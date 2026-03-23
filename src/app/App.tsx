@@ -144,7 +144,7 @@ export default function App() {
   }, [phase]);
 
   return (
-    <div className="size-full flex items-center justify-center bg-neutral-50">
+    <div className="min-h-screen w-full flex items-center justify-center bg-neutral-50">
       {phase === 'intro' && (
         <div className="w-full max-w-lg flex flex-col items-center px-6">
           <motion.div
@@ -217,7 +217,7 @@ export default function App() {
       )}
 
       {phase === 'writing' && (
-        <div className="relative w-full h-full flex flex-col">
+        <div className="relative w-full min-h-screen flex flex-col">
           <textarea
             ref={textareaRef}
             onKeyDown={handleKeyDown}

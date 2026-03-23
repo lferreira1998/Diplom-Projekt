@@ -2,6 +2,11 @@ import { Link } from "react-router";
 
 const projects = [
   { name: "One-Word Replay", path: "/one-word-replay" },
+  { name: "Don't Stop Writing", path: "/dont-stop-writing" },
+  { name: "Uninvited Thoughts", path: "/uninvited-thoughts" },
+  { name: "Löschen & Korrigieren", path: "/loschen-korrigieren" },
+  { name: "Drifting Following Words", path: "/drifting-following-words" },
+  { name: "Drifting Disappearing Words", path: "/drifting-disappearing-words" },
 ];
 
 export default function Overview() {

@@ -144,8 +144,9 @@ export default function App() {
   }, [phase]);
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-neutral-50">
+    <>
       {phase === 'intro' && (
+      <div className="min-h-screen w-full flex items-center justify-center bg-neutral-50">
         <div className="w-full max-w-lg flex flex-col items-center px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -214,14 +215,15 @@ export default function App() {
             Begin
           </motion.button>
         </div>
+      </div>
       )}
 
       {phase === 'writing' && (
-        <div className="relative w-full min-h-screen flex flex-col">
+        <div className="h-screen w-full relative flex flex-col bg-neutral-50">
           <textarea
             ref={textareaRef}
             onKeyDown={handleKeyDown}
-            className="w-full h-full bg-neutral-50 resize-none outline-none border-none text-transparent caret-transparent selection:bg-transparent"
+            className="w-full flex-1 bg-neutral-50 resize-none outline-none border-none text-transparent caret-transparent selection:bg-transparent"
             style={{ caretColor: 'transparent' }}
             autoFocus
           />
@@ -235,7 +237,7 @@ export default function App() {
       )}
 
       {phase === 'replay' && (
-        <div className="relative w-full h-full flex items-center justify-center">
+        <div className="h-screen w-full flex items-center justify-center bg-neutral-50">
           <div className="text-4xl text-neutral-900 font-mono tracking-wide">
             {displayText}
           </div>
@@ -243,13 +245,15 @@ export default function App() {
       )}
 
       {phase === 'ended' && (
-        <button
-          onClick={handleReset}
-          className="px-8 py-3 text-xs tracking-widest uppercase bg-neutral-900 text-neutral-50 font-mono hover:bg-neutral-800 transition-colors"
-        >
-          Neu beginnen
-        </button>
+        <div className="h-screen w-full flex items-center justify-center bg-neutral-50">
+          <button
+            onClick={handleReset}
+            className="px-8 py-3 text-xs tracking-widest uppercase bg-neutral-900 text-neutral-50 font-mono hover:bg-neutral-800 transition-colors"
+          >
+            Neu beginnen
+          </button>
+        </div>
       )}
-    </div>
+    </>
   );
 }

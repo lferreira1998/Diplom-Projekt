@@ -115,7 +115,7 @@ function LogoBox() {
       onMouseLeave={() => setHovered(false)}
       style={{
         borderTop: B, borderRight: B, borderBottom: B, borderLeft: "none",
-        borderRadius: "4px",
+        borderRadius: "0 4px 4px 0",
         padding: "20px 32px",
         display: "flex",
         alignItems: "center",
@@ -204,7 +204,7 @@ export default function Overview() {
         <div
           style={{
             borderTop: B, borderLeft: B, borderBottom: B, borderRight: "none",
-            borderRadius: "4px",
+            borderRadius: "4px 0 0 4px",
             flex: 1,
             padding: "20px 32px",
             display: "flex",
@@ -232,7 +232,7 @@ export default function Overview() {
       <div
         style={{
           borderTop: B, borderBottom: B, borderLeft: "none", borderRight: "none",
-          borderRadius: "4px",
+          borderRadius: "0",
           padding: "72px 48px 96px",
           display: "flex",
           flexDirection: "column",
@@ -316,12 +316,12 @@ export default function Overview() {
         >
           {/* Row 1 */}
           <div style={{ flex: 1, display: "flex", gap: "16px", minHeight: 0 }}>
-            <ExperimentCard {...projects[0]} style={{ flex: "0 0 51.4%", borderLeft: "none" }} />
+            <ExperimentCard {...projects[0]} style={{ flex: "0 0 51.4%", borderLeft: "none", borderRadius: "0 4px 4px 0" }} />
             <ExperimentCard {...projects[1]} style={{ flex: 1 }} />
           </div>
           {/* Row 2 */}
           <div style={{ flex: 1, display: "flex", gap: "16px", minHeight: 0 }}>
-            <ExperimentCard {...projects[2]} style={{ flex: "0 0 35.5%", borderLeft: "none" }} />
+            <ExperimentCard {...projects[2]} style={{ flex: "0 0 35.5%", borderLeft: "none", borderRadius: "0 4px 4px 0" }} />
             <ExperimentCard {...projects[3]} style={{ flex: 1 }} />
           </div>
         </div>
@@ -335,7 +335,7 @@ export default function Overview() {
         {/* Right column — 1 experiment */}
         <ExperimentCard
           {...projects[5]}
-          style={{ flex: 461, minWidth: 0, borderRight: "none" }}
+          style={{ flex: 461, minWidth: 0, borderRight: "none", borderRadius: "4px 0 0 4px" }}
         />
       </div>
     </div>

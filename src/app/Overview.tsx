@@ -36,7 +36,7 @@ const projects = [
 ];
 
 const BG = "#060613";
-const BORDER = "1px dashed rgba(89, 89, 100, 0.8)";
+const B = "1px dashed rgba(89, 89, 100, 0.8)";
 
 function ExperimentCard({
   name,
@@ -59,7 +59,7 @@ function ExperimentCard({
       onMouseLeave={() => setHovered(false)}
       style={{
         backgroundColor: hovered ? "#e8e8e8" : BG,
-        border: BORDER,
+        border: B,
         borderRadius: "4px",
         padding: "24px",
         display: "flex",
@@ -114,7 +114,7 @@ function LogoBox() {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        border: BORDER,
+        borderTop: B, borderRight: B, borderBottom: B, borderLeft: "none",
         borderRadius: "4px",
         padding: "20px 32px",
         display: "flex",
@@ -203,7 +203,7 @@ export default function Overview() {
         {/* Nav */}
         <div
           style={{
-            border: BORDER,
+            borderTop: B, borderLeft: B, borderBottom: B, borderRight: "none",
             borderRadius: "4px",
             flex: 1,
             padding: "20px 32px",
@@ -231,7 +231,7 @@ export default function Overview() {
       {/* Hero */}
       <div
         style={{
-          border: BORDER,
+          borderTop: B, borderBottom: B, borderLeft: "none", borderRight: "none",
           borderRadius: "4px",
           padding: "72px 48px 96px",
           display: "flex",
@@ -271,7 +271,7 @@ export default function Overview() {
         {/* CTA Button */}
         <div
           style={{
-            border: BORDER,
+            border: B,
             borderRadius: "4px",
             padding: "8px 16px 9px",
             display: "inline-flex",
@@ -316,12 +316,12 @@ export default function Overview() {
         >
           {/* Row 1 */}
           <div style={{ flex: 1, display: "flex", gap: "16px", minHeight: 0 }}>
-            <ExperimentCard {...projects[0]} style={{ flex: "0 0 51.4%" }} />
+            <ExperimentCard {...projects[0]} style={{ flex: "0 0 51.4%", borderLeft: "none" }} />
             <ExperimentCard {...projects[1]} style={{ flex: 1 }} />
           </div>
           {/* Row 2 */}
           <div style={{ flex: 1, display: "flex", gap: "16px", minHeight: 0 }}>
-            <ExperimentCard {...projects[2]} style={{ flex: "0 0 35.5%" }} />
+            <ExperimentCard {...projects[2]} style={{ flex: "0 0 35.5%", borderLeft: "none" }} />
             <ExperimentCard {...projects[3]} style={{ flex: 1 }} />
           </div>
         </div>
@@ -335,7 +335,7 @@ export default function Overview() {
         {/* Right column — 1 experiment */}
         <ExperimentCard
           {...projects[5]}
-          style={{ flex: 461, minWidth: 0 }}
+          style={{ flex: 461, minWidth: 0, borderRight: "none" }}
         />
       </div>
     </div>

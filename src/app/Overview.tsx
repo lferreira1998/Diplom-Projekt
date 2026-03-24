@@ -3,6 +3,11 @@ import { useNavigate } from "react-router";
 
 const projects = [
   {
+    name: "Don't Stop Writing",
+    path: "/dont-stop-writing",
+    description: "Write continuously. Your typing rhythm shapes the text. Pauses leave visible gaps.",
+  },
+  {
     name: "One-Word Replay",
     path: "/one-word-replay",
     description: "Type in the dark. Watch your words appear one by one in the exact rhythm you wrote them.",
@@ -18,11 +23,6 @@ const projects = [
     description: "Corrections accumulate as layers. Every deletion leaves a trace.",
   },
   {
-    name: "Don't Stop Writing",
-    path: "/dont-stop-writing",
-    description: "Write continuously. Your typing rhythm shapes the text. Pauses leave visible gaps.",
-  },
-  {
     name: "Drifting Following Words",
     path: "/drifting-following-words",
     description: "Words drift in formation, drawn together by invisible forces.",
@@ -34,7 +34,10 @@ const projects = [
   },
 ];
 
-function Tile({
+const BG = "#060613";
+const BORDER = "1px dashed rgba(89, 89, 100, 0.8)";
+
+function ExperimentCard({
   name,
   description,
   path,
@@ -54,15 +57,15 @@ function Tile({
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        padding: "24px",
+        backgroundColor: hovered ? "#e8e8e8" : BG,
+        border: BORDER,
         borderRadius: "4px",
-        border: `1px dashed ${hovered ? "#6f6f6f" : "#b6b6b6"}`,
-        backgroundColor: hovered ? "#e8e8e8" : "#151515",
+        padding: "24px",
         display: "flex",
         flexDirection: "column",
         gap: "12px",
         cursor: "pointer",
-        transition: "background-color 0.2s ease, border-color 0.2s ease",
+        transition: "background-color 0.2s ease",
         minWidth: 0,
         minHeight: 0,
         ...style,
@@ -71,9 +74,9 @@ function Tile({
       <p
         style={{
           fontFamily: "'Area Inktrap', 'Space Grotesk', sans-serif",
-          fontSize: "24px",
-          fontWeight: 600,
-          letterSpacing: "-0.02em",
+          fontSize: "20px",
+          fontWeight: 400,
+          letterSpacing: "-0.4px",
           lineHeight: "normal",
           color: hovered ? "#000000" : "#ffffff",
           margin: 0,
@@ -86,14 +89,14 @@ function Tile({
       <p
         style={{
           fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
-          fontSize: "16px",
+          fontSize: "14px",
           letterSpacing: "-0.02em",
-          color: "#000000",
+          color: hovered ? "#000000" : "#8c8c9e",
           margin: 0,
           lineHeight: 1.5,
           flexShrink: 0,
           opacity: hovered ? 1 : 0,
-          transition: "opacity 0.2s ease",
+          transition: "opacity 0.2s ease, color 0.2s ease",
         }}
       >
         {description}
@@ -106,69 +109,204 @@ export default function Overview() {
   return (
     <div
       style={{
-        height: "100vh",
-        backgroundColor: "#161617",
-        padding: "12px",
+        backgroundColor: BG,
+        padding: "16px",
         display: "flex",
         flexDirection: "column",
-        position: "relative",
+        gap: "16px",
         boxSizing: "border-box",
+        minHeight: "100vh",
       }}
     >
-      {/* Main grid */}
-      <div style={{ flex: 1, display: "flex", gap: "12px", minHeight: 0 }}>
-
-        {/* Left section — ~75% wide, 2 rows */}
-        <div style={{ flex: "3 0 0", display: "flex", flexDirection: "column", gap: "12px", minWidth: 0 }}>
-
-          {/* Row 1: wide tile + medium tile */}
-          <div style={{ flex: 1, display: "flex", gap: "12px", minHeight: 0 }}>
-            <Tile {...projects[0]} style={{ flex: "0 0 52%" }} />
-            <Tile {...projects[1]} style={{ flex: 1 }} />
-          </div>
-
-          {/* Row 2: narrow tile + wide tile */}
-          <div style={{ flex: 1, display: "flex", gap: "12px", minHeight: 0 }}>
-            <Tile {...projects[2]} style={{ flex: "0 0 35%" }} />
-            <Tile {...projects[3]} style={{ flex: 1 }} />
-          </div>
-
-        </div>
-
-        {/* Right section — ~25% wide, 2 tiles with unequal heights */}
-        <div style={{ flex: "1 0 0", display: "flex", flexDirection: "column", gap: "12px", minWidth: 0 }}>
-          <Tile {...projects[4]} style={{ flex: "0 0 60%" }} />
-          <Tile {...projects[5]} style={{ flex: 1 }} />
-        </div>
-
-      </div>
-
-      {/* Badge */}
+      {/* Header */}
       <div
         style={{
-          position: "absolute",
-          bottom: "24px",
-          left: "50%",
-          transform: "translateX(-50%)",
-          backgroundColor: "rgba(222, 222, 222, 0.8)",
-          border: "1px dashed #6f6f6f",
-          borderRadius: "8px",
-          padding: "16px 48px",
-          whiteSpace: "nowrap",
-          pointerEvents: "none",
+          display: "flex",
+          gap: "16px",
+          height: "88px",
+          flexShrink: 0,
         }}
       >
-        <p
+        {/* Logo */}
+        <div
           style={{
-            fontFamily: "'Area Inktrap', 'Space Grotesk', sans-serif",
-            fontSize: "15px",
-            fontWeight: 600,
-            color: "#000000",
-            margin: 0,
+            border: BORDER,
+            borderRadius: "4px",
+            padding: "20px 32px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-end",
+            flexShrink: 0,
           }}
         >
-          Shape of Thought
-        </p>
+          <div style={{ display: "flex", flexDirection: "column", width: "138px" }}>
+            <p
+              style={{
+                fontFamily: "'Area Inktrap Extended', 'Area Inktrap', sans-serif",
+                fontSize: "18px",
+                fontWeight: 700,
+                letterSpacing: "-0.72px",
+                color: "#ffffff",
+                margin: 0,
+                lineHeight: "normal",
+              }}
+            >
+              Shaping
+            </p>
+            <p
+              style={{
+                fontFamily: "'Area Inktrap Extended', 'Area Inktrap', sans-serif",
+                fontSize: "18px",
+                fontWeight: 700,
+                letterSpacing: "-0.72px",
+                color: "#ffffff",
+                margin: 0,
+                lineHeight: "normal",
+                textAlign: "right",
+              }}
+            >
+              Thoughts
+            </p>
+          </div>
+        </div>
+
+        {/* Nav */}
+        <div
+          style={{
+            border: BORDER,
+            borderRadius: "4px",
+            flex: 1,
+            padding: "20px 32px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-end",
+          }}
+        >
+          <p
+            style={{
+              fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
+              fontSize: "18px",
+              letterSpacing: "-0.72px",
+              margin: 0,
+              lineHeight: "normal",
+            }}
+          >
+            <span style={{ color: "#737382" }}>About, </span>
+            <span style={{ color: "#ffffff" }}>Experiments, </span>
+            <span style={{ color: "#747482" }}>Create</span>
+          </p>
+        </div>
+      </div>
+
+      {/* Hero */}
+      <div
+        style={{
+          border: BORDER,
+          borderRadius: "4px",
+          padding: "72px 48px 96px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "24px",
+          flexShrink: 0,
+        }}
+      >
+        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          <div
+            style={{
+              fontFamily: "'Area Inktrap Extended', 'Area Inktrap', sans-serif",
+              fontSize: "60px",
+              fontWeight: 400,
+              letterSpacing: "-3px",
+              color: "#ffffff",
+              lineHeight: "70px",
+            }}
+          >
+            <p style={{ margin: 0 }}>Writing tools shape </p>
+            <p style={{ margin: 0 }}>how and what we think.</p>
+          </div>
+          <p
+            style={{
+              fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
+              fontSize: "26px",
+              letterSpacing: "-1.04px",
+              color: "#8c8c9e",
+              margin: 0,
+              lineHeight: "normal",
+            }}
+          >
+            Explore what happens when the rules change.
+          </p>
+        </div>
+
+        {/* CTA Button */}
+        <div
+          style={{
+            border: BORDER,
+            borderRadius: "4px",
+            padding: "8px 16px 9px",
+            display: "inline-flex",
+            alignItems: "center",
+            cursor: "pointer",
+            alignSelf: "flex-start",
+          }}
+        >
+          <p
+            style={{
+              fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
+              fontSize: "16px",
+              color: "#ffffff",
+              margin: 0,
+              lineHeight: "normal",
+              whiteSpace: "nowrap",
+            }}
+          >
+            Create a writing tool
+          </p>
+        </div>
+      </div>
+
+      {/* Experiment Grid */}
+      <div
+        style={{
+          display: "flex",
+          gap: "16px",
+          height: "822px",
+          flexShrink: 0,
+        }}
+      >
+        {/* Left section: 2×2 grid — 4 experiments */}
+        <div
+          style={{
+            flex: 867,
+            display: "flex",
+            flexDirection: "column",
+            gap: "16px",
+            minWidth: 0,
+          }}
+        >
+          {/* Row 1 */}
+          <div style={{ flex: 1, display: "flex", gap: "16px", minHeight: 0 }}>
+            <ExperimentCard {...projects[0]} style={{ flex: "0 0 51.4%" }} />
+            <ExperimentCard {...projects[1]} style={{ flex: 1 }} />
+          </div>
+          {/* Row 2 */}
+          <div style={{ flex: 1, display: "flex", gap: "16px", minHeight: 0 }}>
+            <ExperimentCard {...projects[2]} style={{ flex: "0 0 35.5%" }} />
+            <ExperimentCard {...projects[3]} style={{ flex: 1 }} />
+          </div>
+        </div>
+
+        {/* Middle column — 1 experiment */}
+        <ExperimentCard
+          {...projects[4]}
+          style={{ flex: 288, minWidth: 0 }}
+        />
+
+        {/* Right column — 1 experiment */}
+        <ExperimentCard
+          {...projects[5]}
+          style={{ flex: 461, minWidth: 0 }}
+        />
       </div>
     </div>
   );

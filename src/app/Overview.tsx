@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
+import { motion } from "motion/react";
 
 const projects = [
   {
@@ -105,6 +106,75 @@ function ExperimentCard({
   );
 }
 
+function LogoBox() {
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        border: BORDER,
+        borderRadius: "4px",
+        padding: "20px 32px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "flex-end",
+        flexShrink: 0,
+        cursor: "default",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          width: "138px",
+          overflow: "hidden",
+        }}
+      >
+        <motion.p
+          layout
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          style={{
+            fontFamily: hovered
+              ? "'Area Inktrap', sans-serif"
+              : "'Area Inktrap Extended', 'Area Inktrap', sans-serif",
+            fontSize: "18px",
+            fontWeight: 700,
+            letterSpacing: "-0.72px",
+            color: "#ffffff",
+            margin: 0,
+            lineHeight: "normal",
+            alignSelf: hovered ? "flex-end" : "flex-start",
+            whiteSpace: "nowrap",
+          }}
+        >
+          Shaping
+        </motion.p>
+        <motion.p
+          layout
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          style={{
+            fontFamily: hovered
+              ? "'Area Inktrap', sans-serif"
+              : "'Area Inktrap Extended', 'Area Inktrap', sans-serif",
+            fontSize: "18px",
+            fontWeight: 700,
+            letterSpacing: "-0.72px",
+            color: "#ffffff",
+            margin: 0,
+            lineHeight: "normal",
+            alignSelf: hovered ? "flex-start" : "flex-end",
+            whiteSpace: "nowrap",
+          }}
+        >
+          Thoughts
+        </motion.p>
+      </div>
+    </div>
+  );
+}
+
 export default function Overview() {
   return (
     <div
@@ -128,47 +198,7 @@ export default function Overview() {
         }}
       >
         {/* Logo */}
-        <div
-          style={{
-            border: BORDER,
-            borderRadius: "4px",
-            padding: "20px 32px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "flex-end",
-            flexShrink: 0,
-          }}
-        >
-          <div style={{ display: "flex", flexDirection: "column", width: "138px" }}>
-            <p
-              style={{
-                fontFamily: "'Area Inktrap Extended', 'Area Inktrap', sans-serif",
-                fontSize: "18px",
-                fontWeight: 700,
-                letterSpacing: "-0.72px",
-                color: "#ffffff",
-                margin: 0,
-                lineHeight: "normal",
-              }}
-            >
-              Shaping
-            </p>
-            <p
-              style={{
-                fontFamily: "'Area Inktrap Extended', 'Area Inktrap', sans-serif",
-                fontSize: "18px",
-                fontWeight: 700,
-                letterSpacing: "-0.72px",
-                color: "#ffffff",
-                margin: 0,
-                lineHeight: "normal",
-                textAlign: "right",
-              }}
-            >
-              Thoughts
-            </p>
-          </div>
-        </div>
+        <LogoBox />
 
         {/* Nav */}
         <div

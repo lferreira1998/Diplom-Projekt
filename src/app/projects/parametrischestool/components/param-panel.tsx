@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { ChevronRight, Settings2, Info, Check } from "lucide-react";
 
@@ -130,14 +131,12 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
   const [tooltip, setTooltip] = useState<{ text: string; x: number; y: number } | null>(null);
 
   const showTooltip = (iconEl: HTMLElement, text: string) => {
-    if (!panelRef.current) return;
-    const iconRect  = iconEl.getBoundingClientRect();
-    const panelRect = panelRef.current.getBoundingClientRect();
+    const rect = iconEl.getBoundingClientRect();
     setTooltip({
       text,
-      // center of icon, relative to panel top-left
-      x: iconRect.left - panelRect.left + iconRect.width  / 2,
-      y: iconRect.top  - panelRect.top,
+      // center of icon in viewport coords (for fixed positioning)
+      x: rect.left + rect.width / 2,
+      y: rect.top,
     });
   };
   const hideTooltip = () => setTooltip(null);
@@ -932,55 +931,55 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
 
             </div>
 
-            {/* ── Tooltip bubble ── */}
-            <AnimatePresence>
-              {tooltip && (
-                <motion.div
-                  key="tooltip-bubble"
-                  initial={{ opacity: 0, y: 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 4 }}
-                  transition={{ duration: 0.15 }}
-                  className="pointer-events-none"
-                  style={{
-                    position: "absolute",
-                    left: tooltip.x,
-                    top: tooltip.y,
-                    // shift left by 50% of own width, and sit fully above the icon
-                    transform: "translate(-50%, calc(-100% - 8px))",
-                    zIndex: 9999,
-                    width: "182px",
-                    padding: "8px 10px",
-                    borderRadius: "8px",
-                    backgroundColor: "#313642",
-                    color: "#E8E9ED",
-                    fontFamily: "'IBM Plex Sans', sans-serif",
-                    fontSize: "10px",
-                    lineHeight: 1.55,
-                    boxShadow: "0 6px 20px rgba(49,54,66,0.22)",
-                    whiteSpace: "pre-line",
-                  }}
-                >
-                  {tooltip.text}
-                  {/* Arrow */}
-                  <div
-                    style={{
-                      position: "absolute",
-                      left: "50%",
-                      top: "100%",
-                      transform: "translateX(-50%)",
-                      width: 0,
-                      height: 0,
-                      borderLeft: "5px solid transparent",
-                      borderRight: "5px solid transparent",
-                      borderTop: "5px solid #313642",
-                    }}
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
-
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Tooltip bubble (portal — never clipped by panel edge) ── */}
+      <AnimatePresence>
+        {tooltip && createPortal(
+          <motion.div
+            key="tooltip-bubble"
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 4 }}
+            transition={{ duration: 0.15 }}
+            className="pointer-events-none"
+            style={{
+              position: "fixed",
+              // center above icon, but clamp so it never leaves the viewport
+              left: Math.min(tooltip.x - 91, window.innerWidth - 198),
+              top: tooltip.y,
+              transform: "translateY(calc(-100% - 8px))",
+              zIndex: 9999,
+              width: "182px",
+              padding: "8px 10px",
+              borderRadius: "8px",
+              backgroundColor: "#313642",
+              color: "#E8E9ED",
+              fontFamily: "'IBM Plex Sans', sans-serif",
+              fontSize: "10px",
+              lineHeight: 1.55,
+              boxShadow: "0 6px 20px rgba(49,54,66,0.22)",
+              whiteSpace: "pre-line",
+            }}
+          >
+            {tooltip.text}
+            <div
+              style={{
+                position: "absolute",
+                left: `${tooltip.x - Math.min(tooltip.x - 91, window.innerWidth - 198)}px`,
+                top: "100%",
+                transform: "translateX(-50%)",
+                width: 0,
+                height: 0,
+                borderLeft: "5px solid transparent",
+                borderRight: "5px solid transparent",
+                borderTop: "5px solid #313642",
+              }}
+            />
+          </motion.div>,
+          document.body
         )}
       </AnimatePresence>
     </>

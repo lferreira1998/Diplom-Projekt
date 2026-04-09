@@ -176,6 +176,7 @@ function LogoBox() {
 }
 
 export default function Overview() {
+  const navigate = useNavigate();
   return (
     <div
       style={{

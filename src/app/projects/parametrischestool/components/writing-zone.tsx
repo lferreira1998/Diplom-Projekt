@@ -1,4 +1,4 @@
-import { useRef, useEffect, useCallback, useState } from "react";
+import { useRef, useEffect, useLayoutEffect, useCallback, useState } from "react";
 import { createPortal } from "react-dom";
 
 // ── Model ─────────────────────────────────────────────────────────────────────
@@ -262,8 +262,10 @@ export function WritingZone({
   const curRef = useRef(cursor);
   const lkpt   = lastKeyPressTimestamp;
 
-  useEffect(() => { posRef.current = positions; }, [positions]);
-  useEffect(() => { curRef.current = cursor;    }, [cursor]);
+  // useLayoutEffect fires synchronously after commit, before the next rAF —
+  // ensures the cursor rAF loop always reads up-to-date positions/cursor.
+  useLayoutEffect(() => { posRef.current = positions; }, [positions]);
+  useLayoutEffect(() => { curRef.current = cursor;    }, [cursor]);
 
   // ── Drift / Fade state ────────────────────────────────────────────────────
   type DE = { x: number; y: number; vx: number; vy: number };
@@ -433,13 +435,18 @@ export function WritingZone({
   }, [cursor, positions.length]);
 
   // ── "Cursor läuft weiter" ─────────────────────────────────────────────────
-  // Visual movement is driven purely by rAF (60 fps smooth transform on the
-  // cursor DOM element). State updates (space inserts) only happen as a
-  // background "base reset" – the user never sees a discrete jump.
+  // Two-ref design eliminates the backward jump from `accum % 1`:
+  //   visualPosRef  — monotonically increases at CHARS_PER_SEC; never resets
+  //   spacesInserted — counts spaces committed so far
+  //   frac = visualPos - spacesInserted  →  always moves forward, no snap
+  //
+  // useLayoutEffect (above) ensures posRef/curRef are current before any rAF
+  // fires, preventing the race condition where a stale ref overwrites a typed char.
 
-  const accumRef     = useRef(0);
-  const lastFrameRef = useRef<number>(0);
-  const onUpdateRef  = useRef(onUpdate);
+  const visualPosRef      = useRef(0);
+  const spacesInsertedRef = useRef(0);
+  const lastFrameRef      = useRef<number>(0);
+  const onUpdateRef       = useRef(onUpdate);
   useEffect(() => { onUpdateRef.current = onUpdate; }, [onUpdate]);
 
   // Char-width measurement (IBM Plex Mono is monospace → one span suffices)
@@ -459,39 +466,43 @@ export function WritingZone({
 
   useEffect(() => {
     if (!cursorLaeuftWeiter) {
-      accumRef.current     = 0;
-      lastFrameRef.current = 0;
-      // Clear any residual transform
+      visualPosRef.current      = 0;
+      spacesInsertedRef.current = 0;
+      lastFrameRef.current      = 0;
       if (cursorDomRef.current) cursorDomRef.current.style.transform = "";
       return;
     }
 
-    const CHARS_PER_SEC = 3.2;   // character-widths per second
+    // Reset on (re-)activation
+    visualPosRef.current      = 0;
+    spacesInsertedRef.current = 0;
 
+    const CHARS_PER_SEC = 1.8;   // slower, smoother
     let animId: number;
 
     const loop = (timestamp: number) => {
       if (lastFrameRef.current === 0) lastFrameRef.current = timestamp;
-      // Cap dt so a tab-switch doesn't produce a big jump
       const dt = Math.min((timestamp - lastFrameRef.current) / 1000, 0.1);
       lastFrameRef.current = timestamp;
 
-      // Always advance – no GAP_MS pause, cursor runs continuously
-      accumRef.current += dt * CHARS_PER_SEC;
+      visualPosRef.current += dt * CHARS_PER_SEC;
 
-      // ── Smooth visual offset applied directly to the DOM (no React state) ──
-      const frac  = accumRef.current % 1;           // 0 → 1 fraction of one char
+      // frac is the fractional position within the current character.
+      // It grows from 0 → 1 → (slightly past 1) per cycle, then resets when
+      // a space is committed. Because we set the transform BEFORE incrementing
+      // spacesInserted, the value momentarily exceeds charW by at most one frame's
+      // step (~0.03 chars), then recovers smoothly — no backward snap ever.
+      const frac  = visualPosRef.current - spacesInsertedRef.current;
       const charW = charWidthRef.current;
+
       if (cursorDomRef.current) {
         cursorDomRef.current.style.transform = `translateX(${frac * charW}px)`;
       }
 
-      // When one full character has been traversed, commit a space to state.
-      // The cursor's base position jumps forward by charW, while our transform
-      // resets to the new (small) fraction – visually seamless.
-      if (accumRef.current >= 1) {
-        accumRef.current -= 1;
-        const pos = posRef.current;
+      // Commit a space when the visual position crosses the next char boundary
+      if (frac >= 1) {
+        spacesInsertedRef.current++;
+        const pos = posRef.current;   // always current thanks to useLayoutEffect
         const cur = curRef.current;
         let next: Position[];
         if (cur < pos.length) {
@@ -512,7 +523,7 @@ export function WritingZone({
       cancelAnimationFrame(animId);
       if (cursorDomRef.current) cursorDomRef.current.style.transform = "";
     };
-  }, [cursorLaeuftWeiter, lkpt]); // onUpdate excluded intentionally – via ref
+  }, [cursorLaeuftWeiter]); // onUpdate/lkpt excluded intentionally – via ref
 
   // ── Backspace ─────────────────────────────────────────────────────────────
 

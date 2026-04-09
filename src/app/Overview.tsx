@@ -270,6 +270,7 @@ export default function Overview() {
 
         {/* CTA Button */}
         <div
+          onClick={() => navigate("/parametrisches-tool")}
           style={{
             border: B,
             borderRadius: "4px",

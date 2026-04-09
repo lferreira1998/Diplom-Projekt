@@ -6,6 +6,7 @@ import UninvitedThoughts from "./projects/uninvitedthoughts/App";
 import LoschenKorrigieren from "./projects/loschenkorrigieren/App";
 import DriftingFollowingWords from "./projects/driftingfollowing/App";
 import DriftingDisappearingWords from "./projects/driftingdisappearing/App";
+import ParametrischesTool from "./projects/parametrischestool/App";
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
       <Route path="/loschen-korrigieren" element={<LoschenKorrigieren />} />
       <Route path="/drifting-following-words" element={<DriftingFollowingWords />} />
       <Route path="/drifting-disappearing-words" element={<DriftingDisappearingWords />} />
+      <Route path="/parametrisches-tool" element={<ParametrischesTool />} />
     </Routes>
   );
 }

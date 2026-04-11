@@ -21,6 +21,7 @@ export interface WritingParams {
   verblasst: boolean;
   verblassenDelay: number;
   verblassenSpeed: number;
+  spiralModus: boolean;
 }
 
 export const DEFAULT_PARAMS: WritingParams = {
@@ -41,6 +42,7 @@ export const DEFAULT_PARAMS: WritingParams = {
   verblasst: false,
   verblassenDelay: 120,
   verblassenSpeed: 100,
+  spiralModus: false,
 };
 
 interface ParamPanelProps {
@@ -122,6 +124,7 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
   const [textLoeschenOpen, setTextLoeschenOpen] = useState(true);
   const [korrekturSichtbarOpen, setKorrekturSichtbarOpen] = useState(true);
   const [bestaendigkeitOpen, setBestaendigkeitOpen] = useState(false);
+  const [spaceOrderOpen, setSpaceOrderOpen] = useState(false);
 
   // ── Tooltip state — managed at panel level ─────────────────────────────────��
   // The bubble is rendered inside the panel's root div (outside overflow containers)
@@ -926,6 +929,75 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
                       </motion.div>
                     )}
                   </AnimatePresence>
+                </div>
+              </div>
+
+              {/* ── Space & Order Card ── */}
+              <div className="rounded-[12px] w-full" style={{ border: "1.5px dashed #9a9daa" }}>
+                <div className="px-[24px] py-[12px] flex flex-col gap-[16px]">
+
+                  {/* Header row */}
+                  <button
+                    onClick={() => setSpaceOrderOpen((o) => !o)}
+                    className="flex items-center justify-between cursor-pointer w-full"
+                    style={{ background: "none", border: "none", outline: "none", padding: 0, height: "36px" }}
+                  >
+                    <span style={{ fontFamily: FONT_SEMI, fontSize: "11.52px", color: "#313642", letterSpacing: "0.1152px" }}>
+                      Space &amp; Order
+                    </span>
+                    <motion.span
+                      animate={{ rotate: spaceOrderOpen ? -90 : 90 }}
+                      transition={{ duration: 0.18 }}
+                      style={{ display: "inline-flex", color: "#B0B3BC" }}
+                    >
+                      <ChevronRight size={14} />
+                    </motion.span>
+                  </button>
+
+                  <AnimatePresence>
+                    {spaceOrderOpen && (
+                      <motion.div
+                        key="space-order-content"
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.2 }}
+                        style={{ overflow: "hidden" }}
+                        className="flex flex-col gap-[16px]"
+                      >
+                        <div style={{ borderTop: "1.5px dashed #9a9daa" }} />
+
+                        {/* ── Spirale ── */}
+                        <div className="flex flex-col gap-[8px]">
+                          <div className="flex items-center justify-between" style={{ height: "36px" }}>
+                            <div className="flex items-center gap-[6px]">
+                              <span style={{ fontFamily: FONT_SEMI, fontSize: "11.52px", color: "#313642", letterSpacing: "0.1152px" }}>
+                                Spirale
+                              </span>
+                              <div
+                                className="flex items-center cursor-help"
+                                onMouseEnter={(e) => showTooltip(e.currentTarget, "Text ordnet sich spiralförmig an.\nNeue Zeichen erscheinen außen,\nältere driften nach innen.")}
+                                onMouseLeave={hideTooltip}
+                              >
+                                <Info size={11} style={{ color: "#B0B3BC" }} />
+                              </div>
+                            </div>
+                            <PillSwitch
+                              checked={params.spiralModus}
+                              onChange={(v) => update("spiralModus", v)}
+                            />
+                          </div>
+                          <p style={{ fontFamily: FONT_REG, fontSize: "9.6px", lineHeight: "14.4px", color: "#9a9daa", letterSpacing: "0.768px", margin: 0 }}>
+                            Linearität aufheben.{"\n"}
+                            <br />
+                            Der Text formt sich im Raum.
+                          </p>
+                        </div>
+
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
                 </div>
               </div>
 

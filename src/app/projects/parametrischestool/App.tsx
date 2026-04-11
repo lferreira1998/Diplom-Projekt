@@ -463,6 +463,7 @@ export default function App() {
             verblasst={params.verblasst}
             verblassenDelay={params.verblassenDelay}
             verblassenSpeed={params.verblassenSpeed}
+            spiralModus={params.spiralModus}
           />
         </div>
 

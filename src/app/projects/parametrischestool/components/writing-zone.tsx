@@ -33,6 +33,7 @@ interface WritingZoneProps {
   verblasst?: boolean;
   verblassenDelay?: number;
   verblassenSpeed?: number; // 10–500, default 100
+  spiralModus?: boolean;
 }
 
 // ── Pure helpers ──────────────────────────────────────────────────────────────
@@ -231,6 +232,220 @@ function computeGroups(pos: Position[]): { sid: number[]; wid: number[] } {
   return { sid, wid };
 }
 
+// ── SpiralCanvas ──────────────────────────────────────────────────────────────
+
+function parseRgb(color: string): [number, number, number] {
+  if (color.startsWith("#")) {
+    return [
+      parseInt(color.slice(1, 3), 16),
+      parseInt(color.slice(3, 5), 16),
+      parseInt(color.slice(5, 7), 16),
+    ];
+  }
+  const m = color.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+  if (m) return [+m[1], +m[2], +m[3]];
+  return [49, 54, 66];
+}
+
+interface SpiralCanvasProps {
+  positions: Position[];
+  cursor: number;
+  textColor: string;
+  visibility: "visible" | "hidden" | "sentence" | "word" | "char";
+  split: number;
+  verblasst: boolean;
+  posTimesRef: React.MutableRefObject<number[]>;
+  verblassenDelay: number;
+  verblassenSpeed: number;
+  driftTick: number;
+}
+
+function SpiralCanvas({
+  positions,
+  cursor,
+  textColor,
+  visibility,
+  split,
+  verblasst,
+  posTimesRef,
+  verblassenDelay,
+  verblassenSpeed,
+  driftTick,
+}: SpiralCanvasProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const wrapRef   = useRef<HTMLDivElement>(null);
+  const [cursorOn, setCursorOn] = useState(true);
+  const [size, setSize]         = useState({ w: 0, h: 0 });
+
+  // cursor blink
+  useEffect(() => {
+    const id = setInterval(() => setCursorOn(v => !v), 530);
+    return () => clearInterval(id);
+  }, []);
+
+  // size observer
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(entries => {
+      const { width, height } = entries[0].contentRect;
+      setSize({ w: width, h: height });
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  // draw spiral
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    const W = size.w || canvas.parentElement?.getBoundingClientRect().width || 800;
+    const H = size.h || canvas.parentElement?.getBoundingClientRect().height || 600;
+    if (!W || !H) return;
+
+    canvas.width  = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.width  = `${W}px`;
+    canvas.style.height = `${H}px`;
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, W, H);
+
+    // build char list with visibility info
+    const isAllHidden = visibility === "hidden";
+    const charInfos: { char: string; posIdx: number; shouldHide: boolean }[] = [];
+    for (let i = 0; i < positions.length; i++) {
+      const ch = getVisibleChar(positions[i]);
+      if (ch === null) continue;
+      const beforeCursor = i < cursor;
+      const shouldHide =
+        isAllHidden ||
+        (visibility !== "visible" && beforeCursor && i < split);
+      charInfos.push({
+        char: ch === "\n" ? " " : ch,
+        posIdx: i,
+        shouldHide,
+      });
+    }
+
+    const chars = charInfos.map(c => c.char);
+    const N = chars.length;
+    const [r, g, b] = parseRgb(textColor);
+
+    const cx = W / 2;
+    const cy = H / 2;
+    const minR  = 24;
+    const maxR  = Math.min(W, H) * 0.38;
+    const minFs = 7;
+    const maxFs = 28;
+    // writing position: bottom (6 o'clock)
+    const cursorAngle = Math.PI * 0.5;
+    const curX = cx + maxR * Math.cos(cursorAngle);
+    const curY = cy + maxR * Math.sin(cursorAngle);
+
+    if (N === 0) {
+      if (cursorOn) {
+        ctx.save();
+        ctx.translate(curX, curY);
+        ctx.fillStyle = `rgba(${r},${g},${b},0.75)`;
+        ctx.fillRect(-1.5, -maxFs * 0.55, 3, maxFs * 1.1);
+        ctx.restore();
+      }
+      return;
+    }
+
+    // estimate total angular span for tightness
+    let estAngle = 0;
+    let tmpR = maxR;
+    for (let i = N - 1; i >= 0; i--) {
+      const prog = Math.max(0, (tmpR - minR) / (maxR - minR));
+      const fs = minFs + (maxFs - minFs) * Math.pow(prog, 0.55);
+      const aStep = (fs * 0.6 + fs * 0.08) / Math.max(tmpR, 4);
+      estAngle += aStep;
+      const tight = (maxR - minR) / Math.max(estAngle, Math.PI * 1.2);
+      tmpR -= tight * aStep;
+      tmpR = Math.max(tmpR, minR);
+    }
+    const spiralTightness = (maxR - minR) / Math.max(estAngle, Math.PI * 1.2);
+
+    // compute char positions
+    let curAngle = cursorAngle;
+    let curRad   = maxR;
+    const nowMs  = Date.now();
+
+    interface CP {
+      x: number; y: number; char: string;
+      fs: number; opacity: number; rot: number; shouldHide: boolean;
+    }
+    const cps: CP[] = [];
+
+    for (let i = N - 1; i >= 0; i--) {
+      const radiusProg = Math.max(0, (curRad - minR) / (maxR - minR));
+      const fs = minFs + (maxFs - minFs) * Math.pow(radiusProg, 0.55);
+      let opacity = 0.1 + 0.9 * Math.pow(radiusProg, 0.35);
+
+      // apply verblasst
+      if (verblasst && charInfos[i]) {
+        const t = posTimesRef.current[charInfos[i].posIdx];
+        if (t) {
+          const age = Math.max(0, (nowMs - t - verblassenDelay * 1000) / 1000);
+          const dur = Math.max(1, 60 / (verblassenSpeed / 100));
+          opacity *= Math.max(0, 1 - age / dur);
+        }
+      }
+
+      ctx.font = `${fs}px 'IBM Plex Mono', monospace`;
+      const cw    = ctx.measureText(chars[i]).width;
+      const aStep = (cw * 0.78 + fs * 0.1) / Math.max(curRad, 4);
+      curAngle += aStep;
+      curRad   -= spiralTightness * aStep;
+      curRad    = Math.max(curRad, 2);
+
+      const x   = cx + curRad * Math.cos(curAngle);
+      const y   = cy + curRad * Math.sin(curAngle);
+      const rot = curAngle - Math.PI / 2;
+
+      cps.unshift({
+        x, y, char: chars[i], fs, opacity, rot,
+        shouldHide: charInfos[i]?.shouldHide ?? false,
+      });
+    }
+
+    // draw oldest → newest
+    for (const cp of cps) {
+      if (cp.shouldHide) continue;
+      ctx.save();
+      ctx.translate(cp.x, cp.y);
+      ctx.rotate(cp.rot);
+      ctx.font = `${cp.fs}px 'IBM Plex Mono', monospace`;
+      ctx.fillStyle = `rgba(${r},${g},${b},${Math.min(1, cp.opacity)})`;
+      ctx.textAlign    = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(cp.char, 0, 0);
+      ctx.restore();
+    }
+
+    // cursor line at writing position
+    if (cursorOn) {
+      ctx.save();
+      ctx.translate(curX, curY);
+      ctx.fillStyle = `rgba(${r},${g},${b},0.85)`;
+      ctx.fillRect(-1.5, -maxFs * 0.55, 3, maxFs * 1.1);
+      ctx.restore();
+    }
+  }, [positions, cursor, textColor, visibility, split, verblasst, posTimesRef,
+      verblassenDelay, verblassenSpeed, cursorOn, size, driftTick]);
+
+  return (
+    <div ref={wrapRef} style={{ position: "absolute", inset: 0 }}>
+      <canvas ref={canvasRef} style={{ display: "block" }} />
+    </div>
+  );
+}
+
 // ── WritingZone ───────────────────────────────────────────────────────────────
 
 export function WritingZone({
@@ -254,6 +469,7 @@ export function WritingZone({
   verblasst          = false,
   verblassenDelay    = 120,
   verblassenSpeed    = 100,
+  spiralModus        = false,
 }: WritingZoneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const cursorDomRef = useRef<HTMLSpanElement>(null);
@@ -728,9 +944,40 @@ export function WritingZone({
     return els;
   };
 
-  const nodes = buildNodes();
+  const nodes = spiralModus ? [] : buildNodes();
 
   // ── JSX ──────────────────────────────────────────────────────────────────
+
+  if (spiralModus) {
+    return (
+      <div
+        className="flex-1 relative transition-all duration-300"
+        style={{ paddingRight: panelOpen ? "296px" : "0px" }}
+      >
+        <div
+          ref={containerRef}
+          tabIndex={0}
+          onKeyDown={handleKeyDown}
+          onClick={() => containerRef.current?.focus()}
+          className="absolute inset-0 outline-none cursor-text"
+          style={{ caretColor: "transparent" }}
+        >
+          <SpiralCanvas
+            positions={positions}
+            cursor={cursor}
+            textColor={textColor}
+            visibility={visibility}
+            split={split}
+            verblasst={verblasst}
+            posTimesRef={posTimesRef}
+            verblassenDelay={verblassenDelay}
+            verblassenSpeed={verblassenSpeed}
+            driftTick={driftTick}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>

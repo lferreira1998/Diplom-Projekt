@@ -972,7 +972,7 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
                           <div className="flex items-center justify-between" style={{ height: "36px" }}>
                             <div className="flex items-center gap-[6px]">
                               <span style={{ fontFamily: FONT_SEMI, fontSize: "11.52px", color: "#313642", letterSpacing: "0.1152px" }}>
-                                Spirale
+                                Spiraling Text
                               </span>
                               <div
                                 className="flex items-center cursor-help"

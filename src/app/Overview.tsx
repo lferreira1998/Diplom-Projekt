@@ -1,6 +1,7 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 
 const projects = [
   {
@@ -37,6 +38,210 @@ const projects = [
 
 const BG = "#060613";
 const B = "1px dashed rgba(89, 89, 100, 0.8)";
+const FONT_UI = "'Area Inktrap', 'Space Grotesk', sans-serif";
+const FONT_BODY = "'IBM Plex Sans', system-ui, sans-serif";
+
+// ── Start Modal ───────────────────────────────────────────────────────────────
+
+function StartModal({ onClose }: { onClose: () => void }) {
+  const navigate = useNavigate();
+  const [name, setName] = useState("");
+  const [prompt, setPrompt] = useState("");
+  const [description, setDescription] = useState("");
+
+  const inputStyle: React.CSSProperties = {
+    backgroundColor: "#F4F5F7",
+    border: "1px dashed #D0D1D6",
+    borderRadius: "12px",
+    height: "40px",
+    width: "100%",
+    padding: "0 12px",
+    fontFamily: FONT_UI,
+    fontSize: "10.88px",
+    color: "#313642",
+    letterSpacing: "0.3264px",
+    outline: "none",
+    boxSizing: "border-box",
+  };
+
+  const labelStyle: React.CSSProperties = {
+    fontFamily: FONT_UI,
+    fontSize: "11.52px",
+    fontWeight: 600,
+    letterSpacing: "0.1152px",
+    lineHeight: "17.28px",
+    color: "#313642",
+    margin: 0,
+  };
+
+  const hintStyle: React.CSSProperties = {
+    fontFamily: FONT_UI,
+    fontSize: "9.6px",
+    letterSpacing: "0.768px",
+    lineHeight: "14.4px",
+    color: "#7A7D89",
+    margin: 0,
+  };
+
+  return createPortal(
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.25 }}
+      onClick={onClose}
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 300,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "rgba(6,6,19,0.65)",
+        backdropFilter: "blur(8px)",
+        padding: "24px",
+      }}
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 18, scale: 0.97 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 18, scale: 0.97 }}
+        transition={{ duration: 0.24, delay: 0.06 }}
+        onClick={e => e.stopPropagation()}
+        style={{
+          backgroundColor: "#ECEDF0",
+          border: "1px dashed #C3C4C8",
+          borderRadius: "12px",
+          padding: "24px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "24px",
+          width: "100%",
+          maxWidth: "420px",
+          boxSizing: "border-box",
+        }}
+      >
+        {/* Header */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          <p style={{
+            fontFamily: FONT_UI,
+            fontSize: "20px",
+            fontWeight: 400,
+            letterSpacing: "0.1152px",
+            lineHeight: "normal",
+            color: "#313642",
+            margin: 0,
+          }}>
+            Erstelle dein eigenes Writing-Tool
+          </p>
+          <div style={{ borderTop: "1px dashed #C3C4C8", width: "100%" }} />
+          <p style={{
+            fontFamily: FONT_UI,
+            fontSize: "11.52px",
+            fontWeight: 400,
+            letterSpacing: "0.1152px",
+            lineHeight: "17.28px",
+            color: "#313642",
+            margin: 0,
+          }}>
+            Verändere die Parameter und erstelle dein eigenes Tool.{" "}
+            <br />
+            Wenn du fertig bist, kannst du es speichern und mit anderen teilen.
+          </p>
+        </div>
+
+        {/* Name */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+          <p style={labelStyle}>Name</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            <input
+              type="text"
+              placeholder="Name eingeben"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              style={inputStyle}
+            />
+            <p style={hintStyle}>Du kannst den Namen jederzeit ändern.</p>
+          </div>
+        </div>
+
+        {/* Schreibanstoß */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+          <p style={labelStyle}>Schreibanstoß oder Aufgaben</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            <input
+              type="text"
+              placeholder="Beispiel: Schreibe etwas über dich..."
+              value={prompt}
+              onChange={e => setPrompt(e.target.value)}
+              style={inputStyle}
+            />
+            <p style={hintStyle}>
+              Das hilft Menschen beim Schreiben. Von allgemein bis sehr spezifisch.
+              Du kannst auch mehrere anlegen.
+            </p>
+          </div>
+        </div>
+
+        {/* Beschreibung */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+          <p style={labelStyle}>Beschreibung oder Regel</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            <textarea
+              placeholder="Beispiel: Dieses Tool hilft anonym in öffentlichen Plätzen zu schreiben, indem immer nur das aktuelle Wort sichtbar ist."
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+              style={{
+                backgroundColor: "#F4F5F7",
+                border: "1px dashed #D0D1D6",
+                borderRadius: "12px",
+                height: "120px",
+                width: "100%",
+                padding: "12px",
+                fontFamily: FONT_UI,
+                fontSize: "10.88px",
+                color: "#313642",
+                letterSpacing: "0.3264px",
+                lineHeight: "16.32px",
+                outline: "none",
+                resize: "none",
+                boxSizing: "border-box",
+              }}
+            />
+            <p style={hintStyle}>
+              Das hilft Menschen beim Schreiben. Von allgemein bis sehr spezifisch.
+              Du kannst auch mehrere anlegen.
+            </p>
+          </div>
+        </div>
+
+        {/* Loslegen */}
+        <button
+          onClick={() => navigate("/parametrisches-tool")}
+          style={{
+            width: "100%",
+            height: "29px",
+            backgroundColor: "#313642",
+            color: "#ECEDF0",
+            border: "none",
+            borderRadius: "100px",
+            cursor: "pointer",
+            fontFamily: FONT_UI,
+            fontSize: "10.88px",
+            fontWeight: 600,
+            letterSpacing: "0.3264px",
+            lineHeight: "16.32px",
+          }}
+        >
+          Loslegen
+        </button>
+      </motion.div>
+    </motion.div>,
+    document.body
+  );
+}
+
+// ── ExperimentCard ────────────────────────────────────────────────────────────
 
 function ExperimentCard({
   name,
@@ -74,7 +279,7 @@ function ExperimentCard({
     >
       <p
         style={{
-          fontFamily: "'Area Inktrap', 'Space Grotesk', sans-serif",
+          fontFamily: FONT_UI,
           fontSize: "20px",
           fontWeight: 400,
           letterSpacing: "-0.4px",
@@ -89,7 +294,7 @@ function ExperimentCard({
       </p>
       <p
         style={{
-          fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
+          fontFamily: FONT_BODY,
           fontSize: "14px",
           letterSpacing: "-0.02em",
           color: hovered ? "#000000" : "#8c8c9e",
@@ -105,6 +310,8 @@ function ExperimentCard({
     </div>
   );
 }
+
+// ── LogoBox ───────────────────────────────────────────────────────────────────
 
 function LogoBox() {
   const [hovered, setHovered] = useState(false);
@@ -175,8 +382,11 @@ function LogoBox() {
   );
 }
 
+// ── Overview ──────────────────────────────────────────────────────────────────
+
 export default function Overview() {
-  const navigate = useNavigate();
+  const [showModal, setShowModal] = useState(false);
+
   return (
     <div
       style={{
@@ -198,10 +408,7 @@ export default function Overview() {
           flexShrink: 0,
         }}
       >
-        {/* Logo */}
         <LogoBox />
-
-        {/* Nav */}
         <div
           style={{
             borderTop: B, borderLeft: B, borderBottom: B, borderRight: "none",
@@ -215,7 +422,7 @@ export default function Overview() {
         >
           <p
             style={{
-              fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
+              fontFamily: FONT_BODY,
               fontSize: "18px",
               letterSpacing: "-0.72px",
               margin: 0,
@@ -233,7 +440,6 @@ export default function Overview() {
       <div
         style={{
           borderTop: B, borderBottom: B, borderLeft: "none", borderRight: "none",
-          borderRadius: "0",
           padding: "72px 48px 96px",
           display: "flex",
           flexDirection: "column",
@@ -257,7 +463,7 @@ export default function Overview() {
           </div>
           <p
             style={{
-              fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
+              fontFamily: FONT_BODY,
               fontSize: "26px",
               letterSpacing: "-1.04px",
               color: "#8c8c9e",
@@ -271,7 +477,7 @@ export default function Overview() {
 
         {/* CTA Button */}
         <div
-          onClick={() => navigate("/parametrisches-tool")}
+          onClick={() => setShowModal(true)}
           style={{
             border: B,
             borderRadius: "4px",
@@ -284,7 +490,7 @@ export default function Overview() {
         >
           <p
             style={{
-              fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
+              fontFamily: FONT_BODY,
               fontSize: "16px",
               color: "#ffffff",
               margin: 0,
@@ -306,7 +512,6 @@ export default function Overview() {
           flexShrink: 0,
         }}
       >
-        {/* Left section: 2×2 grid — 4 experiments */}
         <div
           style={{
             flex: 867,
@@ -316,30 +521,23 @@ export default function Overview() {
             minWidth: 0,
           }}
         >
-          {/* Row 1 */}
           <div style={{ flex: 1, display: "flex", gap: "16px", minHeight: 0 }}>
             <ExperimentCard {...projects[0]} style={{ flex: "0 0 51.4%", borderLeft: "none", borderRadius: "0 4px 4px 0" }} />
             <ExperimentCard {...projects[1]} style={{ flex: 1 }} />
           </div>
-          {/* Row 2 */}
           <div style={{ flex: 1, display: "flex", gap: "16px", minHeight: 0 }}>
             <ExperimentCard {...projects[2]} style={{ flex: "0 0 35.5%", borderLeft: "none", borderRadius: "0 4px 4px 0" }} />
             <ExperimentCard {...projects[3]} style={{ flex: 1 }} />
           </div>
         </div>
-
-        {/* Middle column — 1 experiment */}
-        <ExperimentCard
-          {...projects[4]}
-          style={{ flex: 288, minWidth: 0 }}
-        />
-
-        {/* Right column — 1 experiment */}
-        <ExperimentCard
-          {...projects[5]}
-          style={{ flex: 461, minWidth: 0, borderRight: "none", borderRadius: "4px 0 0 4px" }}
-        />
+        <ExperimentCard {...projects[4]} style={{ flex: 288, minWidth: 0 }} />
+        <ExperimentCard {...projects[5]} style={{ flex: 461, minWidth: 0, borderRight: "none", borderRadius: "4px 0 0 4px" }} />
       </div>
+
+      {/* Start Modal */}
+      <AnimatePresence>
+        {showModal && <StartModal onClose={() => setShowModal(false)} />}
+      </AnimatePresence>
     </div>
   );
 }

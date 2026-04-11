@@ -22,6 +22,8 @@ export interface WritingParams {
   verblassenDelay: number;
   verblassenSpeed: number;
   spiralModus: boolean;
+  textAppearsRandom: boolean;
+  randomMode: "words" | "sentences";
 }
 
 export const DEFAULT_PARAMS: WritingParams = {
@@ -43,6 +45,8 @@ export const DEFAULT_PARAMS: WritingParams = {
   verblassenDelay: 120,
   verblassenSpeed: 100,
   spiralModus: false,
+  textAppearsRandom: false,
+  randomMode: "words",
 };
 
 interface ParamPanelProps {
@@ -992,6 +996,69 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
                             <br />
                             Der Text formt sich im Raum.
                           </p>
+                        </div>
+
+                        <div style={{ borderTop: "1.5px dashed #9a9daa" }} />
+
+                        {/* ── Text appears Random ── */}
+                        <div className="flex flex-col gap-[8px]">
+                          <div className="flex items-center justify-between" style={{ height: "36px" }}>
+                            <div className="flex items-center gap-[6px]">
+                              <span style={{ fontFamily: FONT_SEMI, fontSize: "11.52px", color: "#313642", letterSpacing: "0.1152px" }}>
+                                Text appears Random
+                              </span>
+                              <div
+                                className="flex items-center cursor-help"
+                                onMouseEnter={(e) => showTooltip(e.currentTarget, "Wörter oder Sätze erscheinen\nan zufälligen Positionen\nim Raum.")}
+                                onMouseLeave={hideTooltip}
+                              >
+                                <Info size={11} style={{ color: "#B0B3BC" }} />
+                              </div>
+                            </div>
+                            <PillSwitch
+                              checked={params.textAppearsRandom}
+                              onChange={(v) => update("textAppearsRandom", v)}
+                            />
+                          </div>
+
+                          <AnimatePresence>
+                            {params.textAppearsRandom && (
+                              <motion.div
+                                key="random-mode"
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: "auto" }}
+                                exit={{ opacity: 0, height: 0 }}
+                                transition={{ duration: 0.15 }}
+                                style={{ overflow: "hidden" }}
+                                className="flex flex-col gap-[8px]"
+                              >
+                                <div className="flex gap-[8px]">
+                                  {(["words", "sentences"] as const).map((mode) => {
+                                    const label = mode === "words" ? "Wörter" : "Sätze";
+                                    const active = params.randomMode === mode;
+                                    return (
+                                      <button
+                                        key={mode}
+                                        onClick={() => update("randomMode", mode)}
+                                        className="flex-1 cursor-pointer flex items-center justify-center"
+                                        style={{
+                                          height: "29px",
+                                          borderRadius: "100px",
+                                          backgroundColor: active ? "#313642" : "transparent",
+                                          border: active ? "1.5px solid transparent" : "1.5px dashed #9a9daa",
+                                          outline: "none",
+                                        }}
+                                      >
+                                        <span style={{ fontFamily: FONT_REG, fontSize: "10.88px", color: active ? "#ecedf0" : "#9a9daa", letterSpacing: "0.3264px" }}>
+                                          {label}
+                                        </span>
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
                         </div>
 
                       </motion.div>

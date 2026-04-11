@@ -34,6 +34,8 @@ interface WritingZoneProps {
   verblassenDelay?: number;
   verblassenSpeed?: number; // 10–500, default 100
   spiralModus?: boolean;
+  textAppearsRandom?: boolean;
+  randomMode?: "words" | "sentences";
 }
 
 // ── Pure helpers ──────────────────────────────────────────────────────────────
@@ -230,6 +232,299 @@ function computeGroups(pos: Position[]): { sid: number[]; wid: number[] } {
     if (ch === "." || ch === "!" || ch === "?" || ch === "\n") s++;
   }
   return { sid, wid };
+}
+
+// ── RandomTextZone ────────────────────────────────────────────────────────────
+
+const FILLER_WORDS_SET = new Set([
+  "wie","und","oder","aber","denn","weil","dass","als","wenn",
+  "der","die","das","ein","eine","einer","einem","einen",
+  "ist","sind","war","hat","haben","wird","werden","wurde",
+  "ich","du","er","sie","es","wir","ihr","man",
+  "in","an","auf","für","mit","von","zu","bei","nach",
+  "so","da","ja","noch","auch","nur","schon","doch","mal",
+  "the","a","is","are","was","were","be","been",
+  "and","or","but","if","of","to","at","on","for",
+  "it","he","she","we","they","i","you","my","his","her",
+  "not","no","do","did","has","had","can","will",
+  "this","that","then","than","just","also","very","really",
+]);
+
+interface FloatingChunk {
+  id: number; text: string;
+  x: number; y: number; z: number;
+  rotateX: number; rotateY: number; rotateZ: number;
+  vx: number; vy: number; vz: number;
+  released: boolean;
+  isFiller: boolean; fillerTimer: number; fillerMaxTime: number; fadeOut: number;
+  baseSpeed: number;
+  opacityPhase: number; opacitySpeed: number; opacityMin: number;
+  ghostTimer: number; ghostCooldown: number; ghostDuration: number; isGhost: boolean;
+  wanderAngle: number; wanderAngleZ: number;
+}
+
+const R_PERSP = 900;
+const R_MIN_Z = -600;
+const R_MAX_Z = 200;
+
+function rnd(min: number, max: number) { return Math.random() * (max - min) + min; }
+function rDepthOpacity(z: number) { return 0.25 + ((z - R_MIN_Z) / (R_MAX_Z - R_MIN_Z)) * 0.75; }
+
+interface RandomTextZoneProps {
+  textColor: string;
+  randomMode: "words" | "sentences";
+}
+
+function RandomTextZone({ textColor, randomMode }: RandomTextZoneProps) {
+  const wrapRef    = useRef<HTMLDivElement>(null);
+  const chunksRef  = useRef<FloatingChunk[]>([]);
+  const curChunkRef = useRef<FloatingChunk | null>(null);
+  const curTextRef  = useRef("");
+  const nextIdRef   = useRef(0);
+  const rafRef      = useRef(0);
+  const elMapRef    = useRef<Map<number, HTMLDivElement>>(new Map());
+  const [, tick]    = useState(0);
+  const lastTRef    = useRef(0);
+  const modeRef     = useRef(randomMode);
+
+  useLayoutEffect(() => { modeRef.current = randomMode; }, [randomMode]);
+
+  const newChunk = useCallback(() => {
+    const el = wrapRef.current;
+    if (!el) return null;
+    const { width: w, height: h } = el.getBoundingClientRect();
+    const z = rnd(R_MIN_Z * 0.4, R_MAX_Z * 0.6);
+    const s = R_PERSP / (R_PERSP - z);
+    const c: FloatingChunk = {
+      id: nextIdRef.current++, text: "",
+      x: rnd(-w / s * 0.35, w / s * 0.35),
+      y: rnd(-h / s * 0.35, h / s * 0.35),
+      z,
+      rotateX: rnd(-8, 8), rotateY: rnd(-12, 12), rotateZ: rnd(-3, 3),
+      vx: 0, vy: 0, vz: 0,
+      released: false,
+      isFiller: false, fillerTimer: 0, fillerMaxTime: rnd(5, 14), fadeOut: 1,
+      baseSpeed: rnd(0.2, 0.6),
+      opacityPhase: rnd(0, Math.PI * 2), opacitySpeed: rnd(0.08, 0.3), opacityMin: rnd(0.4, 0.75),
+      ghostTimer: 0, ghostCooldown: rnd(10, 35), ghostDuration: rnd(1.5, 5), isGhost: false,
+      wanderAngle: rnd(0, Math.PI * 2), wanderAngleZ: rnd(0, Math.PI * 2),
+    };
+    curChunkRef.current = c;
+    chunksRef.current.push(c);
+    tick(n => n + 1);
+    return c;
+  }, []);
+
+  const releaseChunk = useCallback(() => {
+    const c = curChunkRef.current;
+    if (!c || !c.text.trim()) {
+      if (c) chunksRef.current = chunksRef.current.filter(x => x.id !== c.id);
+      curChunkRef.current = null;
+      curTextRef.current  = "";
+      return;
+    }
+    c.text     = c.text.trim();
+    c.released = true;
+    c.isFiller = FILLER_WORDS_SET.has(c.text.toLowerCase());
+    curChunkRef.current = null;
+    curTextRef.current  = "";
+    tick(n => n + 1);
+  }, []);
+
+  // keyboard
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const mode = modeRef.current;
+
+      if (e.key === " " || e.key === "Enter") {
+        e.preventDefault();
+        if (mode === "sentences") {
+          if (e.key === " ") {
+            if (!curChunkRef.current) newChunk();
+            if (curChunkRef.current) {
+              curTextRef.current += "\u00A0";
+              curChunkRef.current.text = curTextRef.current;
+              tick(n => n + 1);
+            }
+          } else {
+            releaseChunk();
+          }
+        } else {
+          releaseChunk();
+          if (e.key === " ") newChunk();
+        }
+        return;
+      }
+
+      if (e.key === "Backspace") {
+        e.preventDefault();
+        if (curChunkRef.current && curTextRef.current.length > 0) {
+          curTextRef.current = curTextRef.current.slice(0, -1);
+          curChunkRef.current.text = curTextRef.current;
+          tick(n => n + 1);
+        }
+        return;
+      }
+
+      if (e.key.length === 1) {
+        e.preventDefault();
+        if (!curChunkRef.current) newChunk();
+        if (curChunkRef.current) {
+          curTextRef.current += e.key;
+          curChunkRef.current.text = curTextRef.current;
+          tick(n => n + 1);
+        }
+        if (mode === "sentences" && (e.key === "." || e.key === "!" || e.key === "?")) {
+          releaseChunk();
+        }
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [newChunk, releaseChunk]);
+
+  // animation loop
+  useEffect(() => {
+    const loop = (time: number) => {
+      if (!lastTRef.current) lastTRef.current = time;
+      const dt = Math.min((time - lastTRef.current) / 1000, 0.1);
+      lastTRef.current = time;
+
+      const wrap = wrapRef.current;
+      const w = wrap ? wrap.getBoundingClientRect().width  : 800;
+      const h = wrap ? wrap.getBoundingClientRect().height : 600;
+      const DAMP = 0.985;
+      let cleanup = false;
+
+      for (const c of chunksRef.current) {
+        if (!c.released) continue;
+        c.wanderAngle  += rnd(-0.3, 0.3) * dt;
+        c.wanderAngleZ += rnd(-0.2, 0.2) * dt;
+        const ws = c.baseSpeed * 0.4;
+        c.vx += Math.cos(c.wanderAngle)  * ws * dt;
+        c.vy += Math.sin(c.wanderAngle)  * ws * dt;
+        c.vz += Math.sin(c.wanderAngleZ) * ws * 0.15 * dt;
+        c.vx *= DAMP; c.vy *= DAMP; c.vz *= DAMP;
+        c.x += c.vx * dt * 6; c.y += c.vy * dt * 6; c.z += c.vz * dt * 3;
+
+        const s  = R_PERSP / (R_PERSP - c.z);
+        const sx = c.x * s, sy = c.y * s;
+        const mx = w * 0.44, my = h * 0.42;
+        if (sx >  mx) c.vx -= (sx - mx) * 0.002;
+        if (sx < -mx) c.vx -= (sx + mx) * 0.002;
+        if (sy >  my) c.vy -= (sy - my) * 0.002;
+        if (sy < -my) c.vy -= (sy + my) * 0.002;
+        c.z = Math.max(R_MIN_Z, Math.min(R_MAX_Z, c.z));
+        if (c.z <= R_MIN_Z) c.vz =  Math.abs(c.vz) * 0.3;
+        if (c.z >= R_MAX_Z) c.vz = -Math.abs(c.vz) * 0.3;
+
+        c.opacityPhase += c.opacitySpeed * dt;
+        const breathe = c.opacityMin + (1 - c.opacityMin) * (0.5 + 0.5 * Math.sin(c.opacityPhase));
+
+        if (!c.isGhost) {
+          c.ghostTimer += dt;
+          if (c.ghostTimer >= c.ghostCooldown) { c.isGhost = true; c.ghostTimer = 0; }
+        } else {
+          c.ghostTimer += dt;
+          if (c.ghostTimer >= c.ghostDuration) {
+            c.isGhost = false; c.ghostTimer = 0;
+            c.ghostCooldown = rnd(8, 30); c.ghostDuration = rnd(1.5, 5);
+          }
+        }
+        const ghost = c.isGhost ? Math.max(0, 1 - c.ghostTimer / 0.8) : Math.min(1, c.ghostTimer / 0.8);
+
+        if (c.isFiller) {
+          c.fillerTimer += dt;
+          if (c.fillerTimer > c.fillerMaxTime) {
+            c.fadeOut -= dt * 0.3;
+            if (c.fadeOut <= 0) { c.fadeOut = 0; cleanup = true; }
+          }
+        }
+
+        const domEl = elMapRef.current.get(c.id);
+        if (domEl) {
+          const op = rDepthOpacity(c.z) * c.fadeOut * breathe * ghost;
+          domEl.style.transform = `translate(-50%,-50%) translate(${sx}px,${sy}px) scale(${s}) rotateX(${c.rotateX}deg) rotateY(${c.rotateY}deg) rotateZ(${c.rotateZ}deg)`;
+          domEl.style.opacity   = `${Math.max(0, op)}`;
+          domEl.style.filter    = c.z < -200 ? `blur(${((-200 - c.z) / 200) * 1.5}px)` : "none";
+        }
+      }
+
+      // current (not yet released)
+      for (const c of chunksRef.current) {
+        if (c.released) continue;
+        const domEl = elMapRef.current.get(c.id);
+        if (domEl) {
+          const s  = R_PERSP / (R_PERSP - c.z);
+          domEl.style.transform = `translate(-50%,-50%) translate(${c.x * s}px,${c.y * s}px) scale(${s}) rotateX(${c.rotateX}deg) rotateY(${c.rotateY}deg) rotateZ(${c.rotateZ}deg)`;
+          domEl.style.opacity   = `${rDepthOpacity(c.z)}`;
+          domEl.style.filter    = "none";
+        }
+      }
+
+      if (cleanup) {
+        const gone = chunksRef.current.filter(c => c.isFiller && c.fadeOut <= 0);
+        for (const g of gone) elMapRef.current.delete(g.id);
+        chunksRef.current = chunksRef.current.filter(c => !(c.isFiller && c.fadeOut <= 0));
+        tick(n => n + 1);
+      }
+      rafRef.current = requestAnimationFrame(loop);
+    };
+    rafRef.current = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, []);
+
+  const chunks = chunksRef.current;
+  const [r, g, b] = parseRgb(textColor);
+
+  return (
+    <div
+      ref={wrapRef}
+      style={{ position: "absolute", inset: 0, perspective: `${R_PERSP}px`, perspectiveOrigin: "50% 50%", overflow: "hidden" }}
+    >
+      <div style={{ position: "absolute", inset: 0, transformStyle: "preserve-3d" }}>
+        {chunks.map(c => (
+          <div
+            key={c.id}
+            ref={el => { if (el) elMapRef.current.set(c.id, el); }}
+            style={{
+              position: "absolute", left: "50%", top: "50%",
+              color: `rgb(${r},${g},${b})`,
+              fontFamily: "'IBM Plex Mono', 'Courier New', monospace",
+              fontSize: "clamp(0.9rem, 2vw, 1.15rem)",
+              fontWeight: 400, letterSpacing: "0.02em",
+              whiteSpace: "nowrap", userSelect: "none", pointerEvents: "none",
+              willChange: "transform, opacity", transformStyle: "preserve-3d",
+            }}
+          >
+            {c.text}
+            {!c.released && (
+              <span style={{
+                display: "inline-block", width: "2px", height: "1.1em",
+                background: `rgb(${r},${g},${b})`,
+                marginLeft: "1px", verticalAlign: "text-bottom",
+                animation: "cursorBlink 1s step-end infinite",
+              }} />
+            )}
+          </div>
+        ))}
+      </div>
+      {chunks.length === 0 && (
+        <div style={{
+          position: "absolute", left: "50%", top: "50%",
+          transform: "translate(-50%, -50%)", pointerEvents: "none",
+          fontFamily: "'IBM Plex Mono', 'Courier New', monospace",
+          fontSize: "clamp(0.9rem, 2vw, 1.15rem)",
+          color: `rgb(${r},${g},${b})`, opacity: 0.25,
+          letterSpacing: "0.1em", whiteSpace: "nowrap",
+          fontStyle: "italic",
+        }}>
+          Fang einfach an zu schreiben…
+        </div>
+      )}
+    </div>
+  );
 }
 
 // ── SpiralCanvas ──────────────────────────────────────────────────────────────
@@ -470,6 +765,8 @@ export function WritingZone({
   verblassenDelay    = 120,
   verblassenSpeed    = 100,
   spiralModus        = false,
+  textAppearsRandom  = false,
+  randomMode         = "words" as const,
 }: WritingZoneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const cursorDomRef = useRef<HTMLSpanElement>(null);
@@ -764,6 +1061,7 @@ export function WritingZone({
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (textAppearsRandom) return;
       if (e.key === "Tab") return;
       if (e.ctrlKey || e.metaKey || e.altKey) return;
       e.preventDefault();
@@ -782,7 +1080,7 @@ export function WritingZone({
       lkpt.current = now;
       onUpdate(newPos, cursor + 1);
     },
-    [positions, cursor, applyBackspace, onUpdate, lkpt]
+    [positions, cursor, applyBackspace, onUpdate, lkpt, textAppearsRandom]
   );
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -947,6 +1245,28 @@ export function WritingZone({
   const nodes = spiralModus ? [] : buildNodes();
 
   // ── JSX ──────────────────────────────────────────────────────────────────
+
+  if (textAppearsRandom) {
+    return (
+      <div
+        className="flex-1 relative transition-all duration-300"
+        style={{ paddingRight: panelOpen ? "296px" : "0px" }}
+      >
+        <div
+          ref={containerRef}
+          tabIndex={0}
+          onClick={() => containerRef.current?.focus()}
+          className="absolute inset-0 outline-none cursor-text"
+          style={{ caretColor: "transparent" }}
+        >
+          <RandomTextZone
+            textColor={textColor}
+            randomMode={randomMode}
+          />
+        </div>
+      </div>
+    );
+  }
 
   if (spiralModus) {
     return (

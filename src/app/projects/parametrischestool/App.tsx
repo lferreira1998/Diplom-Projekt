@@ -464,6 +464,8 @@ export default function App() {
             verblassenDelay={params.verblassenDelay}
             verblassenSpeed={params.verblassenSpeed}
             spiralModus={params.spiralModus}
+            textAppearsRandom={params.textAppearsRandom}
+            randomMode={params.randomMode}
           />
         </div>
 

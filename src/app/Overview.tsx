@@ -51,10 +51,22 @@ function DriftingToolNames({ onNavigate }: { onNavigate: (path: string) => void 
   const chunksRef   = useRef<DriftChunk[]>([]);
   const elMapRef    = useRef<Map<number, HTMLDivElement>>(new Map());
   const hoveredRef  = useRef<number | null>(null);
+  const cursorRef   = useRef<HTMLDivElement>(null);
   const rafRef      = useRef(0);
   const lastTRef    = useRef(0);
   const [, tick]    = useState(0);
   const initRef     = useRef(false);
+
+  // track mouse for custom cursor
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      if (cursorRef.current) {
+        cursorRef.current.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
+      }
+    };
+    window.addEventListener("mousemove", onMove);
+    return () => window.removeEventListener("mousemove", onMove);
+  }, []);
 
   // initialise chunks once the wrapper has dimensions
   useEffect(() => {
@@ -152,6 +164,11 @@ function DriftingToolNames({ onNavigate }: { onNavigate: (path: string) => void 
           domEl.style.color     = hovered ? NAVY : `rgba(49,54,66,1)`;
         }
       }
+      // show/hide custom cursor based on hover
+      if (cursorRef.current) {
+        cursorRef.current.style.opacity = hoveredRef.current !== null ? "1" : "0";
+      }
+
       rafRef.current = requestAnimationFrame(loop);
     };
     rafRef.current = requestAnimationFrame(loop);
@@ -161,6 +178,29 @@ function DriftingToolNames({ onNavigate }: { onNavigate: (path: string) => void 
   const chunks = chunksRef.current;
 
   return (
+    <>
+    {createPortal(
+      <div
+        ref={cursorRef}
+        style={{
+          position: "fixed", top: 0, left: 0,
+          transform: "translate(-200px, -200px)",
+          pointerEvents: "none", zIndex: 9999,
+          opacity: 0, transition: "opacity 0.15s",
+          userSelect: "none",
+        }}
+      >
+        <div style={{ transform: "translate(-50%, -50%)" }}>
+          <span style={{
+            fontFamily: FONT_UI, fontSize: "11px", fontWeight: 600,
+            color: NAVY, letterSpacing: "0.08em", whiteSpace: "nowrap",
+          }}>
+            Think & Write
+          </span>
+        </div>
+      </div>,
+      document.body
+    )}
     <div
       ref={wrapRef}
       style={{
@@ -198,52 +238,7 @@ function DriftingToolNames({ onNavigate }: { onNavigate: (path: string) => void 
         ))}
       </div>
     </div>
-  );
-}
-
-// ── Custom cursor ─────────────────────────────────────────────────────────────
-
-function CustomCursor() {
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const onMove = (e: MouseEvent) => {
-      if (ref.current) {
-        ref.current.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
-      }
-    };
-    window.addEventListener("mousemove", onMove);
-    return () => window.removeEventListener("mousemove", onMove);
-  }, []);
-
-  return createPortal(
-    <div
-      ref={ref}
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        transform: "translate(-200px, -200px)",
-        pointerEvents: "none",
-        zIndex: 9999,
-        userSelect: "none",
-      }}
-    >
-      {/* inner div centers the text on the exact cursor point */}
-      <div style={{ transform: "translate(-50%, -50%)" }}>
-        <span style={{
-          fontFamily: FONT_UI,
-          fontSize: "11px",
-          fontWeight: 600,
-          color: NAVY,
-          letterSpacing: "0.08em",
-          whiteSpace: "nowrap",
-        }}>
-          Think & Write
-        </span>
-      </div>
-    </div>,
-    document.body
+    </>
   );
 }
 
@@ -364,7 +359,7 @@ function StartModal({ onClose }: { onClose: () => void }) {
           onClick={() => navigate("/parametrisches-tool")}
           style={{
             width: "100%", height: "29px", backgroundColor: "#313642", color: "#ECEDF0",
-            border: "none", borderRadius: "100px", cursor: "none",
+            border: "none", borderRadius: "100px", cursor: "pointer",
             fontFamily: FONT_UI, fontSize: "10.88px", fontWeight: 600, letterSpacing: "0.3264px",
           }}
         >
@@ -392,7 +387,6 @@ export default function Overview() {
           height: "100vh",
           position: "relative",
           overflow: "hidden",
-          cursor: "none",
         }}
       >
         {/* ── Drifting tool names ── */}
@@ -495,7 +489,7 @@ export default function Overview() {
               alignItems: "center",
               padding: "16px 24px",
               boxSizing: "border-box",
-              cursor: "none",
+              cursor: "pointer",
             }}
           >
             <p style={{
@@ -532,7 +526,7 @@ export default function Overview() {
             onClick={() => setShowModal(true)}
             style={{
               position: "relative",
-              cursor: "none",
+              cursor: "pointer",
               width: "175.574px",
               height: "238.844px",
               flexShrink: 0,
@@ -605,7 +599,7 @@ export default function Overview() {
               justifyContent: "center",
               padding: "16px 24px",
               boxSizing: "border-box",
-              cursor: "none",
+              cursor: "pointer",
               width: "175.574px",
             }}
           >

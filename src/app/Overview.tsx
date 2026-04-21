@@ -23,6 +23,8 @@ const TOOLS = [
   { label: "Drifting Following Words",    path: "/drifting-following-words"  },
   { label: "...into thin air",            path: "/drifting-disappearing-words" },
   { label: "...off the grid",             path: "https://lferreira1998.github.io/Writinglines1/" },
+  { label: "...in a spiral",              path: "https://lferreira1998.github.io/9spiraltextvisualization1/" },
+  { label: "...randomly & spatially",     path: "https://lferreira1998.github.io/83dspacethoughtvisualizationexperiencecopy/" },
 ];
 
 // ── Drift physics ─────────────────────────────────────────────────────────────

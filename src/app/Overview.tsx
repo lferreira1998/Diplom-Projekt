@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from "motion/react";
 
 // ── Assets ────────────────────────────────────────────────────────────────────
 
-const IMG_BG        = "https://www.figma.com/api/mcp/asset/b9add7e5-cd3b-4c0d-b538-932d110d6976";
 const IMG_RECTANGLE = "https://www.figma.com/api/mcp/asset/2305d040-b7cb-4629-8012-61aeb2ff6761";
 const IMG_VECTOR    = "https://www.figma.com/api/mcp/asset/4e65b27f-b35c-4131-a8a5-a53fea26f2f6";
 
@@ -346,31 +345,6 @@ export default function Overview() {
           overflow: "hidden",
         }}
       >
-        {/* ── Background screenshot ── */}
-        <div
-          style={{
-            position: "absolute",
-            width: "1406.299px",
-            height: "882.078px",
-            left: "82.13px",
-            top: "50%",
-            transform: "translateY(-50%) translateY(12.04px)",
-            pointerEvents: "none",
-          }}
-        >
-          <img
-            alt=""
-            src={IMG_BG}
-            style={{
-              position: "absolute", inset: 0,
-              width: "100%", height: "100%",
-              objectFit: "cover",
-              mixBlendMode: "darken",
-              pointerEvents: "none",
-            }}
-          />
-        </div>
-
         {/* ── Drifting tool names ── */}
         <DriftingToolNames onNavigate={handleNavigate} />
 

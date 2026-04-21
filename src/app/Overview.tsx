@@ -105,7 +105,7 @@ function DriftingToolNames({ onNavigate }: { onNavigate: (path: string) => void 
             rotateY:      rnd(-14, 14),
             rotateZ:      rnd(-7, 7),
             vx: 0, vy: 0, vz: 0,
-            baseSpeed:    rnd(0.15, 0.45),
+            baseSpeed:    rnd(0.4, 0.9),
             wanderAngle:  rnd(0, Math.PI * 2),
             wanderAngleZ: rnd(0, Math.PI * 2),
             baseFontSize: rnd(1.03, 1.8),
@@ -142,12 +142,12 @@ function DriftingToolNames({ onNavigate }: { onNavigate: (path: string) => void 
         if (!hovered) {
           c.wanderAngle  += rnd(-0.3, 0.3) * dt;
           c.wanderAngleZ += rnd(-0.2, 0.2) * dt;
-          const ws = c.baseSpeed * 0.62;
+          const ws = c.baseSpeed * 1.1;
           c.vx += Math.cos(c.wanderAngle)  * ws * dt;
           c.vy += Math.sin(c.wanderAngle)  * ws * dt;
           c.vz += Math.sin(c.wanderAngleZ) * ws * 0.12 * dt;
           c.vx *= DAMP; c.vy *= DAMP; c.vz *= DAMP;
-          c.x += c.vx * dt * 6; c.y += c.vy * dt * 6; c.z += c.vz * dt * 3;
+          c.x += c.vx * dt * 10; c.y += c.vy * dt * 10; c.z += c.vz * dt * 5;
 
           const s  = R_PERSP / (R_PERSP - c.z);
           const sx = c.x * s, sy = c.y * s;

@@ -573,11 +573,9 @@ export default function Overview() {
               width: "175.574px",
               height: "238.844px",
               flexShrink: 0,
-              opacity: 0.5,
-              backdropFilter: "blur(4px)",
             }}
           >
-            {/* Background image */}
+            {/* Background image — opacity only here, text stays full */}
             <img
               alt=""
               src={IMG_RECTANGLE}
@@ -585,6 +583,7 @@ export default function Overview() {
                 position: "absolute", inset: 0,
                 width: "100%", height: "100%",
                 display: "block",
+                opacity: 0.5,
               }}
             />
 

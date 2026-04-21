@@ -51,7 +51,7 @@ interface DriftChunk {
 
 // ── DriftingToolNames ─────────────────────────────────────────────────────────
 
-function DriftingToolNames({ onNavigate }: { onNavigate: (path: string) => void }) {
+function DriftingToolNames({ onNavigate, uiHoveredRef }: { onNavigate: (path: string) => void; uiHoveredRef: React.MutableRefObject<boolean> }) {
   const wrapRef     = useRef<HTMLDivElement>(null);
   const chunksRef   = useRef<DriftChunk[]>([]);
   const elMapRef    = useRef<Map<number, HTMLDivElement>>(new Map());
@@ -61,12 +61,14 @@ function DriftingToolNames({ onNavigate }: { onNavigate: (path: string) => void 
   const tiltRef      = useRef({ x: 0, y: 0 });
   const rafRef       = useRef(0);
   const lastTRef     = useRef(0);
+  const hasMovedRef  = useRef(false);
   const [, tick]     = useState(0);
   const initRef      = useRef(false);
 
   // track mouse for custom cursor + tilt
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
+      hasMovedRef.current = true;
       if (cursorRef.current) {
         cursorRef.current.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
       }
@@ -209,9 +211,9 @@ function DriftingToolNames({ onNavigate }: { onNavigate: (path: string) => void 
         }
       }
 
-      // show/hide custom cursor based on hover
+      // show cursor always; hide only when over UI panels or before first mouse move
       if (cursorRef.current) {
-        cursorRef.current.style.opacity = hoveredRef.current !== null ? "1" : "0";
+        cursorRef.current.style.opacity = (hasMovedRef.current && !uiHoveredRef.current) ? "1" : "0";
       }
 
       rafRef.current = requestAnimationFrame(loop);
@@ -422,6 +424,7 @@ export default function Overview() {
   const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
   const handleNavigate = useCallback((path: string) => navigate(path), [navigate]);
+  const uiHoveredRef = useRef(false);
 
   return (
     <>
@@ -432,13 +435,16 @@ export default function Overview() {
           height: "100vh",
           position: "relative",
           overflow: "hidden",
+          cursor: "none",
         }}
       >
         {/* ── Drifting tool names ── */}
-        <DriftingToolNames onNavigate={handleNavigate} />
+        <DriftingToolNames onNavigate={handleNavigate} uiHoveredRef={uiHoveredRef} />
 
         {/* ── Top-left panel ── */}
         <div
+          onMouseEnter={() => { uiHoveredRef.current = true; }}
+          onMouseLeave={() => { uiHoveredRef.current = false; }}
           style={{
             position: "absolute",
             top: 0, left: 0,
@@ -449,6 +455,7 @@ export default function Overview() {
             width: "307px",
             boxSizing: "border-box",
             zIndex: 10,
+            cursor: "default",
           }}
         >
           {/* Logo card */}
@@ -557,6 +564,8 @@ export default function Overview() {
 
         {/* ── Bottom-right CTA ── */}
         <div
+          onMouseEnter={() => { uiHoveredRef.current = true; }}
+          onMouseLeave={() => { uiHoveredRef.current = false; }}
           style={{
             position: "absolute",
             right: 0,
@@ -567,6 +576,7 @@ export default function Overview() {
             gap: "16px",
             alignItems: "flex-start",
             zIndex: 10,
+            cursor: "default",
           }}
         >
           {/* Create your own — grid overlay */}

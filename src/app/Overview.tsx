@@ -68,7 +68,7 @@ function DriftingToolNames({ onNavigate }: { onNavigate: (path: string) => void 
 
       const chunks: DriftChunk[] = [];
       let id = 0;
-      for (let rep = 0; rep < 4; rep++) {
+      for (let rep = 0; rep < 2; rep++) {
         for (const t of TOOLS) {
           const z      = rnd(R_MIN_Z * 0.6, R_MAX_Z * 0.75);
           const s      = R_PERSP / (R_PERSP - z);

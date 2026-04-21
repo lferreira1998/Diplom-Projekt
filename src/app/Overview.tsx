@@ -72,13 +72,13 @@ function DriftingToolNames({ onNavigate }: { onNavigate: (path: string) => void 
         for (const t of TOOLS) {
           const z      = rnd(R_MIN_Z * 0.6, R_MAX_Z * 0.75);
           const s      = R_PERSP / (R_PERSP - z);
-          const xRange = w / s * 0.46;
-          const yRange = h / s * 0.44;
+          const xRange = w / s * 0.48;
+          const yRange = h / s * 0.47;
           chunks.push({
             id:           id++,
             label:        t.label,
             path:         t.path,
-            x:            rnd(-xRange * 0.6, xRange * 0.6),
+            x:            rnd(-xRange, xRange),
             y:            rnd(-yRange, yRange),
             z,
             rotateX:      rnd(-9, 9),
@@ -126,7 +126,7 @@ function DriftingToolNames({ onNavigate }: { onNavigate: (path: string) => void 
 
           const s  = R_PERSP / (R_PERSP - c.z);
           const sx = c.x * s, sy = c.y * s;
-          const mx = w * 0.44, my = h * 0.43;
+          const mx = w * 0.48, my = h * 0.47;
           if (sx >  mx) c.vx -= (sx - mx) * 0.002;
           if (sx < -mx) c.vx -= (sx + mx) * 0.002;
           if (sy >  my) c.vy -= (sy - my) * 0.002;

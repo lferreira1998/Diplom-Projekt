@@ -620,8 +620,6 @@ export default function Overview() {
         </div>
       </div>
 
-      <CustomCursor />
-
       <AnimatePresence>
         {showModal && <StartModal onClose={() => setShowModal(false)} />}
       </AnimatePresence>

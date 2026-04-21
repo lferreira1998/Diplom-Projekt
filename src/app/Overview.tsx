@@ -20,12 +20,13 @@ const TOOLS = [
   { label: "...blind & then witness",     path: "/one-word-replay"           },
   { label: "...uninvited thoughts",       path: "/uninvited-thoughts"        },
   { label: "...with visible corrections", path: "/loschen-korrigieren"       },
-  { label: "Drifting Following Words",    path: "/drifting-following-words"  },
+  { label: "...fleeting",                 path: "/drifting-following-words"  },
   { label: "...into thin air",            path: "/drifting-disappearing-words" },
   { label: "...off the grid",             path: "https://lferreira1998.github.io/Writinglines1/" },
   { label: "...in a spiral",              path: "https://lferreira1998.github.io/9spiraltextvisualization1/" },
   { label: "...randomly & spatially",     path: "https://lferreira1998.github.io/83dspacethoughtvisualizationexperiencecopy/" },
   { label: "...anonymously in public",    path: "/anonymously-in-public" },
+  { label: "...against the clock",        path: "/visual-timer" },
 ];
 
 // ── Drift physics ─────────────────────────────────────────────────────────────

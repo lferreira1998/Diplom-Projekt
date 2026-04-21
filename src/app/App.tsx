@@ -8,6 +8,7 @@ import DriftingFollowingWords from "./projects/driftingfollowing/App";
 import DriftingDisappearingWords from "./projects/driftingdisappearing/App";
 import ParametrischesTool from "./projects/parametrischestool/App";
 import AnonymouslyInPublic from "./projects/anonymouslyinpublic/App";
+import VisualTimer from "./projects/visualtimer/App";
 
 export default function App() {
   return (
@@ -21,6 +22,7 @@ export default function App() {
       <Route path="/drifting-disappearing-words" element={<DriftingDisappearingWords />} />
       <Route path="/parametrisches-tool" element={<ParametrischesTool />} />
       <Route path="/anonymously-in-public" element={<AnonymouslyInPublic />} />
+      <Route path="/visual-timer" element={<VisualTimer />} />
     </Routes>
   );
 }

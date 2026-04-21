@@ -16,12 +16,12 @@ const NAVY         = "#11112d";
 const BORDER_NAVY  = "1px dashed #11112d";
 
 const TOOLS = [
-  { label: "Don't Stop Writing",       path: "/dont-stop-writing"         },
-  { label: "One-Word Replay",           path: "/one-word-replay"           },
-  { label: "Uninvited Thoughts",        path: "/uninvited-thoughts"        },
-  { label: "Löschen & Korrigieren",     path: "/loschen-korrigieren"       },
-  { label: "Drifting Following Words",  path: "/drifting-following-words"  },
-  { label: "Drifting Disappearing Words", path: "/drifting-disappearing-words" },
+  { label: "...without stopping",         path: "/dont-stop-writing"         },
+  { label: "...blind & then witness",     path: "/one-word-replay"           },
+  { label: "...uninvited thoughts",       path: "/uninvited-thoughts"        },
+  { label: "...with visible corrections", path: "/loschen-korrigieren"       },
+  { label: "Drifting Following Words",    path: "/drifting-following-words"  },
+  { label: "...into thin air",            path: "/drifting-disappearing-words" },
 ];
 
 // ── Drift physics ─────────────────────────────────────────────────────────────
@@ -235,7 +235,7 @@ function DriftingToolNames({ onNavigate }: { onNavigate: (path: string) => void 
             fontFamily: FONT_UI, fontSize: "11px", fontWeight: 600,
             color: NAVY, letterSpacing: "0.08em", whiteSpace: "nowrap",
           }}>
-            Think & Write
+            think & write...
           </span>
         </div>
       </div>,

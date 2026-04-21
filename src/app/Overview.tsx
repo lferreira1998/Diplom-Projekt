@@ -186,7 +186,7 @@ function DriftingToolNames({ onNavigate }: { onNavigate: (path: string) => void 
               whiteSpace: "nowrap",
               userSelect: "none",
               pointerEvents: "all",
-              cursor: "pointer",
+              cursor: "none",
               willChange: "transform, opacity",
               transformStyle: "preserve-3d",
               color: "rgba(49,54,66,1)",
@@ -209,7 +209,7 @@ function CustomCursor() {
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
       if (ref.current) {
-        ref.current.style.transform = `translate(${e.clientX + 14}px, ${e.clientY - 8}px)`;
+        ref.current.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
       }
     };
     window.addEventListener("mousemove", onMove);
@@ -229,16 +229,19 @@ function CustomCursor() {
         userSelect: "none",
       }}
     >
-      <span style={{
-        fontFamily: FONT_UI,
-        fontSize: "11px",
-        fontWeight: 600,
-        color: NAVY,
-        letterSpacing: "0.08em",
-        whiteSpace: "nowrap",
-      }}>
-        Think & Write
-      </span>
+      {/* inner div centers the text on the exact cursor point */}
+      <div style={{ transform: "translate(-50%, -50%)" }}>
+        <span style={{
+          fontFamily: FONT_UI,
+          fontSize: "11px",
+          fontWeight: 600,
+          color: NAVY,
+          letterSpacing: "0.08em",
+          whiteSpace: "nowrap",
+        }}>
+          Think & Write
+        </span>
+      </div>
     </div>,
     document.body
   );
@@ -361,7 +364,7 @@ function StartModal({ onClose }: { onClose: () => void }) {
           onClick={() => navigate("/parametrisches-tool")}
           style={{
             width: "100%", height: "29px", backgroundColor: "#313642", color: "#ECEDF0",
-            border: "none", borderRadius: "100px", cursor: "pointer",
+            border: "none", borderRadius: "100px", cursor: "none",
             fontFamily: FONT_UI, fontSize: "10.88px", fontWeight: 600, letterSpacing: "0.3264px",
           }}
         >
@@ -492,7 +495,7 @@ export default function Overview() {
               alignItems: "center",
               padding: "16px 24px",
               boxSizing: "border-box",
-              cursor: "pointer",
+              cursor: "none",
             }}
           >
             <p style={{
@@ -529,7 +532,7 @@ export default function Overview() {
             onClick={() => setShowModal(true)}
             style={{
               position: "relative",
-              cursor: "pointer",
+              cursor: "none",
               width: "175.574px",
               height: "238.844px",
               flexShrink: 0,
@@ -602,7 +605,7 @@ export default function Overview() {
               justifyContent: "center",
               padding: "16px 24px",
               boxSizing: "border-box",
-              cursor: "pointer",
+              cursor: "none",
               width: "175.574px",
             }}
           >

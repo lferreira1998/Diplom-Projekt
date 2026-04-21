@@ -22,6 +22,7 @@ const TOOLS = [
   { label: "...with visible corrections", path: "/loschen-korrigieren"       },
   { label: "Drifting Following Words",    path: "/drifting-following-words"  },
   { label: "...into thin air",            path: "/drifting-disappearing-words" },
+  { label: "...off the grid",             path: "https://lferreira1998.github.io/Writinglines1/" },
 ];
 
 // ── Drift physics ─────────────────────────────────────────────────────────────
@@ -256,7 +257,7 @@ function DriftingToolNames({ onNavigate }: { onNavigate: (path: string) => void 
             ref={el => { if (el) elMapRef.current.set(c.id, el); }}
             onMouseEnter={() => { hoveredRef.current = c.id; }}
             onMouseLeave={() => { hoveredRef.current = null; }}
-            onClick={() => onNavigate(c.path)}
+            onClick={() => c.path.startsWith("http") ? window.open(c.path, "_blank") : onNavigate(c.path)}
             style={{
               position: "absolute", left: "50%", top: "50%",
               fontFamily: "'IBM Plex Mono', 'Courier New', monospace",

@@ -529,6 +529,7 @@ export default function Overview() {
               height: "64px",
               display: "flex",
               alignItems: "center",
+              justifyContent: "center",
               padding: "16px 24px",
               boxSizing: "border-box",
               cursor: "pointer",
@@ -572,6 +573,8 @@ export default function Overview() {
               width: "175.574px",
               height: "238.844px",
               flexShrink: 0,
+              opacity: 0.5,
+              backdropFilter: "blur(4px)",
             }}
           >
             {/* Background image */}

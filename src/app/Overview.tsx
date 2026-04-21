@@ -50,18 +50,26 @@ function DriftingToolNames({ onNavigate }: { onNavigate: (path: string) => void 
   const wrapRef     = useRef<HTMLDivElement>(null);
   const chunksRef   = useRef<DriftChunk[]>([]);
   const elMapRef    = useRef<Map<number, HTMLDivElement>>(new Map());
-  const hoveredRef  = useRef<number | null>(null);
-  const cursorRef   = useRef<HTMLDivElement>(null);
-  const rafRef      = useRef(0);
-  const lastTRef    = useRef(0);
-  const [, tick]    = useState(0);
-  const initRef     = useRef(false);
+  const hoveredRef   = useRef<number | null>(null);
+  const cursorRef    = useRef<HTMLDivElement>(null);
+  const mouseNormRef = useRef({ x: 0, y: 0 });
+  const tiltRef      = useRef({ x: 0, y: 0 });
+  const rafRef       = useRef(0);
+  const lastTRef     = useRef(0);
+  const [, tick]     = useState(0);
+  const initRef      = useRef(false);
 
-  // track mouse for custom cursor
+  // track mouse for custom cursor + tilt
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
       if (cursorRef.current) {
         cursorRef.current.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
+      }
+      const wrap = wrapRef.current;
+      if (wrap) {
+        const { left, top, width, height } = wrap.getBoundingClientRect();
+        mouseNormRef.current.x = ((e.clientX - left) / width)  * 2 - 1;
+        mouseNormRef.current.y = ((e.clientY - top)  / height) * 2 - 1;
       }
     };
     window.addEventListener("mousemove", onMove);
@@ -124,6 +132,10 @@ function DriftingToolNames({ onNavigate }: { onNavigate: (path: string) => void 
       const h = wrap ? wrap.getBoundingClientRect().height : 600;
       const chunks = chunksRef.current;
 
+      // smoothly lerp tilt toward mouse position
+      tiltRef.current.x += (mouseNormRef.current.x - tiltRef.current.x) * 0.04;
+      tiltRef.current.y += (mouseNormRef.current.y - tiltRef.current.y) * 0.04;
+
       // wander + boundary
       for (const c of chunks) {
         const hovered = hoveredRef.current === c.id;
@@ -183,7 +195,9 @@ function DriftingToolNames({ onNavigate }: { onNavigate: (path: string) => void 
           const sx  = c.x * s, sy = c.y * s;
           const op  = hovered ? 0.72 : depthOpacity(c.z);
           const blur = c.z < -200 ? ((-200 - c.z) / 200) * 1.5 : 0;
-          domEl.style.transform = `translate(-50%,-50%) translate(${sx}px,${sy}px) scale(${s}) rotateX(${c.rotateX}deg) rotateY(${c.rotateY}deg) rotateZ(${c.rotateZ}deg)`;
+          const tRX = c.rotateX - tiltRef.current.y * 12;
+          const tRY = c.rotateY + tiltRef.current.x * 16;
+          domEl.style.transform = `translate(-50%,-50%) translate(${sx}px,${sy}px) scale(${s}) rotateX(${tRX}deg) rotateY(${tRY}deg) rotateZ(${c.rotateZ}deg)`;
           domEl.style.opacity   = `${op}`;
           domEl.style.filter    = blur > 0 ? `blur(${blur}px)` : "none";
           domEl.style.color     = hovered ? NAVY : `rgba(49,54,66,1)`;

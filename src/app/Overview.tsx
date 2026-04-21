@@ -100,7 +100,7 @@ function DriftingToolNames({ onNavigate }: { onNavigate: (path: string) => void 
             baseSpeed:    rnd(0.15, 0.45),
             wanderAngle:  rnd(0, Math.PI * 2),
             wanderAngleZ: rnd(0, Math.PI * 2),
-            baseFontSize: rnd(0.72, 1.25),
+            baseFontSize: rnd(0.86, 1.5),
           });
         }
       }

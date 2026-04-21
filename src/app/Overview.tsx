@@ -499,7 +499,8 @@ export default function Overview() {
           {/* Description card */}
           <div
             style={{
-              backgroundColor: "white",
+              backgroundColor: "rgba(255,255,255,0.5)",
+              backdropFilter: "blur(4px)",
               border: BORDER_NAVY,
               padding: "16px 24px",
               boxSizing: "border-box",
@@ -522,7 +523,8 @@ export default function Overview() {
           {/* About the Project button */}
           <div
             style={{
-              backgroundColor: "white",
+              backgroundColor: "rgba(255,255,255,0.5)",
+              backdropFilter: "blur(4px)",
               border: BORDER_NAVY,
               height: "64px",
               display: "flex",
@@ -631,7 +633,8 @@ export default function Overview() {
           {/* See all tools button */}
           <div
             style={{
-              backgroundColor: "white",
+              backgroundColor: "rgba(255,255,255,0.5)",
+              backdropFilter: "blur(4px)",
               border: BORDER_NAVY,
               height: "48px",
               display: "flex",

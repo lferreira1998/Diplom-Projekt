@@ -100,7 +100,7 @@ function DriftingToolNames({ onNavigate }: { onNavigate: (path: string) => void 
             baseSpeed:    rnd(0.15, 0.45),
             wanderAngle:  rnd(0, Math.PI * 2),
             wanderAngleZ: rnd(0, Math.PI * 2),
-            baseFontSize: rnd(0.86, 1.5),
+            baseFontSize: rnd(1.03, 1.8),
           });
         }
       }
@@ -122,14 +122,15 @@ function DriftingToolNames({ onNavigate }: { onNavigate: (path: string) => void 
       const wrap = wrapRef.current;
       const w = wrap ? wrap.getBoundingClientRect().width  : 800;
       const h = wrap ? wrap.getBoundingClientRect().height : 600;
+      const chunks = chunksRef.current;
 
-      for (const c of chunksRef.current) {
+      // wander + boundary
+      for (const c of chunks) {
         const hovered = hoveredRef.current === c.id;
-
         if (!hovered) {
           c.wanderAngle  += rnd(-0.3, 0.3) * dt;
           c.wanderAngleZ += rnd(-0.2, 0.2) * dt;
-          const ws = c.baseSpeed * 0.4;
+          const ws = c.baseSpeed * 0.48; // 20% faster
           c.vx += Math.cos(c.wanderAngle)  * ws * dt;
           c.vy += Math.sin(c.wanderAngle)  * ws * dt;
           c.vz += Math.sin(c.wanderAngleZ) * ws * 0.12 * dt;
@@ -147,11 +148,35 @@ function DriftingToolNames({ onNavigate }: { onNavigate: (path: string) => void 
           if (c.z <= R_MIN_Z) c.vz =  Math.abs(c.vz) * 0.3;
           if (c.z >= R_MAX_Z) c.vz = -Math.abs(c.vz) * 0.3;
         } else {
-          // brake quickly on hover
           c.vx *= 0.88; c.vy *= 0.88; c.vz *= 0.88;
           c.x += c.vx * dt * 6; c.y += c.vy * dt * 6;
         }
+      }
 
+      // repulsion — keep words from overlapping
+      const MIN_DIST = 200;
+      for (let i = 0; i < chunks.length; i++) {
+        for (let j = i + 1; j < chunks.length; j++) {
+          const a = chunks[i], b = chunks[j];
+          const sa = R_PERSP / (R_PERSP - a.z);
+          const sb = R_PERSP / (R_PERSP - b.z);
+          const dx = a.x * sa - b.x * sb;
+          const dy = a.y * sa - b.y * sb;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < MIN_DIST && dist > 0.5) {
+            const force = ((MIN_DIST - dist) / MIN_DIST) * 0.005;
+            const nx = dx / dist, ny = dy / dist;
+            a.vx += (nx * force) / sa;
+            a.vy += (ny * force) / sa;
+            b.vx -= (nx * force) / sb;
+            b.vy -= (ny * force) / sb;
+          }
+        }
+      }
+
+      // update DOM
+      for (const c of chunks) {
+        const hovered = hoveredRef.current === c.id;
         const domEl = elMapRef.current.get(c.id);
         if (domEl) {
           const s   = R_PERSP / (R_PERSP - c.z);
@@ -164,6 +189,7 @@ function DriftingToolNames({ onNavigate }: { onNavigate: (path: string) => void 
           domEl.style.color     = hovered ? NAVY : `rgba(49,54,66,1)`;
         }
       }
+
       // show/hide custom cursor based on hover
       if (cursorRef.current) {
         cursorRef.current.style.opacity = hoveredRef.current !== null ? "1" : "0";

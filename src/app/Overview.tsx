@@ -1,32 +1,210 @@
-import { useState } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
 
-const IMG_RECTANGLE = "https://www.figma.com/api/mcp/asset/6f056d20-7603-49b9-a17f-a5d406b9fc38";
-const IMG_SCREENSHOT = "https://www.figma.com/api/mcp/asset/55b27563-956e-47ef-94a0-8ace12926a53";
-const IMG_VECTOR = "https://www.figma.com/api/mcp/asset/591ed8f5-e969-47dd-aff0-39c6a195fc7b";
+// ── Assets ────────────────────────────────────────────────────────────────────
 
-const BG = "#e5dde6";
-const BORDER = "1px dashed #14151b";
-const FONT_UI = "'Area Inktrap', 'Space Grotesk', sans-serif";
-const FONT_UI_EXT = "'Area Inktrap Extended', 'Area Inktrap', sans-serif";
-const BROWNISH = "#484643";
+const IMG_BG        = "https://www.figma.com/api/mcp/asset/b9add7e5-cd3b-4c0d-b538-932d110d6976";
+const IMG_RECTANGLE = "https://www.figma.com/api/mcp/asset/2305d040-b7cb-4629-8012-61aeb2ff6761";
+const IMG_VECTOR    = "https://www.figma.com/api/mcp/asset/4e65b27f-b35c-4131-a8a5-a53fea26f2f6";
 
-const OTHER_TOOLS = [
-  { label: "uninvited thoughts", path: "/uninvited-thoughts" },
-  { label: "don't correct it", path: "/loschen-korrigieren" },
-  { label: "write in a spiral", path: "/parametrisches-tool" },
-  { label: "without seeing it", path: "/one-word-replay" },
-  { label: "in a random order", path: "/parametrisches-tool" },
+// ── Constants ─────────────────────────────────────────────────────────────────
+
+const FONT_UI      = "'Area Inktrap', 'Space Grotesk', sans-serif";
+const FONT_UI_EXT  = "'Area Inktrap Extended', 'Area Inktrap', sans-serif";
+const NAVY         = "#11112d";
+const BORDER_NAVY  = "1px dashed #11112d";
+
+const TOOLS = [
+  { label: "Don't Stop Writing",       path: "/dont-stop-writing"         },
+  { label: "One-Word Replay",           path: "/one-word-replay"           },
+  { label: "Uninvited Thoughts",        path: "/uninvited-thoughts"        },
+  { label: "Löschen & Korrigieren",     path: "/loschen-korrigieren"       },
+  { label: "Drifting Following Words",  path: "/drifting-following-words"  },
+  { label: "Drifting Disappearing Words", path: "/drifting-disappearing-words" },
 ];
+
+// ── Drift physics ─────────────────────────────────────────────────────────────
+
+const R_PERSP = 900;
+const R_MIN_Z = -500;
+const R_MAX_Z =  200;
+const DAMP    = 0.985;
+
+function rnd(min: number, max: number) { return Math.random() * (max - min) + min; }
+function depthOpacity(z: number) { return 0.18 + ((z - R_MIN_Z) / (R_MAX_Z - R_MIN_Z)) * 0.55; }
+
+interface DriftChunk {
+  id: number; label: string; path: string;
+  x: number; y: number; z: number;
+  rotateX: number; rotateY: number; rotateZ: number;
+  vx: number; vy: number; vz: number;
+  baseSpeed: number;
+  wanderAngle: number; wanderAngleZ: number;
+  baseFontSize: number; // rem
+}
+
+// ── DriftingToolNames ─────────────────────────────────────────────────────────
+
+function DriftingToolNames({ onNavigate }: { onNavigate: (path: string) => void }) {
+  const wrapRef     = useRef<HTMLDivElement>(null);
+  const chunksRef   = useRef<DriftChunk[]>([]);
+  const elMapRef    = useRef<Map<number, HTMLDivElement>>(new Map());
+  const hoveredRef  = useRef<number | null>(null);
+  const rafRef      = useRef(0);
+  const lastTRef    = useRef(0);
+  const [, tick]    = useState(0);
+  const initRef     = useRef(false);
+
+  // initialise chunks once the wrapper has dimensions
+  useEffect(() => {
+    const wrap = wrapRef.current;
+    if (!wrap || initRef.current) return;
+    const ro = new ResizeObserver(() => {
+      if (initRef.current) return;
+      const { width: w, height: h } = wrap.getBoundingClientRect();
+      if (!w || !h) return;
+      initRef.current = true;
+
+      const chunks: DriftChunk[] = TOOLS.map((t, i) => {
+        const z   = rnd(R_MIN_Z * 0.6, R_MAX_Z * 0.75);
+        const s   = R_PERSP / (R_PERSP - z);
+        // spread across full viewport, avoid the left panel (~307px) a bit
+        const xRange = w / s * 0.46;
+        const yRange = h / s * 0.44;
+        return {
+          id:          i,
+          label:       t.label,
+          path:        t.path,
+          x:           rnd(-xRange * 0.5, xRange),
+          y:           rnd(-yRange, yRange),
+          z,
+          rotateX:     rnd(-9, 9),
+          rotateY:     rnd(-14, 14),
+          rotateZ:     rnd(-7, 7),
+          vx: 0, vy: 0, vz: 0,
+          baseSpeed:   rnd(0.15, 0.45),
+          wanderAngle:  rnd(0, Math.PI * 2),
+          wanderAngleZ: rnd(0, Math.PI * 2),
+          baseFontSize: rnd(0.72, 1.25),
+        };
+      });
+      chunksRef.current = chunks;
+      tick(n => n + 1);
+      ro.disconnect();
+    });
+    ro.observe(wrap);
+    return () => ro.disconnect();
+  }, []);
+
+  // animation loop
+  useEffect(() => {
+    const loop = (time: number) => {
+      if (!lastTRef.current) lastTRef.current = time;
+      const dt = Math.min((time - lastTRef.current) / 1000, 0.1);
+      lastTRef.current = time;
+
+      const wrap = wrapRef.current;
+      const w = wrap ? wrap.getBoundingClientRect().width  : 800;
+      const h = wrap ? wrap.getBoundingClientRect().height : 600;
+
+      for (const c of chunksRef.current) {
+        const hovered = hoveredRef.current === c.id;
+
+        if (!hovered) {
+          c.wanderAngle  += rnd(-0.3, 0.3) * dt;
+          c.wanderAngleZ += rnd(-0.2, 0.2) * dt;
+          const ws = c.baseSpeed * 0.4;
+          c.vx += Math.cos(c.wanderAngle)  * ws * dt;
+          c.vy += Math.sin(c.wanderAngle)  * ws * dt;
+          c.vz += Math.sin(c.wanderAngleZ) * ws * 0.12 * dt;
+          c.vx *= DAMP; c.vy *= DAMP; c.vz *= DAMP;
+          c.x += c.vx * dt * 6; c.y += c.vy * dt * 6; c.z += c.vz * dt * 3;
+
+          const s  = R_PERSP / (R_PERSP - c.z);
+          const sx = c.x * s, sy = c.y * s;
+          const mx = w * 0.44, my = h * 0.43;
+          if (sx >  mx) c.vx -= (sx - mx) * 0.002;
+          if (sx < -mx) c.vx -= (sx + mx) * 0.002;
+          if (sy >  my) c.vy -= (sy - my) * 0.002;
+          if (sy < -my) c.vy -= (sy + my) * 0.002;
+          c.z = Math.max(R_MIN_Z, Math.min(R_MAX_Z, c.z));
+          if (c.z <= R_MIN_Z) c.vz =  Math.abs(c.vz) * 0.3;
+          if (c.z >= R_MAX_Z) c.vz = -Math.abs(c.vz) * 0.3;
+        } else {
+          // brake quickly on hover
+          c.vx *= 0.88; c.vy *= 0.88; c.vz *= 0.88;
+          c.x += c.vx * dt * 6; c.y += c.vy * dt * 6;
+        }
+
+        const domEl = elMapRef.current.get(c.id);
+        if (domEl) {
+          const s   = R_PERSP / (R_PERSP - c.z);
+          const sx  = c.x * s, sy = c.y * s;
+          const op  = hovered ? 0.72 : depthOpacity(c.z);
+          const blur = c.z < -200 ? ((-200 - c.z) / 200) * 1.5 : 0;
+          domEl.style.transform = `translate(-50%,-50%) translate(${sx}px,${sy}px) scale(${s}) rotateX(${c.rotateX}deg) rotateY(${c.rotateY}deg) rotateZ(${c.rotateZ}deg)`;
+          domEl.style.opacity   = `${op}`;
+          domEl.style.filter    = blur > 0 ? `blur(${blur}px)` : "none";
+          domEl.style.color     = hovered ? NAVY : `rgba(49,54,66,1)`;
+        }
+      }
+      rafRef.current = requestAnimationFrame(loop);
+    };
+    rafRef.current = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, []);
+
+  const chunks = chunksRef.current;
+
+  return (
+    <div
+      ref={wrapRef}
+      style={{
+        position: "absolute", inset: 0,
+        perspective: `${R_PERSP}px`, perspectiveOrigin: "50% 50%",
+        overflow: "hidden", pointerEvents: "none",
+      }}
+    >
+      <div style={{ position: "absolute", inset: 0, transformStyle: "preserve-3d" }}>
+        {chunks.map(c => (
+          <div
+            key={c.id}
+            ref={el => { if (el) elMapRef.current.set(c.id, el); }}
+            onMouseEnter={() => { hoveredRef.current = c.id; }}
+            onMouseLeave={() => { hoveredRef.current = null; }}
+            onClick={() => onNavigate(c.path)}
+            style={{
+              position: "absolute", left: "50%", top: "50%",
+              fontFamily: "'IBM Plex Mono', 'Courier New', monospace",
+              fontSize: `${c.baseFontSize}rem`,
+              fontWeight: 400,
+              letterSpacing: "0.02em",
+              whiteSpace: "nowrap",
+              userSelect: "none",
+              pointerEvents: "all",
+              cursor: "pointer",
+              willChange: "transform, opacity",
+              transformStyle: "preserve-3d",
+              color: "rgba(49,54,66,1)",
+              transition: "color 0.2s ease",
+            }}
+          >
+            {c.label}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 // ── Start Modal ───────────────────────────────────────────────────────────────
 
 function StartModal({ onClose }: { onClose: () => void }) {
   const navigate = useNavigate();
-  const [name, setName] = useState("");
-  const [prompt, setPrompt] = useState("");
+  const [name,        setName]        = useState("");
+  const [prompt,      setPrompt]      = useState("");
   const [description, setDescription] = useState("");
 
   const inputStyle: React.CSSProperties = {
@@ -65,20 +243,13 @@ function StartModal({ onClose }: { onClose: () => void }) {
 
   return createPortal(
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       transition={{ duration: 0.25 }}
       onClick={onClose}
       style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 300,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: "rgba(6,6,19,0.65)",
-        backdropFilter: "blur(8px)",
+        position: "fixed", inset: 0, zIndex: 300,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        backgroundColor: "rgba(6,6,19,0.65)", backdropFilter: "blur(8px)",
         padding: "24px",
       }}
     >
@@ -89,16 +260,10 @@ function StartModal({ onClose }: { onClose: () => void }) {
         transition={{ duration: 0.24, delay: 0.06 }}
         onClick={e => e.stopPropagation()}
         style={{
-          backgroundColor: "#ECEDF0",
-          border: "1px dashed #C3C4C8",
-          borderRadius: "12px",
-          padding: "24px",
-          display: "flex",
-          flexDirection: "column",
-          gap: "24px",
-          width: "100%",
-          maxWidth: "420px",
-          boxSizing: "border-box",
+          backgroundColor: "#ECEDF0", border: "1px dashed #C3C4C8",
+          borderRadius: "12px", padding: "24px",
+          display: "flex", flexDirection: "column", gap: "24px",
+          width: "100%", maxWidth: "420px", boxSizing: "border-box",
         }}
       >
         <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
@@ -124,7 +289,7 @@ function StartModal({ onClose }: { onClose: () => void }) {
           <p style={labelStyle}>Schreibanstoß oder Aufgaben</p>
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
             <input type="text" placeholder="Beispiel: Schreibe etwas über dich..." value={prompt} onChange={e => setPrompt(e.target.value)} style={inputStyle} />
-            <p style={hintStyle}>Das hilft Menschen beim Schreiben. Von allgemein bis sehr spezifisch. Du kannst auch mehrere anlegen.</p>
+            <p style={hintStyle}>Das hilft Menschen beim Schreiben. Von allgemein bis sehr spezifisch.</p>
           </div>
         </div>
 
@@ -136,40 +301,23 @@ function StartModal({ onClose }: { onClose: () => void }) {
               value={description}
               onChange={e => setDescription(e.target.value)}
               style={{
-                backgroundColor: "#F4F5F7",
-                border: "1px dashed #D0D1D6",
-                borderRadius: "12px",
-                height: "120px",
-                width: "100%",
-                padding: "12px",
-                fontFamily: FONT_UI,
-                fontSize: "10.88px",
-                color: "#313642",
-                letterSpacing: "0.3264px",
-                lineHeight: "16.32px",
-                outline: "none",
-                resize: "none",
-                boxSizing: "border-box",
+                backgroundColor: "#F4F5F7", border: "1px dashed #D0D1D6",
+                borderRadius: "12px", height: "120px", width: "100%",
+                padding: "12px", fontFamily: FONT_UI, fontSize: "10.88px",
+                color: "#313642", letterSpacing: "0.3264px", lineHeight: "16.32px",
+                outline: "none", resize: "none", boxSizing: "border-box",
               }}
             />
-            <p style={hintStyle}>Das hilft Menschen beim Schreiben. Von allgemein bis sehr spezifisch.</p>
+            <p style={hintStyle}>Das hilft Menschen beim Schreiben.</p>
           </div>
         </div>
 
         <button
           onClick={() => navigate("/parametrisches-tool")}
           style={{
-            width: "100%",
-            height: "29px",
-            backgroundColor: "#313642",
-            color: "#ECEDF0",
-            border: "none",
-            borderRadius: "100px",
-            cursor: "pointer",
-            fontFamily: FONT_UI,
-            fontSize: "10.88px",
-            fontWeight: 600,
-            letterSpacing: "0.3264px",
+            width: "100%", height: "29px", backgroundColor: "#313642", color: "#ECEDF0",
+            border: "none", borderRadius: "100px", cursor: "pointer",
+            fontFamily: FONT_UI, fontSize: "10.88px", fontWeight: 600, letterSpacing: "0.3264px",
           }}
         >
           Loslegen
@@ -184,122 +332,186 @@ function StartModal({ onClose }: { onClose: () => void }) {
 
 export default function Overview() {
   const [showModal, setShowModal] = useState(false);
-  const [text, setText] = useState("");
   const navigate = useNavigate();
-
-  const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
-  const charCount = text.length;
+  const handleNavigate = useCallback((path: string) => navigate(path), [navigate]);
 
   return (
     <>
-      <style>{`
-        .overview-textarea::placeholder {
-          color: rgba(89, 89, 100, 0.8);
-          font-weight: 600;
-        }
-      `}</style>
-
       <div
         style={{
-          backgroundColor: BG,
-          minHeight: "100vh",
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "stretch",
-          boxSizing: "border-box",
+          backgroundColor: "#f5f5f6",
+          width: "100vw",
+          height: "100vh",
+          position: "relative",
+          overflow: "hidden",
         }}
       >
-        {/* ── Left Column ── */}
+        {/* ── Background screenshot ── */}
         <div
           style={{
-            width: "307px",
-            flexShrink: 0,
+            position: "absolute",
+            width: "1406.299px",
+            height: "882.078px",
+            left: "82.13px",
+            top: "50%",
+            transform: "translateY(-50%) translateY(12.04px)",
+            pointerEvents: "none",
+          }}
+        >
+          <img
+            alt=""
+            src={IMG_BG}
+            style={{
+              position: "absolute", inset: 0,
+              width: "100%", height: "100%",
+              objectFit: "cover",
+              mixBlendMode: "darken",
+              pointerEvents: "none",
+            }}
+          />
+        </div>
+
+        {/* ── Drifting tool names ── */}
+        <DriftingToolNames onNavigate={handleNavigate} />
+
+        {/* ── Top-left panel ── */}
+        <div
+          style={{
+            position: "absolute",
+            top: 0, left: 0,
             padding: "40px",
             display: "flex",
             flexDirection: "column",
-            gap: "24px",
+            gap: "16px",
+            width: "307px",
             boxSizing: "border-box",
+            zIndex: 10,
           }}
         >
-          {/* Shaping Thought card */}
+          {/* Logo card */}
           <div
             style={{
-              backgroundColor: "rgba(255,255,255,0.4)",
-              border: BORDER,
-              borderRadius: "4px",
-              padding: "24px",
+              backgroundColor: NAVY,
+              border: BORDER_NAVY,
+              height: "64px",
               display: "flex",
-              flexDirection: "column",
-              gap: "24px",
-              flexShrink: 0,
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "16px 24px",
+              boxSizing: "border-box",
             }}
           >
-            <p
-              style={{
-                fontFamily: FONT_UI_EXT,
-                fontSize: "25px",
-                fontWeight: 600,
-                letterSpacing: "-1.25px",
-                color: BROWNISH,
-                margin: 0,
-                lineHeight: "normal",
-              }}
-            >
-              Shaping Thought
-            </p>
-
-            <p
-              style={{
-                fontFamily: FONT_UI,
-                fontSize: "14px",
-                fontWeight: 600,
-                letterSpacing: "0.1152px",
-                lineHeight: "17.28px",
-                color: "#000000",
-                margin: 0,
-                whiteSpace: "pre-wrap",
-              }}
-            >
-              {"Schreibtools formen Denken.\n\nShaping Thought verändert ihre Regeln."}
-            </p>
-
             <div
               style={{
-                backgroundColor: "rgba(255,255,255,0.2)",
-                border: BORDER,
-                borderRadius: "2px",
-                padding: "6px 12px",
                 display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
+                flexDirection: "column",
+                width: "121.682px",
+                overflow: "hidden",
               }}
             >
-              <p
-                style={{
-                  fontFamily: FONT_UI,
-                  fontSize: "14px",
-                  fontWeight: 600,
-                  letterSpacing: "0.1152px",
-                  lineHeight: "17.28px",
-                  color: BROWNISH,
-                  margin: 0,
-                  width: "157px",
-                }}
-              >
-                Mehr über das Projekt
+              <p style={{
+                fontFamily: FONT_UI_EXT,
+                fontSize: "15.87px",
+                fontWeight: 700,
+                letterSpacing: "-0.6348px",
+                color: "#f2f3f6",
+                margin: 0,
+                lineHeight: "normal",
+                whiteSpace: "nowrap",
+                alignSelf: "flex-start",
+              }}>
+                Shaping
+              </p>
+              <p style={{
+                fontFamily: FONT_UI_EXT,
+                fontSize: "15.87px",
+                fontWeight: 700,
+                letterSpacing: "-0.6348px",
+                color: "#f2f3f6",
+                margin: 0,
+                lineHeight: "normal",
+                whiteSpace: "nowrap",
+                alignSelf: "flex-end",
+              }}>
+                Thoughts
               </p>
             </div>
           </div>
 
-          {/* Create your own Writing Interface — grid overlay */}
+          {/* Description card */}
+          <div
+            style={{
+              backgroundColor: "white",
+              border: BORDER_NAVY,
+              padding: "16px 24px",
+              boxSizing: "border-box",
+            }}
+          >
+            <p style={{
+              fontFamily: FONT_UI,
+              fontSize: "12px",
+              fontWeight: 600,
+              letterSpacing: "0.1152px",
+              lineHeight: "20px",
+              color: "black",
+              margin: 0,
+              whiteSpace: "pre-wrap",
+            }}>
+              {"Schreibtools formen durch ihre Regeln, wie und was wir Denken. \n\nShaping Thought erforscht, was passiert, wenn wir diese Regeln verändern."}
+            </p>
+          </div>
+
+          {/* About the Project button */}
+          <div
+            style={{
+              backgroundColor: "white",
+              border: BORDER_NAVY,
+              height: "64px",
+              display: "flex",
+              alignItems: "center",
+              padding: "16px 24px",
+              boxSizing: "border-box",
+              cursor: "pointer",
+            }}
+          >
+            <p style={{
+              fontFamily: FONT_UI,
+              fontSize: "12px",
+              fontWeight: 600,
+              letterSpacing: "0.1152px",
+              lineHeight: "17.28px",
+              color: NAVY,
+              margin: 0,
+              whiteSpace: "nowrap",
+            }}>
+              About the Project
+            </p>
+          </div>
+        </div>
+
+        {/* ── Bottom-right CTA ── */}
+        <div
+          style={{
+            position: "absolute",
+            right: 0,
+            bottom: 0,
+            padding: "40px",
+            display: "flex",
+            flexDirection: "column",
+            gap: "16px",
+            alignItems: "flex-start",
+            zIndex: 10,
+          }}
+        >
+          {/* Create your own — grid overlay */}
           <div
             onClick={() => setShowModal(true)}
             style={{
-              flex: "1 0 0",
               position: "relative",
               cursor: "pointer",
-              minHeight: 0,
+              width: "175.574px",
+              height: "238.844px",
+              flexShrink: 0,
             }}
           >
             {/* Background image */}
@@ -307,26 +519,25 @@ export default function Overview() {
               alt=""
               src={IMG_RECTANGLE}
               style={{
+                position: "absolute", inset: 0,
+                width: "100%", height: "100%",
                 display: "block",
-                width: "227px",
-                height: "475px",
-                objectFit: "cover",
               }}
             />
 
-            {/* "Create your own Writing Interface" text overlay */}
+            {/* Text overlay */}
             <div
               style={{
                 position: "absolute",
-                top: "209.15px",
-                left: "44.16px",
-                width: "136.2px",
+                top: "101.42px",
+                left: "36.29px",
                 fontFamily: FONT_UI,
-                fontSize: "14px",
+                fontSize: "12px",
                 fontWeight: 600,
-                color: BROWNISH,
+                color: NAVY,
                 textAlign: "center",
-                lineHeight: "22px",
+                lineHeight: "18px",
+                whiteSpace: "nowrap",
                 pointerEvents: "none",
               }}
             >
@@ -339,9 +550,9 @@ export default function Overview() {
               style={{
                 position: "absolute",
                 top: 0,
-                left: "167.42px",
-                width: "59.579px",
-                height: "87.047px",
+                left: "129.49px",
+                width: "46.082px",
+                height: "43.77px",
                 pointerEvents: "none",
               }}
             >
@@ -350,315 +561,42 @@ export default function Overview() {
                 src={IMG_VECTOR}
                 style={{
                   position: "absolute",
-                  inset: "-0.32% -0.69% -0.57% -0.84%",
-                  width: "101.53%",
-                  height: "100.89%",
+                  inset: "-0.83% -0.75% -1.14% -1.09%",
+                  width: "101.84%",
+                  height: "101.97%",
                   maxWidth: "none",
                 }}
               />
             </div>
           </div>
-        </div>
 
-        {/* ── Center Column ── */}
-        <div
-          style={{
-            flex: 1,
-            minWidth: 0,
-            paddingTop: "40px",
-            paddingBottom: "40px",
-            display: "flex",
-            flexDirection: "column",
-            gap: "10px",
-          }}
-        >
-          {/* Writing preview card */}
+          {/* See all tools button */}
           <div
             style={{
-              backgroundColor: "rgba(255,255,255,0.4)",
-              border: BORDER,
-              borderRadius: "4px",
-              paddingTop: "24px",
-              paddingBottom: "40px",
-              paddingLeft: "40px",
-              paddingRight: "40px",
-              display: "flex",
-              flexDirection: "column",
-              gap: "24px",
-              height: "778px",
-              boxSizing: "border-box",
-              flexShrink: 0,
-            }}
-          >
-            {/* Top bar */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "16px", flexShrink: 0 }}>
-              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
-                {/* Tool name */}
-                <div style={{ height: "16.32px", position: "relative", flexShrink: 0, width: "162.07px" }}>
-                  <p
-                    style={{
-                      position: "absolute",
-                      fontFamily: FONT_UI,
-                      fontWeight: 400,
-                      fontSize: "10.88px",
-                      lineHeight: "16.32px",
-                      color: "#313642",
-                      letterSpacing: "2.176px",
-                      textTransform: "uppercase",
-                      whiteSpace: "nowrap",
-                      margin: 0,
-                      left: 0,
-                      top: "-0.5px",
-                    }}
-                  >
-                    Don't Stop Writing
-                  </p>
-                </div>
-
-                {/* Stats */}
-                <div style={{ display: "flex", gap: "16px", alignItems: "center", height: "14.398px" }}>
-                  <div style={{ opacity: 0.6, position: "relative", height: "14.398px" }}>
-                    <p
-                      style={{
-                        position: "absolute",
-                        fontFamily: FONT_UI,
-                        fontWeight: 400,
-                        fontSize: "9.6px",
-                        lineHeight: "14.4px",
-                        color: "#313642",
-                        letterSpacing: "0.768px",
-                        whiteSpace: "nowrap",
-                        margin: 0,
-                        left: 0,
-                        top: "0.5px",
-                      }}
-                    >
-                      8:58
-                    </p>
-                  </div>
-                  {wordCount > 0 && (
-                    <div style={{ opacity: 0.4, position: "relative", height: "14.398px" }}>
-                      <p style={{ position: "absolute", fontFamily: FONT_UI, fontWeight: 400, fontSize: "9.6px", lineHeight: "14.4px", color: "#313642", letterSpacing: "0.768px", whiteSpace: "nowrap", margin: 0, left: 0, top: "0.5px" }}>
-                        {wordCount} {wordCount === 1 ? "word" : "words"}
-                      </p>
-                    </div>
-                  )}
-                  {charCount > 0 && (
-                    <div style={{ opacity: 0.4, position: "relative", height: "14.398px" }}>
-                      <p style={{ position: "absolute", fontFamily: FONT_UI, fontWeight: 400, fontSize: "9.6px", lineHeight: "14.4px", color: "#313642", letterSpacing: "0.768px", whiteSpace: "nowrap", margin: 0, left: 0, top: "0.5px" }}>
-                        {charCount} chars
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div style={{ borderTop: "1px solid #e0e1e6" }} />
-            </div>
-
-            {/* Textarea */}
-            <textarea
-              className="overview-textarea"
-              value={text}
-              onChange={e => setText(e.target.value)}
-              placeholder="Write something or select a writing tool on the right side..."
-              style={{
-                flex: 1,
-                backgroundColor: "transparent",
-                border: "none",
-                outline: "none",
-                resize: "none",
-                width: "100%",
-                fontFamily: FONT_UI,
-                fontSize: "24px",
-                fontWeight: 600,
-                lineHeight: "30px",
-                letterSpacing: "0.1152px",
-                color: "#313642",
-                padding: 0,
-              }}
-            />
-          </div>
-
-          {/* Screenshot */}
-          <div
-            style={{
-              position: "relative",
-              height: "860.508px",
-              flexShrink: 0,
-              width: "888.275px",
-            }}
-          >
-            <div
-              style={{
-                position: "absolute",
-                height: "780.508px",
-                left: "58.16px",
-                top: "40px",
-                width: "771.963px",
-                overflow: "hidden",
-              }}
-            >
-              <img
-                alt=""
-                src={IMG_SCREENSHOT}
-                style={{
-                  position: "absolute",
-                  width: "201.85%",
-                  height: "125.68%",
-                  left: "-49.31%",
-                  top: "-16.16%",
-                  maxWidth: "none",
-                  mixBlendMode: "luminosity",
-                }}
-              />
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                backgroundColor: "#f5f5f6",
-                height: "251.529px",
-                left: "255.48px",
-                top: "306.76px",
-                width: "397.041px",
-              }}
-            />
-          </div>
-        </div>
-
-        {/* ── Right Column ── */}
-        <div
-          style={{
-            width: "307px",
-            flexShrink: 0,
-            padding: "40px",
-            display: "flex",
-            flexDirection: "column",
-            gap: "24px",
-            boxSizing: "border-box",
-          }}
-        >
-          {/* Writing Tools header */}
-          <div style={{ display: "flex", flexDirection: "column", flexShrink: 0 }}>
-            <div
-              style={{
-                backgroundColor: "rgba(255,255,255,0.4)",
-                border: BORDER,
-                borderRadius: "4px",
-                height: "64px",
-                display: "flex",
-                alignItems: "center",
-                padding: "16px 24px",
-                boxSizing: "border-box",
-              }}
-            >
-              <p
-                style={{
-                  fontFamily: FONT_UI_EXT,
-                  fontSize: "20px",
-                  fontWeight: 600,
-                  letterSpacing: "0.1152px",
-                  lineHeight: "17.28px",
-                  color: BROWNISH,
-                  margin: 0,
-                  whiteSpace: "nowrap",
-                }}
-              >
-                Writing Tools
-              </p>
-            </div>
-          </div>
-
-          {/* Tools list */}
-          <div style={{ display: "flex", flexDirection: "column", flexShrink: 0 }}>
-            {/* Standard interface — expanded, top */}
-            <button
-              onClick={() => navigate("/dont-stop-writing")}
-              style={{
-                backgroundColor: "rgba(255,255,255,0.4)",
-                border: BORDER,
-                borderRadius: "4px 4px 0 0",
-                padding: "16px 24px",
-                cursor: "pointer",
-                display: "flex",
-                flexDirection: "column",
-                gap: "24px",
-                alignItems: "flex-start",
-                width: "227px",
-                boxSizing: "border-box",
-                textAlign: "left",
-              }}
-            >
-              <p style={{ fontFamily: FONT_UI, fontSize: "13px", fontWeight: 600, color: "#11112d", margin: 0, lineHeight: "17.28px", whiteSpace: "nowrap" }}>
-                standard interface
-              </p>
-              <div style={{ display: "flex", flexDirection: "column", gap: "24px", width: "100%" }}>
-                <p style={{ fontFamily: FONT_UI, fontSize: "12px", fontWeight: 600, color: "#434343", margin: 0, lineHeight: "17.28px", letterSpacing: "0.1152px" }}>
-                  This is the standard writing tool we all know. Write here or try new ones to explore.
-                </p>
-                <div
-                  style={{
-                    backgroundColor: "rgba(255,255,255,0.2)",
-                    border: BORDER,
-                    borderRadius: "2px",
-                    padding: "6px 12px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <p style={{ fontFamily: FONT_UI, fontSize: "14px", fontWeight: 600, color: BROWNISH, margin: 0, lineHeight: "17.28px", letterSpacing: "0.1152px", width: "157px", textAlign: "center" }}>
-                    Schreiben
-                  </p>
-                </div>
-              </div>
-            </button>
-
-            {/* Other tools */}
-            {OTHER_TOOLS.map(({ label, path }, i) => (
-              <button
-                key={label}
-                onClick={() => navigate(path)}
-                style={{
-                  backgroundColor: "rgba(255,255,255,0.2)",
-                  borderLeft: BORDER,
-                  borderRight: BORDER,
-                  borderBottom: BORDER,
-                  borderTop: "none",
-                  borderRadius: i === OTHER_TOOLS.length - 1 ? "0 0 4px 4px" : "0",
-                  padding: "16px 24px",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  width: "100%",
-                  boxSizing: "border-box",
-                  textAlign: "left",
-                }}
-              >
-                <p style={{ fontFamily: FONT_UI, fontSize: "13px", fontWeight: 600, color: BROWNISH, margin: 0, lineHeight: "17.28px", whiteSpace: "nowrap" }}>
-                  {label}
-                </p>
-              </button>
-            ))}
-          </div>
-
-          {/* Explore all experiments */}
-          <div
-            style={{
-              backgroundColor: "rgba(255,255,255,0.4)",
-              border: BORDER,
-              borderRadius: "4px",
-              height: "64px",
+              backgroundColor: "white",
+              border: BORDER_NAVY,
+              height: "48px",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               padding: "16px 24px",
-              cursor: "pointer",
               boxSizing: "border-box",
-              flexShrink: 0,
+              cursor: "pointer",
+              width: "175.574px",
             }}
           >
-            <p style={{ fontFamily: FONT_UI, fontSize: "14px", fontWeight: 600, color: BROWNISH, margin: 0, lineHeight: "17.28px", letterSpacing: "0.1152px", textAlign: "center", flex: 1 }}>
-              Explore all experiments
+            <p style={{
+              fontFamily: FONT_UI,
+              fontSize: "12px",
+              fontWeight: 600,
+              letterSpacing: "0.1152px",
+              lineHeight: "17.28px",
+              color: NAVY,
+              margin: 0,
+              textAlign: "center",
+              width: "109px",
+            }}>
+              See all tools
             </p>
           </div>
         </div>

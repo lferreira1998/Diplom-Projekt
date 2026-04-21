@@ -142,7 +142,7 @@ function DriftingToolNames({ onNavigate }: { onNavigate: (path: string) => void 
         if (!hovered) {
           c.wanderAngle  += rnd(-0.3, 0.3) * dt;
           c.wanderAngleZ += rnd(-0.2, 0.2) * dt;
-          const ws = c.baseSpeed * 0.48; // 20% faster
+          const ws = c.baseSpeed * 0.62;
           c.vx += Math.cos(c.wanderAngle)  * ws * dt;
           c.vy += Math.sin(c.wanderAngle)  * ws * dt;
           c.vz += Math.sin(c.wanderAngleZ) * ws * 0.12 * dt;

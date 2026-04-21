@@ -66,29 +66,32 @@ function DriftingToolNames({ onNavigate }: { onNavigate: (path: string) => void 
       if (!w || !h) return;
       initRef.current = true;
 
-      const chunks: DriftChunk[] = TOOLS.map((t, i) => {
-        const z   = rnd(R_MIN_Z * 0.6, R_MAX_Z * 0.75);
-        const s   = R_PERSP / (R_PERSP - z);
-        // spread across full viewport, avoid the left panel (~307px) a bit
-        const xRange = w / s * 0.46;
-        const yRange = h / s * 0.44;
-        return {
-          id:          i,
-          label:       t.label,
-          path:        t.path,
-          x:           rnd(-xRange * 0.5, xRange),
-          y:           rnd(-yRange, yRange),
-          z,
-          rotateX:     rnd(-9, 9),
-          rotateY:     rnd(-14, 14),
-          rotateZ:     rnd(-7, 7),
-          vx: 0, vy: 0, vz: 0,
-          baseSpeed:   rnd(0.15, 0.45),
-          wanderAngle:  rnd(0, Math.PI * 2),
-          wanderAngleZ: rnd(0, Math.PI * 2),
-          baseFontSize: rnd(0.72, 1.25),
-        };
-      });
+      const chunks: DriftChunk[] = [];
+      let id = 0;
+      for (let rep = 0; rep < 4; rep++) {
+        for (const t of TOOLS) {
+          const z      = rnd(R_MIN_Z * 0.6, R_MAX_Z * 0.75);
+          const s      = R_PERSP / (R_PERSP - z);
+          const xRange = w / s * 0.46;
+          const yRange = h / s * 0.44;
+          chunks.push({
+            id:           id++,
+            label:        t.label,
+            path:         t.path,
+            x:            rnd(-xRange * 0.6, xRange * 0.6),
+            y:            rnd(-yRange, yRange),
+            z,
+            rotateX:      rnd(-9, 9),
+            rotateY:      rnd(-14, 14),
+            rotateZ:      rnd(-7, 7),
+            vx: 0, vy: 0, vz: 0,
+            baseSpeed:    rnd(0.15, 0.45),
+            wanderAngle:  rnd(0, Math.PI * 2),
+            wanderAngleZ: rnd(0, Math.PI * 2),
+            baseFontSize: rnd(0.72, 1.25),
+          });
+        }
+      }
       chunksRef.current = chunks;
       tick(n => n + 1);
       ro.disconnect();
@@ -195,6 +198,49 @@ function DriftingToolNames({ onNavigate }: { onNavigate: (path: string) => void 
         ))}
       </div>
     </div>
+  );
+}
+
+// ── Custom cursor ─────────────────────────────────────────────────────────────
+
+function CustomCursor() {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      if (ref.current) {
+        ref.current.style.transform = `translate(${e.clientX + 14}px, ${e.clientY - 8}px)`;
+      }
+    };
+    window.addEventListener("mousemove", onMove);
+    return () => window.removeEventListener("mousemove", onMove);
+  }, []);
+
+  return createPortal(
+    <div
+      ref={ref}
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        transform: "translate(-200px, -200px)",
+        pointerEvents: "none",
+        zIndex: 9999,
+        userSelect: "none",
+      }}
+    >
+      <span style={{
+        fontFamily: FONT_UI,
+        fontSize: "11px",
+        fontWeight: 600,
+        color: NAVY,
+        letterSpacing: "0.08em",
+        whiteSpace: "nowrap",
+      }}>
+        Think & Write
+      </span>
+    </div>,
+    document.body
   );
 }
 
@@ -343,6 +389,7 @@ export default function Overview() {
           height: "100vh",
           position: "relative",
           overflow: "hidden",
+          cursor: "none",
         }}
       >
         {/* ── Drifting tool names ── */}
@@ -575,6 +622,8 @@ export default function Overview() {
           </div>
         </div>
       </div>
+
+      <CustomCursor />
 
       <AnimatePresence>
         {showModal && <StartModal onClose={() => setShowModal(false)} />}

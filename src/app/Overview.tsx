@@ -16,17 +16,17 @@ const NAVY         = "#11112d";
 const BORDER_NAVY  = "1px dashed #11112d";
 
 const TOOLS = [
-  { label: "...without stopping",         path: "/dont-stop-writing",           description: "Schreib, ohne aufzuhören. Kein Löschen, kein Innehalten. Nur der nächste Buchstabe." },
-  { label: "...blind & then witness",     path: "/one-word-replay",             description: "Du schreibst Wort für Wort – und siehst erst am Ende, was du geschrieben hast." },
-  { label: "...uninvited thoughts",       path: "/uninvited-thoughts",          description: "Fremde Gedanken mischen sich ungebeten zwischen deine eigenen Worte." },
-  { label: "...with visible corrections", path: "/loschen-korrigieren",         description: "Nichts verschwindet wirklich. Jede Korrektur bleibt sichtbar als Schicht." },
+  { label: "...without stopping",         path: "/dont-stop-writing",           description: "Here, \"not writing\" is visualized, because the cursor keeps moving, whether you're keeping up or not." },
+  { label: "...blind & then witness",     path: "/one-word-replay",             description: "You won't see what you're writing. And when you're done, you'll be able to watch yourself think and write." },
+  { label: "...uninvited thoughts",       path: "/uninvited-thoughts",          description: "Focus on the moving dot and try not to think about anything. You won't be able to. Unwelcome thoughts will pop up. Write them down, send them off, and keep focusing on the dot." },
+  { label: "...with visible corrections", path: "/loschen-korrigieren",         description: "Everything you write remains visible. Every correction. Inspired by old typewriters." },
   { label: "...fleeting",                 path: "/drifting-following-words",    description: "Wörter folgen dir nach und verschwinden, bevor sie ankern können." },
-  { label: "...into thin air",            path: "/drifting-disappearing-words", description: "Text löst sich auf, während du schreibst. Was bleibt, wenn nichts bleibt?" },
-  { label: "...off the grid",             path: "/off-the-grid",      description: "Schreiben jenseits von Linien und Strukturen. Kein Raster, keine Grenzen." },
-  { label: "...in a spiral",              path: "/in-a-spiral",       description: "Dein Text entfaltet sich spiralförmig – nach innen oder nach außen." },
-  { label: "...randomly & spatially",     path: "/randomly-spatially", description: "Gedanken verteilen sich frei im dreidimensionalen Raum." },
-  { label: "...anonymously in public",    path: "/anonymously-in-public",       description: "Nur der aktuelle Buchstabe ist sichtbar. Alles andere bleibt verborgen." },
-  { label: "...against the clock",        path: "/visual-timer",                description: "Der Hintergrund wird zur Farbe der Schrift, während die Zeit verrinnt." },
+  { label: "...into thin air",            path: "/drifting-disappearing-words", description: "Write down your thoughts and watch them disappear again… drifting away and fading." },
+  { label: "...off the grid",             path: "/off-the-grid",               description: "Don't write linearly on pre-drawn lines; instead, draw your own lines on which you can then write." },
+  { label: "...in a spiral",              path: "/in-a-spiral",                description: "In this experiment, you write in a spiral; the old is rolled up, and the new is always in focus." },
+  { label: "...randomly & spatially",     path: "/randomly-spatially",         description: "Words and sentences do not appear sequentially here, but are scattered throughout the space at varying distances. Inspired by our chaotic inner world." },
+  { label: "...anonymously in public",    path: "/anonymously-in-public",       description: "Write about your deepest secrets, or about the people next to you. They won't see it, because only the current letter is visible at any given time." },
+  { label: "...against the clock",        path: "/visual-timer",                description: "Here you can visually see time slowly running out, as the background gradually turns the same color as your text…until you can no longer see what you've written." },
 ];
 
 // ── Drift physics ─────────────────────────────────────────────────────────────

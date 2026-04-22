@@ -273,7 +273,7 @@ const DriftingToolNames = memo(function DriftingToolNames({ onWordClick, uiHover
             onClick={() => onWordClick({ label: c.label, path: c.path, description: c.description })}
             style={{
               position: "absolute", left: "50%", top: "50%",
-              fontFamily: "'IBM Plex Mono', 'Courier New', monospace",
+              fontFamily: "'Courier New', monospace",
               fontSize: `${c.baseFontSize}rem`,
               fontWeight: 400,
               letterSpacing: "0.02em",
@@ -328,7 +328,7 @@ function ToolPreviewPanel({ tool, onClose }: { tool: Tool; onClose: () => void }
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px" }}>
         <p style={{
-          fontFamily: "'IBM Plex Mono', 'Courier New', monospace",
+          fontFamily: "'Courier New', monospace",
           fontSize: "18px", fontWeight: 400,
           color: NAVY, margin: 0,
           lineHeight: 1.25, flex: 1,

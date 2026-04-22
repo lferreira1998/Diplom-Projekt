@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
@@ -16,17 +16,17 @@ const NAVY         = "#11112d";
 const BORDER_NAVY  = "1px dashed #11112d";
 
 const TOOLS = [
-  { label: "...without stopping",         path: "/dont-stop-writing"         },
-  { label: "...blind & then witness",     path: "/one-word-replay"           },
-  { label: "...uninvited thoughts",       path: "/uninvited-thoughts"        },
-  { label: "...with visible corrections", path: "/loschen-korrigieren"       },
-  { label: "...fleeting",                 path: "/drifting-following-words"  },
-  { label: "...into thin air",            path: "/drifting-disappearing-words" },
-  { label: "...off the grid",             path: "https://github.com/lferreira1998/Writinglines1" },
-  { label: "...in a spiral",              path: "https://github.com/lferreira1998/9spiraltextvisualization1" },
-  { label: "...randomly & spatially",     path: "https://github.com/lferreira1998/83dspacethoughtvisualizationexperiencecopy" },
-  { label: "...anonymously in public",    path: "/anonymously-in-public" },
-  { label: "...against the clock",        path: "/visual-timer" },
+  { label: "...without stopping",         path: "/dont-stop-writing",           description: "Schreib, ohne aufzuhören. Kein Löschen, kein Innehalten. Nur der nächste Buchstabe." },
+  { label: "...blind & then witness",     path: "/one-word-replay",             description: "Du schreibst Wort für Wort – und siehst erst am Ende, was du geschrieben hast." },
+  { label: "...uninvited thoughts",       path: "/uninvited-thoughts",          description: "Fremde Gedanken mischen sich ungebeten zwischen deine eigenen Worte." },
+  { label: "...with visible corrections", path: "/loschen-korrigieren",         description: "Nichts verschwindet wirklich. Jede Korrektur bleibt sichtbar als Schicht." },
+  { label: "...fleeting",                 path: "/drifting-following-words",    description: "Wörter folgen dir nach und verschwinden, bevor sie ankern können." },
+  { label: "...into thin air",            path: "/drifting-disappearing-words", description: "Text löst sich auf, während du schreibst. Was bleibt, wenn nichts bleibt?" },
+  { label: "...off the grid",             path: "https://github.com/lferreira1998/Writinglines1",                              description: "Schreiben jenseits von Linien und Strukturen. Kein Raster, keine Grenzen." },
+  { label: "...in a spiral",              path: "https://github.com/lferreira1998/9spiraltextvisualization1",                  description: "Dein Text entfaltet sich spiralförmig – nach innen oder nach außen." },
+  { label: "...randomly & spatially",     path: "https://github.com/lferreira1998/83dspacethoughtvisualizationexperiencecopy", description: "Gedanken verteilen sich frei im dreidimensionalen Raum." },
+  { label: "...anonymously in public",    path: "/anonymously-in-public",       description: "Nur der aktuelle Buchstabe ist sichtbar. Alles andere bleibt verborgen." },
+  { label: "...against the clock",        path: "/visual-timer",                description: "Der Hintergrund wird zur Farbe der Schrift, während die Zeit verrinnt." },
 ];
 
 // ── Drift physics ─────────────────────────────────────────────────────────────
@@ -39,8 +39,14 @@ const DAMP    = 0.985;
 function rnd(min: number, max: number) { return Math.random() * (max - min) + min; }
 function depthOpacity(z: number) { return 0.18 + ((z - R_MIN_Z) / (R_MAX_Z - R_MIN_Z)) * 0.55; }
 
+interface Tool {
+  label: string;
+  path: string;
+  description: string;
+}
+
 interface DriftChunk {
-  id: number; label: string; path: string;
+  id: number; label: string; path: string; description: string;
   x: number; y: number; z: number;
   rotateX: number; rotateY: number; rotateZ: number;
   vx: number; vy: number; vz: number;
@@ -51,7 +57,7 @@ interface DriftChunk {
 
 // ── DriftingToolNames ─────────────────────────────────────────────────────────
 
-function DriftingToolNames({ onNavigate, uiHoveredRef }: { onNavigate: (path: string) => void; uiHoveredRef: React.MutableRefObject<boolean> }) {
+function DriftingToolNames({ onWordClick, uiHoveredRef }: { onWordClick: (tool: Tool) => void; uiHoveredRef: React.MutableRefObject<boolean> }) {
   const wrapRef     = useRef<HTMLDivElement>(null);
   const chunksRef   = useRef<DriftChunk[]>([]);
   const elMapRef    = useRef<Map<number, HTMLDivElement>>(new Map());
@@ -105,6 +111,7 @@ function DriftingToolNames({ onNavigate, uiHoveredRef }: { onNavigate: (path: st
             id:           id++,
             label:        t.label,
             path:         t.path,
+            description:  t.description,
             x:            rnd(-xRange, xRange),
             y:            rnd(-yRange, yRange),
             z,
@@ -263,7 +270,7 @@ function DriftingToolNames({ onNavigate, uiHoveredRef }: { onNavigate: (path: st
             ref={el => { if (el) elMapRef.current.set(c.id, el); }}
             onMouseEnter={() => { hoveredRef.current = c.id; }}
             onMouseLeave={() => { hoveredRef.current = null; }}
-            onClick={() => c.path.startsWith("http") ? window.open(c.path, "_blank") : onNavigate(c.path)}
+            onClick={() => onWordClick({ label: c.label, path: c.path, description: c.description })}
             style={{
               position: "absolute", left: "50%", top: "50%",
               fontFamily: "'IBM Plex Mono', 'Courier New', monospace",
@@ -286,6 +293,110 @@ function DriftingToolNames({ onNavigate, uiHoveredRef }: { onNavigate: (path: st
       </div>
     </div>
     </>
+  );
+}
+
+// ── Tool Preview Modal ────────────────────────────────────────────────────────
+
+function ToolPreviewModal({ tool, onClose }: { tool: Tool; onClose: () => void }) {
+  const navigate = useNavigate();
+
+  const handleStart = () => {
+    onClose();
+    if (tool.path.startsWith("http")) {
+      window.open(tool.path, "_blank");
+    } else {
+      navigate(tool.path);
+    }
+  };
+
+  return createPortal(
+    <motion.div
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
+      onClick={onClose}
+      style={{
+        position: "fixed", inset: 0, zIndex: 200,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        backgroundColor: "rgba(17,17,45,0.12)", backdropFilter: "blur(3px)",
+        cursor: "default",
+      }}
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 14, scale: 0.97 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 14, scale: 0.97 }}
+        transition={{ duration: 0.22, delay: 0.05 }}
+        onClick={e => e.stopPropagation()}
+        style={{
+          backgroundColor: "rgba(255,255,255,0.88)",
+          backdropFilter: "blur(12px)",
+          border: BORDER_NAVY,
+          borderRadius: "2px",
+          padding: "28px",
+          width: "360px",
+          boxSizing: "border-box",
+          display: "flex",
+          flexDirection: "column",
+          gap: "20px",
+          cursor: "default",
+        }}
+      >
+        {/* Header */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <p style={{
+            fontFamily: "'IBM Plex Mono', 'Courier New', monospace",
+            fontSize: "20px", fontWeight: 400,
+            color: NAVY, margin: 0, letterSpacing: "0.02em",
+            lineHeight: 1.2,
+          }}>
+            {tool.label}
+          </p>
+          <button
+            onClick={onClose}
+            style={{
+              background: "none", border: "none", cursor: "pointer",
+              fontFamily: FONT_UI, fontSize: "14px", color: "rgba(17,17,45,0.4)",
+              padding: "0 0 0 12px", lineHeight: 1, flexShrink: 0,
+            }}
+          >
+            ×
+          </button>
+        </div>
+
+        {/* Description */}
+        <p style={{
+          fontFamily: FONT_UI, fontSize: "12px", fontWeight: 400,
+          color: "rgba(17,17,45,0.65)", margin: 0,
+          lineHeight: "1.65", letterSpacing: "0.02em",
+        }}>
+          {tool.description}
+        </p>
+
+        {/* GIF preview placeholder */}
+        <div style={{
+          width: "100%", aspectRatio: "16/10",
+          backgroundColor: "rgba(17,17,45,0.04)",
+          border: "1px dashed rgba(17,17,45,0.18)",
+          borderRadius: "2px",
+        }} />
+
+        {/* Start button */}
+        <button
+          onClick={handleStart}
+          style={{
+            width: "100%", height: "40px",
+            backgroundColor: NAVY, color: "#f2f3f6",
+            border: "none", borderRadius: "100px",
+            cursor: "pointer", fontFamily: FONT_UI,
+            fontSize: "12px", fontWeight: 600, letterSpacing: "0.08em",
+          }}
+        >
+          Starten →
+        </button>
+      </motion.div>
+    </motion.div>,
+    document.body
   );
 }
 
@@ -421,9 +532,8 @@ function StartModal({ onClose }: { onClose: () => void }) {
 // ── Overview ──────────────────────────────────────────────────────────────────
 
 export default function Overview() {
-  const [showModal, setShowModal] = useState(false);
-  const navigate = useNavigate();
-  const handleNavigate = useCallback((path: string) => navigate(path), [navigate]);
+  const [showModal,    setShowModal]    = useState(false);
+  const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
   const uiHoveredRef = useRef(false);
 
   return (
@@ -439,7 +549,7 @@ export default function Overview() {
         }}
       >
         {/* ── Drifting tool names ── */}
-        <DriftingToolNames onNavigate={handleNavigate} uiHoveredRef={uiHoveredRef} />
+        <DriftingToolNames onWordClick={setSelectedTool} uiHoveredRef={uiHoveredRef} />
 
         {/* ── Top-left panel ── */}
         <div
@@ -681,6 +791,7 @@ export default function Overview() {
       </div>
 
       <AnimatePresence>
+        {selectedTool && <ToolPreviewModal tool={selectedTool} onClose={() => setSelectedTool(null)} />}
         {showModal && <StartModal onClose={() => setShowModal(false)} />}
       </AnimatePresence>
     </>

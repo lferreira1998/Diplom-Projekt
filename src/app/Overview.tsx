@@ -22,9 +22,9 @@ const TOOLS = [
   { label: "...with visible corrections", path: "/loschen-korrigieren"       },
   { label: "...fleeting",                 path: "/drifting-following-words"  },
   { label: "...into thin air",            path: "/drifting-disappearing-words" },
-  { label: "...off the grid",             path: "https://lferreira1998.github.io/Writinglines1/" },
-  { label: "...in a spiral",              path: "https://lferreira1998.github.io/9spiraltextvisualization1/" },
-  { label: "...randomly & spatially",     path: "https://lferreira1998.github.io/83dspacethoughtvisualizationexperiencecopy/" },
+  { label: "...off the grid",             path: "https://github.com/lferreira1998/Writinglines1" },
+  { label: "...in a spiral",              path: "https://github.com/lferreira1998/9spiraltextvisualization1" },
+  { label: "...randomly & spatially",     path: "https://github.com/lferreira1998/83dspacethoughtvisualizationexperiencecopy" },
   { label: "...anonymously in public",    path: "/anonymously-in-public" },
   { label: "...against the clock",        path: "/visual-timer" },
 ];

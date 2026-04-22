@@ -301,6 +301,12 @@ const DriftingToolNames = memo(function DriftingToolNames({ onWordClick, uiHover
 function ToolPreviewPanel({ tool, onClose }: { tool: Tool; onClose: () => void }) {
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
   return (
     <motion.div
       key={tool.path}
@@ -313,69 +319,69 @@ function ToolPreviewPanel({ tool, onClose }: { tool: Tool; onClose: () => void }
         left: "50%", top: "50%",
         x: "-50%", y: "-50%",
         zIndex: 100,
-        backgroundColor: "#fff",
+        backgroundColor: "rgba(255,255,255,0.6)",
+        backdropFilter: "blur(4px)",
         border: BORDER_NAVY,
-        padding: "24px 28px",
-        width: "320px",
+        padding: "24px",
+        width: "560px",
         boxSizing: "border-box",
         display: "flex",
-        flexDirection: "column",
-        gap: "16px",
+        flexDirection: "row",
+        gap: "24px",
+        alignItems: "stretch",
         cursor: "default",
         pointerEvents: "all",
       }}
     >
-      {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px" }}>
-        <p style={{
-          fontFamily: "'Courier New', monospace",
-          fontSize: "18px", fontWeight: 400,
-          color: NAVY, margin: 0,
-          lineHeight: 1.25, flex: 1,
-        }}>
-          {tool.label}
-        </p>
+      {/* Left column: title + description + start button */}
+      <div style={{ flex: "1 0 0", minWidth: 0, display: "flex", flexDirection: "column", gap: "16px" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          <p style={{
+            fontFamily: "'Courier Prime', 'Courier New', monospace",
+            fontSize: "26px", fontWeight: 400,
+            color: NAVY, margin: 0,
+            letterSpacing: "-1.3px",
+            textAlign: "center",
+            whiteSpace: "nowrap",
+          }}>
+            {tool.label}
+          </p>
+          <p style={{
+            fontFamily: FONT_UI, fontSize: "12px", fontWeight: 600,
+            color: "#060613", margin: 0,
+            lineHeight: "20px", letterSpacing: "0.1152px",
+          }}>
+            {tool.description}
+          </p>
+        </div>
+
         <button
-          onClick={onClose}
+          onClick={() => { onClose(); navigate(tool.path); }}
           style={{
-            background: "none", border: "none", cursor: "pointer",
-            fontSize: "18px", color: "rgba(17,17,45,0.35)",
-            padding: 0, lineHeight: 1, flexShrink: 0,
+            width: "100%", height: "48px",
+            backgroundColor: "rgba(255,255,255,0.5)",
+            border: BORDER_NAVY,
+            cursor: "pointer", fontFamily: FONT_UI,
+            fontSize: "12px", fontWeight: 600,
+            color: NAVY, letterSpacing: "0.1152px",
+            marginTop: "auto",
           }}
         >
-          ×
+          Start
         </button>
       </div>
 
-      {/* Description */}
-      <p style={{
-        fontFamily: FONT_UI, fontSize: "12px", fontWeight: 400,
-        color: "rgba(17,17,45,0.65)", margin: 0,
-        lineHeight: "1.65",
-      }}>
-        {tool.description}
-      </p>
+      {/* Vertical divider */}
+      <div style={{ width: "1px", alignSelf: "stretch", borderLeft: "1px dashed #11112d", flexShrink: 0 }} />
 
-      {/* GIF placeholder */}
-      <div style={{
-        width: "100%", aspectRatio: "16/10",
-        backgroundColor: "rgba(17,17,45,0.04)",
-        border: "1px dashed rgba(17,17,45,0.2)",
-      }} />
-
-      {/* Starten button */}
-      <button
-        onClick={() => { onClose(); navigate(tool.path); }}
-        style={{
-          width: "100%", height: "40px",
-          backgroundColor: NAVY, color: "#f2f3f6",
-          border: "none", borderRadius: "100px",
-          cursor: "pointer", fontFamily: FONT_UI,
-          fontSize: "12px", fontWeight: 600, letterSpacing: "0.08em",
-        }}
-      >
-        Starten →
-      </button>
+      {/* Right column: GIF preview placeholder */}
+      <div style={{ flex: "1 0 0", minWidth: 0, backdropFilter: "blur(6px)", display: "flex", alignSelf: "stretch" }}>
+        <div style={{
+          flex: 1,
+          backgroundColor: "rgba(255,255,255,0.3)",
+          border: BORDER_NAVY,
+        }} />
+      </div>
     </motion.div>
   );
 }

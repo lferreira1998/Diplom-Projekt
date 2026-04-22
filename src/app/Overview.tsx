@@ -22,9 +22,9 @@ const TOOLS = [
   { label: "...with visible corrections", path: "/loschen-korrigieren",         description: "Nichts verschwindet wirklich. Jede Korrektur bleibt sichtbar als Schicht." },
   { label: "...fleeting",                 path: "/drifting-following-words",    description: "Wörter folgen dir nach und verschwinden, bevor sie ankern können." },
   { label: "...into thin air",            path: "/drifting-disappearing-words", description: "Text löst sich auf, während du schreibst. Was bleibt, wenn nichts bleibt?" },
-  { label: "...off the grid",             path: "https://github.com/lferreira1998/Writinglines1",                              description: "Schreiben jenseits von Linien und Strukturen. Kein Raster, keine Grenzen." },
-  { label: "...in a spiral",              path: "https://github.com/lferreira1998/9spiraltextvisualization1",                  description: "Dein Text entfaltet sich spiralförmig – nach innen oder nach außen." },
-  { label: "...randomly & spatially",     path: "https://github.com/lferreira1998/83dspacethoughtvisualizationexperiencecopy", description: "Gedanken verteilen sich frei im dreidimensionalen Raum." },
+  { label: "...off the grid",             path: "/off-the-grid",      description: "Schreiben jenseits von Linien und Strukturen. Kein Raster, keine Grenzen." },
+  { label: "...in a spiral",              path: "/in-a-spiral",       description: "Dein Text entfaltet sich spiralförmig – nach innen oder nach außen." },
+  { label: "...randomly & spatially",     path: "/randomly-spatially", description: "Gedanken verteilen sich frei im dreidimensionalen Raum." },
   { label: "...anonymously in public",    path: "/anonymously-in-public",       description: "Nur der aktuelle Buchstabe ist sichtbar. Alles andere bleibt verborgen." },
   { label: "...against the clock",        path: "/visual-timer",                description: "Der Hintergrund wird zur Farbe der Schrift, während die Zeit verrinnt." },
 ];

@@ -9,6 +9,9 @@ import DriftingDisappearingWords from "./projects/driftingdisappearing/App";
 import ParametrischesTool from "./projects/parametrischestool/App";
 import AnonymouslyInPublic from "./projects/anonymouslyinpublic/App";
 import VisualTimer from "./projects/visualtimer/App";
+import OffTheGrid from "./projects/offthegrid/App";
+import InASpiral from "./projects/inaspiral/App";
+import RandomlySpatially from "./projects/randomlyspatially/App";
 
 export default function App() {
   return (
@@ -23,6 +26,9 @@ export default function App() {
       <Route path="/parametrisches-tool" element={<ParametrischesTool />} />
       <Route path="/anonymously-in-public" element={<AnonymouslyInPublic />} />
       <Route path="/visual-timer" element={<VisualTimer />} />
+      <Route path="/off-the-grid" element={<OffTheGrid />} />
+      <Route path="/in-a-spiral" element={<InASpiral />} />
+      <Route path="/randomly-spatially" element={<RandomlySpatially />} />
     </Routes>
   );
 }

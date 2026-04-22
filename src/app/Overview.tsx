@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, memo } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
@@ -57,7 +57,7 @@ interface DriftChunk {
 
 // ── DriftingToolNames ─────────────────────────────────────────────────────────
 
-function DriftingToolNames({ onWordClick, uiHoveredRef }: { onWordClick: (tool: Tool) => void; uiHoveredRef: React.MutableRefObject<boolean> }) {
+const DriftingToolNames = memo(function DriftingToolNames({ onWordClick, uiHoveredRef }: { onWordClick: (tool: Tool) => void; uiHoveredRef: React.MutableRefObject<boolean> }) {
   const wrapRef     = useRef<HTMLDivElement>(null);
   const chunksRef   = useRef<DriftChunk[]>([]);
   const elMapRef    = useRef<Map<number, HTMLDivElement>>(new Map());
@@ -294,109 +294,89 @@ function DriftingToolNames({ onWordClick, uiHoveredRef }: { onWordClick: (tool: 
     </div>
     </>
   );
-}
+});
 
-// ── Tool Preview Modal ────────────────────────────────────────────────────────
+// ── Tool Preview Panel ────────────────────────────────────────────────────────
 
-function ToolPreviewModal({ tool, onClose }: { tool: Tool; onClose: () => void }) {
+function ToolPreviewPanel({ tool, onClose }: { tool: Tool; onClose: () => void }) {
   const navigate = useNavigate();
 
-  const handleStart = () => {
-    onClose();
-    if (tool.path.startsWith("http")) {
-      window.open(tool.path, "_blank");
-    } else {
-      navigate(tool.path);
-    }
-  };
-
-  return createPortal(
+  return (
     <motion.div
-      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      transition={{ duration: 0.2 }}
-      onClick={onClose}
+      key={tool.path}
+      initial={{ opacity: 0, scale: 0.97 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.97 }}
+      transition={{ duration: 0.14 }}
       style={{
-        position: "fixed", inset: 0, zIndex: 200,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        backgroundColor: "rgba(17,17,45,0.12)", backdropFilter: "blur(3px)",
+        position: "absolute",
+        left: "50%", top: "50%",
+        x: "-50%", y: "-50%",
+        zIndex: 100,
+        backgroundColor: "#fff",
+        border: BORDER_NAVY,
+        padding: "24px 28px",
+        width: "320px",
+        boxSizing: "border-box",
+        display: "flex",
+        flexDirection: "column",
+        gap: "16px",
         cursor: "default",
+        pointerEvents: "all",
       }}
     >
-      <motion.div
-        initial={{ opacity: 0, y: 14, scale: 0.97 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 14, scale: 0.97 }}
-        transition={{ duration: 0.22, delay: 0.05 }}
-        onClick={e => e.stopPropagation()}
-        style={{
-          backgroundColor: "rgba(255,255,255,0.88)",
-          backdropFilter: "blur(12px)",
-          border: BORDER_NAVY,
-          borderRadius: "2px",
-          padding: "28px",
-          width: "360px",
-          boxSizing: "border-box",
-          display: "flex",
-          flexDirection: "column",
-          gap: "20px",
-          cursor: "default",
-        }}
-      >
-        {/* Header */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-          <p style={{
-            fontFamily: "'IBM Plex Mono', 'Courier New', monospace",
-            fontSize: "20px", fontWeight: 400,
-            color: NAVY, margin: 0, letterSpacing: "0.02em",
-            lineHeight: 1.2,
-          }}>
-            {tool.label}
-          </p>
-          <button
-            onClick={onClose}
-            style={{
-              background: "none", border: "none", cursor: "pointer",
-              fontFamily: FONT_UI, fontSize: "14px", color: "rgba(17,17,45,0.4)",
-              padding: "0 0 0 12px", lineHeight: 1, flexShrink: 0,
-            }}
-          >
-            ×
-          </button>
-        </div>
-
-        {/* Description */}
+      {/* Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px" }}>
         <p style={{
-          fontFamily: FONT_UI, fontSize: "12px", fontWeight: 400,
-          color: "rgba(17,17,45,0.65)", margin: 0,
-          lineHeight: "1.65", letterSpacing: "0.02em",
+          fontFamily: "'IBM Plex Mono', 'Courier New', monospace",
+          fontSize: "18px", fontWeight: 400,
+          color: NAVY, margin: 0,
+          lineHeight: 1.25, flex: 1,
         }}>
-          {tool.description}
+          {tool.label}
         </p>
-
-        {/* GIF preview placeholder */}
-        <div style={{
-          width: "100%", aspectRatio: "16/10",
-          backgroundColor: "rgba(17,17,45,0.04)",
-          border: "1px dashed rgba(17,17,45,0.18)",
-          borderRadius: "2px",
-        }} />
-
-        {/* Start button */}
         <button
-          onClick={handleStart}
+          onClick={onClose}
           style={{
-            width: "100%", height: "40px",
-            backgroundColor: NAVY, color: "#f2f3f6",
-            border: "none", borderRadius: "100px",
-            cursor: "pointer", fontFamily: FONT_UI,
-            fontSize: "12px", fontWeight: 600, letterSpacing: "0.08em",
+            background: "none", border: "none", cursor: "pointer",
+            fontSize: "18px", color: "rgba(17,17,45,0.35)",
+            padding: 0, lineHeight: 1, flexShrink: 0,
           }}
         >
-          Starten →
+          ×
         </button>
-      </motion.div>
-    </motion.div>,
-    document.body
+      </div>
+
+      {/* Description */}
+      <p style={{
+        fontFamily: FONT_UI, fontSize: "12px", fontWeight: 400,
+        color: "rgba(17,17,45,0.65)", margin: 0,
+        lineHeight: "1.65",
+      }}>
+        {tool.description}
+      </p>
+
+      {/* GIF placeholder */}
+      <div style={{
+        width: "100%", aspectRatio: "16/10",
+        backgroundColor: "rgba(17,17,45,0.04)",
+        border: "1px dashed rgba(17,17,45,0.2)",
+      }} />
+
+      {/* Starten button */}
+      <button
+        onClick={() => { onClose(); navigate(tool.path); }}
+        style={{
+          width: "100%", height: "40px",
+          backgroundColor: NAVY, color: "#f2f3f6",
+          border: "none", borderRadius: "100px",
+          cursor: "pointer", fontFamily: FONT_UI,
+          fontSize: "12px", fontWeight: 600, letterSpacing: "0.08em",
+        }}
+      >
+        Starten →
+      </button>
+    </motion.div>
   );
 }
 
@@ -672,6 +652,17 @@ export default function Overview() {
           </div>
         </div>
 
+        {/* ── Tool preview panel (no overlay) ── */}
+        <AnimatePresence>
+          {selectedTool && (
+            <ToolPreviewPanel
+              key="tool-panel"
+              tool={selectedTool}
+              onClose={() => setSelectedTool(null)}
+            />
+          )}
+        </AnimatePresence>
+
         {/* ── Bottom-right CTA ── */}
         <div
           onMouseEnter={() => { uiHoveredRef.current = true; }}
@@ -791,7 +782,6 @@ export default function Overview() {
       </div>
 
       <AnimatePresence>
-        {selectedTool && <ToolPreviewModal tool={selectedTool} onClose={() => setSelectedTool(null)} />}
         {showModal && <StartModal onClose={() => setShowModal(false)} />}
       </AnimatePresence>
     </>

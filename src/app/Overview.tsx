@@ -272,7 +272,7 @@ const DriftingToolNames = memo(function DriftingToolNames({ onWordClick, uiHover
             ref={el => { if (el) elMapRef.current.set(c.id, el); }}
             onMouseEnter={() => { hoveredRef.current = c.id; }}
             onMouseLeave={() => { hoveredRef.current = null; }}
-            onClick={() => onWordClick({ label: c.label, path: c.path, video: c.video, description: c.description })}
+            onClick={e => { e.stopPropagation(); onWordClick({ label: c.label, path: c.path, video: c.video, description: c.description }); }}
             style={{
               position: "absolute", left: "50%", top: "50%",
               fontFamily: "'Courier New', monospace",

@@ -387,8 +387,8 @@ function ToolPreviewPanel({ tool, onClose }: { tool: Tool; onClose: () => void }
           autoPlay loop muted playsInline
           style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
         >
-          <source src={`/videos/${tool.video}.webm`} type="video/webm" />
-          <source src={`/videos/${tool.video}.mp4`} type="video/mp4" />
+          <source src={`${import.meta.env.BASE_URL}videos/${tool.video}.webm`} type="video/webm" />
+          <source src={`${import.meta.env.BASE_URL}videos/${tool.video}.mp4`} type="video/mp4" />
         </video>
       </div>
     </motion.div>

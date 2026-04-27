@@ -325,26 +325,29 @@ function ToolPreviewPanel({ tool, onClose }: { tool: Tool; onClose: () => void }
         backdropFilter: "blur(4px)",
         border: BORDER_NAVY,
         padding: "24px",
-        width: "560px",
+        width: "669px",
+        height: "286px",
         boxSizing: "border-box",
         display: "flex",
         flexDirection: "row",
         gap: "24px",
-        alignItems: "stretch",
         cursor: "default",
         pointerEvents: "all",
+        flexShrink: 0,
       }}
     >
-      {/* Left column: title + description + start button */}
-      <div style={{ flex: "1 0 0", minWidth: 0, display: "flex", flexDirection: "column", gap: "16px" }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+      {/* Left column — 238px tall, button always pinned to bottom */}
+      <div style={{ flex: "1 0 0", minWidth: 0, height: "238px", position: "relative" }}>
+
+        {/* Title + description — max 174px so button always fits below */}
+        <div style={{ overflow: "hidden", maxHeight: "174px", display: "flex", flexDirection: "column", gap: "16px" }}>
           <p style={{
             fontFamily: "'Courier Prime', 'Courier New', monospace",
             fontSize: "26px", fontWeight: 400,
             color: NAVY, margin: 0,
             letterSpacing: "-1.3px",
             textAlign: "center",
-            whiteSpace: "nowrap",
+            lineHeight: "1.15",
           }}>
             {tool.label}
           </p>
@@ -357,16 +360,17 @@ function ToolPreviewPanel({ tool, onClose }: { tool: Tool; onClose: () => void }
           </p>
         </div>
 
+        {/* Start button — pinned to bottom at y=190 */}
         <button
           onClick={() => { onClose(); navigate(tool.path); }}
           style={{
-            width: "100%", height: "48px",
+            position: "absolute", bottom: 0, left: 0, right: 0,
+            height: "48px",
             backgroundColor: "rgba(255,255,255,0.5)",
             border: BORDER_NAVY,
             cursor: "pointer", fontFamily: FONT_UI,
             fontSize: "12px", fontWeight: 600,
             color: NAVY, letterSpacing: "0.1152px",
-            marginTop: "auto",
           }}
         >
           Start
@@ -376,14 +380,11 @@ function ToolPreviewPanel({ tool, onClose }: { tool: Tool; onClose: () => void }
       {/* Vertical divider */}
       <div style={{ width: "1px", alignSelf: "stretch", borderLeft: "1px dashed #11112d", flexShrink: 0 }} />
 
-      {/* Right column: video preview */}
-      <div style={{ flex: "1 0 0", minWidth: 0, display: "flex", alignSelf: "stretch", border: BORDER_NAVY, overflow: "hidden" }}>
+      {/* Right column — video fills full height */}
+      <div style={{ flex: "1 0 0", minWidth: 0, alignSelf: "stretch", border: BORDER_NAVY, overflow: "hidden" }}>
         <video
           key={tool.video}
-          autoPlay
-          loop
-          muted
-          playsInline
+          autoPlay loop muted playsInline
           style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
         >
           <source src={`/videos/${tool.video}.webm`} type="video/webm" />

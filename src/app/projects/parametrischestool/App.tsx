@@ -9,7 +9,7 @@ import {
 } from "./components/param-panel";
 
 const FONT_UI = "'Area Inktrap', 'Space Grotesk', sans-serif";
-const BG_COLOR = "#F2F3F6";
+const BG_COLOR = "#F5F5F6";
 const TEXT_COLOR = "#313642";
 
 function formatTime(s: number): string {
@@ -369,7 +369,7 @@ export default function App() {
                 alignItems: "center",
                 padding: "0 24px",
                 border: `1px dashed ${panelOpen ? "#11112d" : "#b4b3b3"}`,
-                backgroundColor: panelOpen ? "#f8f8f8" : "transparent",
+                backgroundColor: panelOpen ? "#F5F5F6" : "transparent",
                 boxSizing: "border-box",
                 transition: "border-color 0.3s, background-color 0.3s",
                 gap: "16px",
@@ -406,7 +406,7 @@ export default function App() {
                 alignItems: "center",
                 justifyContent: "center",
                 border: `1px dashed ${panelOpen ? "#11112d" : "#b4b3b3"}`,
-                backgroundColor: panelOpen ? "#f8f8f8" : "transparent",
+                backgroundColor: panelOpen ? "#F5F5F6" : "transparent",
                 cursor: "pointer",
                 fontFamily: FONT_UI,
                 fontSize: "12px",

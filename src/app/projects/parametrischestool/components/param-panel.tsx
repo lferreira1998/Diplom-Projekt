@@ -185,7 +185,7 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
               <div>
                 <button
                   onClick={() => setZeitCardOpen((o) => !o)}
-                  style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", background: "#f8f8f8", border: "1px dashed #11112d", cursor: "pointer", minHeight: "64px", boxSizing: "border-box", outline: "none" }}
+                  style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", background: "#F5F5F6", border: "1px dashed #11112d", cursor: "pointer", minHeight: "64px", boxSizing: "border-box", outline: "none" }}
                 >
                   <span style={{ fontFamily: FONT_SEMI, fontSize: "13px", color: "#11112d", lineHeight: "17.28px" }}>Zeit</span>
                   <motion.span animate={{ rotate: zeitCardOpen ? 45 : 0 }} transition={{ duration: 0.18 }} style={{ fontSize: "24px", color: "#11112d", fontFamily: FONT_REG, lineHeight: 1 }}>+</motion.span>
@@ -200,7 +200,7 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
                         transition={{ duration: 0.22 }}
                         style={{ overflow: "hidden" }}
                       >
-                      <div style={{ borderLeft: "1px dashed #11112d", borderRight: "1px dashed #11112d", borderBottom: "1px dashed #11112d", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "16px", backgroundColor: "#f8f8f8", marginTop: "-1px" }}>
+                      <div style={{ borderLeft: "1px dashed #11112d", borderRight: "1px dashed #11112d", borderBottom: "1px dashed #11112d", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "16px", backgroundColor: "#F5F5F6", marginTop: "-1px" }}>
 
                         {/* ── Timer sub-section ── */}
                         <div className="flex flex-col gap-[8px]">
@@ -410,7 +410,7 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
               <div style={{ marginTop: "-1px" }}>
                 <button
                   onClick={() => setSichtbarkeitOpen((o) => !o)}
-                  style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", background: "#f8f8f8", border: "1px dashed #11112d", cursor: "pointer", minHeight: "64px", boxSizing: "border-box", outline: "none" }}
+                  style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", background: "#F5F5F6", border: "1px dashed #11112d", cursor: "pointer", minHeight: "64px", boxSizing: "border-box", outline: "none" }}
                 >
                   <span style={{ fontFamily: FONT_SEMI, fontSize: "13px", color: "#11112d", lineHeight: "17.28px" }}>Sichtbarkeit</span>
                   <motion.span animate={{ rotate: sichtbarkeitOpen ? 45 : 0 }} transition={{ duration: 0.18 }} style={{ fontSize: "24px", color: "#11112d", fontFamily: FONT_REG, lineHeight: 1 }}>+</motion.span>
@@ -425,7 +425,7 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
                         transition={{ duration: 0.22 }}
                         style={{ overflow: "hidden" }}
                       >
-                      <div style={{ borderLeft: "1px dashed #11112d", borderRight: "1px dashed #11112d", borderBottom: "1px dashed #11112d", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "16px", backgroundColor: "#f8f8f8", marginTop: "-1px" }}>
+                      <div style={{ borderLeft: "1px dashed #11112d", borderRight: "1px dashed #11112d", borderBottom: "1px dashed #11112d", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "16px", backgroundColor: "#F5F5F6", marginTop: "-1px" }}>
                         <div style={{ borderTop: "1.5px dashed #9a9daa" }} />
 
                         {/* Text sub-section */}
@@ -527,7 +527,7 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
               <div style={{ marginTop: "-1px" }}>
                 <button
                   onClick={() => setKorrigierenOpen((o) => !o)}
-                  style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", background: "#f8f8f8", border: "1px dashed #11112d", cursor: "pointer", minHeight: "64px", boxSizing: "border-box", outline: "none" }}
+                  style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", background: "#F5F5F6", border: "1px dashed #11112d", cursor: "pointer", minHeight: "64px", boxSizing: "border-box", outline: "none" }}
                 >
                   <span style={{ fontFamily: FONT_SEMI, fontSize: "13px", color: "#11112d", lineHeight: "17.28px" }}>Korrigieren</span>
                   <motion.span animate={{ rotate: korrigierenOpen ? 45 : 0 }} transition={{ duration: 0.18 }} style={{ fontSize: "24px", color: "#11112d", fontFamily: FONT_REG, lineHeight: 1 }}>+</motion.span>
@@ -542,7 +542,7 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
                         transition={{ duration: 0.22 }}
                         style={{ overflow: "hidden" }}
                       >
-                      <div style={{ borderLeft: "1px dashed #11112d", borderRight: "1px dashed #11112d", borderBottom: "1px dashed #11112d", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "16px", backgroundColor: "#f8f8f8", marginTop: "-1px" }}>
+                      <div style={{ borderLeft: "1px dashed #11112d", borderRight: "1px dashed #11112d", borderBottom: "1px dashed #11112d", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "16px", backgroundColor: "#F5F5F6", marginTop: "-1px" }}>
 
                         {/* ── Text löschen sub-section ── */}
                         <div className="flex flex-col gap-[8px]">
@@ -673,7 +673,7 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
               <div style={{ marginTop: "-1px" }}>
                 <button
                   onClick={() => setBestaendigkeitOpen((o) => !o)}
-                  style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", background: "#f8f8f8", border: "1px dashed #11112d", cursor: "pointer", minHeight: "64px", boxSizing: "border-box", outline: "none" }}
+                  style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", background: "#F5F5F6", border: "1px dashed #11112d", cursor: "pointer", minHeight: "64px", boxSizing: "border-box", outline: "none" }}
                 >
                   <span style={{ fontFamily: FONT_SEMI, fontSize: "13px", color: "#11112d", lineHeight: "17.28px" }}>Beständigkeit</span>
                   <motion.span animate={{ rotate: bestaendigkeitOpen ? 45 : 0 }} transition={{ duration: 0.18 }} style={{ fontSize: "24px", color: "#11112d", fontFamily: FONT_REG, lineHeight: 1 }}>+</motion.span>
@@ -688,7 +688,7 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
                         transition={{ duration: 0.22 }}
                         style={{ overflow: "hidden" }}
                       >
-                      <div style={{ borderLeft: "1px dashed #11112d", borderRight: "1px dashed #11112d", borderBottom: "1px dashed #11112d", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "16px", backgroundColor: "#f8f8f8", marginTop: "-1px" }}>
+                      <div style={{ borderLeft: "1px dashed #11112d", borderRight: "1px dashed #11112d", borderBottom: "1px dashed #11112d", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "16px", backgroundColor: "#F5F5F6", marginTop: "-1px" }}>
 
                         {/* ── Text driftet ── */}
                         <div className="flex flex-col gap-[8px]">
@@ -854,7 +854,7 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
               <div style={{ marginTop: "-1px" }}>
                 <button
                   onClick={() => setSpaceOrderOpen((o) => !o)}
-                  style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", background: "#f8f8f8", border: "1px dashed #11112d", cursor: "pointer", minHeight: "64px", boxSizing: "border-box", outline: "none" }}
+                  style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", background: "#F5F5F6", border: "1px dashed #11112d", cursor: "pointer", minHeight: "64px", boxSizing: "border-box", outline: "none" }}
                 >
                   <span style={{ fontFamily: FONT_SEMI, fontSize: "13px", color: "#11112d", lineHeight: "17.28px" }}>Space &amp; Order</span>
                   <motion.span animate={{ rotate: spaceOrderOpen ? 45 : 0 }} transition={{ duration: 0.18 }} style={{ fontSize: "24px", color: "#11112d", fontFamily: FONT_REG, lineHeight: 1 }}>+</motion.span>
@@ -869,7 +869,7 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
                         transition={{ duration: 0.22 }}
                         style={{ overflow: "hidden" }}
                       >
-                      <div style={{ borderLeft: "1px dashed #11112d", borderRight: "1px dashed #11112d", borderBottom: "1px dashed #11112d", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "16px", backgroundColor: "#f8f8f8", marginTop: "-1px" }}>
+                      <div style={{ borderLeft: "1px dashed #11112d", borderRight: "1px dashed #11112d", borderBottom: "1px dashed #11112d", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "16px", backgroundColor: "#F5F5F6", marginTop: "-1px" }}>
 
                         {/* ── Spirale ── */}
                         <div className="flex flex-col gap-[8px]">
@@ -975,7 +975,7 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
                 flexShrink: 0,
                 height: "64px",
                 border: "1px dashed #11112d",
-                backgroundColor: "#f8f8f8",
+                backgroundColor: "#F5F5F6",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",

@@ -300,7 +300,7 @@ const DriftingToolNames = memo(function DriftingToolNames({ onWordClick, uiHover
 
 // ── Tool Preview Panel ────────────────────────────────────────────────────────
 
-function ToolPreviewPanel({ tool, onClose }: { tool: Tool; onClose: () => void }) {
+function ToolPreviewPanel({ tool, onClose, uiHoveredRef }: { tool: Tool; onClose: () => void; uiHoveredRef: React.MutableRefObject<boolean> }) {
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -335,6 +335,8 @@ function ToolPreviewPanel({ tool, onClose }: { tool: Tool; onClose: () => void }
         pointerEvents: "all",
         flexShrink: 0,
       }}
+      onMouseEnter={() => { uiHoveredRef.current = true; }}
+      onMouseLeave={() => { uiHoveredRef.current = false; }}
     >
       {/* Left column — 238px tall, button always pinned to bottom */}
       <div style={{ flex: "1 0 0", minWidth: 0, height: "238px", position: "relative" }}>
@@ -674,6 +676,7 @@ export default function Overview() {
               key="tool-panel"
               tool={selectedTool}
               onClose={() => setSelectedTool(null)}
+              uiHoveredRef={uiHoveredRef}
             />
           )}
         </AnimatePresence>

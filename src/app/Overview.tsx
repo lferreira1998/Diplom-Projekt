@@ -16,17 +16,17 @@ const NAVY         = "#11112d";
 const BORDER_NAVY  = "1px dashed #11112d";
 
 const TOOLS = [
-  { label: "...without stopping",         path: "/dont-stop-writing",           description: "Here, \"not writing\" is visualized, because the cursor keeps moving, whether you're keeping up or not." },
-  { label: "...blind & then witness",     path: "/one-word-replay",             description: "You won't see what you're writing. And when you're done, you'll be able to watch yourself think and write." },
-  { label: "...uninvited thoughts",       path: "/uninvited-thoughts",          description: "Focus on the moving dot and try not to think about anything. You won't be able to. Unwelcome thoughts will pop up. Write them down, send them off, and keep focusing on the dot." },
-  { label: "...with visible corrections", path: "/loschen-korrigieren",         description: "Everything you write remains visible. Every correction. Inspired by old typewriters." },
-  { label: "...fleeting",                 path: "/drifting-following-words",    description: "Wörter folgen dir nach und verschwinden, bevor sie ankern können." },
-  { label: "...into thin air",            path: "/drifting-disappearing-words", description: "Write down your thoughts and watch them disappear again… drifting away and fading." },
-  { label: "...off the grid",             path: "/off-the-grid",               description: "Don't write linearly on pre-drawn lines; instead, draw your own lines on which you can then write." },
-  { label: "...in a spiral",              path: "/in-a-spiral",                description: "In this experiment, you write in a spiral; the old is rolled up, and the new is always in focus." },
-  { label: "...randomly & spatially",     path: "/randomly-spatially",         description: "Words and sentences do not appear sequentially here, but are scattered throughout the space at varying distances. Inspired by our chaotic inner world." },
-  { label: "...anonymously in public",    path: "/anonymously-in-public",       description: "Write about your deepest secrets, or about the people next to you. They won't see it, because only the current letter is visible at any given time." },
-  { label: "...against the clock",        path: "/visual-timer",                description: "Here you can visually see time slowly running out, as the background gradually turns the same color as your text…until you can no longer see what you've written." },
+  { label: "...without stopping",         path: "/dont-stop-writing",           video: "without-stopping",       description: "Here, \"not writing\" is visualized, because the cursor keeps moving, whether you're keeping up or not." },
+  { label: "...blind & then witness",     path: "/one-word-replay",             video: "blind-then-witness",     description: "You won't see what you're writing. And when you're done, you'll be able to watch yourself think and write." },
+  { label: "...uninvited thoughts",       path: "/uninvited-thoughts",          video: "uninvited-thoughts",     description: "Focus on the moving dot and try not to think about anything. You won't be able to. Unwelcome thoughts will pop up. Write them down, send them off, and keep focusing on the dot." },
+  { label: "...with visible corrections", path: "/loschen-korrigieren",         video: "visible-corrections",    description: "Everything you write remains visible. Every correction. Inspired by old typewriters." },
+  { label: "...fleeting",                 path: "/drifting-following-words",    video: "fleeting",               description: "Wörter folgen dir nach und verschwinden, bevor sie ankern können." },
+  { label: "...into thin air",            path: "/drifting-disappearing-words", video: "into-thin-air",          description: "Write down your thoughts and watch them disappear again… drifting away and fading." },
+  { label: "...off the grid",             path: "/off-the-grid",               video: "off-the-grid",           description: "Don't write linearly on pre-drawn lines; instead, draw your own lines on which you can then write." },
+  { label: "...in a spiral",              path: "/in-a-spiral",                video: "in-a-spiral",            description: "In this experiment, you write in a spiral; the old is rolled up, and the new is always in focus." },
+  { label: "...randomly & spatially",     path: "/randomly-spatially",         video: "randomly-spatially",     description: "Words and sentences do not appear sequentially here, but are scattered throughout the space at varying distances. Inspired by our chaotic inner world." },
+  { label: "...anonymously in public",    path: "/anonymously-in-public",       video: "anonymously-in-public",  description: "Write about your deepest secrets, or about the people next to you. They won't see it, because only the current letter is visible at any given time." },
+  { label: "...against the clock",        path: "/visual-timer",                video: "against-the-clock",      description: "Here you can visually see time slowly running out, as the background gradually turns the same color as your text…until you can no longer see what you've written." },
 ];
 
 // ── Drift physics ─────────────────────────────────────────────────────────────
@@ -42,11 +42,12 @@ function depthOpacity(z: number) { return 0.18 + ((z - R_MIN_Z) / (R_MAX_Z - R_M
 interface Tool {
   label: string;
   path: string;
+  video: string;
   description: string;
 }
 
 interface DriftChunk {
-  id: number; label: string; path: string; description: string;
+  id: number; label: string; path: string; video: string; description: string;
   x: number; y: number; z: number;
   rotateX: number; rotateY: number; rotateZ: number;
   vx: number; vy: number; vz: number;
@@ -111,6 +112,7 @@ const DriftingToolNames = memo(function DriftingToolNames({ onWordClick, uiHover
             id:           id++,
             label:        t.label,
             path:         t.path,
+            video:        t.video,
             description:  t.description,
             x:            rnd(-xRange, xRange),
             y:            rnd(-yRange, yRange),
@@ -270,7 +272,7 @@ const DriftingToolNames = memo(function DriftingToolNames({ onWordClick, uiHover
             ref={el => { if (el) elMapRef.current.set(c.id, el); }}
             onMouseEnter={() => { hoveredRef.current = c.id; }}
             onMouseLeave={() => { hoveredRef.current = null; }}
-            onClick={() => onWordClick({ label: c.label, path: c.path, description: c.description })}
+            onClick={() => onWordClick({ label: c.label, path: c.path, video: c.video, description: c.description })}
             style={{
               position: "absolute", left: "50%", top: "50%",
               fontFamily: "'Courier New', monospace",
@@ -374,13 +376,19 @@ function ToolPreviewPanel({ tool, onClose }: { tool: Tool; onClose: () => void }
       {/* Vertical divider */}
       <div style={{ width: "1px", alignSelf: "stretch", borderLeft: "1px dashed #11112d", flexShrink: 0 }} />
 
-      {/* Right column: GIF preview placeholder */}
-      <div style={{ flex: "1 0 0", minWidth: 0, backdropFilter: "blur(6px)", display: "flex", alignSelf: "stretch" }}>
-        <div style={{
-          flex: 1,
-          backgroundColor: "rgba(255,255,255,0.3)",
-          border: BORDER_NAVY,
-        }} />
+      {/* Right column: video preview */}
+      <div style={{ flex: "1 0 0", minWidth: 0, display: "flex", alignSelf: "stretch", border: BORDER_NAVY, overflow: "hidden" }}>
+        <video
+          key={tool.video}
+          autoPlay
+          loop
+          muted
+          playsInline
+          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+        >
+          <source src={`/videos/${tool.video}.webm`} type="video/webm" />
+          <source src={`/videos/${tool.video}.mp4`} type="video/mp4" />
+        </video>
       </div>
     </motion.div>
   );

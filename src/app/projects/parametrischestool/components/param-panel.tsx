@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
-import { ChevronRight, Settings2, Info, Check } from "lucide-react";
+import { ChevronRight, Info } from "lucide-react";
 
 export interface WritingParams {
   timerOn: boolean;
@@ -154,82 +154,67 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
 
   return (
     <>
-      {/* ── Toggle button ── */}
-      <motion.button
-        onClick={onToggle}
-        className="fixed top-5 right-5 z-50 cursor-pointer flex items-center justify-center"
-        style={{
-          width: "32px",
-          height: "32px",
-          borderRadius: "8px",
-          border: "1px solid #E0E1E6",
-          backgroundColor: isOpen ? "#313642" : "rgba(242,243,246,0.9)",
-          color: isOpen ? "#F2F3F6" : "#9A9DAA",
-          backdropFilter: "blur(8px)",
-          transition: "background-color 0.2s, color 0.2s",
-        }}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-      >
-        {isOpen ? <ChevronRight size={14} /> : <Settings2 size={14} />}
-      </motion.button>
-
       {/* ── Panel ── */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
             ref={panelRef}
-            initial={{ x: 300, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: 300, opacity: 0 }}
+            initial={{ x: 319 }}
+            animate={{ x: 0 }}
+            exit={{ x: 319 }}
             transition={{ type: "spring", damping: 28, stiffness: 300 }}
-            className="fixed top-0 right-0 h-full z-40 flex flex-col"
             style={{
-              width: "280px",
-              backgroundColor: "rgba(242,243,246,0.95)",
-              backdropFilter: "blur(20px)",
-              borderLeft: "1px solid #E0E1E6",
-              // position:relative so absolute children are positioned within panel
               position: "fixed",
+              top: 0,
+              right: 0,
+              height: "100%",
+              width: "319px",
+              zIndex: 40,
+              display: "flex",
+              flexDirection: "column",
+              backgroundColor: "#f5f5f6",
+              padding: "24px",
+              gap: "16px",
+              boxSizing: "border-box",
             }}
           >
-            {/* Header */}
-            <div className="px-5 pt-14 pb-4">
-              <h2 style={{ fontFamily: FONT_SEMI, fontSize: "0.95rem", color: "#313642", letterSpacing: "-0.01em" }}>
+            {/* Dark header */}
+            <div
+              style={{
+                flexShrink: 0,
+                height: "64px",
+                backgroundColor: "#11112d",
+                border: "1px dashed #11112d",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "0 24px",
+              }}
+            >
+              <span style={{ fontFamily: FONT_SEMI, fontSize: "15.87px", color: "#f2f3f6", letterSpacing: "-0.03em", fontWeight: 700 }}>
                 Parameters
-              </h2>
-              <p style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: "0.72rem", color: "#A0A3AD", lineHeight: 1.5, marginTop: "0.3rem" }}>
-                Changes apply instantly.
-              </p>
+              </span>
+              <button
+                onClick={onToggle}
+                style={{ background: "none", border: "none", cursor: "pointer", fontFamily: FONT_SEMI, fontSize: "13px", color: "#ebeef3", lineHeight: "17.28px" }}
+              >
+                Close
+              </button>
             </div>
 
-            {/* Scrollable content */}
+            {/* Scrollable category list */}
             <div
-              className="flex-1 overflow-y-auto px-5 pb-8 flex flex-col gap-3"
-              style={{ scrollbarWidth: "none" }}
+              style={{ flex: 1, overflowY: "auto", scrollbarWidth: "none", backgroundColor: "#f7f7f7", display: "flex", flexDirection: "column" }}
             >
-              {/* ── Zeit Card ── */}
-              <div className="rounded-[12px] w-full" style={{ border: "1.5px dashed #9a9daa" }}>
-                <div className="px-[24px] py-[12px] flex flex-col gap-[16px] relative">
-
-                  {/* Header row */}
-                  <button
-                    onClick={() => setZeitCardOpen((o) => !o)}
-                    className="flex items-center justify-between cursor-pointer w-full"
-                    style={{ background: "none", border: "none", outline: "none", padding: 0, height: "36px" }}
-                  >
-                    <span style={{ fontFamily: FONT_SEMI, fontSize: "11.52px", color: "#313642", letterSpacing: "0.1152px" }}>
-                      Zeit
-                    </span>
-                    <motion.span
-                      animate={{ rotate: zeitCardOpen ? -90 : 90 }}
-                      transition={{ duration: 0.18 }}
-                      style={{ display: "inline-flex", color: "#B0B3BC" }}
-                    >
-                      <ChevronRight size={14} />
-                    </motion.span>
-                  </button>
-
+              {/* ── Zeit ── */}
+              <div>
+                <button
+                  onClick={() => setZeitCardOpen((o) => !o)}
+                  style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", background: "rgba(255,255,255,0.1)", border: "1px dashed #11112d", cursor: "pointer", minHeight: "64px", boxSizing: "border-box", outline: "none" }}
+                >
+                  <span style={{ fontFamily: FONT_SEMI, fontSize: "13px", color: "#11112d", lineHeight: "17.28px" }}>Zeit</span>
+                  <motion.span animate={{ rotate: zeitCardOpen ? 45 : 0 }} transition={{ duration: 0.18 }} style={{ fontSize: "24px", color: "#11112d", fontFamily: FONT_REG, lineHeight: 1 }}>+</motion.span>
+                </button>
                   <AnimatePresence>
                     {zeitCardOpen && (
                       <motion.div
@@ -237,11 +222,10 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.2 }}
+                        transition={{ duration: 0.22 }}
                         style={{ overflow: "hidden" }}
-                        className="flex flex-col gap-[16px]"
                       >
-                        <div style={{ borderTop: "1.5px dashed #9a9daa" }} />
+                      <div style={{ borderLeft: "1px dashed #11112d", borderRight: "1px dashed #11112d", borderBottom: "1px dashed #11112d", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "16px", backgroundColor: "rgba(255,255,255,0.1)", marginTop: "-1px" }}>
 
                         {/* ── Timer sub-section ── */}
                         <div className="flex flex-col gap-[8px]">
@@ -441,36 +425,21 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
                           </p>
                         </div>
 
+                      </div>
                       </motion.div>
                     )}
                   </AnimatePresence>
-
-                </div>
               </div>
 
-              {/* ── Sichtbarkeit Card ── */}
-              <div className="rounded-[12px] w-full" style={{ border: "1.5px dashed #9a9daa" }}>
-                <div className="px-[24px] py-[12px] flex flex-col gap-[16px]">
-
-                  {/* Header row */}
-                  <button
-                    onClick={() => setSichtbarkeitOpen((o) => !o)}
-                    className="flex items-center justify-between cursor-pointer w-full"
-                    style={{ background: "none", border: "none", outline: "none", padding: 0, height: "36px" }}
-                  >
-                    <span style={{ fontFamily: FONT_SEMI, fontSize: "11.52px", color: "#313642", letterSpacing: "0.1152px" }}>
-                      Sichtbarkeit
-                    </span>
-                    <motion.span
-                      animate={{ rotate: sichtbarkeitOpen ? -90 : 90 }}
-                      transition={{ duration: 0.18 }}
-                      style={{ display: "inline-flex", color: "#B0B3BC" }}
-                    >
-                      <ChevronRight size={14} />
-                    </motion.span>
-                  </button>
-
-                  {/* Expanded content */}
+              {/* ── Sichtbarkeit ── */}
+              <div style={{ marginTop: "-1px" }}>
+                <button
+                  onClick={() => setSichtbarkeitOpen((o) => !o)}
+                  style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", background: "rgba(255,255,255,0.1)", border: "1px dashed #11112d", cursor: "pointer", minHeight: "64px", boxSizing: "border-box", outline: "none" }}
+                >
+                  <span style={{ fontFamily: FONT_SEMI, fontSize: "13px", color: "#11112d", lineHeight: "17.28px" }}>Sichtbarkeit</span>
+                  <motion.span animate={{ rotate: sichtbarkeitOpen ? 45 : 0 }} transition={{ duration: 0.18 }} style={{ fontSize: "24px", color: "#11112d", fontFamily: FONT_REG, lineHeight: 1 }}>+</motion.span>
+                </button>
                   <AnimatePresence>
                     {sichtbarkeitOpen && (
                       <motion.div
@@ -478,11 +447,10 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.2 }}
+                        transition={{ duration: 0.22 }}
                         style={{ overflow: "hidden" }}
-                        className="flex flex-col gap-[16px]"
                       >
-                        {/* Dashed divider */}
+                      <div style={{ borderLeft: "1px dashed #11112d", borderRight: "1px dashed #11112d", borderBottom: "1px dashed #11112d", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "16px", backgroundColor: "rgba(255,255,255,0.1)", marginTop: "-1px" }}>
                         <div style={{ borderTop: "1.5px dashed #9a9daa" }} />
 
                         {/* Text sub-section */}
@@ -574,35 +542,21 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
                           </AnimatePresence>
                         </div>
 
+                      </div>
                       </motion.div>
                     )}
                   </AnimatePresence>
-
-                </div>
               </div>
 
-              {/* ── Korrigieren Card ── */}
-              <div className="rounded-[12px] w-full" style={{ border: "1.5px dashed #9a9daa" }}>
-                <div className="px-[24px] py-[12px] flex flex-col gap-[16px]">
-
-                  {/* Header row */}
-                  <button
-                    onClick={() => setKorrigierenOpen((o) => !o)}
-                    className="flex items-center justify-between cursor-pointer w-full"
-                    style={{ background: "none", border: "none", outline: "none", padding: 0, height: "36px" }}
-                  >
-                    <span style={{ fontFamily: FONT_SEMI, fontSize: "11.52px", color: "#313642", letterSpacing: "0.1152px" }}>
-                      Korrigieren
-                    </span>
-                    <motion.span
-                      animate={{ rotate: korrigierenOpen ? -90 : 90 }}
-                      transition={{ duration: 0.18 }}
-                      style={{ display: "inline-flex", color: "#B0B3BC" }}
-                    >
-                      <ChevronRight size={14} />
-                    </motion.span>
-                  </button>
-
+              {/* ── Korrigieren ── */}
+              <div style={{ marginTop: "-1px" }}>
+                <button
+                  onClick={() => setKorrigierenOpen((o) => !o)}
+                  style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", background: "rgba(255,255,255,0.1)", border: "1px dashed #11112d", cursor: "pointer", minHeight: "64px", boxSizing: "border-box", outline: "none" }}
+                >
+                  <span style={{ fontFamily: FONT_SEMI, fontSize: "13px", color: "#11112d", lineHeight: "17.28px" }}>Korrigieren</span>
+                  <motion.span animate={{ rotate: korrigierenOpen ? 45 : 0 }} transition={{ duration: 0.18 }} style={{ fontSize: "24px", color: "#11112d", fontFamily: FONT_REG, lineHeight: 1 }}>+</motion.span>
+                </button>
                   <AnimatePresence>
                     {korrigierenOpen && (
                       <motion.div
@@ -610,11 +564,10 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.2 }}
+                        transition={{ duration: 0.22 }}
                         style={{ overflow: "hidden" }}
-                        className="flex flex-col gap-[16px]"
                       >
-                        <div style={{ borderTop: "1.5px dashed #9a9daa" }} />
+                      <div style={{ borderLeft: "1px dashed #11112d", borderRight: "1px dashed #11112d", borderBottom: "1px dashed #11112d", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "16px", backgroundColor: "rgba(255,255,255,0.1)", marginTop: "-1px" }}>
 
                         {/* ── Text löschen sub-section ── */}
                         <div className="flex flex-col gap-[8px]">
@@ -732,37 +685,24 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
                           </AnimatePresence>
                         </div>
 
+                      </div>
                       </motion.div>
                     )}
                   </AnimatePresence>
-                </div>
               </div>
 
-              {/* ── Beständigkeit Card ── */}
+              {/* ── Beständigkeit ── */}
               <>
                 <style>{`\n                  .dsw-range { -webkit-appearance:none; appearance:none; background:transparent; cursor:pointer; }\n                  .dsw-range::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:20px; height:20px; border-radius:50%; background:#ecedf0; border:1.5px solid #9a9daa; cursor:pointer; }\n                  .dsw-range::-moz-range-thumb { width:20px; height:20px; border-radius:50%; background:#ecedf0; border:1.5px solid #9a9daa; cursor:pointer; }\n                  .dsw-range::-webkit-slider-runnable-track { height:1px; background:transparent; }\n                  .dsw-range::-moz-range-track { height:1px; background:transparent; }\n                `}</style>
               </>
-              <div className="rounded-[12px] w-full" style={{ border: "1.5px dashed #9a9daa" }}>
-                <div className="px-[24px] py-[12px] flex flex-col gap-[16px]">
-
-                  {/* Header row */}
-                  <button
-                    onClick={() => setBestaendigkeitOpen((o) => !o)}
-                    className="flex items-center justify-between cursor-pointer w-full"
-                    style={{ background: "none", border: "none", outline: "none", padding: 0, height: "36px" }}
-                  >
-                    <span style={{ fontFamily: FONT_SEMI, fontSize: "11.52px", color: "#313642", letterSpacing: "0.1152px" }}>
-                      Beständigkeit
-                    </span>
-                    <motion.span
-                      animate={{ rotate: bestaendigkeitOpen ? -90 : 90 }}
-                      transition={{ duration: 0.18 }}
-                      style={{ display: "inline-flex", color: "#B0B3BC" }}
-                    >
-                      <ChevronRight size={14} />
-                    </motion.span>
-                  </button>
-
+              <div style={{ marginTop: "-1px" }}>
+                <button
+                  onClick={() => setBestaendigkeitOpen((o) => !o)}
+                  style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", background: "rgba(255,255,255,0.1)", border: "1px dashed #11112d", cursor: "pointer", minHeight: "64px", boxSizing: "border-box", outline: "none" }}
+                >
+                  <span style={{ fontFamily: FONT_SEMI, fontSize: "13px", color: "#11112d", lineHeight: "17.28px" }}>Beständigkeit</span>
+                  <motion.span animate={{ rotate: bestaendigkeitOpen ? 45 : 0 }} transition={{ duration: 0.18 }} style={{ fontSize: "24px", color: "#11112d", fontFamily: FONT_REG, lineHeight: 1 }}>+</motion.span>
+                </button>
                   <AnimatePresence>
                     {bestaendigkeitOpen && (
                       <motion.div
@@ -770,11 +710,10 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.2 }}
+                        transition={{ duration: 0.22 }}
                         style={{ overflow: "hidden" }}
-                        className="flex flex-col gap-[16px]"
                       >
-                        <div style={{ borderTop: "1.5px dashed #9a9daa" }} />
+                      <div style={{ borderLeft: "1px dashed #11112d", borderRight: "1px dashed #11112d", borderBottom: "1px dashed #11112d", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "16px", backgroundColor: "rgba(255,255,255,0.1)", marginTop: "-1px" }}>
 
                         {/* ── Text driftet ── */}
                         <div className="flex flex-col gap-[8px]">
@@ -930,34 +869,21 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
                           </AnimatePresence>
                         </div>
 
+                      </div>
                       </motion.div>
                     )}
                   </AnimatePresence>
-                </div>
               </div>
 
-              {/* ── Space & Order Card ── */}
-              <div className="rounded-[12px] w-full" style={{ border: "1.5px dashed #9a9daa" }}>
-                <div className="px-[24px] py-[12px] flex flex-col gap-[16px]">
-
-                  {/* Header row */}
-                  <button
-                    onClick={() => setSpaceOrderOpen((o) => !o)}
-                    className="flex items-center justify-between cursor-pointer w-full"
-                    style={{ background: "none", border: "none", outline: "none", padding: 0, height: "36px" }}
-                  >
-                    <span style={{ fontFamily: FONT_SEMI, fontSize: "11.52px", color: "#313642", letterSpacing: "0.1152px" }}>
-                      Space &amp; Order
-                    </span>
-                    <motion.span
-                      animate={{ rotate: spaceOrderOpen ? -90 : 90 }}
-                      transition={{ duration: 0.18 }}
-                      style={{ display: "inline-flex", color: "#B0B3BC" }}
-                    >
-                      <ChevronRight size={14} />
-                    </motion.span>
-                  </button>
-
+              {/* ── Space & Order ── */}
+              <div style={{ marginTop: "-1px" }}>
+                <button
+                  onClick={() => setSpaceOrderOpen((o) => !o)}
+                  style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", background: "rgba(255,255,255,0.1)", border: "1px dashed #11112d", cursor: "pointer", minHeight: "64px", boxSizing: "border-box", outline: "none" }}
+                >
+                  <span style={{ fontFamily: FONT_SEMI, fontSize: "13px", color: "#11112d", lineHeight: "17.28px" }}>Space &amp; Order</span>
+                  <motion.span animate={{ rotate: spaceOrderOpen ? 45 : 0 }} transition={{ duration: 0.18 }} style={{ fontSize: "24px", color: "#11112d", fontFamily: FONT_REG, lineHeight: 1 }}>+</motion.span>
+                </button>
                   <AnimatePresence>
                     {spaceOrderOpen && (
                       <motion.div
@@ -965,11 +891,10 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.2 }}
+                        transition={{ duration: 0.22 }}
                         style={{ overflow: "hidden" }}
-                        className="flex flex-col gap-[16px]"
                       >
-                        <div style={{ borderTop: "1.5px dashed #9a9daa" }} />
+                      <div style={{ borderLeft: "1px dashed #11112d", borderRight: "1px dashed #11112d", borderBottom: "1px dashed #11112d", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "16px", backgroundColor: "rgba(255,255,255,0.1)", marginTop: "-1px" }}>
 
                         {/* ── Spirale ── */}
                         <div className="flex flex-col gap-[8px]">
@@ -1061,13 +986,30 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
                           </AnimatePresence>
                         </div>
 
+                      </div>
                       </motion.div>
                     )}
                   </AnimatePresence>
-
-                </div>
               </div>
 
+            </div>
+
+            {/* Bottom: Name, Description & Writing Prompt */}
+            <div
+              style={{
+                flexShrink: 0,
+                height: "64px",
+                border: "1px dashed #11112d",
+                backgroundColor: "#f8f8f8",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "0 24px",
+              }}
+            >
+              <span style={{ fontFamily: FONT_SEMI, fontSize: "12px", color: "#11112d", textAlign: "center", letterSpacing: "0.1152px", lineHeight: "17.28px" }}>
+                Name, Description &amp; Writing Prompt
+              </span>
             </div>
 
           </motion.div>

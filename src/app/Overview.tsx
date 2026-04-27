@@ -337,6 +337,7 @@ function ToolPreviewPanel({ tool, onClose, uiHoveredRef }: { tool: Tool; onClose
       }}
       onMouseEnter={() => { uiHoveredRef.current = true; }}
       onMouseLeave={() => { uiHoveredRef.current = false; }}
+      onClick={e => e.stopPropagation()}
     >
       {/* Left column — 238px tall, button always pinned to bottom */}
       <div style={{ flex: "1 0 0", minWidth: 0, height: "238px", position: "relative" }}>
@@ -544,6 +545,7 @@ export default function Overview() {
           overflow: "hidden",
           cursor: "none",
         }}
+        onClick={() => setSelectedTool(null)}
       >
         {/* ── Drifting tool names ── */}
         <DriftingToolNames onWordClick={setSelectedTool} uiHoveredRef={uiHoveredRef} />

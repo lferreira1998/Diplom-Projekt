@@ -159,58 +159,33 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
         {isOpen && (
           <motion.div
             ref={panelRef}
-            initial={{ x: 319 }}
+            initial={{ x: 343 }}
             animate={{ x: 0 }}
-            exit={{ x: 319 }}
+            exit={{ x: 343 }}
             transition={{ type: "spring", damping: 28, stiffness: 300 }}
             style={{
               position: "fixed",
-              top: 0,
+              top: "80px",
               right: 0,
-              height: "100%",
-              width: "319px",
+              height: "calc(100% - 80px)",
+              width: "343px",
               zIndex: 40,
               display: "flex",
               flexDirection: "column",
               backgroundColor: "#f5f5f6",
-              padding: "24px",
-              gap: "16px",
+              padding: "0 48px 24px 24px",
               boxSizing: "border-box",
             }}
           >
-            {/* Dark header */}
-            <div
-              style={{
-                flexShrink: 0,
-                height: "64px",
-                backgroundColor: "#11112d",
-                border: "1px dashed #11112d",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "0 24px",
-              }}
-            >
-              <span style={{ fontFamily: FONT_SEMI, fontSize: "15.87px", color: "#f2f3f6", letterSpacing: "-0.03em", fontWeight: 700 }}>
-                Parameters
-              </span>
-              <button
-                onClick={onToggle}
-                style={{ background: "none", border: "none", cursor: "pointer", fontFamily: FONT_SEMI, fontSize: "13px", color: "#ebeef3", lineHeight: "17.28px" }}
-              >
-                Close
-              </button>
-            </div>
-
             {/* Scrollable category list */}
             <div
-              style={{ flex: 1, overflowY: "auto", scrollbarWidth: "none", backgroundColor: "#f7f7f7", display: "flex", flexDirection: "column" }}
+              style={{ flex: 1, overflowY: "auto", scrollbarWidth: "none", backgroundColor: "#f5f5f6", display: "flex", flexDirection: "column" }}
             >
               {/* ── Zeit ── */}
               <div>
                 <button
                   onClick={() => setZeitCardOpen((o) => !o)}
-                  style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", background: "rgba(255,255,255,0.1)", border: "1px dashed #11112d", cursor: "pointer", minHeight: "64px", boxSizing: "border-box", outline: "none" }}
+                  style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", background: "#f8f8f8", border: "1px dashed #11112d", cursor: "pointer", minHeight: "64px", boxSizing: "border-box", outline: "none" }}
                 >
                   <span style={{ fontFamily: FONT_SEMI, fontSize: "13px", color: "#11112d", lineHeight: "17.28px" }}>Zeit</span>
                   <motion.span animate={{ rotate: zeitCardOpen ? 45 : 0 }} transition={{ duration: 0.18 }} style={{ fontSize: "24px", color: "#11112d", fontFamily: FONT_REG, lineHeight: 1 }}>+</motion.span>
@@ -225,7 +200,7 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
                         transition={{ duration: 0.22 }}
                         style={{ overflow: "hidden" }}
                       >
-                      <div style={{ borderLeft: "1px dashed #11112d", borderRight: "1px dashed #11112d", borderBottom: "1px dashed #11112d", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "16px", backgroundColor: "rgba(255,255,255,0.1)", marginTop: "-1px" }}>
+                      <div style={{ borderLeft: "1px dashed #11112d", borderRight: "1px dashed #11112d", borderBottom: "1px dashed #11112d", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "16px", backgroundColor: "#f8f8f8", marginTop: "-1px" }}>
 
                         {/* ── Timer sub-section ── */}
                         <div className="flex flex-col gap-[8px]">
@@ -435,7 +410,7 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
               <div style={{ marginTop: "-1px" }}>
                 <button
                   onClick={() => setSichtbarkeitOpen((o) => !o)}
-                  style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", background: "rgba(255,255,255,0.1)", border: "1px dashed #11112d", cursor: "pointer", minHeight: "64px", boxSizing: "border-box", outline: "none" }}
+                  style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", background: "#f8f8f8", border: "1px dashed #11112d", cursor: "pointer", minHeight: "64px", boxSizing: "border-box", outline: "none" }}
                 >
                   <span style={{ fontFamily: FONT_SEMI, fontSize: "13px", color: "#11112d", lineHeight: "17.28px" }}>Sichtbarkeit</span>
                   <motion.span animate={{ rotate: sichtbarkeitOpen ? 45 : 0 }} transition={{ duration: 0.18 }} style={{ fontSize: "24px", color: "#11112d", fontFamily: FONT_REG, lineHeight: 1 }}>+</motion.span>
@@ -450,7 +425,7 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
                         transition={{ duration: 0.22 }}
                         style={{ overflow: "hidden" }}
                       >
-                      <div style={{ borderLeft: "1px dashed #11112d", borderRight: "1px dashed #11112d", borderBottom: "1px dashed #11112d", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "16px", backgroundColor: "rgba(255,255,255,0.1)", marginTop: "-1px" }}>
+                      <div style={{ borderLeft: "1px dashed #11112d", borderRight: "1px dashed #11112d", borderBottom: "1px dashed #11112d", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "16px", backgroundColor: "#f8f8f8", marginTop: "-1px" }}>
                         <div style={{ borderTop: "1.5px dashed #9a9daa" }} />
 
                         {/* Text sub-section */}
@@ -552,7 +527,7 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
               <div style={{ marginTop: "-1px" }}>
                 <button
                   onClick={() => setKorrigierenOpen((o) => !o)}
-                  style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", background: "rgba(255,255,255,0.1)", border: "1px dashed #11112d", cursor: "pointer", minHeight: "64px", boxSizing: "border-box", outline: "none" }}
+                  style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", background: "#f8f8f8", border: "1px dashed #11112d", cursor: "pointer", minHeight: "64px", boxSizing: "border-box", outline: "none" }}
                 >
                   <span style={{ fontFamily: FONT_SEMI, fontSize: "13px", color: "#11112d", lineHeight: "17.28px" }}>Korrigieren</span>
                   <motion.span animate={{ rotate: korrigierenOpen ? 45 : 0 }} transition={{ duration: 0.18 }} style={{ fontSize: "24px", color: "#11112d", fontFamily: FONT_REG, lineHeight: 1 }}>+</motion.span>
@@ -567,7 +542,7 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
                         transition={{ duration: 0.22 }}
                         style={{ overflow: "hidden" }}
                       >
-                      <div style={{ borderLeft: "1px dashed #11112d", borderRight: "1px dashed #11112d", borderBottom: "1px dashed #11112d", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "16px", backgroundColor: "rgba(255,255,255,0.1)", marginTop: "-1px" }}>
+                      <div style={{ borderLeft: "1px dashed #11112d", borderRight: "1px dashed #11112d", borderBottom: "1px dashed #11112d", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "16px", backgroundColor: "#f8f8f8", marginTop: "-1px" }}>
 
                         {/* ── Text löschen sub-section ── */}
                         <div className="flex flex-col gap-[8px]">
@@ -698,7 +673,7 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
               <div style={{ marginTop: "-1px" }}>
                 <button
                   onClick={() => setBestaendigkeitOpen((o) => !o)}
-                  style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", background: "rgba(255,255,255,0.1)", border: "1px dashed #11112d", cursor: "pointer", minHeight: "64px", boxSizing: "border-box", outline: "none" }}
+                  style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", background: "#f8f8f8", border: "1px dashed #11112d", cursor: "pointer", minHeight: "64px", boxSizing: "border-box", outline: "none" }}
                 >
                   <span style={{ fontFamily: FONT_SEMI, fontSize: "13px", color: "#11112d", lineHeight: "17.28px" }}>Beständigkeit</span>
                   <motion.span animate={{ rotate: bestaendigkeitOpen ? 45 : 0 }} transition={{ duration: 0.18 }} style={{ fontSize: "24px", color: "#11112d", fontFamily: FONT_REG, lineHeight: 1 }}>+</motion.span>
@@ -713,7 +688,7 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
                         transition={{ duration: 0.22 }}
                         style={{ overflow: "hidden" }}
                       >
-                      <div style={{ borderLeft: "1px dashed #11112d", borderRight: "1px dashed #11112d", borderBottom: "1px dashed #11112d", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "16px", backgroundColor: "rgba(255,255,255,0.1)", marginTop: "-1px" }}>
+                      <div style={{ borderLeft: "1px dashed #11112d", borderRight: "1px dashed #11112d", borderBottom: "1px dashed #11112d", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "16px", backgroundColor: "#f8f8f8", marginTop: "-1px" }}>
 
                         {/* ── Text driftet ── */}
                         <div className="flex flex-col gap-[8px]">
@@ -879,7 +854,7 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
               <div style={{ marginTop: "-1px" }}>
                 <button
                   onClick={() => setSpaceOrderOpen((o) => !o)}
-                  style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", background: "rgba(255,255,255,0.1)", border: "1px dashed #11112d", cursor: "pointer", minHeight: "64px", boxSizing: "border-box", outline: "none" }}
+                  style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", background: "#f8f8f8", border: "1px dashed #11112d", cursor: "pointer", minHeight: "64px", boxSizing: "border-box", outline: "none" }}
                 >
                   <span style={{ fontFamily: FONT_SEMI, fontSize: "13px", color: "#11112d", lineHeight: "17.28px" }}>Space &amp; Order</span>
                   <motion.span animate={{ rotate: spaceOrderOpen ? 45 : 0 }} transition={{ duration: 0.18 }} style={{ fontSize: "24px", color: "#11112d", fontFamily: FONT_REG, lineHeight: 1 }}>+</motion.span>
@@ -894,7 +869,7 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
                         transition={{ duration: 0.22 }}
                         style={{ overflow: "hidden" }}
                       >
-                      <div style={{ borderLeft: "1px dashed #11112d", borderRight: "1px dashed #11112d", borderBottom: "1px dashed #11112d", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "16px", backgroundColor: "rgba(255,255,255,0.1)", marginTop: "-1px" }}>
+                      <div style={{ borderLeft: "1px dashed #11112d", borderRight: "1px dashed #11112d", borderBottom: "1px dashed #11112d", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "16px", backgroundColor: "#f8f8f8", marginTop: "-1px" }}>
 
                         {/* ── Spirale ── */}
                         <div className="flex flex-col gap-[8px]">

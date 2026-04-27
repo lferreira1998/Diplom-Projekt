@@ -358,90 +358,90 @@ export default function App() {
         }}
       >
         {/* Top bar */}
-        <div className="px-6 md:px-10 pt-5 pb-3">
+        <div
+          style={{
+            padding: "24px",
+            paddingBottom: 0,
+            paddingRight: panelOpen ? "343px" : "24px",
+            transition: "padding-right 0.42s cubic-bezier(0.16,1,0.3,1)",
+          }}
+        >
           <div
-            className="flex items-center justify-between transition-all duration-300"
-            style={{ paddingRight: panelOpen ? "296px" : "0px" }}
+            style={{
+              position: "relative",
+              height: "64px",
+              display: "flex",
+              alignItems: "center",
+              backgroundColor: "#f8f8f8",
+              border: "1px dashed #11112d",
+              padding: "0 24px",
+              boxSizing: "border-box",
+            }}
           >
             <span
               style={{
                 fontFamily: FONT_UI,
-                fontSize: "0.68rem",
+                fontSize: "15.87px",
                 color: contentTextColor,
-                letterSpacing: "0.2em",
-                textTransform: "uppercase",
+                letterSpacing: "-0.03em",
+                fontWeight: 700,
                 transition: "color 1s linear",
               }}
             >
               Don't Stop Writing
             </span>
 
-            <div className="flex items-center gap-4">
-              {/* Countdown */}
+            <div className="flex items-center gap-4" style={{ marginLeft: "auto", marginRight: panelOpen ? 0 : "140px" }}>
               {params.timerOn && timerRunning && (
-                <span
-                  className="tabular-nums"
-                  style={{
-                    fontFamily: FONT_UI,
-                    fontSize: "0.6rem",
-                    color: timeLeft <= 10 ? "#E05252" : contentTextColor,
-                    letterSpacing: "0.08em",
-                    opacity: 0.6,
-                    transition: "color 0.3s",
-                  }}
-                >
+                <span className="tabular-nums" style={{ fontFamily: FONT_UI, fontSize: "0.6rem", color: timeLeft <= 10 ? "#E05252" : contentTextColor, letterSpacing: "0.08em", opacity: 0.6, transition: "color 0.3s" }}>
                   {formatTime(timeLeft)}
                 </span>
               )}
-
               {positions.length > 0 && (
                 <>
-                  <span
-                    className="tabular-nums"
-                    style={{
-                      fontFamily: FONT_UI,
-                      fontSize: "0.6rem",
-                      color: contentTextColor,
-                      opacity: 0.4,
-                      letterSpacing: "0.08em",
-                      transition: "color 1s linear",
-                    }}
-                  >
+                  <span className="tabular-nums" style={{ fontFamily: FONT_UI, fontSize: "0.6rem", color: contentTextColor, opacity: 0.4, letterSpacing: "0.08em", transition: "color 1s linear" }}>
                     {wordCount} {wordCount === 1 ? "word" : "words"}
                   </span>
-                  <span
-                    className="tabular-nums"
-                    style={{
-                      fontFamily: FONT_UI,
-                      fontSize: "0.6rem",
-                      color: contentTextColor,
-                      opacity: 0.4,
-                      letterSpacing: "0.08em",
-                      transition: "color 1s linear",
-                    }}
-                  >
+                  <span className="tabular-nums" style={{ fontFamily: FONT_UI, fontSize: "0.6rem", color: contentTextColor, opacity: 0.4, letterSpacing: "0.08em", transition: "color 1s linear" }}>
                     {visibleText.length} chars
                   </span>
                 </>
               )}
             </div>
+
+            <AnimatePresence>
+              {!panelOpen && (
+                <motion.button
+                  key="open-params"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.18 }}
+                  onClick={() => setPanelOpen(true)}
+                  style={{
+                    position: "absolute",
+                    right: "-1px",
+                    top: "-1px",
+                    height: "calc(100% + 2px)",
+                    padding: "0 24px",
+                    border: "1px dashed #11112d",
+                    background: "transparent",
+                    cursor: "pointer",
+                    fontFamily: FONT_UI,
+                    fontSize: "13px",
+                    color: "#5c5c6c",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  Open Parameters
+                </motion.button>
+              )}
+            </AnimatePresence>
           </div>
-          <div
-            className="mt-2 transition-all duration-300"
-            style={{
-              borderTop: `1px solid ${
-                params.timerOn && params.visualTimer && progress > 0.3
-                  ? "rgba(242,243,246,0.15)"
-                  : "#E0E1E6"
-              }`,
-              marginRight: panelOpen ? "296px" : "0px",
-              transition: "border-color 1s linear, margin-right 0.3s",
-            }}
-          />
         </div>
 
         {/* Writing area */}
-        <div className="flex-1 flex flex-col px-6 md:px-10 pb-8">
+        <div className="flex-1 flex flex-col pb-8" style={{ paddingLeft: "24px", paddingRight: panelOpen ? "343px" : "24px", transition: "padding-right 0.42s cubic-bezier(0.16,1,0.3,1)" }}>
           <WritingZone
             positions={positions}
             cursor={cursor}

@@ -1250,7 +1250,7 @@ export function WritingZone({
     return (
       <div
         className="flex-1 relative transition-all duration-300"
-        style={{ paddingRight: panelOpen ? "296px" : "0px" }}
+        style={{ paddingRight: panelOpen ? "319px" : "0px" }}
       >
         <div
           ref={containerRef}
@@ -1272,7 +1272,7 @@ export function WritingZone({
     return (
       <div
         className="flex-1 relative transition-all duration-300"
-        style={{ paddingRight: panelOpen ? "296px" : "0px" }}
+        style={{ paddingRight: panelOpen ? "319px" : "0px" }}
       >
         <div
           ref={containerRef}
@@ -1303,7 +1303,7 @@ export function WritingZone({
     <>
       <div
         className="flex-1 flex items-start pt-6 md:pt-12 transition-all duration-300"
-        style={{ paddingRight: panelOpen ? "296px" : "0px" }}
+        style={{ paddingRight: panelOpen ? "319px" : "0px" }}
       >
         <div
           ref={containerRef}

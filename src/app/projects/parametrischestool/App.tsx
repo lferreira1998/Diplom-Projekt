@@ -360,6 +360,30 @@ export default function App() {
         {/* Top bar */}
         <div style={{ padding: "24px 48px 16px 48px" }}>
           <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
+            {/* Zurück button */}
+            <button
+              onClick={() => window.history.back()}
+              style={{
+                width: "271px",
+                height: "40px",
+                flexShrink: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                border: "1px dashed #b4b3b3",
+                backgroundColor: "transparent",
+                cursor: "pointer",
+                fontFamily: FONT_UI,
+                fontSize: "12px",
+                color: contentTextColor,
+                letterSpacing: "-0.48px",
+                fontWeight: 600,
+                transition: "color 1s linear",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Zurück
+            </button>
             {/* Title box */}
             <div
               style={{
@@ -368,10 +392,9 @@ export default function App() {
                 display: "flex",
                 alignItems: "center",
                 padding: "0 24px",
-                border: `1px dashed ${panelOpen ? "#11112d" : "#b4b3b3"}`,
-                backgroundColor: panelOpen ? "#F5F5F6" : "transparent",
+                border: "1px dashed #b4b3b3",
+                backgroundColor: "transparent",
                 boxSizing: "border-box",
-                transition: "border-color 0.3s, background-color 0.3s",
                 gap: "16px",
               }}
             >
@@ -402,18 +425,18 @@ export default function App() {
               style={{
                 width: "271px",
                 height: "40px",
+                flexShrink: 0,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                border: `1px dashed ${panelOpen ? "#11112d" : "#b4b3b3"}`,
-                backgroundColor: panelOpen ? "#F5F5F6" : "transparent",
+                border: "1px dashed #b4b3b3",
+                backgroundColor: "transparent",
                 cursor: "pointer",
                 fontFamily: FONT_UI,
                 fontSize: "12px",
                 color: "#11112d",
                 letterSpacing: "-0.48px",
                 fontWeight: 600,
-                transition: "border-color 0.3s, background-color 0.3s",
                 whiteSpace: "nowrap",
               }}
             >
@@ -423,7 +446,7 @@ export default function App() {
         </div>
 
         {/* Writing area */}
-        <div className="flex-1 flex flex-col pb-8" style={{ paddingLeft: "48px", paddingRight: panelOpen ? "343px" : "48px", transition: "padding-right 0.42s cubic-bezier(0.16,1,0.3,1)" }}>
+        <div className="flex-1 flex flex-col pb-8" style={{ paddingLeft: panelOpen ? "48px" : "335px", paddingRight: panelOpen ? "343px" : "48px", transition: "padding-left 0.42s cubic-bezier(0.16,1,0.3,1), padding-right 0.42s cubic-bezier(0.16,1,0.3,1)" }}>
           <WritingZone
             positions={positions}
             cursor={cursor}

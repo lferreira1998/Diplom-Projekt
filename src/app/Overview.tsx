@@ -398,139 +398,10 @@ function ToolPreviewPanel({ tool, onClose, uiHoveredRef }: { tool: Tool; onClose
   );
 }
 
-// ── Start Modal ───────────────────────────────────────────────────────────────
-
-function StartModal({ onClose }: { onClose: () => void }) {
-  const navigate = useNavigate();
-  const [name,        setName]        = useState("");
-  const [prompt,      setPrompt]      = useState("");
-  const [description, setDescription] = useState("");
-
-  const inputStyle: React.CSSProperties = {
-    backgroundColor: "#F4F5F7",
-    border: "1px dashed #D0D1D6",
-    borderRadius: "12px",
-    height: "40px",
-    width: "100%",
-    padding: "0 12px",
-    fontFamily: FONT_UI,
-    fontSize: "10.88px",
-    color: "#313642",
-    letterSpacing: "0.3264px",
-    outline: "none",
-    boxSizing: "border-box",
-  };
-
-  const labelStyle: React.CSSProperties = {
-    fontFamily: FONT_UI,
-    fontSize: "11.52px",
-    fontWeight: 600,
-    letterSpacing: "0.1152px",
-    lineHeight: "17.28px",
-    color: "#313642",
-    margin: 0,
-  };
-
-  const hintStyle: React.CSSProperties = {
-    fontFamily: FONT_UI,
-    fontSize: "9.6px",
-    letterSpacing: "0.768px",
-    lineHeight: "14.4px",
-    color: "#7A7D89",
-    margin: 0,
-  };
-
-  return createPortal(
-    <motion.div
-      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      transition={{ duration: 0.25 }}
-      onClick={onClose}
-      style={{
-        position: "fixed", inset: 0, zIndex: 300,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        backgroundColor: "rgba(6,6,19,0.65)", backdropFilter: "blur(8px)",
-        padding: "24px",
-      }}
-    >
-      <motion.div
-        initial={{ opacity: 0, y: 18, scale: 0.97 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 18, scale: 0.97 }}
-        transition={{ duration: 0.24, delay: 0.06 }}
-        onClick={e => e.stopPropagation()}
-        style={{
-          backgroundColor: "#ECEDF0", border: "1px dashed #C3C4C8",
-          borderRadius: "12px", padding: "24px",
-          display: "flex", flexDirection: "column", gap: "24px",
-          width: "100%", maxWidth: "420px", boxSizing: "border-box",
-        }}
-      >
-        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-          <p style={{ fontFamily: FONT_UI, fontSize: "20px", fontWeight: 400, letterSpacing: "0.1152px", color: "#313642", margin: 0 }}>
-            Erstelle dein eigenes Writing-Tool
-          </p>
-          <div style={{ borderTop: "1px dashed #C3C4C8" }} />
-          <p style={{ fontFamily: FONT_UI, fontSize: "11.52px", letterSpacing: "0.1152px", lineHeight: "17.28px", color: "#313642", margin: 0 }}>
-            Verändere die Parameter und erstelle dein eigenes Tool.<br />
-            Wenn du fertig bist, kannst du es speichern und mit anderen teilen.
-          </p>
-        </div>
-
-        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-          <p style={labelStyle}>Name</p>
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            <input type="text" placeholder="Name eingeben" value={name} onChange={e => setName(e.target.value)} style={inputStyle} />
-            <p style={hintStyle}>Du kannst den Namen jederzeit ändern.</p>
-          </div>
-        </div>
-
-        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-          <p style={labelStyle}>Schreibanstoß oder Aufgaben</p>
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            <input type="text" placeholder="Beispiel: Schreibe etwas über dich..." value={prompt} onChange={e => setPrompt(e.target.value)} style={inputStyle} />
-            <p style={hintStyle}>Das hilft Menschen beim Schreiben. Von allgemein bis sehr spezifisch.</p>
-          </div>
-        </div>
-
-        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-          <p style={labelStyle}>Beschreibung oder Regel</p>
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            <textarea
-              placeholder="Beispiel: Dieses Tool hilft anonym in öffentlichen Plätzen zu schreiben..."
-              value={description}
-              onChange={e => setDescription(e.target.value)}
-              style={{
-                backgroundColor: "#F4F5F7", border: "1px dashed #D0D1D6",
-                borderRadius: "12px", height: "120px", width: "100%",
-                padding: "12px", fontFamily: FONT_UI, fontSize: "10.88px",
-                color: "#313642", letterSpacing: "0.3264px", lineHeight: "16.32px",
-                outline: "none", resize: "none", boxSizing: "border-box",
-              }}
-            />
-            <p style={hintStyle}>Das hilft Menschen beim Schreiben.</p>
-          </div>
-        </div>
-
-        <button
-          onClick={() => navigate("/parametrisches-tool")}
-          style={{
-            width: "100%", height: "29px", backgroundColor: "#313642", color: "#ECEDF0",
-            border: "none", borderRadius: "100px", cursor: "pointer",
-            fontFamily: FONT_UI, fontSize: "10.88px", fontWeight: 600, letterSpacing: "0.3264px",
-          }}
-        >
-          Loslegen
-        </button>
-      </motion.div>
-    </motion.div>,
-    document.body
-  );
-}
-
 // ── Overview ──────────────────────────────────────────────────────────────────
 
 export default function Overview() {
-  const [showModal,    setShowModal]    = useState(false);
+  const navigate = useNavigate();
   const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
   const uiHoveredRef = useRef(false);
 
@@ -702,7 +573,7 @@ export default function Overview() {
         >
           {/* Create your own — grid overlay */}
           <div
-            onClick={() => setShowModal(true)}
+            onClick={() => navigate("/parametrisches-tool")}
             style={{
               position: "relative",
               cursor: "pointer",
@@ -801,9 +672,6 @@ export default function Overview() {
         </div>
       </div>
 
-      <AnimatePresence>
-        {showModal && <StartModal onClose={() => setShowModal(false)} />}
-      </AnimatePresence>
     </>
   );
 }

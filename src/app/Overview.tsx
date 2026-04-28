@@ -575,31 +575,43 @@ export default function Overview() {
             style={{
               position: "relative",
               cursor: "pointer",
-              width: "175.574px",
-              height: "238.844px",
+              width: "191px",
+              height: "268.899px",
               flexShrink: 0,
-              backgroundColor: "rgba(255,255,255,0.5)",
-              backdropFilter: "blur(4px)",
-              border: BORDER_NAVY,
-              boxSizing: "border-box",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
             }}
           >
-            {/* Arrow — top right */}
+            {/* Dog-eared page shape */}
             <svg
-              viewBox="0 0 46 44"
-              width="46" height="44"
-              style={{ position: "absolute", top: 0, right: 0, pointerEvents: "none" }}
+              width="191" height="268.899"
+              viewBox="0 0 191 268.899"
               fill="none"
+              style={{ display: "block", position: "absolute", inset: 0 }}
             >
-              <path d="M8 36 L38 6 M22 6 L38 6 L38 22" stroke={NAVY} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              {/* Card body — top-right corner cut off */}
+              <path
+                d="M 0.5,0.5 L 140.87,0.5 L 190.5,49.277 L 190.5,268.4 L 0.5,268.4 Z"
+                fill="rgba(255,255,255,0.7)"
+                stroke={NAVY}
+                strokeWidth="1"
+                strokeDasharray="5 4"
+              />
+              {/* Fold triangle — the bent-back corner */}
+              <path
+                d="M 140.87,0.5 L 140.87,49.277 L 190.5,49.277 Z"
+                fill="rgba(0,0,0,0.05)"
+                stroke={NAVY}
+                strokeWidth="1"
+                strokeDasharray="5 4"
+              />
             </svg>
 
             {/* Text */}
             <div
               style={{
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
                 fontFamily: FONT_UI,
                 fontSize: "12px",
                 fontWeight: 600,
@@ -607,6 +619,7 @@ export default function Overview() {
                 textAlign: "center",
                 lineHeight: "18px",
                 pointerEvents: "none",
+                whiteSpace: "nowrap",
               }}
             >
               <p style={{ margin: 0 }}>Create your own</p>
@@ -627,7 +640,7 @@ export default function Overview() {
               padding: "16px 24px",
               boxSizing: "border-box",
               cursor: "pointer",
-              width: "175.574px",
+              width: "191px",
             }}
           >
             <p style={{

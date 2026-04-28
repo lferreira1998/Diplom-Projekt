@@ -105,36 +105,41 @@ function ToolInfoModal({
     setPrompts(prev => prev.length > 1 ? prev.filter((_, idx) => idx !== i) : prev);
 
   return createPortal(
-    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 45 }}>
+    /* dark overlay — no blur, no animation */
+    <div
+      onClick={onClose}
+      style={{ position: "fixed", inset: 0, zIndex: 45, backgroundColor: "rgba(0,0,0,0.2)" }}
+    >
+      {/* centered card */}
       <div
         onClick={e => e.stopPropagation()}
         style={{
-          position: "absolute", top: "80px", right: 0,
-          width: "343px", height: "calc(100% - 80px)",
-          backgroundColor: "#F5F5F6", border: "1px dashed #b4b3b3",
+          position: "absolute", top: "50%", left: "50%",
+          transform: "translate(-50%, -50%)",
+          width: "458px", backgroundColor: "#F5F5F6",
+          border: "1px dashed #11112d", backdropFilter: "blur(4px)",
           boxSizing: "border-box", padding: "24px",
-          overflowY: "auto", scrollbarWidth: "none",
           display: "flex", flexDirection: "column", gap: "32px",
+          maxHeight: "90vh", overflowY: "auto", scrollbarWidth: "none",
         }}
       >
         {/* ── Name ── */}
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
             <p style={sLabel}>Name</p>
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-              {/* Readonly chip — current saved name */}
-              <div style={{ ...fieldBase, width: "100%", height: "40px", padding: "0 8px", display: "flex", alignItems: "center", overflow: "hidden", boxSizing: "border-box" }}>
+            {/* side-by-side: readonly chip + editable input */}
+            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              <div style={{ ...fieldBase, height: "40px", padding: "0 8px", display: "flex", alignItems: "center", flexShrink: 0, overflow: "hidden" }}>
                 <span style={{ fontFamily: FONT_COURIER, fontSize: "12px", color: "#11112d", letterSpacing: "-0.6px", whiteSpace: "nowrap" }}>
                   {toolName || "Write and think..."}
                 </span>
               </div>
-              {/* Editable name input */}
               <input
                 type="text"
                 placeholder="Name eingeben"
                 value={name}
                 onChange={e => setName(e.target.value)}
-                style={{ ...fieldBase, width: "100%", height: "40px", padding: "0 12px", color: "#5e6069" }}
+                style={{ ...fieldBase, flex: 1, height: "40px", padding: "0 12px" }}
               />
             </div>
           </div>
@@ -174,7 +179,7 @@ function ToolInfoModal({
             placeholder="Beispiel: Dieses Tool hilft anonym in öffentlichen Plätzen zu schreiben"
             value={desc}
             onChange={e => setDesc(e.target.value)}
-            style={{ ...fieldBase, width: "100%", height: "200px", padding: "12px", lineHeight: "16.32px", resize: "none" }}
+            style={{ ...fieldBase, width: "100%", height: "114px", padding: "12px", lineHeight: "16.32px", resize: "none" }}
           />
         </div>
 
@@ -183,7 +188,7 @@ function ToolInfoModal({
           onClick={() => { onSave(name || toolName, desc, prompts.filter(p => p.trim())); onClose(); }}
           style={{
             width: "100%", height: "48px", flexShrink: 0,
-            backgroundColor: "#F5F5F6", border: "1px dashed #b4b3b3",
+            backgroundColor: "#F5F5F6", border: "1px dashed #11112d",
             cursor: "pointer", fontFamily: FONT_SEMI, fontSize: "12px",
             fontWeight: 600, color: "#11112d", letterSpacing: "0.1152px",
             lineHeight: "17.28px",

@@ -1302,19 +1302,22 @@ export function WritingZone({
   return (
     <>
       <div
-        className="flex-1 flex items-start pt-6 md:pt-12 transition-all duration-300"
-        style={{ paddingRight: panelOpen ? "343px" : "0px" }}
+        className="flex-1 flex items-start pt-6 md:pt-12"
       >
         <div
           ref={containerRef}
           tabIndex={0}
           onKeyDown={handleKeyDown}
-          className="w-full outline-none cursor-text min-h-[60vh] relative max-w-4xl mx-auto"
+          className="outline-none cursor-text min-h-[60vh] relative"
           style={{
+            width:        "1010px",
+            maxWidth:     "100%",
+            marginLeft:   panelOpen ? "auto" : "0",
+            marginRight:  "auto",
             color:        textColor,
             fontFamily:   "'IBM Plex Mono', 'Courier New', monospace",
-            fontSize:     "clamp(0.9rem, 2vw, 1.15rem)",
-            lineHeight:   1.95,
+            fontSize:     "20px",
+            lineHeight:   1.6,
             caretColor:   "transparent",
             wordBreak:    "break-all",
             overflowWrap: "anywhere",
@@ -1346,8 +1349,8 @@ export function WritingZone({
         className="absolute left-0 top-0 pointer-events-none"
         style={{
           fontFamily: "'IBM Plex Mono', 'Courier New', monospace",
-          fontSize: "clamp(0.9rem, 2vw, 1.15rem)",
-          lineHeight: 1.95,
+          fontSize: "20px",
+          lineHeight: 1.6,
           visibility: "hidden",
           userSelect: "none",
           whiteSpace: "pre",

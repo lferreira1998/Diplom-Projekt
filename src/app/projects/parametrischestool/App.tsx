@@ -9,6 +9,7 @@ import {
 } from "./components/param-panel";
 
 const FONT_UI = "'Area Inktrap', 'Space Grotesk', sans-serif";
+const FONT_UI_EXT = "'Area Inktrap Extended', 'Area Inktrap', sans-serif";
 const BG_COLOR = "#F5F5F6";
 const TEXT_COLOR = "#313642";
 
@@ -373,7 +374,7 @@ export default function App() {
                 border: "1px dashed #b4b3b3",
                 backgroundColor: "transparent",
                 cursor: "pointer",
-                fontFamily: FONT_UI,
+                fontFamily: FONT_UI_EXT,
                 fontSize: "12px",
                 color: contentTextColor,
                 letterSpacing: "-0.48px",
@@ -398,7 +399,7 @@ export default function App() {
                 gap: "16px",
               }}
             >
-              <span style={{ fontFamily: FONT_UI, fontSize: "12px", color: contentTextColor, letterSpacing: "-0.48px", fontWeight: 600, transition: "color 1s linear" }}>
+              <span style={{ fontFamily: FONT_UI_EXT, fontSize: "12px", color: contentTextColor, letterSpacing: "-0.48px", fontWeight: 600, transition: "color 1s linear" }}>
                 Don't Stop Writing
               </span>
               <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "16px" }}>
@@ -432,7 +433,7 @@ export default function App() {
                 border: "1px dashed #b4b3b3",
                 backgroundColor: "transparent",
                 cursor: "pointer",
-                fontFamily: FONT_UI,
+                fontFamily: FONT_UI_EXT,
                 fontSize: "12px",
                 color: "#11112d",
                 letterSpacing: "-0.48px",

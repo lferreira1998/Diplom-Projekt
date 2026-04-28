@@ -69,7 +69,7 @@ function formatDelay(seconds: number): string {
 
 const catBtnStyle: React.CSSProperties = {
   width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
-  padding: "16px 24px", background: "#F5F5F6", border: "1px dashed #11112d",
+  padding: "16px 24px", background: "#F5F5F6", border: "1px dashed #b4b3b3",
   cursor: "pointer", minHeight: "64px", boxSizing: "border-box", outline: "none",
 };
 const catLabelStyle: React.CSSProperties = {
@@ -79,8 +79,8 @@ const plusStyle: React.CSSProperties = {
   fontSize: "24px", color: "#11112d", fontFamily: FONT_REG, lineHeight: 1, letterSpacing: "0.1152px",
 };
 const expandedStyle: React.CSSProperties = {
-  borderLeft: "1px dashed #11112d", borderRight: "1px dashed #11112d",
-  borderBottom: "1px dashed #11112d", padding: "16px 24px",
+  borderLeft: "1px dashed #b4b3b3", borderRight: "1px dashed #b4b3b3",
+  borderBottom: "1px dashed #b4b3b3", padding: "16px 24px",
   display: "flex", flexDirection: "column", gap: "8px",
   backgroundColor: "#F5F5F6", marginTop: "-1px",
 };
@@ -123,7 +123,7 @@ function OptionBtn({ label, active, onClick, full }: { label: string; active: bo
 }
 
 function Sep() {
-  return <div style={{ borderTop: "1px dashed #11112d", margin: "4px 0" }} />;
+  return <div style={{ borderTop: "1px dashed #b4b3b3", margin: "4px 0" }} />;
 }
 
 function SliderRow({ value, min, max, step, onChange, displayValue }: {
@@ -369,7 +369,7 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
             </div>
 
             {/* Bottom bar */}
-            <div style={{ flexShrink: 0, height: "64px", border: "1px dashed #11112d", backgroundColor: "#F5F5F6", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 24px", marginTop: "16px" }}>
+            <div style={{ flexShrink: 0, height: "64px", border: "1px dashed #b4b3b3", backgroundColor: "#F5F5F6", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 24px", marginTop: "16px" }}>
               <span style={{ fontFamily: FONT_SEMI, fontSize: "12px", color: "#11112d", textAlign: "center", letterSpacing: "0.1152px", lineHeight: "17.28px" }}>
                 Name, Description &amp; Writing Prompt
               </span>

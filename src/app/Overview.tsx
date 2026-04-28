@@ -512,6 +512,7 @@ export default function Overview() {
 
           {/* About the Project button */}
           <div
+            onClick={() => navigate("/about-the-project")}
             style={{
               backgroundColor: "rgba(255,255,255,0.5)",
               backdropFilter: "blur(4px)",

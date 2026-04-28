@@ -5,8 +5,6 @@ import { motion, AnimatePresence } from "motion/react";
 
 // ── Assets ────────────────────────────────────────────────────────────────────
 
-const IMG_RECTANGLE = "https://www.figma.com/api/mcp/asset/2305d040-b7cb-4629-8012-61aeb2ff6761";
-const IMG_VECTOR    = "https://www.figma.com/api/mcp/asset/4e65b27f-b35c-4131-a8a5-a53fea26f2f6";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -580,62 +578,39 @@ export default function Overview() {
               width: "175.574px",
               height: "238.844px",
               flexShrink: 0,
+              backgroundColor: "rgba(255,255,255,0.5)",
+              backdropFilter: "blur(4px)",
+              border: BORDER_NAVY,
+              boxSizing: "border-box",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
-            {/* Background image — opacity only here, text stays full */}
-            <img
-              alt=""
-              src={IMG_RECTANGLE}
-              style={{
-                position: "absolute", inset: 0,
-                width: "100%", height: "100%",
-                display: "block",
-                opacity: 0.5,
-              }}
-            />
+            {/* Arrow — top right */}
+            <svg
+              viewBox="0 0 46 44"
+              width="46" height="44"
+              style={{ position: "absolute", top: 0, right: 0, pointerEvents: "none" }}
+              fill="none"
+            >
+              <path d="M8 36 L38 6 M22 6 L38 6 L38 22" stroke={NAVY} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
 
-            {/* Text overlay */}
+            {/* Text */}
             <div
               style={{
-                position: "absolute",
-                top: "101.42px",
-                left: "36.29px",
                 fontFamily: FONT_UI,
                 fontSize: "12px",
                 fontWeight: 600,
                 color: NAVY,
                 textAlign: "center",
                 lineHeight: "18px",
-                whiteSpace: "nowrap",
                 pointerEvents: "none",
               }}
             >
               <p style={{ margin: 0 }}>Create your own</p>
               <p style={{ margin: 0 }}>Writing Interface</p>
-            </div>
-
-            {/* Vector arrow — top right */}
-            <div
-              style={{
-                position: "absolute",
-                top: 0,
-                left: "129.49px",
-                width: "46.082px",
-                height: "43.77px",
-                pointerEvents: "none",
-              }}
-            >
-              <img
-                alt=""
-                src={IMG_VECTOR}
-                style={{
-                  position: "absolute",
-                  inset: "-0.83% -0.75% -1.14% -1.09%",
-                  width: "101.84%",
-                  height: "101.97%",
-                  maxWidth: "none",
-                }}
-              />
             </div>
           </div>
 

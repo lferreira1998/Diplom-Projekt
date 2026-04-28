@@ -49,7 +49,7 @@ export const DEFAULT_PARAMS: WritingParams = {
   spiralModus: false,
   textAppearsRandom: false,
   randomMode: "words",
-  toolName: "Don't Stop Writing",
+  toolName: "Write and think...",
   toolDescription: "",
   toolPrompts: [""],
 };
@@ -61,23 +61,23 @@ interface ParamPanelProps {
   onToggle: () => void;
 }
 
-const FONT_SEMI = "'Area Inktrap', 'Space Grotesk', sans-serif";
-const FONT_EXT  = "'Area Inktrap Extended', 'Area Inktrap', sans-serif";
-const FONT_REG  = "'Area Inktrap', 'Space Grotesk', sans-serif";
-const FONT_MONO = "'IBM Plex Mono', 'Courier New', monospace";
+const FONT_SEMI   = "'Area Inktrap', 'Space Grotesk', sans-serif";
+const FONT_EXT    = "'Area Inktrap Extended', 'Area Inktrap', sans-serif";
+const FONT_REG    = "'Area Inktrap', 'Space Grotesk', sans-serif";
+const FONT_MONO   = "'IBM Plex Mono', 'Courier New', monospace";
+const FONT_COURIER = "'Courier Prime', 'Courier New', monospace";
 
-const mLabel: React.CSSProperties = {
-  fontFamily: FONT_EXT, fontSize: "11.52px", fontWeight: 600,
-  letterSpacing: "0.1152px", lineHeight: "17.28px", color: "#11112d", margin: 0,
+const sLabel: React.CSSProperties = {
+  fontFamily: FONT_SEMI, fontSize: "11.52px", fontWeight: 600,
+  letterSpacing: "0.1152px", lineHeight: "17.28px", color: "#313642", margin: 0,
 };
-const mHint: React.CSSProperties = {
-  fontFamily: FONT_REG, fontSize: "9.6px", letterSpacing: "0.576px",
-  lineHeight: "14.4px", color: "#b4b3b3", margin: 0,
+const sHint: React.CSSProperties = {
+  fontFamily: FONT_REG, fontSize: "9.6px", letterSpacing: "0.768px",
+  lineHeight: "14.4px", color: "#7a7d89", margin: 0,
 };
-const mInput: React.CSSProperties = {
-  width: "100%", height: "32px", padding: "0 12px",
-  backgroundColor: "transparent", border: "1px dashed #b4b3b3",
-  fontFamily: FONT_REG, fontSize: "10.88px", color: "#11112d",
+const fieldBase: React.CSSProperties = {
+  backgroundColor: "#f8f8f8", border: "1px dashed #b4b3b3",
+  fontFamily: FONT_COURIER, fontSize: "12px", color: "#11112d",
   letterSpacing: "0.3264px", outline: "none", boxSizing: "border-box",
 };
 
@@ -100,89 +100,98 @@ function ToolInfoModal({
 
   const updatePrompt = (i: number, val: string) =>
     setPrompts(prev => prev.map((p, idx) => idx === i ? val : p));
-  const addPrompt = () => setPrompts(prev => [...prev, ""]);
+  const addPrompt    = () => setPrompts(prev => [...prev, ""]);
   const removePrompt = (i: number) =>
     setPrompts(prev => prev.length > 1 ? prev.filter((_, idx) => idx !== i) : prev);
 
   return createPortal(
-    <div
-      onClick={onClose}
-      style={{ position: "fixed", inset: 0, zIndex: 200 }}
-    >
+    /* transparent click-away layer */
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 45 }}>
       <div
         onClick={e => e.stopPropagation()}
         style={{
-          position: "absolute", top: "80px", left: "48px",
-          width: "319px", maxHeight: "calc(100vh - 96px)",
+          position: "absolute", top: "80px", right: 0,
+          width: "343px", height: "calc(100% - 80px)",
+          backgroundColor: "#F5F5F6", border: "1px dashed #11112d",
+          boxSizing: "border-box", padding: "24px",
           overflowY: "auto", scrollbarWidth: "none",
-          backgroundColor: "#F5F5F6", border: "1px dashed #b4b3b3",
-          boxSizing: "border-box",
-          display: "flex", flexDirection: "column",
+          display: "flex", flexDirection: "column", gap: "32px",
         }}
       >
-        {/* Name */}
-        <div style={{ borderBottom: "1px dashed #b4b3b3", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "8px" }}>
-          <p style={mLabel}>Name</p>
-          <input
-            type="text" placeholder="Name eingeben" value={name}
-            onChange={e => setName(e.target.value)}
-            style={mInput}
-          />
-          <p style={mHint}>Du kannst den Namen jederzeit ändern.</p>
-        </div>
-
-        {/* Prompts */}
-        <div style={{ borderBottom: "1px dashed #b4b3b3", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "8px" }}>
-          <p style={mLabel}>Schreibanstoß oder Aufgaben</p>
-          {prompts.map((p, i) => (
-            <div key={i} style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+        {/* ── Name ── */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            <p style={sLabel}>Name</p>
+            <div style={{ display: "flex", gap: "8px" }}>
+              {/* Readonly chip — shows current saved name */}
+              <div style={{ ...fieldBase, height: "40px", padding: "0 8px", display: "flex", alignItems: "center", flexShrink: 0, overflow: "hidden" }}>
+                <span style={{ fontFamily: FONT_COURIER, fontSize: "12px", color: "#11112d", letterSpacing: "-0.6px", whiteSpace: "nowrap" }}>
+                  {toolName || "Write and think..."}
+                </span>
+              </div>
+              {/* Editable input */}
               <input
                 type="text"
-                placeholder="Beispiel: Schreibe etwas über dich…"
-                value={p}
-                onChange={e => updatePrompt(i, e.target.value)}
-                style={{ ...mInput, flex: 1 }}
+                placeholder="Name eingeben"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                style={{ ...fieldBase, flex: 1, height: "40px", padding: "0 12px", color: name ? "#11112d" : "#5e6069" }}
               />
-              {prompts.length > 1 && (
-                <button
-                  onClick={() => removePrompt(i)}
-                  style={{ background: "none", border: "none", cursor: "pointer", fontFamily: FONT_MONO, fontSize: "14px", color: "#b4b3b3", padding: "0 4px", lineHeight: 1 }}
-                >×</button>
-              )}
             </div>
-          ))}
+          </div>
+          <p style={sHint}>Beende mit dem Namen den Satz &ldquo;Write and think...&rdquo;</p>
+        </div>
+
+        {/* ── Schreibanstoß ── */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            <p style={sLabel}>Schreibanstoß oder Aufgabe</p>
+            {prompts.map((p, i) => (
+              <div key={i} style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                <input
+                  type="text"
+                  placeholder="Beispiel: Schreibe etwas über dich..."
+                  value={p}
+                  onChange={e => updatePrompt(i, e.target.value)}
+                  style={{ ...fieldBase, flex: 1, height: "40px", padding: "0 12px" }}
+                />
+                {prompts.length > 1 && (
+                  <button onClick={() => removePrompt(i)} style={{ background: "none", border: "none", cursor: "pointer", fontFamily: FONT_COURIER, fontSize: "16px", color: "#b4b3b3", padding: "0 2px", lineHeight: 1, flexShrink: 0 }}>×</button>
+                )}
+              </div>
+            ))}
+          </div>
           <button
             onClick={addPrompt}
-            style={{ alignSelf: "flex-start", background: "none", border: "none", cursor: "pointer", fontFamily: FONT_EXT, fontSize: "10.88px", fontWeight: 600, color: "#11112d", letterSpacing: "0.3264px", padding: 0 }}
+            style={{ alignSelf: "flex-start", background: "none", border: "none", cursor: "pointer", fontFamily: FONT_COURIER, fontSize: "12px", color: "#11112d", letterSpacing: "0.3264px", lineHeight: "16.32px", padding: 0 }}
           >+ Weiteren hinzufügen</button>
-          <p style={mHint}>Das hilft Menschen beim Schreiben. Von allgemein bis sehr spezifisch.</p>
+          <p style={sHint}>Das hilft Menschen beim Schreiben. Von allgemein bis sehr spezifisch.{"\n"}Du kannst auch mehrere anlegen.</p>
         </div>
 
-        {/* Description */}
-        <div style={{ borderBottom: "1px dashed #b4b3b3", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "8px" }}>
-          <p style={mLabel}>Beschreibung oder Regel</p>
+        {/* ── Beschreibung ── */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          <p style={sLabel}>Beschreibung oder Regel</p>
           <textarea
-            placeholder="Beispiel: Dieses Tool hilft anonym in öffentlichen Plätzen zu schreiben…"
+            placeholder="Beispiel: Dieses Tool hilft anonym in öffentlichen Plätzen zu schreiben"
             value={desc}
             onChange={e => setDesc(e.target.value)}
-            style={{ ...mInput, height: "96px", padding: "10px 12px", lineHeight: "16.32px", resize: "none" }}
+            style={{ ...fieldBase, width: "100%", height: "114px", padding: "12px", lineHeight: "16.32px", resize: "none" }}
           />
-          <p style={mHint}>Das hilft Menschen beim Schreiben.</p>
         </div>
 
-        {/* Save */}
-        <div style={{ padding: "16px 24px" }}>
-          <button
-            onClick={() => { onSave(name, desc, prompts.filter(Boolean)); onClose(); }}
-            style={{
-              width: "100%", height: "32px", backgroundColor: "#11112d", color: "#F5F5F6",
-              border: "none", cursor: "pointer",
-              fontFamily: FONT_EXT, fontSize: "10.88px", fontWeight: 600, letterSpacing: "0.3264px",
-            }}
-          >
-            Start
-          </button>
-        </div>
+        {/* ── Speichern ── */}
+        <button
+          onClick={() => { onSave(name || toolName, desc, prompts.filter(p => p.trim())); onClose(); }}
+          style={{
+            width: "100%", height: "48px", flexShrink: 0,
+            backgroundColor: "#F5F5F6", border: "1px dashed #11112d",
+            cursor: "pointer", fontFamily: FONT_SEMI, fontSize: "12px",
+            fontWeight: 600, color: "#11112d", letterSpacing: "0.1152px",
+            lineHeight: "17.28px",
+          }}
+        >
+          Speichern
+        </button>
       </div>
     </div>,
     document.body

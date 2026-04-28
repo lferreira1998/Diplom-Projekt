@@ -248,7 +248,7 @@ export default function App() {
   const [params, setParams] = useState<WritingParams>(DEFAULT_PARAMS);
   const [positions, setPositions] = useState<Position[]>([]);
   const [cursor, setCursor] = useState(0);
-  const [panelOpen, setPanelOpen] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(true);
   const lastKeyPressTimestamp = useRef(0);
 
   // Timer state

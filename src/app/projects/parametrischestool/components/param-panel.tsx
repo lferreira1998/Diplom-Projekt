@@ -105,14 +105,13 @@ function ToolInfoModal({
     setPrompts(prev => prev.length > 1 ? prev.filter((_, idx) => idx !== i) : prev);
 
   return createPortal(
-    /* transparent click-away layer */
     <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 45 }}>
       <div
         onClick={e => e.stopPropagation()}
         style={{
           position: "absolute", top: "80px", right: 0,
           width: "343px", height: "calc(100% - 80px)",
-          backgroundColor: "#F5F5F6", border: "1px dashed #11112d",
+          backgroundColor: "#F5F5F6", border: "1px dashed #b4b3b3",
           boxSizing: "border-box", padding: "24px",
           overflowY: "auto", scrollbarWidth: "none",
           display: "flex", flexDirection: "column", gap: "32px",
@@ -122,24 +121,24 @@ function ToolInfoModal({
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
             <p style={sLabel}>Name</p>
-            <div style={{ display: "flex", gap: "8px" }}>
-              {/* Readonly chip — shows current saved name */}
-              <div style={{ ...fieldBase, height: "40px", padding: "0 8px", display: "flex", alignItems: "center", flexShrink: 0, overflow: "hidden" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              {/* Readonly chip — current saved name */}
+              <div style={{ ...fieldBase, width: "100%", height: "40px", padding: "0 8px", display: "flex", alignItems: "center", overflow: "hidden", boxSizing: "border-box" }}>
                 <span style={{ fontFamily: FONT_COURIER, fontSize: "12px", color: "#11112d", letterSpacing: "-0.6px", whiteSpace: "nowrap" }}>
                   {toolName || "Write and think..."}
                 </span>
               </div>
-              {/* Editable input */}
+              {/* Editable name input */}
               <input
                 type="text"
                 placeholder="Name eingeben"
                 value={name}
                 onChange={e => setName(e.target.value)}
-                style={{ ...fieldBase, flex: 1, height: "40px", padding: "0 12px", color: name ? "#11112d" : "#5e6069" }}
+                style={{ ...fieldBase, width: "100%", height: "40px", padding: "0 12px", color: "#5e6069" }}
               />
             </div>
           </div>
-          <p style={sHint}>Beende mit dem Namen den Satz &ldquo;Write and think...&rdquo;</p>
+          <p style={sHint}>Beende den Satz &ldquo;Write and think...&rdquo;</p>
         </div>
 
         {/* ── Schreibanstoß ── */}
@@ -165,7 +164,7 @@ function ToolInfoModal({
             onClick={addPrompt}
             style={{ alignSelf: "flex-start", background: "none", border: "none", cursor: "pointer", fontFamily: FONT_COURIER, fontSize: "12px", color: "#11112d", letterSpacing: "0.3264px", lineHeight: "16.32px", padding: 0 }}
           >+ Weiteren hinzufügen</button>
-          <p style={sHint}>Das hilft Menschen beim Schreiben. Von allgemein bis sehr spezifisch.{"\n"}Du kannst auch mehrere anlegen.</p>
+          <p style={{ ...sHint, whiteSpace: "pre-wrap" }}>{"Das hilft Menschen beim Schreiben. Von allgemein bis sehr spezifisch. \nDu kannst auch mehrere anlegen."}</p>
         </div>
 
         {/* ── Beschreibung ── */}
@@ -175,7 +174,7 @@ function ToolInfoModal({
             placeholder="Beispiel: Dieses Tool hilft anonym in öffentlichen Plätzen zu schreiben"
             value={desc}
             onChange={e => setDesc(e.target.value)}
-            style={{ ...fieldBase, width: "100%", height: "114px", padding: "12px", lineHeight: "16.32px", resize: "none" }}
+            style={{ ...fieldBase, width: "100%", height: "200px", padding: "12px", lineHeight: "16.32px", resize: "none" }}
           />
         </div>
 
@@ -184,7 +183,7 @@ function ToolInfoModal({
           onClick={() => { onSave(name || toolName, desc, prompts.filter(p => p.trim())); onClose(); }}
           style={{
             width: "100%", height: "48px", flexShrink: 0,
-            backgroundColor: "#F5F5F6", border: "1px dashed #11112d",
+            backgroundColor: "#F5F5F6", border: "1px dashed #b4b3b3",
             cursor: "pointer", fontFamily: FONT_SEMI, fontSize: "12px",
             fontWeight: 600, color: "#11112d", letterSpacing: "0.1152px",
             lineHeight: "17.28px",

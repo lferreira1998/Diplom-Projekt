@@ -25,7 +25,7 @@ export interface WritingParams {
   randomMode: "words" | "sentences";
   toolName: string;
   toolDescription: string;
-  toolPrompt: string;
+  toolPrompts: string[];
 }
 
 export const DEFAULT_PARAMS: WritingParams = {
@@ -51,7 +51,7 @@ export const DEFAULT_PARAMS: WritingParams = {
   randomMode: "words",
   toolName: "Don't Stop Writing",
   toolDescription: "",
-  toolPrompt: "",
+  toolPrompts: [""],
 };
 
 interface ParamPanelProps {
@@ -66,31 +66,31 @@ const FONT_EXT  = "'Area Inktrap Extended', 'Area Inktrap', sans-serif";
 const FONT_REG  = "'Area Inktrap', 'Space Grotesk', sans-serif";
 const FONT_MONO = "'IBM Plex Mono', 'Courier New', monospace";
 
-const modalLabelStyle: React.CSSProperties = {
+const mLabel: React.CSSProperties = {
   fontFamily: FONT_EXT, fontSize: "11.52px", fontWeight: 600,
   letterSpacing: "0.1152px", lineHeight: "17.28px", color: "#11112d", margin: 0,
 };
-const modalHintStyle: React.CSSProperties = {
-  fontFamily: FONT_REG, fontSize: "9.6px", letterSpacing: "0.768px",
-  lineHeight: "14.4px", color: "#7A7D89", margin: 0,
+const mHint: React.CSSProperties = {
+  fontFamily: FONT_REG, fontSize: "9.6px", letterSpacing: "0.576px",
+  lineHeight: "14.4px", color: "#b4b3b3", margin: 0,
 };
-const modalInputStyle: React.CSSProperties = {
-  backgroundColor: "#F4F5F7", border: "1px dashed #D0D1D6", borderRadius: "12px",
-  height: "40px", width: "100%", padding: "0 12px",
+const mInput: React.CSSProperties = {
+  width: "100%", height: "32px", padding: "0 12px",
+  backgroundColor: "transparent", border: "1px dashed #b4b3b3",
   fontFamily: FONT_REG, fontSize: "10.88px", color: "#11112d",
   letterSpacing: "0.3264px", outline: "none", boxSizing: "border-box",
 };
 
 function ToolInfoModal({
-  toolName, toolDescription, toolPrompt, onSave, onClose,
+  toolName, toolDescription, toolPrompts, onSave, onClose,
 }: {
-  toolName: string; toolDescription: string; toolPrompt: string;
-  onSave: (name: string, desc: string, prompt: string) => void;
+  toolName: string; toolDescription: string; toolPrompts: string[];
+  onSave: (name: string, desc: string, prompts: string[]) => void;
   onClose: () => void;
 }) {
-  const [name,   setName]   = useState(toolName);
-  const [desc,   setDesc]   = useState(toolDescription);
-  const [prompt, setPrompt] = useState(toolPrompt);
+  const [name,    setName]    = useState(toolName);
+  const [desc,    setDesc]    = useState(toolDescription);
+  const [prompts, setPrompts] = useState<string[]>(toolPrompts.length ? toolPrompts : [""]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -98,81 +98,93 @@ function ToolInfoModal({
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
+  const updatePrompt = (i: number, val: string) =>
+    setPrompts(prev => prev.map((p, idx) => idx === i ? val : p));
+  const addPrompt = () => setPrompts(prev => [...prev, ""]);
+  const removePrompt = (i: number) =>
+    setPrompts(prev => prev.length > 1 ? prev.filter((_, idx) => idx !== i) : prev);
+
   return createPortal(
-    <motion.div
-      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      transition={{ duration: 0.2 }}
+    <div
       onClick={onClose}
-      style={{
-        position: "fixed", inset: 0, zIndex: 300,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        backgroundColor: "rgba(6,6,19,0.65)", backdropFilter: "blur(8px)",
-        padding: "24px",
-      }}
+      style={{ position: "fixed", inset: 0, zIndex: 200 }}
     >
-      <motion.div
-        initial={{ opacity: 0, y: 16, scale: 0.97 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 16, scale: 0.97 }}
-        transition={{ duration: 0.22, delay: 0.05 }}
+      <div
         onClick={e => e.stopPropagation()}
         style={{
-          backgroundColor: "#ECEDF0", border: "1px dashed #C3C4C8",
-          borderRadius: "12px", padding: "24px",
-          display: "flex", flexDirection: "column", gap: "20px",
-          width: "100%", maxWidth: "420px", boxSizing: "border-box",
+          position: "absolute", top: "80px", left: "48px",
+          width: "319px", maxHeight: "calc(100vh - 96px)",
+          overflowY: "auto", scrollbarWidth: "none",
+          backgroundColor: "#F5F5F6", border: "1px dashed #b4b3b3",
+          boxSizing: "border-box",
+          display: "flex", flexDirection: "column",
         }}
       >
-        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-          <p style={{ fontFamily: FONT_EXT, fontSize: "16px", fontWeight: 600, color: "#11112d", margin: 0, letterSpacing: "-0.48px" }}>
-            Name, Description &amp; Writing Prompt
-          </p>
-          <div style={{ borderTop: "1px dashed #C3C4C8" }} />
-        </div>
-
-        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-          <p style={modalLabelStyle}>Name</p>
+        {/* Name */}
+        <div style={{ borderBottom: "1px dashed #b4b3b3", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "8px" }}>
+          <p style={mLabel}>Name</p>
           <input
             type="text" placeholder="Name eingeben" value={name}
             onChange={e => setName(e.target.value)}
-            style={modalInputStyle}
+            style={mInput}
           />
-          <p style={modalHintStyle}>Du kannst den Namen jederzeit ändern.</p>
+          <p style={mHint}>Du kannst den Namen jederzeit ändern.</p>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-          <p style={modalLabelStyle}>Schreibanstoß oder Aufgaben</p>
-          <input
-            type="text" placeholder="Beispiel: Schreibe etwas über dich…" value={prompt}
-            onChange={e => setPrompt(e.target.value)}
-            style={modalInputStyle}
-          />
-          <p style={modalHintStyle}>Das hilft Menschen beim Schreiben. Von allgemein bis sehr spezifisch.</p>
+        {/* Prompts */}
+        <div style={{ borderBottom: "1px dashed #b4b3b3", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "8px" }}>
+          <p style={mLabel}>Schreibanstoß oder Aufgaben</p>
+          {prompts.map((p, i) => (
+            <div key={i} style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              <input
+                type="text"
+                placeholder="Beispiel: Schreibe etwas über dich…"
+                value={p}
+                onChange={e => updatePrompt(i, e.target.value)}
+                style={{ ...mInput, flex: 1 }}
+              />
+              {prompts.length > 1 && (
+                <button
+                  onClick={() => removePrompt(i)}
+                  style={{ background: "none", border: "none", cursor: "pointer", fontFamily: FONT_MONO, fontSize: "14px", color: "#b4b3b3", padding: "0 4px", lineHeight: 1 }}
+                >×</button>
+              )}
+            </div>
+          ))}
+          <button
+            onClick={addPrompt}
+            style={{ alignSelf: "flex-start", background: "none", border: "none", cursor: "pointer", fontFamily: FONT_EXT, fontSize: "10.88px", fontWeight: 600, color: "#11112d", letterSpacing: "0.3264px", padding: 0 }}
+          >+ Weiteren hinzufügen</button>
+          <p style={mHint}>Das hilft Menschen beim Schreiben. Von allgemein bis sehr spezifisch.</p>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-          <p style={modalLabelStyle}>Beschreibung oder Regel</p>
+        {/* Description */}
+        <div style={{ borderBottom: "1px dashed #b4b3b3", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "8px" }}>
+          <p style={mLabel}>Beschreibung oder Regel</p>
           <textarea
             placeholder="Beispiel: Dieses Tool hilft anonym in öffentlichen Plätzen zu schreiben…"
             value={desc}
             onChange={e => setDesc(e.target.value)}
-            style={{ ...modalInputStyle, height: "108px", padding: "12px", lineHeight: "16.32px", resize: "none" }}
+            style={{ ...mInput, height: "96px", padding: "10px 12px", lineHeight: "16.32px", resize: "none" }}
           />
-          <p style={modalHintStyle}>Das hilft Menschen beim Schreiben.</p>
+          <p style={mHint}>Das hilft Menschen beim Schreiben.</p>
         </div>
 
-        <button
-          onClick={() => { onSave(name, desc, prompt); onClose(); }}
-          style={{
-            width: "100%", height: "36px", backgroundColor: "#11112d", color: "#ECEDF0",
-            border: "none", borderRadius: "100px", cursor: "pointer",
-            fontFamily: FONT_EXT, fontSize: "10.88px", fontWeight: 600, letterSpacing: "0.3264px",
-          }}
-        >
-          Speichern
-        </button>
-      </motion.div>
-    </motion.div>,
+        {/* Save */}
+        <div style={{ padding: "16px 24px" }}>
+          <button
+            onClick={() => { onSave(name, desc, prompts.filter(Boolean)); onClose(); }}
+            style={{
+              width: "100%", height: "32px", backgroundColor: "#11112d", color: "#F5F5F6",
+              border: "none", cursor: "pointer",
+              fontFamily: FONT_EXT, fontSize: "10.88px", fontWeight: 600, letterSpacing: "0.3264px",
+            }}
+          >
+            Start
+          </button>
+        </div>
+      </div>
+    </div>,
     document.body
   );
 }
@@ -497,19 +509,17 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
               </span>
             </div>
 
-            <AnimatePresence>
-              {showToolInfoModal && (
-                <ToolInfoModal
-                  toolName={params.toolName}
-                  toolDescription={params.toolDescription}
-                  toolPrompt={params.toolPrompt}
-                  onSave={(name, desc, prompt) => {
-                    onChange({ ...params, toolName: name, toolDescription: desc, toolPrompt: prompt });
-                  }}
-                  onClose={() => setShowToolInfoModal(false)}
-                />
-              )}
-            </AnimatePresence>
+            {showToolInfoModal && (
+              <ToolInfoModal
+                toolName={params.toolName}
+                toolDescription={params.toolDescription}
+                toolPrompts={params.toolPrompts}
+                onSave={(name, desc, prompts) => {
+                  onChange({ ...params, toolName: name, toolDescription: desc, toolPrompts: prompts.length ? prompts : [""] });
+                }}
+                onClose={() => setShowToolInfoModal(false)}
+              />
+            )}
 
           </motion.div>
         )}

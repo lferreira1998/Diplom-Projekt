@@ -472,7 +472,7 @@ export default function App() {
             spiralModus={params.spiralModus}
             textAppearsRandom={params.textAppearsRandom}
             randomMode={params.randomMode}
-            writingPrompt={params.toolPrompt}
+            writingPrompt={params.toolPrompts[0] || ""}
           />
         </div>
 

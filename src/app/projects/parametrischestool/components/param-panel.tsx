@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -23,6 +23,9 @@ export interface WritingParams {
   spiralModus: boolean;
   textAppearsRandom: boolean;
   randomMode: "words" | "sentences";
+  toolName: string;
+  toolDescription: string;
+  toolPrompt: string;
 }
 
 export const DEFAULT_PARAMS: WritingParams = {
@@ -46,6 +49,9 @@ export const DEFAULT_PARAMS: WritingParams = {
   spiralModus: false,
   textAppearsRandom: false,
   randomMode: "words",
+  toolName: "Don't Stop Writing",
+  toolDescription: "",
+  toolPrompt: "",
 };
 
 interface ParamPanelProps {
@@ -56,8 +62,120 @@ interface ParamPanelProps {
 }
 
 const FONT_SEMI = "'Area Inktrap', 'Space Grotesk', sans-serif";
+const FONT_EXT  = "'Area Inktrap Extended', 'Area Inktrap', sans-serif";
 const FONT_REG  = "'Area Inktrap', 'Space Grotesk', sans-serif";
 const FONT_MONO = "'IBM Plex Mono', 'Courier New', monospace";
+
+const modalLabelStyle: React.CSSProperties = {
+  fontFamily: FONT_EXT, fontSize: "11.52px", fontWeight: 600,
+  letterSpacing: "0.1152px", lineHeight: "17.28px", color: "#11112d", margin: 0,
+};
+const modalHintStyle: React.CSSProperties = {
+  fontFamily: FONT_REG, fontSize: "9.6px", letterSpacing: "0.768px",
+  lineHeight: "14.4px", color: "#7A7D89", margin: 0,
+};
+const modalInputStyle: React.CSSProperties = {
+  backgroundColor: "#F4F5F7", border: "1px dashed #D0D1D6", borderRadius: "12px",
+  height: "40px", width: "100%", padding: "0 12px",
+  fontFamily: FONT_REG, fontSize: "10.88px", color: "#11112d",
+  letterSpacing: "0.3264px", outline: "none", boxSizing: "border-box",
+};
+
+function ToolInfoModal({
+  toolName, toolDescription, toolPrompt, onSave, onClose,
+}: {
+  toolName: string; toolDescription: string; toolPrompt: string;
+  onSave: (name: string, desc: string, prompt: string) => void;
+  onClose: () => void;
+}) {
+  const [name,   setName]   = useState(toolName);
+  const [desc,   setDesc]   = useState(toolDescription);
+  const [prompt, setPrompt] = useState(toolPrompt);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return createPortal(
+    <motion.div
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
+      onClick={onClose}
+      style={{
+        position: "fixed", inset: 0, zIndex: 300,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        backgroundColor: "rgba(6,6,19,0.65)", backdropFilter: "blur(8px)",
+        padding: "24px",
+      }}
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 16, scale: 0.97 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 16, scale: 0.97 }}
+        transition={{ duration: 0.22, delay: 0.05 }}
+        onClick={e => e.stopPropagation()}
+        style={{
+          backgroundColor: "#ECEDF0", border: "1px dashed #C3C4C8",
+          borderRadius: "12px", padding: "24px",
+          display: "flex", flexDirection: "column", gap: "20px",
+          width: "100%", maxWidth: "420px", boxSizing: "border-box",
+        }}
+      >
+        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          <p style={{ fontFamily: FONT_EXT, fontSize: "16px", fontWeight: 600, color: "#11112d", margin: 0, letterSpacing: "-0.48px" }}>
+            Name, Description &amp; Writing Prompt
+          </p>
+          <div style={{ borderTop: "1px dashed #C3C4C8" }} />
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+          <p style={modalLabelStyle}>Name</p>
+          <input
+            type="text" placeholder="Name eingeben" value={name}
+            onChange={e => setName(e.target.value)}
+            style={modalInputStyle}
+          />
+          <p style={modalHintStyle}>Du kannst den Namen jederzeit ändern.</p>
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+          <p style={modalLabelStyle}>Schreibanstoß oder Aufgaben</p>
+          <input
+            type="text" placeholder="Beispiel: Schreibe etwas über dich…" value={prompt}
+            onChange={e => setPrompt(e.target.value)}
+            style={modalInputStyle}
+          />
+          <p style={modalHintStyle}>Das hilft Menschen beim Schreiben. Von allgemein bis sehr spezifisch.</p>
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+          <p style={modalLabelStyle}>Beschreibung oder Regel</p>
+          <textarea
+            placeholder="Beispiel: Dieses Tool hilft anonym in öffentlichen Plätzen zu schreiben…"
+            value={desc}
+            onChange={e => setDesc(e.target.value)}
+            style={{ ...modalInputStyle, height: "108px", padding: "12px", lineHeight: "16.32px", resize: "none" }}
+          />
+          <p style={modalHintStyle}>Das hilft Menschen beim Schreiben.</p>
+        </div>
+
+        <button
+          onClick={() => { onSave(name, desc, prompt); onClose(); }}
+          style={{
+            width: "100%", height: "36px", backgroundColor: "#11112d", color: "#ECEDF0",
+            border: "none", borderRadius: "100px", cursor: "pointer",
+            fontFamily: FONT_EXT, fontSize: "10.88px", fontWeight: 600, letterSpacing: "0.3264px",
+          }}
+        >
+          Speichern
+        </button>
+      </motion.div>
+    </motion.div>,
+    document.body
+  );
+}
 
 function formatDelay(seconds: number): string {
   if (seconds === 0) return "Sofort";
@@ -156,6 +274,7 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
   const [korrigierenOpen,    setKorrigierenOpen]    = useState(false);
   const [bestaendigkeitOpen, setBestaendigkeitOpen] = useState(false);
   const [spaceOrderOpen,     setSpaceOrderOpen]     = useState(false);
+  const [showToolInfoModal,  setShowToolInfoModal]  = useState(false);
 
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -369,11 +488,28 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
             </div>
 
             {/* Bottom bar */}
-            <div style={{ flexShrink: 0, height: "64px", border: "1px dashed #b4b3b3", backgroundColor: "#F5F5F6", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 24px", marginTop: "16px" }}>
+            <div
+              onClick={() => setShowToolInfoModal(true)}
+              style={{ flexShrink: 0, height: "64px", border: "1px dashed #b4b3b3", backgroundColor: "#F5F5F6", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 24px", marginTop: "16px", cursor: "pointer" }}
+            >
               <span style={{ fontFamily: FONT_SEMI, fontSize: "12px", color: "#11112d", textAlign: "center", letterSpacing: "0.1152px", lineHeight: "17.28px" }}>
                 Name, Description &amp; Writing Prompt
               </span>
             </div>
+
+            <AnimatePresence>
+              {showToolInfoModal && (
+                <ToolInfoModal
+                  toolName={params.toolName}
+                  toolDescription={params.toolDescription}
+                  toolPrompt={params.toolPrompt}
+                  onSave={(name, desc, prompt) => {
+                    onChange({ ...params, toolName: name, toolDescription: desc, toolPrompt: prompt });
+                  }}
+                  onClose={() => setShowToolInfoModal(false)}
+                />
+              )}
+            </AnimatePresence>
 
           </motion.div>
         )}

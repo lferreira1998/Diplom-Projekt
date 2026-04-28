@@ -400,7 +400,7 @@ export default function App() {
               }}
             >
               <span style={{ fontFamily: FONT_UI_EXT, fontSize: "12px", color: contentTextColor, letterSpacing: "-0.48px", fontWeight: 600, transition: "color 1s linear" }}>
-                Don't Stop Writing
+                {params.toolName || "Don't Stop Writing"}
               </span>
               <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "16px" }}>
                 {params.timerOn && timerRunning && (
@@ -472,6 +472,7 @@ export default function App() {
             spiralModus={params.spiralModus}
             textAppearsRandom={params.textAppearsRandom}
             randomMode={params.randomMode}
+            writingPrompt={params.toolPrompt}
           />
         </div>
 

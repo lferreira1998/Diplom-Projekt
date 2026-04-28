@@ -36,6 +36,7 @@ interface WritingZoneProps {
   spiralModus?: boolean;
   textAppearsRandom?: boolean;
   randomMode?: "words" | "sentences";
+  writingPrompt?: string;
 }
 
 // ── Pure helpers ──────────────────────────────────────────────────────────────
@@ -767,6 +768,7 @@ export function WritingZone({
   spiralModus        = false,
   textAppearsRandom  = false,
   randomMode         = "words" as const,
+  writingPrompt      = "",
 }: WritingZoneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const cursorDomRef = useRef<HTMLSpanElement>(null);
@@ -1330,7 +1332,7 @@ export function WritingZone({
               className="select-none absolute top-0 left-0 pointer-events-none"
               style={{ color: "#C0C2CA", fontStyle: "italic" }}
             >
-              Fang einfach an zu schreiben…
+              {writingPrompt || "Fang einfach an zu schreiben…"}
             </span>
           )}
           {nodes}

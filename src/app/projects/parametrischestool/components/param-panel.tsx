@@ -131,7 +131,7 @@ function ToolInfoModal({
             <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
               <div style={{ ...fieldBase, height: "40px", padding: "0 8px", display: "flex", alignItems: "center", flexShrink: 0, overflow: "hidden" }}>
                 <span style={{ fontFamily: FONT_COURIER, fontSize: "12px", color: "#11112d", letterSpacing: "-0.6px", whiteSpace: "nowrap" }}>
-                  {toolName || "Write and think..."}
+                  Write and think...
                 </span>
               </div>
               <input
@@ -185,7 +185,7 @@ function ToolInfoModal({
 
         {/* ── Speichern ── */}
         <button
-          onClick={() => { onSave(name || toolName, desc, prompts.filter(p => p.trim())); onClose(); }}
+          onClick={() => { onSave(name.trim() ? `Write and think ${name.trim()}` : toolName, desc, prompts.filter(p => p.trim())); onClose(); }}
           style={{
             width: "100%", height: "48px", flexShrink: 0,
             backgroundColor: "#F5F5F6", border: "1px dashed #11112d",

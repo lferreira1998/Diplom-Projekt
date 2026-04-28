@@ -7,51 +7,52 @@ const COURIER = "'Courier Prime', 'Courier New', monospace";
 const MONO    = "'IBM Plex Mono', monospace";
 const INKTRAP = "'Area Inktrap Extended', 'Area Inktrap', sans-serif";
 
-const DASH      = "#b4b3b3";
-const TEXT_MAIN = "#11112d";
-const TEXT_SUB  = "#5c5c6c";
-const TEXT_BODY = "#2e2e2c";
-const TEXT_DASH = "#6a6a66";
-const META      = "#8a8a82";
-const BG        = "#f5f5f6";
+const DASH       = "#b4b3b3";
+const NAVY       = "#11112d";
+const TEXT_SUB   = "#5c5c6c";
+const TEXT_BODY  = "#2e2e2c";
+const TEXT_DASH  = "#6a6a66";
+const META       = "#8a8a82";
+const BG         = "#f5f5f6";
+
+// Canvas size (the mind map lives on this absolute-pixel surface)
+const CANVAS_W = 1700;
+const CANVAS_H = 1000;
 
 export function MindMap() {
   const navigate = useNavigate();
   const [opened, setOpened] = useState<Set<string>>(
-    () => new Set(allNodes.filter((n) => n.initiallyVisible).map((n) => n.id))
+    () => new Set(allNodes.filter(n => n.initiallyVisible).map(n => n.id))
   );
   const [active, setActive] = useState<string | null>(null);
 
   const visibleIds = useMemo(() => {
     const v = new Set<string>();
-    allNodes.forEach((n) => n.initiallyVisible && v.add(n.id));
-    opened.forEach((id) => {
+    allNodes.forEach(n => n.initiallyVisible && v.add(n.id));
+    opened.forEach(id => {
       v.add(id);
-      allNodes.find((x) => x.id === id)?.reveals?.forEach((r) => v.add(r));
+      allNodes.find(x => x.id === id)?.reveals?.forEach(r => v.add(r));
     });
     return v;
   }, [opened]);
 
-  const visibleNodes = allNodes.filter((n) => visibleIds.has(n.id));
-  const activeNode = active ? allNodes.find((n) => n.id === active) ?? null : null;
+  const visibleNodes = allNodes.filter(n => visibleIds.has(n.id));
+  const activeNode   = active ? allNodes.find(n => n.id === active) ?? null : null;
 
   const handleOpen = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setActive(id);
-    setOpened((prev) => new Set([...prev, id]));
+    setOpened(prev => new Set([...prev, id]));
   };
 
-  type Line = { fx: number; fy: number; tx: number; ty: number; main: boolean };
-  const lines = useMemo<Line[]>(() => {
-    const result: Line[] = [];
-    visibleNodes.forEach((n) => {
-      n.connections?.forEach((c) => {
-        const t = allNodes.find((x) => x.id === c.to);
+  // Lines connect visible node centers
+  const lines = useMemo(() => {
+    const result: { fx: number; fy: number; tx: number; ty: number }[] = [];
+    visibleNodes.forEach(n => {
+      n.connections?.forEach(c => {
+        const t = allNodes.find(x => x.id === c.to);
         if (!t || !visibleIds.has(t.id)) return;
-        result.push({
-          fx: n.x, fy: n.y, tx: t.x, ty: t.y,
-          main: n.nodeType === "main" && t.nodeType === "main",
-        });
+        result.push({ fx: n.x, fy: n.y, tx: t.x, ty: t.y });
       });
     });
     return result;
@@ -59,172 +60,171 @@ export function MindMap() {
 
   return (
     <div
-      style={{
-        position: "relative", width: "100%", height: "100%",
-        overflow: "hidden", userSelect: "none", backgroundColor: BG,
-      }}
+      style={{ width: "100vw", height: "100vh", overflow: "hidden", position: "relative", backgroundColor: BG }}
       onClick={() => setActive(null)}
     >
-      {/* ── Header ───────────────────────────────────────────────────────── */}
+      {/* ── Header (fixed at top, full width) ──────────────────────────── */}
       <div
         style={{
           position: "absolute", left: 0, right: 0, top: 0, zIndex: 20,
           display: "flex", alignItems: "center", gap: 16,
           padding: "24px 48px 16px 48px",
+          backgroundColor: BG,
         }}
+        onClick={e => e.stopPropagation()}
       >
-        {/* Zurück */}
-        <button
-          onClick={(e) => { e.stopPropagation(); navigate("/"); }}
-          style={{
-            width: 271, height: 40, flexShrink: 0,
-            backgroundColor: BG,
-            border: `1px dashed ${DASH}`,
-            fontFamily: INKTRAP,
-            fontSize: 12,
-            color: TEXT_MAIN,
-            cursor: "pointer",
-          }}
-        >
-          Zurück
-        </button>
-
-        {/* Title */}
-        <div
-          style={{
-            flex: 1, height: 40,
-            border: `1px dashed ${DASH}`,
-            padding: "0 24px",
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}
-        >
-          <span style={{
-            fontFamily: INKTRAP,
-            fontSize: 12,
-            color: TEXT_MAIN,
-            letterSpacing: "-0.04em",
-            textAlign: "center",
+        {/* Left group: Zurück + title */}
+        <div style={{ display: "flex", flex: 1, gap: 16, alignItems: "center", minWidth: 0 }}>
+          <button
+            onClick={() => navigate("/")}
+            style={{
+              width: 271, height: 40, flexShrink: 0,
+              backgroundColor: BG, border: `1px dashed ${DASH}`,
+              fontFamily: INKTRAP, fontSize: 12, color: NAVY,
+              cursor: "pointer", letterSpacing: "0.1152px",
+            }}
+          >
+            Zurück
+          </button>
+          <div style={{
+            flex: 1, height: 40, border: `1px dashed ${DASH}`,
+            padding: "0 24px", display: "flex", alignItems: "center",
           }}>
-            Shaping Thought — Research Map
-          </span>
+            <span style={{
+              fontFamily: INKTRAP, fontSize: 12, color: NAVY,
+              letterSpacing: "-0.04em", textAlign: "center", width: "100%",
+              whiteSpace: "nowrap",
+            }}>
+              Shaping Thought — Research Map
+            </span>
+          </div>
         </div>
-
         {/* Information */}
         <button
-          onClick={(e) => e.stopPropagation()}
           style={{
             width: 271, height: 40, flexShrink: 0,
-            backgroundColor: BG,
-            border: `1px dashed ${DASH}`,
+            backgroundColor: BG, border: `1px dashed ${DASH}`,
             padding: "0 24px",
             display: "flex", alignItems: "center", justifyContent: "space-between",
-            fontFamily: INKTRAP,
-            fontSize: 12,
-            color: TEXT_MAIN,
-            cursor: "pointer",
+            fontFamily: INKTRAP, fontSize: 12, color: NAVY, cursor: "pointer",
+            letterSpacing: "0.1152px",
           }}
         >
           <span>Information</span>
-          <span style={{ display: "inline-block", transform: "rotate(-45deg)", fontSize: 14, lineHeight: 1 }}>+</span>
+          <span style={{ display: "inline-block", transform: "rotate(-45deg)", fontSize: 14, lineHeight: 1 }}>
+            +
+          </span>
         </button>
       </div>
 
-      {/* ── Connection lines ─────────────────────────────────────────────── */}
-      <svg
+      {/* ── Scrollable map canvas ──────────────────────────────────────── */}
+      <div
         style={{
-          position: "absolute", inset: 0, width: "100%", height: "100%",
-          pointerEvents: "none", overflow: "visible",
+          position: "absolute", top: 80, left: 0, right: 0, bottom: 0,
+          overflow: "auto",
         }}
       >
-        <defs>
-          <marker id="dashArr" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto">
-            <polyline
-              points="1,1 7,4 1,7"
-              fill="none"
-              stroke={DASH}
-              strokeWidth="1"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </marker>
-        </defs>
-        <AnimatePresence>
-          {lines.map((l, i) => (
-            <motion.line
-              key={`${l.fx}-${l.fy}-${l.tx}-${l.ty}-${i}`}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.5 }}
-              x1={`${l.fx}%`} y1={`${l.fy}%`}
-              x2={`${l.tx}%`} y2={`${l.ty}%`}
-              stroke={DASH}
-              strokeWidth={1}
-              strokeDasharray="4 4"
-              markerEnd="url(#dashArr)"
-            />
-          ))}
-        </AnimatePresence>
-      </svg>
+        <div
+          style={{
+            position: "relative",
+            width: CANVAS_W,
+            height: CANVAS_H,
+            minWidth: "100%",
+            minHeight: "calc(100vh - 80px)",
+          }}
+        >
+          {/* SVG connection lines */}
+          <svg
+            style={{
+              position: "absolute", inset: 0, width: "100%", height: "100%",
+              pointerEvents: "none", overflow: "visible",
+            }}
+          >
+            <defs>
+              <marker id="mmArrow" markerWidth="10" markerHeight="10" refX="7" refY="4" orient="auto">
+                <polyline
+                  points="1,1 7,4 1,7"
+                  fill="none" stroke={DASH} strokeWidth="1"
+                  strokeLinecap="round" strokeLinejoin="round"
+                />
+              </marker>
+            </defs>
+            <AnimatePresence>
+              {lines.map((l, i) => (
+                <motion.line
+                  key={`${l.fx}-${l.fy}-${l.tx}-${l.ty}`}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.5 }}
+                  x1={l.fx} y1={l.fy}
+                  x2={l.tx} y2={l.ty}
+                  stroke={DASH}
+                  strokeWidth={1}
+                  strokeDasharray="4 4"
+                  markerEnd="url(#mmArrow)"
+                />
+              ))}
+            </AnimatePresence>
+          </svg>
 
-      {/* ── Nodes ────────────────────────────────────────────────────────── */}
-      <AnimatePresence>
-        {visibleNodes.map((n) => {
-          const isMain   = n.nodeType === "main";
-          const isActive = active === n.id;
-          return (
-            <motion.button
-              key={n.id}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
-              onClick={(e) => handleOpen(n.id, e)}
-              style={{
-                position: "absolute",
-                left: `${n.x}%`,
-                top: `${n.y}%`,
-                transform: "translate(-50%, -50%)",
-                padding: 16,
-                background: "transparent",
-                border: "none",
-                cursor: "pointer",
-              }}
-            >
-              <p
-                style={{
-                  fontFamily: COURIER,
-                  fontSize: isMain ? 14 : 12,
-                  lineHeight: "14.3px",
-                  color: isMain ? TEXT_MAIN : TEXT_SUB,
-                  textAlign: "center",
-                  whiteSpace: "pre",
-                  margin: 0,
-                  textDecoration: isActive ? "underline" : "none",
-                  textDecorationStyle: "dashed",
-                  textUnderlineOffset: 4,
-                }}
-              >
-                {n.label}
-              </p>
-            </motion.button>
-          );
-        })}
-      </AnimatePresence>
+          {/* Nodes */}
+          <AnimatePresence>
+            {visibleNodes.map(n => {
+              const isMain   = n.nodeType === "main";
+              const isActive = active === n.id;
+              return (
+                <motion.button
+                  key={n.id}
+                  initial={{ opacity: 0, scale: 0.88 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.88 }}
+                  transition={{ duration: 0.28, ease: "easeOut" }}
+                  onClick={e => handleOpen(n.id, e)}
+                  style={{
+                    position: "absolute",
+                    left: n.x, top: n.y,
+                    transform: "translate(-50%, -50%)",
+                    padding: 16,
+                    background: "transparent", border: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  <p style={{
+                    fontFamily: COURIER,
+                    fontSize: isMain ? 14 : 12,
+                    lineHeight: "14.3px",
+                    color: isMain ? NAVY : TEXT_SUB,
+                    textAlign: "center",
+                    whiteSpace: "pre",
+                    margin: 0,
+                    textDecoration: isActive ? "underline" : "none",
+                    textDecorationStyle: "dashed",
+                    textUnderlineOffset: 4,
+                  }}>
+                    {n.label}
+                  </p>
+                </motion.button>
+              );
+            })}
+          </AnimatePresence>
+        </div>
+      </div>
 
-      {/* ── Right detail panel ───────────────────────────────────────────── */}
+      {/* ── Detail panel (fixed overlay on right) ─────────────────────── */}
       <AnimatePresence>
         {activeNode && (
           <motion.div
             key={activeNode.id}
-            initial={{ opacity: 0, x: 12 }}
+            initial={{ opacity: 0, x: 16 }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 12 }}
+            exit={{ opacity: 0, x: 16 }}
             transition={{ duration: 0.18, ease: "easeOut" }}
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
             style={{
-              position: "absolute", zIndex: 30,
-              top: 80, right: 48, bottom: 24, width: 271,
+              position: "fixed", zIndex: 30,
+              top: 80, right: 48, bottom: 24,
+              width: 271,
               backgroundColor: BG,
               border: `1px dashed ${DASH}`,
               padding: "16px 24px",
@@ -236,14 +236,15 @@ export function MindMap() {
             {/* Title */}
             <p style={{
               fontFamily: COURIER, fontSize: 14.5, lineHeight: "20.01px",
-              color: TEXT_MAIN, whiteSpace: "pre-wrap", margin: 0,
+              color: NAVY, whiteSpace: "pre-wrap", margin: 0,
             }}>
               {activeNode.title}
             </p>
 
+            {/* Divider */}
             <div style={{ height: 0, borderTop: `1px dashed ${DASH}` }} />
 
-            {/* Body */}
+            {/* Body paragraphs */}
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {activeNode.body.map((p, i) => {
                 if (!p) return <div key={i} style={{ height: 4 }} />;
@@ -265,7 +266,7 @@ export function MindMap() {
               })}
             </div>
 
-            {/* → führt weiter zu */}
+            {/* "Führt weiter zu" links */}
             {activeNode.reveals && activeNode.reveals.length > 0 && (
               <>
                 <div style={{ height: 0, borderTop: `1px dashed ${DASH}` }} />
@@ -276,21 +277,19 @@ export function MindMap() {
                   }}>
                     → FÜHRT WEITER ZU
                   </p>
-                  {activeNode.reveals.map((r) => {
-                    const t = allNodes.find((x) => x.id === r);
+                  {activeNode.reveals.map(r => {
+                    const t = allNodes.find(x => x.id === r);
                     if (!t) return null;
-                    const isMain = t.nodeType === "main";
                     return (
                       <button
                         key={r}
-                        onClick={(e) => handleOpen(r, e)}
+                        onClick={e => handleOpen(r, e)}
                         style={{
                           fontFamily: COURIER,
-                          fontSize: isMain ? 12 : 11,
-                          color: isMain ? TEXT_MAIN : TEXT_SUB,
+                          fontSize: t.nodeType === "main" ? 12 : 11,
+                          color: t.nodeType === "main" ? NAVY : TEXT_SUB,
                           background: "none", border: "none",
-                          padding: 0, cursor: "pointer",
-                          textAlign: "left",
+                          padding: 0, cursor: "pointer", textAlign: "left",
                         }}
                       >
                         {t.label}

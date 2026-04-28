@@ -88,7 +88,7 @@ function ToolInfoModal({
   onSave: (name: string, desc: string, prompts: string[]) => void;
   onClose: () => void;
 }) {
-  const [name,    setName]    = useState(toolName);
+  const [name,    setName]    = useState("");
   const [desc,    setDesc]    = useState(toolDescription);
   const [prompts, setPrompts] = useState<string[]>(toolPrompts.length ? toolPrompts : [""]);
 

@@ -630,6 +630,7 @@ export default function Overview() {
 
           {/* See all tools button */}
           <div
+            onClick={e => { e.stopPropagation(); navigate("/all-tools"); }}
             style={{
               backgroundColor: "rgba(255,255,255,0.5)",
               backdropFilter: "blur(4px)",

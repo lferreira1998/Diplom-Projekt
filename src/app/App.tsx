@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router";
 import Overview from "./Overview";
 import OneWordReplay from "./OneWordReplay";
 import AboutTheProject from "./projects/abouttheproject/App";
+import AllTools from "./AllTools";
 import DontStopWriting from "./projects/dontstop/App";
 import UninvitedThoughts from "./projects/uninvitedthoughts/App";
 import LoschenKorrigieren from "./projects/loschenkorrigieren/App";
@@ -31,6 +32,7 @@ export default function App() {
       <Route path="/in-a-spiral" element={<InASpiral />} />
       <Route path="/randomly-spatially" element={<RandomlySpatially />} />
       <Route path="/about-the-project" element={<AboutTheProject />} />
+      <Route path="/all-tools" element={<AllTools />} />
     </Routes>
   );
 }

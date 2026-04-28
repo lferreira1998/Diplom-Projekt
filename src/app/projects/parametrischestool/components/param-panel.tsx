@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
+import { upsertTool } from "../../../utils/storage";
 
 export interface WritingParams {
   timerOn: boolean;
@@ -528,7 +529,9 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
                 toolDescription={params.toolDescription}
                 toolPrompts={params.toolPrompts}
                 onSave={(name, desc, prompts) => {
-                  onChange({ ...params, toolName: name, toolDescription: desc, toolPrompts: prompts.length ? prompts : [""] });
+                  const updated = { ...params, toolName: name, toolDescription: desc, toolPrompts: prompts.length ? prompts : [""] };
+                  onChange(updated);
+                  upsertTool(name, desc, updated);
                 }}
                 onClose={() => setShowToolInfoModal(false)}
               />

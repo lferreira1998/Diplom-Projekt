@@ -2,18 +2,12 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches:
-      - claude/access-figma-code-fK8az
-      - claude/clarify-session-scope-5R22z
+    branches: [claude/access-figma-code-fK8az]
 
 permissions:
   contents: read
   pages: write
   id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: true
 
 jobs:
   build-and-deploy:
@@ -23,16 +17,11 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: claude/clarify-session-scope-5R22z
       - uses: actions/setup-node@v4
         with:
           node-version: 20
       - run: npm install
       - run: npm run build
-        env:
-          VITE_SUPABASE_URL: https://lrppyiremhutnwtdhogt.supabase.co
-          VITE_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxycHB5aXJlbWh1dG53dGRob2d0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NjgyMjUsImV4cCI6MjA5MzA0NDIyNX0.hetcvdF-C2HpaqbuWcy16GcuGsRtsZ8CZzh7-EHfTX4
       - uses: actions/configure-pages@v4
       - uses: actions/upload-pages-artifact@v3
         with:

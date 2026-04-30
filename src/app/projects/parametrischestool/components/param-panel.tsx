@@ -301,6 +301,9 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
   const [bestaendigkeitOpen, setBestaendigkeitOpen] = useState(false);
   const [spaceOrderOpen,     setSpaceOrderOpen]     = useState(false);
   const [showToolInfoModal,  setShowToolInfoModal]  = useState(false);
+  const [saving,             setSaving]             = useState(false);
+  const [savedToolId,        setSavedToolId]        = useState<string | null>(null);
+  const [linkCopied,         setLinkCopied]         = useState(false);
 
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -514,13 +517,61 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
             </div>
 
             {/* Bottom bar */}
-            <div
-              onClick={() => setShowToolInfoModal(true)}
-              style={{ flexShrink: 0, height: "64px", border: "1px dashed #b4b3b3", backgroundColor: "#F5F5F6", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 24px", marginTop: "16px", cursor: "pointer" }}
-            >
-              <span style={{ fontFamily: FONT_SEMI, fontSize: "12px", color: "#11112d", textAlign: "center", letterSpacing: "0.1152px", lineHeight: "17.28px" }}>
-                Name, Description &amp; Writing Prompt
-              </span>
+            <div style={{ flexShrink: 0, display: "flex", flexDirection: "column", marginTop: "16px" }}>
+              {savedToolId ? (
+                <>
+                  <div style={{ height: "64px", border: "1px dashed #b4b3b3", backgroundColor: "#11112d", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 24px" }}>
+                    <span style={{ fontFamily: FONT_SEMI, fontSize: "12px", color: "#F5F5F6", letterSpacing: "0.1152px", lineHeight: "17.28px" }}>
+                      Tool wurde gespeichert ✓
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", border: "1px dashed #b4b3b3", borderTop: "none" }}>
+                    <button
+                      onClick={() => { window.location.href = `${window.location.origin}/Diplom-Projekt/parametrisches-tool?tool=${savedToolId}`; }}
+                      style={{ flex: 1, height: "48px", border: "none", borderRight: "1px dashed #b4b3b3", backgroundColor: "#F5F5F6", cursor: "pointer", fontFamily: FONT_SEMI, fontSize: "11px", color: "#11112d", letterSpacing: "0.1152px", outline: "none" }}
+                    >
+                      Tool benutzen
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(`${window.location.origin}/Diplom-Projekt/parametrisches-tool?tool=${savedToolId}`)
+                          .then(() => { setLinkCopied(true); setTimeout(() => setLinkCopied(false), 2000); });
+                      }}
+                      style={{ flex: 1, height: "48px", border: "none", backgroundColor: "#F5F5F6", cursor: "pointer", fontFamily: FONT_SEMI, fontSize: "11px", color: "#11112d", letterSpacing: "0.1152px", outline: "none" }}
+                    >
+                      {linkCopied ? "Kopiert ✓" : "Link kopieren"}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div
+                    onClick={() => setShowToolInfoModal(true)}
+                    style={{ height: "64px", border: "1px dashed #b4b3b3", backgroundColor: "#F5F5F6", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 24px", cursor: "pointer" }}
+                  >
+                    <span style={{ fontFamily: FONT_SEMI, fontSize: "12px", color: "#11112d", textAlign: "center", letterSpacing: "0.1152px", lineHeight: "17.28px" }}>
+                      {params.toolName && params.toolName !== "Write and think..." ? `"${params.toolName}"` : "Name, Description & Writing Prompt"}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      if (!params.toolName || params.toolName === "Write and think...") {
+                        setShowToolInfoModal(true);
+                        return;
+                      }
+                      setSaving(true);
+                      upsertTool(params.toolName, params.toolDescription, params)
+                        .then((id) => { setSaving(false); setSavedToolId(id); })
+                        .catch(() => setSaving(false));
+                    }}
+                    style={{ height: "64px", border: "1px dashed #b4b3b3", borderTop: "none", backgroundColor: "#F5F5F6", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 24px", cursor: "pointer", outline: "none" }}
+                  >
+                    <span style={{ fontFamily: FONT_SEMI, fontSize: "12px", color: "#11112d", letterSpacing: "0.1152px", lineHeight: "17.28px" }}>
+                      {saving ? "Speichern..." : "Tool speichern"}
+                    </span>
+                  </button>
+                </>
+              )}
             </div>
 
             {showToolInfoModal && (
@@ -531,7 +582,7 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
                 onSave={(name, desc, prompts) => {
                   const updated = { ...params, toolName: name, toolDescription: desc, toolPrompts: prompts.length ? prompts : [""] };
                   onChange(updated);
-                  upsertTool(name, desc, updated);
+                  upsertTool(name, desc, updated).catch(console.error);
                 }}
                 onClose={() => setShowToolInfoModal(false)}
               />

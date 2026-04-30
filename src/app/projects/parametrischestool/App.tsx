@@ -1,12 +1,14 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
+import { useSearchParams } from "react-router";
 import { WritingZone, type Position, extractText } from "./components/writing-zone";
 import {
   ParamPanel,
   DEFAULT_PARAMS,
   type WritingParams,
 } from "./components/param-panel";
+import { getToolById } from "../../utils/storage";
 
 const FONT_UI = "'Area Inktrap', 'Space Grotesk', sans-serif";
 const FONT_UI_EXT = "'Area Inktrap Extended', 'Area Inktrap', sans-serif";
@@ -171,11 +173,21 @@ function RevealedBar({ onDelete, onCopy, copied }: RevealedBarProps) {
 // ── App ───────────────────────────────────────────────────────────────────────
 
 export default function App() {
+  const [searchParams] = useSearchParams();
   const [params, setParams] = useState<WritingParams>(DEFAULT_PARAMS);
   const [positions, setPositions] = useState<Position[]>([]);
   const [cursor, setCursor] = useState(0);
   const [panelOpen, setPanelOpen] = useState(true);
+  const [locked, setLocked] = useState(false);
   const lastKeyPressTimestamp = useRef(0);
+
+  useEffect(() => {
+    const toolId = searchParams.get("tool");
+    if (!toolId) return;
+    getToolById(toolId)
+      .then((tool) => { if (tool) { setParams(tool.params); setLocked(true); setPanelOpen(false); } })
+      .catch(console.error);
+  }, [searchParams]);
 
   const [timerRunning, setTimerRunning] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
@@ -301,30 +313,32 @@ export default function App() {
             </div>
 
             {/* Reset + Open/Close Parameters */}
-            <div style={{ width: "271px", display: "flex", gap: "8px", flexShrink: 0, alignItems: "center" }}>
-              <AnimatePresence>
-                {panelOpen && (
-                  <motion.button
-                    key="reset-btn"
-                    initial={{ opacity: 0, width: 0 }}
-                    animate={{ opacity: 1, width: "40px" }}
-                    exit={{ opacity: 0, width: 0 }}
-                    transition={{ duration: 0.18 }}
-                    onClick={() => setParams(DEFAULT_PARAMS)}
-                    title="Parameter zurücksetzen"
-                    style={{ height: "40px", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", border: "1px dashed #b4b3b3", backgroundColor: "transparent", cursor: "pointer", color: "#11112d", fontSize: "17px", overflow: "hidden", padding: 0, outline: "none" }}
-                  >
-                    ↺
-                  </motion.button>
-                )}
-              </AnimatePresence>
-              <button
-                onClick={() => setPanelOpen((o) => !o)}
-                style={{ flex: 1, height: "40px", display: "flex", alignItems: "center", justifyContent: "center", border: "1px dashed #b4b3b3", backgroundColor: "transparent", cursor: "pointer", fontFamily: FONT_UI_EXT, fontSize: "12px", color: "#11112d", letterSpacing: "-0.48px", fontWeight: 600, whiteSpace: "nowrap" }}
-              >
-                {panelOpen ? "Close Parameters" : "Open Parameters"}
-              </button>
-            </div>
+            {!locked && (
+              <div style={{ width: "271px", display: "flex", gap: "8px", flexShrink: 0, alignItems: "center" }}>
+                <AnimatePresence>
+                  {panelOpen && (
+                    <motion.button
+                      key="reset-btn"
+                      initial={{ opacity: 0, width: 0 }}
+                      animate={{ opacity: 1, width: "40px" }}
+                      exit={{ opacity: 0, width: 0 }}
+                      transition={{ duration: 0.18 }}
+                      onClick={() => setParams(DEFAULT_PARAMS)}
+                      title="Parameter zurücksetzen"
+                      style={{ height: "40px", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", border: "1px dashed #b4b3b3", backgroundColor: "transparent", cursor: "pointer", color: "#11112d", fontSize: "17px", overflow: "hidden", padding: 0, outline: "none" }}
+                    >
+                      ↺
+                    </motion.button>
+                  )}
+                </AnimatePresence>
+                <button
+                  onClick={() => setPanelOpen((o) => !o)}
+                  style={{ flex: 1, height: "40px", display: "flex", alignItems: "center", justifyContent: "center", border: "1px dashed #b4b3b3", backgroundColor: "transparent", cursor: "pointer", fontFamily: FONT_UI_EXT, fontSize: "12px", color: "#11112d", letterSpacing: "-0.48px", fontWeight: 600, whiteSpace: "nowrap" }}
+                >
+                  {panelOpen ? "Close Parameters" : "Open Parameters"}
+                </button>
+              </div>
+            )}
 
           </div>
         </div>
@@ -359,12 +373,14 @@ export default function App() {
           />
         </div>
 
-        <ParamPanel
-          params={params}
-          onChange={setParams}
-          isOpen={panelOpen}
-          onToggle={() => setPanelOpen((o) => !o)}
-        />
+        {!locked && (
+          <ParamPanel
+            params={params}
+            onChange={setParams}
+            isOpen={panelOpen}
+            onToggle={() => setPanelOpen((o) => !o)}
+          />
+        )}
       </div>
 
       <AnimatePresence>

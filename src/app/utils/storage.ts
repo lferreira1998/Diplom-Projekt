@@ -33,11 +33,14 @@ export async function upsertTool(
   name: string,
   description: string,
   params: WritingParams
-): Promise<void> {
-  const { error } = await supabase
+): Promise<string> {
+  const { data, error } = await supabase
     .from("tools")
-    .upsert({ name, description, params }, { onConflict: "name" });
+    .upsert({ name, description, params }, { onConflict: "name" })
+    .select("id")
+    .single();
   if (error) throw error;
+  return (data as { id: string }).id;
 }
 
 export async function getToolById(id: string): Promise<SavedTool | null> {

@@ -24,6 +24,7 @@ export interface WritingParams {
   spiralModus: boolean;
   textAppearsRandom: boolean;
   randomMode: "words" | "sentences";
+  bgNoise: number;
   toolName: string;
   toolDescription: string;
   toolPrompts: string[];
@@ -50,6 +51,7 @@ export const DEFAULT_PARAMS: WritingParams = {
   spiralModus: false,
   textAppearsRandom: false,
   randomMode: "words",
+  bgNoise: 0,
   toolName: "Write and think...",
   toolDescription: "",
   toolPrompts: [""],
@@ -300,6 +302,7 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
   const [korrigierenOpen,    setKorrigierenOpen]    = useState(false);
   const [bestaendigkeitOpen, setBestaendigkeitOpen] = useState(false);
   const [spaceOrderOpen,     setSpaceOrderOpen]     = useState(false);
+  const [lookFeelOpen,       setLookFeelOpen]       = useState(false);
   const [showToolInfoModal,  setShowToolInfoModal]  = useState(false);
   const [saving,             setSaving]             = useState(false);
   const [savedToolId,        setSavedToolId]        = useState<string | null>(null);
@@ -508,6 +511,29 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
                             </motion.div>
                           )}
                         </AnimatePresence>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* ── LOOK & FEEL ── */}
+              <div style={{ marginTop: "-1px" }}>
+                <button onClick={() => setLookFeelOpen(o => !o)} style={catBtnStyle}>
+                  <span style={catLabelStyle}>Look &amp; Feel</span>
+                  <span style={plusStyle}>{lookFeelOpen ? "−" : "+"}</span>
+                </button>
+                <AnimatePresence>
+                  {lookFeelOpen && (
+                    <motion.div key="lookfeel" {...expandMotion}>
+                      <div style={expandedStyle}>
+                        <span style={subLabelStyle}>Textured Background</span>
+                        <SliderRow
+                          value={params.bgNoise}
+                          min={0} max={100} step={1}
+                          onChange={(v) => update("bgNoise", v)}
+                          displayValue={params.bgNoise === 0 ? "Kein Rauschen" : `${params.bgNoise}%`}
+                        />
                       </div>
                     </motion.div>
                   )}

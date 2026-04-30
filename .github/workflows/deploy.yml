@@ -21,7 +21,11 @@ jobs:
         with:
           node-version: 20
       - run: npm install
+      - run: npm install @supabase/supabase-js
       - run: npm run build
+        env:
+          VITE_SUPABASE_URL: https://lrppyiremhutnwtdhogt.supabase.co
+          VITE_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxycHB5aXJlbWh1dG53dGRob2d0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NjgyMjUsImV4cCI6MjA5MzA0NDIyNX0.hetcvdF-C2HpaqbuWcy16GcuGsRtsZ8CZzh7-EHfTX4
       - uses: actions/configure-pages@v4
       - uses: actions/upload-pages-artifact@v3
         with:

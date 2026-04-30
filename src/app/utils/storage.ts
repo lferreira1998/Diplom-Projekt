@@ -1,3 +1,4 @@
+import { supabase } from "./supabase";
 import type { WritingParams } from "../projects/parametrischestool/components/param-panel";
 
 export interface SavedTool {
@@ -8,27 +9,43 @@ export interface SavedTool {
   params: WritingParams;
 }
 
-const KEY = "shapingThought_tools";
-
-export function getSavedTools(): SavedTool[] {
-  try {
-    return JSON.parse(localStorage.getItem(KEY) ?? "[]");
-  } catch {
-    return [];
-  }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapRow(row: any): SavedTool {
+  return {
+    id: row.id,
+    savedAt: row.saved_at,
+    name: row.name,
+    description: row.description ?? "",
+    params: row.params as WritingParams,
+  };
 }
 
-export function upsertTool(name: string, description: string, params: WritingParams): void {
-  const tools = getSavedTools();
-  const idx = tools.findIndex(t => t.name === name);
-  const entry: SavedTool = {
-    id: idx >= 0 ? tools[idx].id : crypto.randomUUID(),
-    savedAt: new Date().toISOString(),
-    name,
-    description,
-    params,
-  };
-  if (idx >= 0) tools[idx] = entry;
-  else tools.push(entry);
-  localStorage.setItem(KEY, JSON.stringify(tools));
+export async function getSavedTools(): Promise<SavedTool[]> {
+  const { data, error } = await supabase
+    .from("tools")
+    .select("*")
+    .order("saved_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []).map(mapRow);
+}
+
+export async function upsertTool(
+  name: string,
+  description: string,
+  params: WritingParams
+): Promise<void> {
+  const { error } = await supabase
+    .from("tools")
+    .upsert({ name, description, params }, { onConflict: "name" });
+  if (error) throw error;
+}
+
+export async function getToolById(id: string): Promise<SavedTool | null> {
+  const { data, error } = await supabase
+    .from("tools")
+    .select("*")
+    .eq("id", id)
+    .single();
+  if (error) return null;
+  return mapRow(data);
 }

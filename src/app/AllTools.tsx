@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
-import { getSavedTools } from "./utils/storage";
+import { getSavedTools, type SavedTool } from "./utils/storage";
 
 const FONT_EXT  = "'Area Inktrap Extended', 'Area Inktrap', sans-serif";
 const FONT_BODY = "'Courier Prime', 'Courier New', monospace";
@@ -10,55 +10,51 @@ const BG        = "#f5f5f6";
 
 export default function AllTools() {
   const navigate = useNavigate();
-  const [tools]  = useState(() => getSavedTools());
+  const [tools, setTools]   = useState<SavedTool[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    getSavedTools()
+      .then(setTools)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  const copyLink = (tool: SavedTool) => {
+    const url = `${window.location.origin}/Diplom-Projekt/parametrisches-tool?tool=${tool.id}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopiedId(tool.id);
+      setTimeout(() => setCopiedId(null), 2000);
+    });
+  };
 
   return (
     <div style={{ width: "100vw", minHeight: "100vh", backgroundColor: BG, boxSizing: "border-box" }}>
 
-      {/* Header — same pattern as other pages */}
-      <div style={{
-        display: "flex", alignItems: "center", gap: 16,
-        padding: "24px 48px 16px 48px",
-      }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 16, padding: "24px 48px 16px 48px" }}>
         <button
           onClick={() => navigate("/")}
-          style={{
-            width: 271, height: 40, flexShrink: 0,
-            backgroundColor: BG, border: `1px dashed ${DASH}`,
-            fontFamily: FONT_EXT, fontSize: 12, color: NAVY,
-            cursor: "pointer", letterSpacing: "-0.48px",
-          }}
+          style={{ width: 271, height: 40, flexShrink: 0, backgroundColor: BG, border: `1px dashed ${DASH}`, fontFamily: FONT_EXT, fontSize: 12, color: NAVY, cursor: "pointer", letterSpacing: "-0.48px" }}
         >
           Zurück
         </button>
-        <div style={{
-          flex: 1, height: 40, border: `1px dashed ${DASH}`,
-          padding: "0 24px", display: "flex", alignItems: "center",
-        }}>
-          <span style={{
-            fontFamily: FONT_EXT, fontSize: 12, color: NAVY,
-            letterSpacing: "-0.48px", textAlign: "center", width: "100%",
-            whiteSpace: "nowrap",
-          }}>
+        <div style={{ flex: 1, height: 40, border: `1px dashed ${DASH}`, padding: "0 24px", display: "flex", alignItems: "center" }}>
+          <span style={{ fontFamily: FONT_EXT, fontSize: 12, color: NAVY, letterSpacing: "-0.48px", textAlign: "center", width: "100%", whiteSpace: "nowrap" }}>
             All Tools
           </span>
         </div>
-        {/* spacer to match Zurück width */}
         <div style={{ width: 271, height: 40, flexShrink: 0 }} />
       </div>
 
-      {/* List */}
       <div style={{ padding: "16px 48px 48px 48px" }}>
-        {tools.length === 0 ? (
-          <div style={{
-            border: `1px dashed ${DASH}`,
-            padding: "32px 24px",
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
-            <p style={{
-              fontFamily: FONT_BODY, fontSize: 12, color: DASH,
-              margin: 0, letterSpacing: "0.3264px",
-            }}>
+        {loading ? (
+          <div style={{ border: `1px dashed ${DASH}`, padding: "32px 24px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <p style={{ fontFamily: FONT_BODY, fontSize: 12, color: DASH, margin: 0 }}>Lade Tools...</p>
+          </div>
+        ) : tools.length === 0 ? (
+          <div style={{ border: `1px dashed ${DASH}`, padding: "32px 24px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <p style={{ fontFamily: FONT_BODY, fontSize: 12, color: DASH, margin: 0, letterSpacing: "0.3264px" }}>
               Noch keine Tools gespeichert. Erstelle eines im parametrischen Tool.
             </p>
           </div>
@@ -66,28 +62,28 @@ export default function AllTools() {
           tools.map((tool, i) => (
             <div
               key={tool.id}
-              style={{
-                border: `1px dashed ${DASH}`,
-                borderTop: i === 0 ? `1px dashed ${DASH}` : "none",
-                padding: "20px 24px",
-                display: "flex", flexDirection: "column", gap: 6,
-              }}
+              style={{ border: `1px dashed ${DASH}`, borderTop: i === 0 ? `1px dashed ${DASH}` : "none", padding: "20px 24px", display: "flex", alignItems: "center", gap: 16 }}
             >
-              <p style={{
-                fontFamily: FONT_BODY, fontSize: 14,
-                color: NAVY, margin: 0, letterSpacing: "-0.14px",
-              }}>
-                {tool.name}
-              </p>
-              {tool.description ? (
-                <p style={{
-                  fontFamily: FONT_BODY, fontSize: 12,
-                  color: "#5c5c6c", margin: 0,
-                  lineHeight: "19.8px", letterSpacing: "0.12px",
-                }}>
-                  {tool.description}
-                </p>
-              ) : null}
+              <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
+                <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: NAVY, margin: 0, letterSpacing: "-0.14px" }}>{tool.name}</p>
+                {tool.description ? (
+                  <p style={{ fontFamily: FONT_BODY, fontSize: 12, color: "#5c5c6c", margin: 0, lineHeight: "19.8px", letterSpacing: "0.12px" }}>{tool.description}</p>
+                ) : null}
+              </div>
+              <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+                <button
+                  onClick={() => copyLink(tool)}
+                  style={{ height: 36, padding: "0 16px", border: `1px dashed ${DASH}`, backgroundColor: BG, fontFamily: FONT_EXT, fontSize: 11, color: NAVY, cursor: "pointer", letterSpacing: "-0.44px", whiteSpace: "nowrap" }}
+                >
+                  {copiedId === tool.id ? "Kopiert ✓" : "Link kopieren"}
+                </button>
+                <button
+                  onClick={() => navigate(`/parametrisches-tool?tool=${tool.id}`)}
+                  style={{ height: 36, padding: "0 16px", border: `1px dashed ${NAVY}`, backgroundColor: NAVY, fontFamily: FONT_EXT, fontSize: 11, color: BG, cursor: "pointer", letterSpacing: "-0.44px", whiteSpace: "nowrap" }}
+                >
+                  Benutzen
+                </button>
+              </div>
             </div>
           ))
         )}

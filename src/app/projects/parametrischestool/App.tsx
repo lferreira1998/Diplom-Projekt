@@ -81,92 +81,40 @@ function TimerDoneOverlay({ isVisual, onDelete, onReveal, onCopy, copied }: Time
             : "0 24px 60px rgba(49,54,66,0.12)",
         }}
       >
-        {/* Heading */}
         <div className="flex flex-col items-center gap-1">
-          <span
-            style={{
-              fontFamily: FONT_UI,
-              fontSize: "1rem",
-              color: headingColor,
-              letterSpacing: "-0.01em",
-            }}
-          >
+          <span style={{ fontFamily: FONT_UI, fontSize: "1rem", color: headingColor, letterSpacing: "-0.01em" }}>
             Zeit abgelaufen.
           </span>
           {isVisual && (
-            <span
-              style={{
-                fontFamily: "'IBM Plex Sans', sans-serif",
-                fontSize: "0.68rem",
-                color: subColor,
-                lineHeight: 1.5,
-                fontStyle: "italic",
-              }}
-            >
+            <span style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: "0.68rem", color: subColor, lineHeight: 1.5, fontStyle: "italic" }}>
               Dein Text wartet hinter dem Dunkel.
             </span>
           )}
         </div>
 
-        {/* Actions */}
         <div className="flex items-center gap-2 flex-wrap justify-center">
-          {/* Text löschen */}
           <button
             onClick={onDelete}
             className="cursor-pointer"
-            style={{
-              fontFamily: FONT_UI,
-              fontSize: "0.65rem",
-              letterSpacing: "0.05em",
-              padding: "0.38rem 0.85rem",
-              borderRadius: "100px",
-              border: isVisual
-                ? "1.5px dashed rgba(242,243,246,0.3)"
-                : "1.5px dashed #9a9daa",
-              backgroundColor: "transparent",
-              color: isVisual ? "rgba(242,243,246,0.55)" : "#9a9daa",
-              transition: "opacity 0.15s",
-            }}
+            style={{ fontFamily: FONT_UI, fontSize: "0.65rem", letterSpacing: "0.05em", padding: "0.38rem 0.85rem", borderRadius: "100px", border: isVisual ? "1.5px dashed rgba(242,243,246,0.3)" : "1.5px dashed #9a9daa", backgroundColor: "transparent", color: isVisual ? "rgba(242,243,246,0.55)" : "#9a9daa", transition: "opacity 0.15s" }}
           >
             Text löschen
           </button>
 
-          {/* Text sehen — only for visual timer */}
           {isVisual && (
             <button
               onClick={onReveal}
               className="cursor-pointer"
-              style={{
-                fontFamily: FONT_UI,
-                fontSize: "0.65rem",
-                letterSpacing: "0.05em",
-                padding: "0.38rem 0.85rem",
-                borderRadius: "100px",
-                border: "1.5px solid rgba(242,243,246,0.5)",
-                backgroundColor: "rgba(242,243,246,0.12)",
-                color: "#F2F3F6",
-                transition: "opacity 0.15s",
-              }}
+              style={{ fontFamily: FONT_UI, fontSize: "0.65rem", letterSpacing: "0.05em", padding: "0.38rem 0.85rem", borderRadius: "100px", border: "1.5px solid rgba(242,243,246,0.5)", backgroundColor: "rgba(242,243,246,0.12)", color: "#F2F3F6", transition: "opacity 0.15s" }}
             >
               Text sehen
             </button>
           )}
 
-          {/* Text kopieren */}
           <button
             onClick={onCopy}
             className="cursor-pointer"
-            style={{
-              fontFamily: FONT_UI,
-              fontSize: "0.65rem",
-              letterSpacing: "0.05em",
-              padding: "0.38rem 0.85rem",
-              borderRadius: "100px",
-              border: "none",
-              backgroundColor: isVisual ? "#F2F3F6" : "#313642",
-              color: isVisual ? "#313642" : "#F2F3F6",
-              transition: "opacity 0.15s",
-            }}
+            style={{ fontFamily: FONT_UI, fontSize: "0.65rem", letterSpacing: "0.05em", padding: "0.38rem 0.85rem", borderRadius: "100px", border: "none", backgroundColor: isVisual ? "#F2F3F6" : "#313642", color: isVisual ? "#313642" : "#F2F3F6", transition: "opacity 0.15s" }}
           >
             {copied ? "Kopiert ✓" : "Text kopieren"}
           </button>
@@ -177,7 +125,7 @@ function TimerDoneOverlay({ isVisual, onDelete, onReveal, onCopy, copied }: Time
   );
 }
 
-// ── Revealed action bar (after "Text sehen") ──────────────────────────────────
+// ── Revealed action bar ───────────────────────────────────────────────────────
 
 interface RevealedBarProps {
   onDelete: () => void;
@@ -197,26 +145,12 @@ function RevealedBar({ onDelete, onCopy, copied }: RevealedBarProps) {
     >
       <div
         className="flex items-center gap-0"
-        style={{
-          backgroundColor: "rgba(242,243,246,0.1)",
-          border: "1.5px dashed rgba(242,243,246,0.25)",
-          borderRadius: "100px",
-          backdropFilter: "blur(10px)",
-          overflow: "hidden",
-        }}
+        style={{ backgroundColor: "rgba(242,243,246,0.1)", border: "1.5px dashed rgba(242,243,246,0.25)", borderRadius: "100px", backdropFilter: "blur(10px)", overflow: "hidden" }}
       >
         <button
           onClick={onCopy}
           className="cursor-pointer"
-          style={{
-            fontFamily: FONT_UI,
-            fontSize: "0.62rem",
-            letterSpacing: "0.05em",
-            padding: "0.38rem 1rem",
-            background: "transparent",
-            border: "none",
-            color: "rgba(242,243,246,0.8)",
-          }}
+          style={{ fontFamily: FONT_UI, fontSize: "0.62rem", letterSpacing: "0.05em", padding: "0.38rem 1rem", background: "transparent", border: "none", color: "rgba(242,243,246,0.8)" }}
         >
           {copied ? "Kopiert ✓" : "Text kopieren"}
         </button>
@@ -224,15 +158,7 @@ function RevealedBar({ onDelete, onCopy, copied }: RevealedBarProps) {
         <button
           onClick={onDelete}
           className="cursor-pointer"
-          style={{
-            fontFamily: FONT_UI,
-            fontSize: "0.62rem",
-            letterSpacing: "0.05em",
-            padding: "0.38rem 1rem",
-            background: "transparent",
-            border: "none",
-            color: "rgba(242,243,246,0.45)",
-          }}
+          style={{ fontFamily: FONT_UI, fontSize: "0.62rem", letterSpacing: "0.05em", padding: "0.38rem 1rem", background: "transparent", border: "none", color: "rgba(242,243,246,0.45)" }}
         >
           Text löschen
         </button>
@@ -251,16 +177,12 @@ export default function App() {
   const [panelOpen, setPanelOpen] = useState(true);
   const lastKeyPressTimestamp = useRef(0);
 
-  // Timer state
   const [timerRunning, setTimerRunning] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
   const [timerDone, setTimerDone] = useState(false);
-
-  // Post-timer state
   const [textRevealed, setTextRevealed] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  // Start/reset timer
   useEffect(() => {
     if (!params.timerOn) {
       setTimerRunning(false);
@@ -276,16 +198,11 @@ export default function App() {
     setTextRevealed(false);
   }, [params.timerOn, params.timerMode, params.timerMinutes]);
 
-  // Countdown
   useEffect(() => {
     if (!timerRunning || timeLeft <= 0) return;
     const id = setInterval(() => {
       setTimeLeft((prev) => {
-        if (prev <= 1) {
-          setTimerRunning(false);
-          setTimerDone(true);
-          return 0;
-        }
+        if (prev <= 1) { setTimerRunning(false); setTimerDone(true); return 0; }
         return prev - 1;
       });
     }, 1000);
@@ -314,16 +231,11 @@ export default function App() {
     setTimeLeft(0);
   }, []);
 
-  const handleReveal = useCallback(() => {
-    setTextRevealed(true);
-  }, []);
+  const handleReveal = useCallback(() => { setTextRevealed(true); }, []);
 
   const visibleText = extractText(positions);
-  const wordCount = visibleText
-    .split(/\s+/)
-    .filter(Boolean).length;
+  const wordCount = visibleText.split(/\s+/).filter(Boolean).length;
 
-  // Visual timer background
   const totalSeconds = (params.timerMinutes || 1) * 60;
   const progress = params.timerOn ? 1 - timeLeft / totalSeconds : 0;
 
@@ -334,10 +246,7 @@ export default function App() {
         ? TEXT_COLOR
         : BG_COLOR;
 
-  // Text color: stays fixed – visual timer darkens the BG, text merges into it naturally.
-  // Only flip to BG_COLOR when text is explicitly revealed on the now-dark background.
   const contentTextColor = textRevealed ? BG_COLOR : TEXT_COLOR;
-
   const showDoneModal = timerDone && !textRevealed;
   const showRevealedBar = timerDone && textRevealed && params.visualTimer;
 
@@ -353,52 +262,22 @@ export default function App() {
 
       <div
         className="min-h-screen flex flex-col"
-        style={{
-          backgroundColor: bgColor,
-          transition: "background-color 1s linear",
-        }}
+        style={{ backgroundColor: bgColor, transition: "background-color 1s linear" }}
       >
         {/* Top bar */}
         <div style={{ padding: "24px 48px 16px 48px" }}>
           <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
-            {/* Zurück button */}
+
+            {/* Zurück */}
             <button
               onClick={() => window.history.back()}
-              style={{
-                width: "271px",
-                height: "40px",
-                flexShrink: 0,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                border: "1px dashed #b4b3b3",
-                backgroundColor: "transparent",
-                cursor: "pointer",
-                fontFamily: FONT_UI_EXT,
-                fontSize: "12px",
-                color: contentTextColor,
-                letterSpacing: "-0.48px",
-                fontWeight: 600,
-                transition: "color 1s linear",
-                whiteSpace: "nowrap",
-              }}
+              style={{ width: "271px", height: "40px", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", border: "1px dashed #b4b3b3", backgroundColor: "transparent", cursor: "pointer", fontFamily: FONT_UI_EXT, fontSize: "12px", color: contentTextColor, letterSpacing: "-0.48px", fontWeight: 600, transition: "color 1s linear", whiteSpace: "nowrap" }}
             >
               Zurück
             </button>
-            {/* Title box */}
-            <div
-              style={{
-                flex: 1,
-                height: "40px",
-                display: "flex",
-                alignItems: "center",
-                padding: "0 24px",
-                border: "1px dashed #b4b3b3",
-                backgroundColor: "transparent",
-                boxSizing: "border-box",
-                gap: "16px",
-              }}
-            >
+
+            {/* Title */}
+            <div style={{ flex: 1, height: "40px", display: "flex", alignItems: "center", padding: "0 24px", border: "1px dashed #b4b3b3", backgroundColor: "transparent", boxSizing: "border-box", gap: "16px" }}>
               <span style={{ fontFamily: FONT_UI_EXT, fontSize: "12px", color: contentTextColor, letterSpacing: "-0.48px", fontWeight: 600, transition: "color 1s linear" }}>
                 {params.toolName || "Don't Stop Writing"}
               </span>
@@ -420,29 +299,33 @@ export default function App() {
                 )}
               </div>
             </div>
-            {/* Open/Close Parameters button */}
-            <button
-              onClick={() => setPanelOpen((o) => !o)}
-              style={{
-                width: "271px",
-                height: "40px",
-                flexShrink: 0,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                border: "1px dashed #b4b3b3",
-                backgroundColor: "transparent",
-                cursor: "pointer",
-                fontFamily: FONT_UI_EXT,
-                fontSize: "12px",
-                color: "#11112d",
-                letterSpacing: "-0.48px",
-                fontWeight: 600,
-                whiteSpace: "nowrap",
-              }}
-            >
-              {panelOpen ? "Close Parameters" : "Open Parameters"}
-            </button>
+
+            {/* Reset + Open/Close Parameters */}
+            <div style={{ width: "271px", display: "flex", gap: "8px", flexShrink: 0, alignItems: "center" }}>
+              <AnimatePresence>
+                {panelOpen && (
+                  <motion.button
+                    key="reset-btn"
+                    initial={{ opacity: 0, width: 0 }}
+                    animate={{ opacity: 1, width: "40px" }}
+                    exit={{ opacity: 0, width: 0 }}
+                    transition={{ duration: 0.18 }}
+                    onClick={() => setParams(DEFAULT_PARAMS)}
+                    title="Parameter zurücksetzen"
+                    style={{ height: "40px", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", border: "1px dashed #b4b3b3", backgroundColor: "transparent", cursor: "pointer", color: "#11112d", fontSize: "17px", overflow: "hidden", padding: 0, outline: "none" }}
+                  >
+                    ↺
+                  </motion.button>
+                )}
+              </AnimatePresence>
+              <button
+                onClick={() => setPanelOpen((o) => !o)}
+                style={{ flex: 1, height: "40px", display: "flex", alignItems: "center", justifyContent: "center", border: "1px dashed #b4b3b3", backgroundColor: "transparent", cursor: "pointer", fontFamily: FONT_UI_EXT, fontSize: "12px", color: "#11112d", letterSpacing: "-0.48px", fontWeight: 600, whiteSpace: "nowrap" }}
+              >
+                {panelOpen ? "Close Parameters" : "Open Parameters"}
+              </button>
+            </div>
+
           </div>
         </div>
 
@@ -476,7 +359,6 @@ export default function App() {
           />
         </div>
 
-        {/* Parameter panel */}
         <ParamPanel
           params={params}
           onChange={setParams}
@@ -485,7 +367,6 @@ export default function App() {
         />
       </div>
 
-      {/* Timer done overlay (portal, escapes transforms) */}
       <AnimatePresence>
         {showDoneModal && (
           <TimerDoneOverlay
@@ -498,7 +379,6 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* Revealed action bar */}
       <AnimatePresence>
         {showRevealedBar && (
           <RevealedBar

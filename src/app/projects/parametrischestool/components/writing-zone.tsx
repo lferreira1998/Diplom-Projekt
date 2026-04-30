@@ -776,6 +776,8 @@ export function WritingZone({
   const posRef = useRef(positions);
   const curRef = useRef(cursor);
   const lkpt   = lastKeyPressTimestamp;
+  const selectAllRef = useRef(false);
+  const [selectAll, setSelectAll] = useState(false);
 
   // useLayoutEffect fires synchronously after commit, before the next rAF —
   // ensures the cursor rAF loop always reads up-to-date positions/cursor.
@@ -1065,12 +1067,35 @@ export function WritingZone({
     (e: React.KeyboardEvent<HTMLDivElement>) => {
       if (textAppearsRandom) return;
       if (e.key === "Tab") return;
+
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "a") {
+        e.preventDefault();
+        if (positions.length > 0) { selectAllRef.current = true; setSelectAll(true); }
+        return;
+      }
+
       if (e.ctrlKey || e.metaKey || e.altKey) return;
       e.preventDefault();
       const now = performance.now();
-      if (e.key === "Backspace") { applyBackspace(); lkpt.current = now; return; }
+
+      if (e.key === "Backspace" || e.key === "Delete") {
+        if (selectAllRef.current) {
+          selectAllRef.current = false; setSelectAll(false);
+          onUpdate([], 0); return;
+        }
+        if (e.key === "Backspace") { applyBackspace(); lkpt.current = now; }
+        return;
+      }
+
       const ch = e.key === "Enter" ? "\n" : e.key.length === 1 ? e.key : null;
-      if (!ch) return;
+      if (!ch) { selectAllRef.current = false; setSelectAll(false); return; }
+
+      if (selectAllRef.current) {
+        selectAllRef.current = false; setSelectAll(false);
+        onUpdate([{ layers: [{ type: "char", char: ch }] }], 1);
+        return;
+      }
+
       let newPos: Position[];
       if (cursor < positions.length) {
         const next   = positions.map(p => ({ layers: [...p.layers] }));
@@ -1280,9 +1305,10 @@ export function WritingZone({
           ref={containerRef}
           tabIndex={0}
           onKeyDown={handleKeyDown}
+          onBlur={() => { selectAllRef.current = false; setSelectAll(false); }}
           onClick={() => containerRef.current?.focus()}
           className="absolute inset-0 outline-none cursor-text"
-          style={{ caretColor: "transparent" }}
+          style={{ caretColor: "transparent", boxShadow: selectAll ? "inset 0 0 0 2px rgba(100,130,200,0.35)" : undefined }}
         >
           <SpiralCanvas
             positions={positions}
@@ -1310,6 +1336,7 @@ export function WritingZone({
           ref={containerRef}
           tabIndex={0}
           onKeyDown={handleKeyDown}
+          onBlur={() => { selectAllRef.current = false; setSelectAll(false); }}
           className="outline-none cursor-text min-h-[60vh] relative"
           style={{
             width:        "1010px",
@@ -1325,6 +1352,7 @@ export function WritingZone({
             overflowWrap: "anywhere",
             transition:   "color 1s linear",
             overflow:     "visible",
+            boxShadow:    selectAll ? "inset 0 0 0 2px rgba(100,130,200,0.35)" : undefined,
           }}
         >
           {positions.length === 0 && (

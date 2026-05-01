@@ -215,7 +215,7 @@ function formatDelay(seconds: number): string {
 
 const catBtnStyle: React.CSSProperties = {
   width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
-  padding: "16px 24px", background: "#F5F5F6", border: "1px dashed #b4b3b3",
+  padding: "16px 24px", background: "transparent", border: "1px dashed #b4b3b3",
   cursor: "pointer", minHeight: "64px", boxSizing: "border-box", outline: "none",
 };
 const catLabelStyle: React.CSSProperties = {
@@ -228,7 +228,7 @@ const expandedStyle: React.CSSProperties = {
   borderLeft: "1px dashed #b4b3b3", borderRight: "1px dashed #b4b3b3",
   borderBottom: "1px dashed #b4b3b3", padding: "16px 24px",
   display: "flex", flexDirection: "column", gap: "8px",
-  backgroundColor: "#F5F5F6", marginTop: "-1px",
+  backgroundColor: "transparent", marginTop: "-1px",
 };
 const subLabelStyle: React.CSSProperties = {
   fontFamily: FONT_SEMI, fontSize: "11.52px", color: "#11112d", letterSpacing: "0.1152px",
@@ -344,7 +344,7 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
               position: "fixed", top: "80px", right: 0,
               height: "calc(100% - 80px)", width: "343px",
               zIndex: 40, display: "flex", flexDirection: "column",
-              backgroundColor: "#F5F5F6", padding: "0 48px 24px 24px",
+              padding: "0 48px 24px 24px",
               boxSizing: "border-box",
             }}
           >
@@ -554,7 +554,7 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
                   <div style={{ display: "flex", border: "1px dashed #b4b3b3", borderTop: "none" }}>
                     <button
                       onClick={() => { window.location.href = `${window.location.origin}/Diplom-Projekt/parametrisches-tool?tool=${savedToolId}`; }}
-                      style={{ flex: 1, height: "48px", border: "none", borderRight: "1px dashed #b4b3b3", backgroundColor: "#F5F5F6", cursor: "pointer", fontFamily: FONT_SEMI, fontSize: "11px", color: "#11112d", letterSpacing: "0.1152px", outline: "none" }}
+                      style={{ flex: 1, height: "48px", border: "none", borderRight: "1px dashed #b4b3b3", backgroundColor: "transparent", cursor: "pointer", fontFamily: FONT_SEMI, fontSize: "11px", color: "#11112d", letterSpacing: "0.1152px", outline: "none" }}
                     >
                       Tool benutzen
                     </button>
@@ -563,7 +563,7 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
                         navigator.clipboard.writeText(`${window.location.origin}/Diplom-Projekt/parametrisches-tool?tool=${savedToolId}`)
                           .then(() => { setLinkCopied(true); setTimeout(() => setLinkCopied(false), 2000); });
                       }}
-                      style={{ flex: 1, height: "48px", border: "none", backgroundColor: "#F5F5F6", cursor: "pointer", fontFamily: FONT_SEMI, fontSize: "11px", color: "#11112d", letterSpacing: "0.1152px", outline: "none" }}
+                      style={{ flex: 1, height: "48px", border: "none", backgroundColor: "transparent", cursor: "pointer", fontFamily: FONT_SEMI, fontSize: "11px", color: "#11112d", letterSpacing: "0.1152px", outline: "none" }}
                     >
                       {linkCopied ? "Kopiert ✓" : "Link kopieren"}
                     </button>
@@ -573,7 +573,7 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
                 <>
                   <div
                     onClick={() => setShowToolInfoModal(true)}
-                    style={{ height: "64px", border: "1px dashed #b4b3b3", backgroundColor: "#F5F5F6", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 24px", cursor: "pointer" }}
+                    style={{ height: "64px", border: "1px dashed #b4b3b3", backgroundColor: "transparent", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 24px", cursor: "pointer" }}
                   >
                     <span style={{ fontFamily: FONT_SEMI, fontSize: "12px", color: "#11112d", textAlign: "center", letterSpacing: "0.1152px", lineHeight: "17.28px" }}>
                       {params.toolName && params.toolName !== "Write and think..." ? `"${params.toolName}"` : "Name, Description & Writing Prompt"}
@@ -590,7 +590,7 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
                         .then((id) => { setSaving(false); setSavedToolId(id); })
                         .catch(() => setSaving(false));
                     }}
-                    style={{ height: "64px", border: "1px dashed #b4b3b3", borderTop: "none", backgroundColor: "#F5F5F6", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 24px", cursor: "pointer", outline: "none" }}
+                    style={{ height: "64px", border: "1px dashed #b4b3b3", borderTop: "none", backgroundColor: "transparent", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 24px", cursor: "pointer", outline: "none" }}
                   >
                     <span style={{ fontFamily: FONT_SEMI, fontSize: "12px", color: "#11112d", letterSpacing: "0.1152px", lineHeight: "17.28px" }}>
                       {saving ? "Speichern..." : "Tool speichern"}

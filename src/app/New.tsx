@@ -75,8 +75,10 @@ function btnStyle(dark: boolean, extra?: React.CSSProperties): React.CSSProperti
     color: dark ? DARK_TEXT : LIGHT_TEXT,
     fontFamily: FONT_SANS,
     fontSize: "14px",
+    fontWeight: 400,
     lineHeight: "normal",
-    padding: "6px 12px",
+    height: "31px",
+    padding: "0 12px",
     ...extra,
   };
 }
@@ -121,7 +123,7 @@ export default function New() {
 
             {/* Eye button — h:31px, px:12 py:6, icon 17.705×12.665 at opacity 80% */}
             <button
-              style={btnStyle(dark, { height: "31px", padding: "6px 12px" })}
+              style={btnStyle(dark)}
               onClick={(e) => { e.stopPropagation(); setVisible(false); }}
             >
               <div style={{ width: "17.705px", height: "12.665px", opacity: 0.8, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -167,7 +169,7 @@ export default function New() {
           >
             {/* Dark mode toggle — 31×31px, p:6, icon 15.482×15.978 */}
             <button
-              style={btnStyle(dark, { width: "31px", height: "31px", padding: "6px" })}
+              style={btnStyle(dark, { width: "31px", padding: "0 6px" })}
               onClick={(e) => { e.stopPropagation(); setDark(d => !d); }}
             >
               <div style={{ width: "15.482px", height: "15.978px", opacity: 0.8, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -177,7 +179,7 @@ export default function New() {
 
             {/* Rules — w:60px, px:12 py:6 */}
             <button
-              style={btnStyle(dark, { width: "60px", padding: "6px 12px" })}
+              style={btnStyle(dark, { width: "60px" })}
               onClick={(e) => e.stopPropagation()}
             >
               Rules

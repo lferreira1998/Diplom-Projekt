@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
-import { getSavedTools, type SavedTool } from "./utils/storage";
+import { getSavedTools, deleteTool, type SavedTool } from "./utils/storage";
 
 const FONT_EXT  = "'Area Inktrap Extended', 'Area Inktrap', sans-serif";
 const FONT_BODY = "'Courier Prime', 'Courier New', monospace";
@@ -13,6 +13,7 @@ export default function AllTools() {
   const [tools, setTools]   = useState<SavedTool[]>([]);
   const [loading, setLoading] = useState(true);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     getSavedTools()
@@ -20,6 +21,14 @@ export default function AllTools() {
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
+
+  const handleDelete = (tool: SavedTool) => {
+    setDeletingId(tool.id);
+    deleteTool(tool.id)
+      .then(() => setTools(prev => prev.filter(t => t.id !== tool.id)))
+      .catch(console.error)
+      .finally(() => setDeletingId(null));
+  };
 
   const copyLink = (tool: SavedTool) => {
     const url = `${window.location.origin}/Diplom-Projekt/parametrisches-tool?tool=${tool.id}`;
@@ -82,6 +91,13 @@ export default function AllTools() {
                   style={{ height: 36, padding: "0 16px", border: `1px dashed ${NAVY}`, backgroundColor: NAVY, fontFamily: FONT_EXT, fontSize: 11, color: BG, cursor: "pointer", letterSpacing: "-0.44px", whiteSpace: "nowrap" }}
                 >
                   Benutzen
+                </button>
+                <button
+                  onClick={() => handleDelete(tool)}
+                  disabled={deletingId === tool.id}
+                  style={{ height: 36, padding: "0 12px", border: `1px dashed ${DASH}`, backgroundColor: BG, fontFamily: FONT_EXT, fontSize: 11, color: "#9a9a9a", cursor: deletingId === tool.id ? "wait" : "pointer", letterSpacing: "-0.44px", whiteSpace: "nowrap", opacity: deletingId === tool.id ? 0.5 : 1 }}
+                >
+                  ×
                 </button>
               </div>
             </div>

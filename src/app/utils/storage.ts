@@ -43,6 +43,11 @@ export async function upsertTool(
   return (data as { id: string }).id;
 }
 
+export async function deleteTool(id: string): Promise<void> {
+  const { error } = await supabase.from("tools").delete().eq("id", id);
+  if (error) throw error;
+}
+
 export async function getToolById(id: string): Promise<SavedTool | null> {
   const { data, error } = await supabase
     .from("tools")

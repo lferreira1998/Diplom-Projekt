@@ -10,11 +10,8 @@ const LIGHT_TEXT = "#555555";
 const DARK_TEXT  = "#fcf6ef";
 const PROMPT_COL = "rgba(155,155,155,0.8)";
 
-// FreightText Pro Book (commercial, Adobe Fonts).
-// Fallback: EB Garamond from Google Fonts (closest freely available match).
-// To use the real font, add @font-face in index.html pointing to your hosted WOFF2.
-const FONT_SERIF = "'FreightText Pro', 'EB Garamond', Georgia, serif";
-const FONT_SANS  = "'General Sans', 'Space Grotesk', sans-serif";
+const FONT_SERIF = "'freight-text-pro', 'EB Garamond', Georgia, serif";
+const FONT_SANS  = "'general-sans', 'Space Grotesk', sans-serif";
 
 // ── Icons (SVG recreations from Figma screenshots) ────────────────────────────
 

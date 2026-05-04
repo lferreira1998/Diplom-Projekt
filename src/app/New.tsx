@@ -126,9 +126,7 @@ export default function New() {
               style={btnStyle(dark)}
               onClick={(e) => { e.stopPropagation(); setVisible(false); }}
             >
-              <div style={{ width: "17.705px", height: "12.665px", opacity: 0.8, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <IconEyeClosed color={iconColor} />
-              </div>
+              <IconEyeClosed color={iconColor} />
             </button>
           </motion.div>
         ) : (
@@ -151,9 +149,7 @@ export default function New() {
             }}
             onClick={(e) => { e.stopPropagation(); setVisible(true); }}
           >
-            <div style={{ width: "17.705px", height: "12.665px", opacity: 0.4, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <IconEyeOpen color={iconColor} />
-            </div>
+            <IconEyeOpen color={iconColor} />
           </motion.button>
         )}
       </AnimatePresence>
@@ -172,9 +168,7 @@ export default function New() {
               style={btnStyle(dark, { width: "31px", padding: "0 6px" })}
               onClick={(e) => { e.stopPropagation(); setDark(d => !d); }}
             >
-              <div style={{ width: "15.482px", height: "15.978px", opacity: 0.8, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <IconHalfCircle color={iconColor} />
-              </div>
+              <IconHalfCircle color={iconColor} />
             </button>
 
             {/* Rules — w:60px, px:12 py:6 */}
@@ -201,16 +195,17 @@ export default function New() {
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Writing area with cursor line + placeholder */}
+        {/* Writing area */}
         <style>{`
           .new-textarea::placeholder {
             color: ${PROMPT_COL};
             font-family: ${FONT_SERIF};
+            font-weight: 300;
+            white-space: nowrap;
+            overflow: hidden;
           }
         `}</style>
-        <div style={{ display: "flex", gap: "4px", alignItems: "flex-start", width: "100%" }}>
-          <CursorLine />
-          <textarea
+        <textarea
             ref={textareaRef}
             className="new-textarea"
             value={text}
@@ -218,7 +213,6 @@ export default function New() {
             placeholder="Explore new ways of thinking by breaking the rules of standard writing tools..."
             spellCheck={false}
             style={{
-              flex: 1,
               background: "transparent",
               border: "none",
               outline: "none",
@@ -234,7 +228,6 @@ export default function New() {
               transition: "color 0.3s",
             }}
           />
-        </div>
       </div>
     </div>
   );

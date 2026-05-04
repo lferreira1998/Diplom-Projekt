@@ -1,184 +1,186 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 
-const LIGHT_BG = "#fcf6ef";
-const DARK_BG = "#555555";
-const BORDER = "#a4a4a4";
+// ── Design tokens (exact from Figma) ─────────────────────────────────────────
+const LIGHT_BG   = "#fcf6ef";
+const DARK_BG    = "#555555";
+const BORDER_COL = "#a4a4a4";
+const LIGHT_BTN_BG = "rgba(241,235,228,0.2)";
+const LIGHT_TEXT = "#555555";
+const DARK_TEXT  = "#fcf6ef";
+const PROMPT_COL = "rgba(155,155,155,0.8)";
 
-const FONT_SERIF = "'Lora', 'Georgia', 'Times New Roman', serif";
-const FONT_SANS = "'General Sans', 'Space Grotesk', sans-serif";
+// FreightText Pro Book (commercial, Adobe Fonts).
+// Fallback: EB Garamond from Google Fonts (closest freely available match).
+// To use the real font, add @font-face in index.html pointing to your hosted WOFF2.
+const FONT_SERIF = "'FreightText Pro', 'EB Garamond', Georgia, serif";
+const FONT_SANS  = "'General Sans', 'Space Grotesk', sans-serif";
 
-function btn(dark: boolean, extra?: React.CSSProperties): React.CSSProperties {
+// ── Icons (SVG recreations from Figma screenshots) ────────────────────────────
+
+// Eye open icon — 17.705 × 12.665 px in Figma
+function IconEyeOpen({ color }: { color: string }) {
+  return (
+    <svg width="18" height="13" viewBox="0 0 18 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path
+        d="M1 6.33C1 6.33 3.8 1 9 1C14.2 1 17 6.33 17 6.33C17 6.33 14.2 11.66 9 11.66C3.8 11.66 1 6.33 1 6.33Z"
+        stroke={color} strokeWidth="1.1" fill="none"
+      />
+      <circle cx="9" cy="6.33" r="2.3" fill={color} />
+    </svg>
+  );
+}
+
+// Closed eye (hidden state) — same dimensions, crossed
+function IconEyeClosed({ color }: { color: string }) {
+  return (
+    <svg width="18" height="13" viewBox="0 0 18 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path
+        d="M1 6.33C1 6.33 3.8 1 9 1C14.2 1 17 6.33 17 6.33C17 6.33 14.2 11.66 9 11.66C3.8 11.66 1 6.33 1 6.33Z"
+        stroke={color} strokeWidth="1.1" fill="none"
+      />
+      <circle cx="9" cy="6.33" r="2.3" fill={color} />
+      <line x1="2" y1="0.5" x2="16" y2="12.5" stroke={color} strokeWidth="1.1" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+// Half-circle dark mode toggle — 15.482 × 15.978 px in Figma (◑ shape)
+function IconHalfCircle({ color }: { color: string }) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="8" cy="8" r="6.5" stroke={color} strokeWidth="1.1" />
+      {/* Left half filled */}
+      <path d="M8 1.5 A6.5 6.5 0 0 0 8 14.5 Z" fill={color} />
+    </svg>
+  );
+}
+
+// Cursor line — thin vertical bar before the prompt (recreates Figma's Line 2)
+function CursorLine() {
+  return (
+    <div style={{ width: "1.5px", height: "34px", background: PROMPT_COL, flexShrink: 0 }} />
+  );
+}
+
+// ── Button style helper ───────────────────────────────────────────────────────
+function btnStyle(dark: boolean, extra?: React.CSSProperties): React.CSSProperties {
   return {
-    border: `1px dashed ${BORDER}`,
+    background: dark ? "transparent" : LIGHT_BTN_BG,
+    border: `1px dashed ${BORDER_COL}`,
     borderRadius: "4px",
-    background: dark ? "transparent" : "rgba(241,235,228,0.2)",
     cursor: "pointer",
-    color: dark ? "#fcf6ef" : "#555555",
-    fontFamily: FONT_SANS,
-    fontSize: "14px",
-    padding: "6px 12px",
+    outline: "none",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    outline: "none",
-    whiteSpace: "nowrap" as const,
-    lineHeight: "normal",
     flexShrink: 0,
+    color: dark ? DARK_TEXT : LIGHT_TEXT,
+    fontFamily: FONT_SANS,
+    fontSize: "14px",
+    lineHeight: "normal",
+    padding: "6px 12px",
     ...extra,
   };
 }
 
-function EyeOpen({ dark }: { dark: boolean }) {
-  const c = dark ? "#fcf6ef" : "#666";
-  return (
-    <svg width="18" height="13" viewBox="0 0 18 13" fill="none">
-      <path d="M1 6.5C1 6.5 4 1 9 1C14 1 17 6.5 17 6.5C17 6.5 14 12 9 12C4 12 1 6.5 1 6.5Z" stroke={c} strokeWidth="1.2" />
-      <circle cx="9" cy="6.5" r="2.2" fill={c} />
-    </svg>
-  );
-}
-
-function EyeClosed({ dark }: { dark: boolean }) {
-  const c = dark ? "#fcf6ef" : "#666";
-  return (
-    <svg width="18" height="13" viewBox="0 0 18 13" fill="none">
-      <path d="M1 6.5C1 6.5 4 1 9 1C14 1 17 6.5 17 6.5C17 6.5 14 12 9 12C4 12 1 6.5 1 6.5Z" stroke={c} strokeWidth="1.2" opacity="0.4" />
-      <line x1="2" y1="1" x2="16" y2="12" stroke={c} strokeWidth="1.2" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function HalfCircleIcon({ dark }: { dark: boolean }) {
-  const c = dark ? "#fcf6ef" : "#555555";
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-      <circle cx="8" cy="8" r="6.5" stroke={c} strokeWidth="1.2" />
-      <path d="M8 1.5 A6.5 6.5 0 0 0 8 14.5 Z" fill={c} />
-    </svg>
-  );
-}
-
-function CursorLine({ dark }: { dark: boolean }) {
-  return (
-    <div style={{
-      width: "1.5px",
-      height: "34px",
-      background: dark ? "rgba(155,155,155,0.6)" : "rgba(155,155,155,0.8)",
-      flexShrink: 0,
-    }} />
-  );
-}
-
+// ── Component ─────────────────────────────────────────────────────────────────
 export default function New() {
-  const [dark, setDark] = useState(false);
-  const [elementsVisible, setElementsVisible] = useState(true);
-  const [text, setText] = useState("");
+  const [dark, setDark]       = useState(false);
+  const [visible, setVisible] = useState(true);
+  const [text, setText]       = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const bg = dark ? DARK_BG : LIGHT_BG;
-  const textColor = dark ? "#fcf6ef" : "#333333";
-  const promptColor = "rgba(155,155,155,0.8)";
-
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setElementsVisible(true);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    textareaRef.current?.focus();
   }, []);
+
+  const bg        = dark ? DARK_BG : LIGHT_BG;
+  const textColor = dark ? DARK_TEXT : LIGHT_TEXT;
+  const iconColor = dark ? DARK_TEXT : LIGHT_TEXT;
 
   return (
     <div
-      style={{
-        minHeight: "100vh",
-        background: bg,
-        position: "relative",
-        transition: "background 0.35s ease",
-        overflow: "hidden",
-      }}
+      style={{ minHeight: "100vh", background: bg, position: "relative", transition: "background 0.3s" }}
       onClick={() => textareaRef.current?.focus()}
     >
-      {/* ── Left panel ── */}
+      {/* ── Left panel ─────────────────────────────────────────────────────── */}
       <AnimatePresence mode="wait">
-        {elementsVisible ? (
+        {visible ? (
+          /* Full left panel: padding 44px from edges, buttons with gap 10px */
           <motion.div
             key="left-full"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            style={{
-              position: "fixed",
-              top: "44px",
-              left: "44px",
-              display: "flex",
-              gap: "10px",
-              alignItems: "center",
-              zIndex: 20,
-            }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            style={{ position: "fixed", top: "44px", left: "44px", display: "flex", gap: "10px", alignItems: "center", zIndex: 20 }}
           >
-            <button style={btn(dark)} onClick={(e) => e.stopPropagation()}>
+            {/* Menu */}
+            <button
+              style={btnStyle(dark)}
+              onClick={(e) => e.stopPropagation()}
+            >
               Menu
             </button>
+
+            {/* Eye button — h:31px, px:12 py:6, icon 17.705×12.665 at opacity 80% */}
             <button
-              style={btn(dark, { padding: "6px 12px" })}
-              onClick={(e) => { e.stopPropagation(); setElementsVisible(false); }}
-              title="UI verstecken"
+              style={btnStyle(dark, { height: "31px", padding: "6px 12px" })}
+              onClick={(e) => { e.stopPropagation(); setVisible(false); }}
             >
-              <EyeOpen dark={dark} />
+              <div style={{ width: "17.705px", height: "12.665px", opacity: 0.8, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <IconEyeOpen color={iconColor} />
+              </div>
             </button>
           </motion.div>
         ) : (
+          /* Mini eye: padding 12px from edges, px:6 py:4, icon at opacity 40% */
           <motion.button
             key="left-mini"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
             style={{
-              position: "fixed",
-              top: "12px",
-              left: "12px",
-              zIndex: 20,
-              ...btn(dark, { padding: "4px 8px" }),
+              position: "fixed", top: "12px", left: "12px", zIndex: 20,
+              background: dark ? "transparent" : LIGHT_BTN_BG,
+              border: "none",
+              borderRadius: "4px",
+              cursor: "pointer",
+              outline: "none",
+              padding: "4px 6px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
-            onClick={(e) => { e.stopPropagation(); setElementsVisible(true); }}
-            title="UI anzeigen"
+            onClick={(e) => { e.stopPropagation(); setVisible(true); }}
           >
-            <EyeClosed dark={dark} />
+            <div style={{ width: "17.705px", height: "12.665px", opacity: 0.4, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <IconEyeClosed color={iconColor} />
+            </div>
           </motion.button>
         )}
       </AnimatePresence>
 
-      {/* ── Right panel ── */}
+      {/* ── Right panel — padding 44px from edges, buttons gap 10px ───────── */}
       <AnimatePresence>
-        {elementsVisible && (
+        {visible && (
           <motion.div
             key="right"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            style={{
-              position: "fixed",
-              top: "44px",
-              right: "44px",
-              display: "flex",
-              gap: "10px",
-              alignItems: "center",
-              zIndex: 20,
-            }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            style={{ position: "fixed", top: "44px", right: "44px", display: "flex", gap: "10px", alignItems: "center", zIndex: 20 }}
           >
+            {/* Dark mode toggle — 31×31px, p:6, icon 15.482×15.978 */}
             <button
-              style={btn(dark, { width: "31px", height: "31px", padding: "6px" })}
+              style={btnStyle(dark, { width: "31px", height: "31px", padding: "6px" })}
               onClick={(e) => { e.stopPropagation(); setDark(d => !d); }}
-              title={dark ? "Light mode" : "Dark mode"}
             >
-              <HalfCircleIcon dark={dark} />
+              <div style={{ width: "15.482px", height: "15.978px", opacity: 0.8, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <IconHalfCircle color={iconColor} />
+              </div>
             </button>
+
+            {/* Rules — w:60px, px:12 py:6 */}
             <button
-              style={btn(dark)}
+              style={btnStyle(dark, { width: "60px", padding: "6px 12px" })}
               onClick={(e) => e.stopPropagation()}
             >
               Rules
@@ -187,36 +189,31 @@ export default function New() {
         )}
       </AnimatePresence>
 
-      {/* ── Center writing zone ── */}
+      {/* ── Center writing zone ─────────────────────────────────────────────── */}
+      {/* Figma: left:50% translateX(-50%), px:40 py:36, frame width 848px     */}
       <div
         style={{
-          position: "absolute",
-          top: 0,
-          left: "50%",
-          transform: "translateX(-50%)",
-          width: "min(768px, calc(100vw - 88px))",
+          position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)",
+          width: "848px", maxWidth: "100vw",
           padding: "36px 40px",
           minHeight: "100vh",
-          display: "flex",
-          flexDirection: "column",
+          display: "flex", flexDirection: "column",
           boxSizing: "border-box",
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Prompt row */}
-        <div style={{ display: "flex", gap: "4px", alignItems: "center", flexShrink: 0 }}>
-          <CursorLine dark={dark} />
-          <p
-            style={{
-              fontFamily: FONT_SERIF,
-              fontStyle: "italic",
-              fontSize: "24px",
-              lineHeight: "45px",
-              color: promptColor,
-              margin: 0,
-              userSelect: "none",
-            }}
-          >
+        {/* Prompt row — gap:4px, w:768px */}
+        <div style={{ display: "flex", gap: "4px", alignItems: "center", flexShrink: 0, width: "768px", maxWidth: "100%" }}>
+          <CursorLine />
+          <p style={{
+            fontFamily: FONT_SERIF,
+            fontSize: "24px",
+            lineHeight: "45px",
+            color: PROMPT_COL,
+            margin: 0,
+            whiteSpace: "nowrap",
+            userSelect: "none",
+          }}>
             Explore new ways of thinking by breaking the rules of standard writing tools...
           </p>
         </div>
@@ -226,7 +223,7 @@ export default function New() {
           ref={textareaRef}
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder=""
+          spellCheck={false}
           style={{
             flex: 1,
             background: "transparent",
@@ -238,14 +235,12 @@ export default function New() {
             lineHeight: "45px",
             color: textColor,
             width: "100%",
-            minHeight: "calc(100vh - 130px)",
+            minHeight: "calc(100vh - 120px)",
             padding: 0,
-            marginTop: "4px",
-            transition: "color 0.35s ease",
+            marginTop: "2px",
             caretColor: textColor,
+            transition: "color 0.3s",
           }}
-          autoFocus
-          spellCheck={false}
         />
       </div>
     </div>

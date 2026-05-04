@@ -198,7 +198,7 @@ export default function New() {
         {/* Writing area */}
         <style>{`
           .new-textarea::placeholder {
-            color: ${PROMPT_COL};
+            color: rgba(155,155,155,0.55);
             font-family: ${FONT_SERIF};
             font-weight: 300;
             white-space: nowrap;

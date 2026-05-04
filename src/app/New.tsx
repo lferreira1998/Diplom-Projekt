@@ -199,46 +199,40 @@ export default function New() {
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Prompt row — gap:4px, w:768px */}
-        <div style={{ display: "flex", gap: "4px", alignItems: "center", flexShrink: 0, width: "768px", maxWidth: "100%" }}>
+        {/* Writing area with cursor line + placeholder */}
+        <style>{`
+          .new-textarea::placeholder {
+            color: ${PROMPT_COL};
+            font-family: ${FONT_SERIF};
+          }
+        `}</style>
+        <div style={{ display: "flex", gap: "4px", alignItems: "flex-start", width: "100%" }}>
           <CursorLine />
-          <p style={{
-            fontFamily: FONT_SERIF,
-            fontSize: "24px",
-            lineHeight: "45px",
-            color: PROMPT_COL,
-            margin: 0,
-            whiteSpace: "nowrap",
-            userSelect: "none",
-          }}>
-            Explore new ways of thinking by breaking the rules of standard writing tools...
-          </p>
+          <textarea
+            ref={textareaRef}
+            className="new-textarea"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="Explore new ways of thinking by breaking the rules of standard writing tools..."
+            spellCheck={false}
+            style={{
+              flex: 1,
+              background: "transparent",
+              border: "none",
+              outline: "none",
+              resize: "none",
+              fontFamily: FONT_SERIF,
+              fontSize: "24px",
+              lineHeight: "45px",
+              color: textColor,
+              width: "100%",
+              minHeight: "calc(100vh - 80px)",
+              padding: 0,
+              caretColor: textColor,
+              transition: "color 0.3s",
+            }}
+          />
         </div>
-
-        {/* Writing area */}
-        <textarea
-          ref={textareaRef}
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          spellCheck={false}
-          style={{
-            flex: 1,
-            background: "transparent",
-            border: "none",
-            outline: "none",
-            resize: "none",
-            fontFamily: FONT_SERIF,
-            fontSize: "24px",
-            lineHeight: "45px",
-            color: textColor,
-            width: "100%",
-            minHeight: "calc(100vh - 120px)",
-            padding: 0,
-            marginTop: "2px",
-            caretColor: textColor,
-            transition: "color 0.3s",
-          }}
-        />
       </div>
     </div>
   );

@@ -182,6 +182,19 @@ export default function New() {
         )}
       </AnimatePresence>
 
+      {/* ── Top gradient fade — text blends into header area when scrolling ── */}
+      <div
+        aria-hidden
+        style={{
+          position: "fixed", top: 0, left: 0, right: 0,
+          height: "120px",
+          background: `linear-gradient(to bottom, ${bg} 0%, ${bg} 35%, transparent 100%)`,
+          pointerEvents: "none",
+          zIndex: 10,
+          transition: "background 0.3s",
+        }}
+      />
+
       {/* ── Center writing zone ─────────────────────────────────────────────── */}
       {/* Figma: left:50% translateX(-50%), px:40 py:36, frame width 848px     */}
       <div
@@ -205,12 +218,25 @@ export default function New() {
             white-space: nowrap;
             overflow: hidden;
           }
+          ::-webkit-scrollbar { width: 4px; }
+          ::-webkit-scrollbar-track { background: transparent; }
+          ::-webkit-scrollbar-thumb {
+            background: ${dark ? "rgba(252,246,239,0.18)" : "rgba(85,85,85,0.15)"};
+            border-radius: 2px;
+          }
+          ::-webkit-scrollbar-thumb:hover {
+            background: ${dark ? "rgba(252,246,239,0.32)" : "rgba(85,85,85,0.28)"};
+          }
         `}</style>
         <textarea
             ref={textareaRef}
             className="new-textarea"
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={(e) => {
+              setText(e.target.value);
+              e.target.style.height = "auto";
+              e.target.style.height = `${e.target.scrollHeight}px`;
+            }}
             placeholder="Explore new ways of thinking by breaking the rules of standard writing tools..."
             spellCheck={false}
             style={{
@@ -218,6 +244,7 @@ export default function New() {
               border: "none",
               outline: "none",
               resize: "none",
+              overflow: "hidden",
               fontFamily: FONT_SERIF,
               fontSize: "24px",
               lineHeight: "1.5",

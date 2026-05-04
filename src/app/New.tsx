@@ -200,7 +200,8 @@ export default function New() {
           .new-textarea::placeholder {
             color: ${PROMPT_COL};
             font-family: ${FONT_SERIF};
-            font-weight: 400;
+            font-weight: 300;
+            font-style: normal;
             white-space: nowrap;
             overflow: hidden;
           }

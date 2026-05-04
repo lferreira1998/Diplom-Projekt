@@ -127,7 +127,7 @@ export default function New() {
               onClick={(e) => { e.stopPropagation(); setVisible(false); }}
             >
               <div style={{ width: "17.705px", height: "12.665px", opacity: 0.8, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <IconEyeOpen color={iconColor} />
+                <IconEyeClosed color={iconColor} />
               </div>
             </button>
           </motion.div>
@@ -152,7 +152,7 @@ export default function New() {
             onClick={(e) => { e.stopPropagation(); setVisible(true); }}
           >
             <div style={{ width: "17.705px", height: "12.665px", opacity: 0.4, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <IconEyeClosed color={iconColor} />
+              <IconEyeOpen color={iconColor} />
             </div>
           </motion.button>
         )}

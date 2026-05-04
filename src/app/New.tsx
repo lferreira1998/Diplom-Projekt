@@ -220,7 +220,7 @@ export default function New() {
               resize: "none",
               fontFamily: FONT_SERIF,
               fontSize: "24px",
-              lineHeight: "45px",
+              lineHeight: "1.5",
               color: textColor,
               width: "100%",
               minHeight: "calc(100vh - 80px)",

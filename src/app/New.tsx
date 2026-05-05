@@ -120,10 +120,11 @@ const NAV_ITEM = {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function New() {
-  const [dark, setDark]       = useState(false);
-  const [visible, setVisible] = useState(true);
+  const [dark, setDark]         = useState(false);
+  const [visible, setVisible]   = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [text, setText]       = useState("");
+  const [menuHovered, setMenuHovered] = useState(false);
+  const [text, setText]         = useState("");
   const [scrollY, setScrollY] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -158,12 +159,41 @@ export default function New() {
           >
             {/* Top row: Menu/Close + Eye */}
             <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-              <button
-                style={btnStyle(dark)}
-                onClick={(e) => { e.stopPropagation(); setMenuOpen(o => !o); }}
+              {/* Menu button with peek-card hover effect */}
+              <div
+                style={{ position: "relative" }}
+                onMouseEnter={() => { if (!menuOpen) setMenuHovered(true); }}
+                onMouseLeave={() => setMenuHovered(false)}
               >
-                {menuOpen ? "Close" : "Menu"}
-              </button>
+                {/* Ghost card that peeks from below on hover */}
+                <motion.div
+                  aria-hidden
+                  animate={{
+                    y:       menuHovered && !menuOpen ? 0 : 5,
+                    opacity: menuHovered && !menuOpen ? 1 : 0,
+                  }}
+                  transition={{ duration: 0.22, ease: "easeOut" }}
+                  style={{
+                    position: "absolute",
+                    left: "2px",
+                    top: "6px",
+                    width: "100%",
+                    height: "27px",
+                    background: dark ? "rgba(252,246,239,0.08)" : "rgba(241,235,228,0.2)",
+                    border: `1px dashed ${BORDER_COL}`,
+                    borderRadius: "4px",
+                    rotate: 7.25,
+                    zIndex: 0,
+                    pointerEvents: "none",
+                  }}
+                />
+                <button
+                  style={{ ...btnStyle(dark), position: "relative", zIndex: 1 }}
+                  onClick={(e) => { e.stopPropagation(); setMenuOpen(o => !o); setMenuHovered(false); }}
+                >
+                  {menuOpen ? "Close" : "Menu"}
+                </button>
+              </div>
               <button
                 style={btnStyle(dark)}
                 onClick={(e) => { e.stopPropagation(); setVisible(false); setMenuOpen(false); }}

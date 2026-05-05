@@ -100,12 +100,23 @@ function navItemStyle(dark: boolean, active: boolean): React.CSSProperties {
     fontSize: "14px",
     fontWeight: 400,
     lineHeight: "normal",
-    padding: "6px 12px",
-    width: "95px",
-    boxSizing: "border-box",
+    height: "31px",
+    padding: "0 12px",
+    width: "fit-content",
     whiteSpace: "nowrap",
   };
 }
+
+const NAV_CONTAINER = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.07 } },
+  exit:   { transition: { staggerChildren: 0.04, staggerDirection: -1 as const } },
+};
+const NAV_ITEM = {
+  hidden:  { opacity: 0, x: -10 },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.18, ease: "easeOut" } },
+  exit:    { opacity: 0, x: -10, transition: { duration: 0.1 } },
+};
 
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function New() {
@@ -161,20 +172,27 @@ export default function New() {
               </button>
             </div>
 
-            {/* Nav items — expand below on menu open */}
+            {/* Nav items — staggered entrance on menu open */}
             <AnimatePresence>
               {menuOpen && (
                 <motion.div
                   key="nav"
-                  initial={{ opacity: 0, y: -6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -6 }}
-                  transition={{ duration: 0.15 }}
-                  style={{ display: "flex", flexDirection: "column", gap: "8px" }}
+                  variants={NAV_CONTAINER}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  style={{ display: "flex", flexDirection: "column", gap: "8px", alignItems: "flex-start" }}
                 >
-                  <button style={navItemStyle(dark, true)}  onClick={(e) => e.stopPropagation()}>Create</button>
-                  <button style={navItemStyle(dark, false)} onClick={(e) => e.stopPropagation()}>Playground</button>
-                  <button style={navItemStyle(dark, false)} onClick={(e) => e.stopPropagation()}>About</button>
+                  {(["Create", "Playground", "About"] as const).map((label, i) => (
+                    <motion.button
+                      key={label}
+                      variants={NAV_ITEM}
+                      style={navItemStyle(dark, i === 0)}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {label}
+                    </motion.button>
+                  ))}
                 </motion.div>
               )}
             </AnimatePresence>

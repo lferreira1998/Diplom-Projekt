@@ -113,9 +113,9 @@ const NAV_CONTAINER = {
   exit:   { transition: { staggerChildren: 0.04, staggerDirection: -1 as const } },
 };
 const NAV_ITEM = {
-  hidden:  { opacity: 0, x: -10 },
-  visible: { opacity: 1, x: 0, transition: { duration: 0.18, ease: "easeOut" } },
-  exit:    { opacity: 0, x: -10, transition: { duration: 0.1 } },
+  hidden:  { opacity: 0, y: -10 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.18, ease: "easeOut" } },
+  exit:    { opacity: 0, y: -10, transition: { duration: 0.1 } },
 };
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -165,7 +165,7 @@ export default function New() {
                 onMouseEnter={() => { if (!menuOpen) setMenuHovered(true); }}
                 onMouseLeave={() => setMenuHovered(false)}
               >
-                {/* Ghost card that peeks from below on hover */}
+                {/* Ghost card — peeks only from bottom, not sides */}
                 <motion.div
                   aria-hidden
                   animate={{
@@ -175,10 +175,10 @@ export default function New() {
                   transition={{ duration: 0.22, ease: "easeOut" }}
                   style={{
                     position: "absolute",
-                    left: "0.5px",
-                    top: "5px",
-                    width: "100%",
-                    height: "29px",
+                    left: "1px",
+                    top: "9px",
+                    width: "calc(100% - 8px)",
+                    height: "28px",
                     background: dark ? "rgba(252,246,239,0.15)" : LIGHT_BG,
                     border: `1px dashed ${BORDER_COL}`,
                     borderRadius: "4px",
@@ -189,7 +189,12 @@ export default function New() {
                 />
                 <button
                   style={{ ...btnStyle(dark, { background: dark ? "transparent" : LIGHT_BG }), position: "relative", zIndex: 1 }}
-                  onClick={(e) => { e.stopPropagation(); setMenuOpen(o => !o); setMenuHovered(false); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setMenuOpen(o => !o);
+                    // Keep hover state briefly so peek card bridges into nav items
+                    setTimeout(() => setMenuHovered(false), 200);
+                  }}
                 >
                   {menuOpen ? "Close" : "Menu"}
                 </button>

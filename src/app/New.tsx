@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { useNavigate } from "react-router";
 
-// ── Design tokens (exact from Figma) ─────────────────────────────────────────
+// ── Design tokens ─────────────────────────────────────────────────────────────
 const LIGHT_BG   = "#fcf6ef";
 const DARK_BG    = "#484848";
 const BORDER_COL = "#a4a4a4";
@@ -13,54 +14,44 @@ const PROMPT_COL = "rgba(155,155,155,0.8)";
 const FONT_SERIF = "'freight-text-pro', 'EB Garamond', Georgia, serif";
 const FONT_SANS  = "'general-sans', 'Space Grotesk', sans-serif";
 
-// ── Icons (SVG recreations from Figma screenshots) ────────────────────────────
+const CATEGORIES = ["Zeit", "Sichtbarkeit", "Korrigieren", "Stabilität", "Position", "Look & Feel"];
 
-// Eye open icon — 17.705 × 12.665 px in Figma
+const NAV_ROUTES: Record<string, string> = {
+  Create: "/new",
+  Playground: "/parametrisches-tool",
+  About: "/about-the-project",
+};
+
+// ── Icons ─────────────────────────────────────────────────────────────────────
 function IconEyeOpen({ color }: { color: string }) {
   return (
     <svg width="18" height="13" viewBox="0 0 18 13" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path
-        d="M1 6.33C1 6.33 3.8 1 9 1C14.2 1 17 6.33 17 6.33C17 6.33 14.2 11.66 9 11.66C3.8 11.66 1 6.33 1 6.33Z"
-        stroke={color} strokeWidth="1.1" fill="none"
-      />
+      <path d="M1 6.33C1 6.33 3.8 1 9 1C14.2 1 17 6.33 17 6.33C17 6.33 14.2 11.66 9 11.66C3.8 11.66 1 6.33 1 6.33Z" stroke={color} strokeWidth="1.1" fill="none" />
       <circle cx="9" cy="6.33" r="2.3" fill={color} />
     </svg>
   );
 }
 
-// Closed eye (hidden state) — same dimensions, crossed
 function IconEyeClosed({ color }: { color: string }) {
   return (
     <svg width="18" height="13" viewBox="0 0 18 13" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path
-        d="M1 6.33C1 6.33 3.8 1 9 1C14.2 1 17 6.33 17 6.33C17 6.33 14.2 11.66 9 11.66C3.8 11.66 1 6.33 1 6.33Z"
-        stroke={color} strokeWidth="1.1" fill="none"
-      />
+      <path d="M1 6.33C1 6.33 3.8 1 9 1C14.2 1 17 6.33 17 6.33C17 6.33 14.2 11.66 9 11.66C3.8 11.66 1 6.33 1 6.33Z" stroke={color} strokeWidth="1.1" fill="none" />
       <circle cx="9" cy="6.33" r="2.3" fill={color} />
       <line x1="2" y1="0.5" x2="16" y2="12.5" stroke={color} strokeWidth="1.1" strokeLinecap="round" />
     </svg>
   );
 }
 
-// Half-circle dark mode toggle — 15.482 × 15.978 px in Figma (◑ shape)
 function IconHalfCircle({ color }: { color: string }) {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
       <circle cx="8" cy="8" r="6.5" stroke={color} strokeWidth="1.1" />
-      {/* Left half filled */}
       <path d="M8 1.5 A6.5 6.5 0 0 0 8 14.5 Z" fill={color} />
     </svg>
   );
 }
 
-// Cursor line — thin vertical bar before the prompt (recreates Figma's Line 2)
-function CursorLine() {
-  return (
-    <div style={{ width: "1.5px", height: "34px", background: PROMPT_COL, flexShrink: 0 }} />
-  );
-}
-
-// ── Button style helper ───────────────────────────────────────────────────────
+// ── Style helpers ─────────────────────────────────────────────────────────────
 function btnStyle(dark: boolean, extra?: React.CSSProperties): React.CSSProperties {
   return {
     background: dark ? "transparent" : LIGHT_BTN_BG,
@@ -107,6 +98,24 @@ function navItemStyle(dark: boolean, active: boolean): React.CSSProperties {
   };
 }
 
+function catStyle(dark: boolean, active: boolean): React.CSSProperties {
+  return {
+    background: active ? "#f2e9dd" : (dark ? "transparent" : LIGHT_BG),
+    border: `1px dashed ${BORDER_COL}`,
+    borderRadius: "4px",
+    cursor: "pointer",
+    outline: "none",
+    padding: "6px 12px",
+    fontFamily: FONT_SANS,
+    fontSize: "14px",
+    fontWeight: 400,
+    color: dark ? DARK_TEXT : LIGHT_TEXT,
+    whiteSpace: "nowrap",
+    lineHeight: "normal",
+  };
+}
+
+// ── Motion variants ───────────────────────────────────────────────────────────
 const NAV_CONTAINER = {
   hidden: {},
   visible: { transition: { staggerChildren: 0.07 } },
@@ -120,17 +129,19 @@ const NAV_ITEM = {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function New() {
+  const navigate = useNavigate();
   const [dark, setDark]         = useState(false);
   const [visible, setVisible]   = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuHovered, setMenuHovered] = useState(false);
+  const [rulesOpen, setRulesOpen] = useState(false);
+  const [timerEnabled, setTimerEnabled] = useState(false);
+  const [activeCategory, setActiveCategory] = useState("Zeit");
   const [text, setText]         = useState("");
-  const [scrollY, setScrollY] = useState(0);
+  const [scrollY, setScrollY]   = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  useEffect(() => {
-    textareaRef.current?.focus();
-  }, []);
+  useEffect(() => { textareaRef.current?.focus(); }, []);
 
   useEffect(() => {
     const onScroll = () => setScrollY(window.scrollY);
@@ -150,14 +161,12 @@ export default function New() {
       {/* ── Left panel ─────────────────────────────────────────────────────── */}
       <AnimatePresence mode="wait">
         {visible ? (
-          /* Full left panel: padding 44px from edges, col layout when menu open */
           <motion.div
             key="left-full"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
             style={{ position: "fixed", top: "44px", left: "44px", display: "flex", flexDirection: "column", gap: "16px", alignItems: "flex-start", zIndex: 20 }}
           >
-            {/* Top row: Menu/Close + Eye */}
             <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
               {/* Menu button with peek-card hover effect */}
               <div
@@ -165,7 +174,6 @@ export default function New() {
                 onMouseEnter={() => { if (!menuOpen) setMenuHovered(true); }}
                 onMouseLeave={() => setMenuHovered(false)}
               >
-                {/* Ghost card — peeks only from bottom, not sides */}
                 <motion.div
                   aria-hidden
                   animate={
@@ -177,26 +185,16 @@ export default function New() {
                   }
                   transition={{ duration: 0.22, ease: "easeOut" }}
                   style={{
-                    position: "absolute",
-                    left: "2px",
-                    top: "9px",
-                    width: "calc(100% - 4px)",
-                    height: "28px",
+                    position: "absolute", left: "2px", top: "9px",
+                    width: "calc(100% - 4px)", height: "28px",
                     background: dark ? "rgba(252,246,239,0.15)" : LIGHT_BG,
                     border: `1px dashed ${BORDER_COL}`,
-                    borderRadius: "4px",
-                    rotate: -2.42,
-                    zIndex: 0,
-                    pointerEvents: "none",
+                    borderRadius: "4px", rotate: -2.42, zIndex: 0, pointerEvents: "none",
                   }}
                 />
                 <button
                   style={{ ...btnStyle(dark, { background: dark ? "transparent" : LIGHT_BG }), position: "relative", zIndex: 1 }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setMenuOpen(o => !o);
-                    setMenuHovered(false);
-                  }}
+                  onClick={(e) => { e.stopPropagation(); setMenuOpen(o => !o); setMenuHovered(false); }}
                 >
                   {menuOpen ? "Close" : "Menu"}
                 </button>
@@ -209,15 +207,13 @@ export default function New() {
               </button>
             </div>
 
-            {/* Nav items — staggered entrance on menu open */}
+            {/* Nav items */}
             <AnimatePresence>
               {menuOpen && (
                 <motion.div
                   key="nav"
                   variants={NAV_CONTAINER}
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
+                  initial="hidden" animate="visible" exit="exit"
                   style={{ display: "flex", flexDirection: "column", gap: "8px", alignItems: "flex-start" }}
                 >
                   {(["Create", "Playground", "About"] as const).map((label, i) => (
@@ -225,7 +221,11 @@ export default function New() {
                       key={label}
                       variants={NAV_ITEM}
                       style={navItemStyle(dark, i === 0)}
-                      onClick={(e) => e.stopPropagation()}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setMenuOpen(false);
+                        if (label !== "Create") navigate(NAV_ROUTES[label]);
+                      }}
                     >
                       {label}
                     </motion.button>
@@ -235,7 +235,6 @@ export default function New() {
             </AnimatePresence>
           </motion.div>
         ) : (
-          /* Mini eye: padding 12px from edges, px:6 py:4, icon at opacity 40% */
           <motion.button
             key="left-mini"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -243,14 +242,8 @@ export default function New() {
             style={{
               position: "fixed", top: "12px", left: "12px", zIndex: 20,
               background: dark ? "transparent" : LIGHT_BTN_BG,
-              border: "none",
-              borderRadius: "4px",
-              cursor: "pointer",
-              outline: "none",
-              padding: "4px 6px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
+              border: "none", borderRadius: "4px", cursor: "pointer", outline: "none",
+              padding: "4px 6px", display: "flex", alignItems: "center", justifyContent: "center",
             }}
             onClick={(e) => { e.stopPropagation(); setVisible(true); }}
           >
@@ -259,7 +252,7 @@ export default function New() {
         )}
       </AnimatePresence>
 
-      {/* ── Right panel — padding 44px from edges, buttons gap 10px ───────── */}
+      {/* ── Right panel ────────────────────────────────────────────────────── */}
       <AnimatePresence>
         {visible && (
           <motion.div
@@ -268,18 +261,15 @@ export default function New() {
             transition={{ duration: 0.15 }}
             style={{ position: "fixed", top: "44px", right: "44px", display: "flex", gap: "10px", alignItems: "center", zIndex: 20 }}
           >
-            {/* Dark mode toggle — 31×31px, p:6, icon 15.482×15.978 */}
             <button
               style={btnStyle(dark, { width: "31px", padding: "0 6px" })}
               onClick={(e) => { e.stopPropagation(); setDark(d => !d); }}
             >
               <IconHalfCircle color={iconColor} />
             </button>
-
-            {/* Rules — w:60px, px:12 py:6 */}
             <button
               style={btnStyle(dark, { width: "60px" })}
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e) => { e.stopPropagation(); setRulesOpen(true); }}
             >
               Rules
             </button>
@@ -287,34 +277,147 @@ export default function New() {
         )}
       </AnimatePresence>
 
-      {/* ── Top gradient fade — appears only when scrolled ──────────────── */}
+      {/* ── Rules panel — slides in from left ──────────────────────────────── */}
+      <AnimatePresence>
+        {rulesOpen && (
+          <motion.div
+            key="rules"
+            initial={{ x: "-100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "-100%" }}
+            transition={{ type: "spring", stiffness: 280, damping: 28 }}
+            style={{
+              position: "fixed", top: 0, left: 0, height: "100vh",
+              display: "flex", gap: "24px",
+              padding: "24px 0 24px 44px",
+              zIndex: 30,
+              alignItems: "flex-start",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Left micro-column: close + dark mode */}
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              transition={{ delay: 0.12, duration: 0.2 }}
+              style={{ display: "flex", flexDirection: "column", gap: "10px", paddingTop: "20px" }}
+            >
+              <button
+                style={btnStyle(dark, { width: "31px", padding: "0", fontSize: "18px" })}
+                onClick={() => setRulesOpen(false)}
+              >
+                ×
+              </button>
+              <button
+                style={btnStyle(dark, { width: "31px", padding: "0 6px" })}
+                onClick={() => setDark(d => !d)}
+              >
+                <IconHalfCircle color={iconColor} />
+              </button>
+            </motion.div>
+
+            {/* Main content panel */}
+            <motion.div
+              initial={{ opacity: 0, x: -16 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -16 }}
+              transition={{ delay: 0.06, type: "spring", stiffness: 300, damping: 28 }}
+              style={{
+                border: `1px dashed ${BORDER_COL}`,
+                borderRadius: "4px",
+                display: "flex", flexDirection: "column", gap: "24px",
+                padding: "24px",
+                width: "277px",
+                height: "calc(100vh - 48px)",
+                background: bg,
+                overflow: "hidden",
+                boxSizing: "border-box",
+              }}
+            >
+              {/* Categories */}
+              <motion.div
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ delay: 0.18, duration: 0.22, ease: "easeOut" }}
+                style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}
+              >
+                {CATEGORIES.map(cat => (
+                  <button key={cat} style={catStyle(dark, cat === activeCategory)}
+                    onClick={() => setActiveCategory(cat)}>
+                    {cat}
+                  </button>
+                ))}
+              </motion.div>
+
+              {/* Divider */}
+              <motion.div
+                initial={{ opacity: 0, scaleX: 0 }}
+                animate={{ opacity: 0.5, scaleX: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ delay: 0.24, duration: 0.28, ease: "easeOut" }}
+                style={{ height: "1px", background: BORDER_COL, transformOrigin: "left" }}
+              />
+
+              {/* Timer row */}
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ delay: 0.28, duration: 0.22, ease: "easeOut" }}
+                style={{ border: `1px dashed ${BORDER_COL}`, borderRadius: "4px", padding: "12px 24px" }}
+              >
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
+                  <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: textColor }}>Timer</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ fontFamily: FONT_SANS, fontSize: "11px", color: BORDER_COL }}>
+                      {timerEnabled ? "An" : "Aus"}
+                    </span>
+                    <button
+                      onClick={() => setTimerEnabled(t => !t)}
+                      style={{
+                        width: "36px", height: "20px",
+                        border: `1px dashed ${BORDER_COL}`, borderRadius: "100px",
+                        background: "transparent", cursor: "pointer",
+                        padding: "3px", display: "flex", alignItems: "center",
+                        justifyContent: "flex-start", outline: "none",
+                      }}
+                    >
+                      <motion.div
+                        animate={{ x: timerEnabled ? 16 : 0 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                        style={{ width: "14px", height: "14px", background: BORDER_COL, borderRadius: "7px", flexShrink: 0 }}
+                      />
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Top gradient fade ───────────────────────────────────────────────── */}
       <div
         aria-hidden
         style={{
-          position: "fixed", top: 0, left: 0, right: 0,
-          height: "120px",
+          position: "fixed", top: 0, left: 0, right: 0, height: "120px",
           background: `linear-gradient(to bottom, ${bg} 0%, ${bg} 35%, transparent 100%)`,
-          pointerEvents: "none",
-          zIndex: 10,
+          pointerEvents: "none", zIndex: 10,
           opacity: Math.min(scrollY / 50, 1),
           transition: "background 0.3s",
         }}
       />
 
       {/* ── Center writing zone ─────────────────────────────────────────────── */}
-      {/* Figma: left:50% translateX(-50%), px:40 py:36, frame width 848px     */}
       <div
         style={{
           position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)",
           width: "848px", maxWidth: "100vw",
-          padding: "36px 40px",
-          minHeight: "100vh",
-          display: "flex", flexDirection: "column",
-          boxSizing: "border-box",
+          padding: "36px 40px", minHeight: "100vh",
+          display: "flex", flexDirection: "column", boxSizing: "border-box",
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Writing area */}
         <style>{`
           .new-textarea::placeholder {
             color: ${PROMPT_COL};
@@ -335,33 +438,24 @@ export default function New() {
           }
         `}</style>
         <textarea
-            ref={textareaRef}
-            className="new-textarea"
-            value={text}
-            onChange={(e) => {
-              setText(e.target.value);
-              e.target.style.height = "auto";
-              e.target.style.height = `${e.target.scrollHeight}px`;
-            }}
-            placeholder="Explore new ways of thinking by breaking the rules of standard writing tools..."
-            spellCheck={false}
-            style={{
-              background: "transparent",
-              border: "none",
-              outline: "none",
-              resize: "none",
-              overflow: "hidden",
-              fontFamily: FONT_SERIF,
-              fontSize: "24px",
-              lineHeight: "1.5",
-              color: textColor,
-              width: "100%",
-              minHeight: "calc(100vh - 80px)",
-              padding: 0,
-              caretColor: textColor,
-              transition: "color 0.3s",
-            }}
-          />
+          ref={textareaRef}
+          className="new-textarea"
+          value={text}
+          onChange={(e) => {
+            setText(e.target.value);
+            e.target.style.height = "auto";
+            e.target.style.height = `${e.target.scrollHeight}px`;
+          }}
+          placeholder="Explore new ways of thinking by breaking the rules of standard writing tools..."
+          spellCheck={false}
+          style={{
+            background: "transparent", border: "none", outline: "none",
+            resize: "none", overflow: "hidden",
+            fontFamily: FONT_SERIF, fontSize: "24px", lineHeight: "1.5",
+            color: textColor, width: "100%", minHeight: "calc(100vh - 80px)",
+            padding: 0, caretColor: textColor, transition: "color 0.3s",
+          }}
+        />
       </div>
     </div>
   );

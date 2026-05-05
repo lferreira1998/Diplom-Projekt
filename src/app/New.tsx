@@ -83,10 +83,35 @@ function btnStyle(dark: boolean, extra?: React.CSSProperties): React.CSSProperti
   };
 }
 
+function navItemStyle(dark: boolean, active: boolean): React.CSSProperties {
+  return {
+    background: active
+      ? (dark ? "rgba(252,246,239,0.12)" : "rgba(85,85,85,0.1)")
+      : (dark ? "transparent" : LIGHT_BTN_BG),
+    border: `1px dashed ${active ? (dark ? DARK_TEXT : LIGHT_TEXT) : BORDER_COL}`,
+    borderRadius: "4px",
+    cursor: "pointer",
+    outline: "none",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "flex-start",
+    color: dark ? DARK_TEXT : LIGHT_TEXT,
+    fontFamily: FONT_SANS,
+    fontSize: "14px",
+    fontWeight: 400,
+    lineHeight: "normal",
+    padding: "6px 12px",
+    width: "95px",
+    boxSizing: "border-box",
+    whiteSpace: "nowrap",
+  };
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function New() {
   const [dark, setDark]       = useState(false);
   const [visible, setVisible] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [text, setText]       = useState("");
   const [scrollY, setScrollY] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -113,28 +138,46 @@ export default function New() {
       {/* ── Left panel ─────────────────────────────────────────────────────── */}
       <AnimatePresence mode="wait">
         {visible ? (
-          /* Full left panel: padding 44px from edges, buttons with gap 10px */
+          /* Full left panel: padding 44px from edges, col layout when menu open */
           <motion.div
             key="left-full"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            style={{ position: "fixed", top: "44px", left: "44px", display: "flex", gap: "10px", alignItems: "center", zIndex: 20 }}
+            style={{ position: "fixed", top: "44px", left: "44px", display: "flex", flexDirection: "column", gap: "16px", alignItems: "flex-start", zIndex: 20 }}
           >
-            {/* Menu */}
-            <button
-              style={btnStyle(dark)}
-              onClick={(e) => e.stopPropagation()}
-            >
-              Menu
-            </button>
+            {/* Top row: Menu/Close + Eye */}
+            <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+              <button
+                style={btnStyle(dark)}
+                onClick={(e) => { e.stopPropagation(); setMenuOpen(o => !o); }}
+              >
+                {menuOpen ? "Close" : "Menu"}
+              </button>
+              <button
+                style={btnStyle(dark)}
+                onClick={(e) => { e.stopPropagation(); setVisible(false); setMenuOpen(false); }}
+              >
+                <IconEyeClosed color={iconColor} />
+              </button>
+            </div>
 
-            {/* Eye button — h:31px, px:12 py:6, icon 17.705×12.665 at opacity 80% */}
-            <button
-              style={btnStyle(dark)}
-              onClick={(e) => { e.stopPropagation(); setVisible(false); }}
-            >
-              <IconEyeClosed color={iconColor} />
-            </button>
+            {/* Nav items — expand below on menu open */}
+            <AnimatePresence>
+              {menuOpen && (
+                <motion.div
+                  key="nav"
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.15 }}
+                  style={{ display: "flex", flexDirection: "column", gap: "8px" }}
+                >
+                  <button style={navItemStyle(dark, true)}  onClick={(e) => e.stopPropagation()}>Create</button>
+                  <button style={navItemStyle(dark, false)} onClick={(e) => e.stopPropagation()}>Playground</button>
+                  <button style={navItemStyle(dark, false)} onClick={(e) => e.stopPropagation()}>About</button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         ) : (
           /* Mini eye: padding 12px from edges, px:6 py:4, icon at opacity 40% */

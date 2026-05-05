@@ -158,27 +158,99 @@ export default function New() {
       style={{ minHeight: "100vh", background: bg, position: "relative", transition: "background 0.3s" }}
       onClick={() => textareaRef.current?.focus()}
     >
-      {/* ── Left panel: ◑ + Rules ──────────────────────────────────────────── */}
+      {/* ── Left: ◑/Rules animate to ×/◑ column, panel shoots out right ─────── */}
       <AnimatePresence>
         {visible && (
           <motion.div
-            key="left"
+            key="left-group"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            style={{ position: "fixed", top: "44px", left: "44px", display: "flex", gap: "10px", alignItems: "center", zIndex: 20 }}
+            style={{
+              position: "fixed", top: "24px", left: "44px",
+              display: "flex", gap: "24px", alignItems: "flex-start", zIndex: 20,
+            }}
+            onClick={(e) => e.stopPropagation()}
           >
-            <button
-              style={btnStyle(dark, { width: "31px", padding: "0 6px" })}
-              onClick={(e) => { e.stopPropagation(); setDark(d => !d); }}
+            {/* Button column — layout-animates between row ↔ column */}
+            <motion.div
+              layout
+              transition={{ type: "spring", stiffness: 280, damping: 26 }}
+              style={{ display: "flex", flexDirection: rulesOpen ? "column" : "row", gap: "10px", paddingTop: "20px" }}
             >
-              <IconHalfCircle color={iconColor} />
-            </button>
-            <button
-              style={btnStyle(dark, { width: "60px" })}
-              onClick={(e) => { e.stopPropagation(); setRulesOpen(true); }}
-            >
-              Rules
-            </button>
+              {/* ◑ dark mode — moves from pos 1 to pos 2 */}
+              <motion.button
+                layout
+                transition={{ type: "spring", stiffness: 280, damping: 26 }}
+                style={{ ...btnStyle(dark, { width: "31px", padding: "0 6px" }), order: rulesOpen ? 2 : 1 }}
+                onClick={(e) => { e.stopPropagation(); setDark(d => !d); }}
+              >
+                <IconHalfCircle color={iconColor} />
+              </motion.button>
+              {/* Rules → × — moves from pos 2 to pos 1 (top) */}
+              <motion.button
+                layout
+                transition={{ type: "spring", stiffness: 280, damping: 26 }}
+                style={{ ...btnStyle(dark, rulesOpen ? { width: "31px", padding: "0" } : { width: "60px" }), order: rulesOpen ? 1 : 2 }}
+                onClick={(e) => { e.stopPropagation(); setRulesOpen(o => !o); }}
+              >
+                <AnimatePresence mode="wait">
+                  {rulesOpen ? (
+                    <motion.span key="x" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.08 }} style={{ fontSize: "18px", lineHeight: "1" }}>×</motion.span>
+                  ) : (
+                    <motion.span key="r" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.08 }}>Rules</motion.span>
+                  )}
+                </AnimatePresence>
+              </motion.button>
+            </motion.div>
+
+            {/* Rules content panel — shoots out to the right of the button column */}
+            <AnimatePresence>
+              {rulesOpen && (
+                <motion.div
+                  key="rules-content"
+                  initial={{ x: -20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  exit={{ x: -20, opacity: 0 }}
+                  transition={{ type: "spring", stiffness: 280, damping: 26, delay: 0.1 }}
+                  style={{
+                    border: `1px dashed ${BORDER_COL}`, borderRadius: "4px",
+                    display: "flex", flexDirection: "column", gap: "24px",
+                    padding: "24px", width: "277px", height: "calc(100vh - 48px)",
+                    background: bg, overflow: "hidden", boxSizing: "border-box",
+                  }}
+                >
+                  <motion.div
+                    initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                    transition={{ delay: 0.2, duration: 0.22, ease: "easeOut" }}
+                    style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}
+                  >
+                    {CATEGORIES.map(cat => (
+                      <button key={cat} style={catStyle(dark, cat === activeCategory)} onClick={() => setActiveCategory(cat)}>{cat}</button>
+                    ))}
+                  </motion.div>
+                  <motion.div
+                    initial={{ opacity: 0, scaleX: 0 }} animate={{ opacity: 0.5, scaleX: 1 }} exit={{ opacity: 0 }}
+                    transition={{ delay: 0.26, duration: 0.28, ease: "easeOut" }}
+                    style={{ height: "1px", background: BORDER_COL, transformOrigin: "left" }}
+                  />
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                    transition={{ delay: 0.30, duration: 0.22, ease: "easeOut" }}
+                    style={{ border: `1px dashed ${BORDER_COL}`, borderRadius: "4px", padding: "12px 24px" }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
+                      <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: textColor }}>Timer</span>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "11px", color: BORDER_COL }}>{timerEnabled ? "An" : "Aus"}</span>
+                        <button onClick={() => setTimerEnabled(t => !t)} style={{ width: "36px", height: "20px", border: `1px dashed ${BORDER_COL}`, borderRadius: "100px", background: "transparent", cursor: "pointer", padding: "3px", display: "flex", alignItems: "center", justifyContent: "flex-start", outline: "none" }}>
+                          <motion.div animate={{ x: timerEnabled ? 16 : 0 }} transition={{ type: "spring", stiffness: 400, damping: 28 }} style={{ width: "14px", height: "14px", background: BORDER_COL, borderRadius: "7px", flexShrink: 0 }} />
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         )}
       </AnimatePresence>
@@ -239,7 +311,7 @@ export default function New() {
                   key="nav"
                   variants={NAV_CONTAINER}
                   initial="hidden" animate="visible" exit="exit"
-                  style={{ display: "flex", flexDirection: "column", gap: "8px", alignItems: "flex-end" }}
+                  style={{ display: "flex", flexDirection: "column", gap: "8px", alignItems: "flex-start" }}
                 >
                   {(["Create", "Playground", "About"] as const).map((label, i) => (
                     <motion.button
@@ -274,125 +346,6 @@ export default function New() {
           >
             <IconEyeOpen color={iconColor} />
           </motion.button>
-        )}
-      </AnimatePresence>
-
-      {/* ── Rules panel — slides in from left ──────────────────────────────── */}
-      <AnimatePresence>
-        {rulesOpen && (
-          <motion.div
-            key="rules"
-            initial={{ x: "-100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "-100%" }}
-            transition={{ type: "spring", stiffness: 280, damping: 28 }}
-            style={{
-              position: "fixed", top: 0, left: 0, height: "100vh",
-              display: "flex", gap: "24px",
-              padding: "24px 0 24px 44px",
-              zIndex: 30,
-              alignItems: "flex-start",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Left micro-column: close + dark mode */}
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              transition={{ delay: 0.12, duration: 0.2 }}
-              style={{ display: "flex", flexDirection: "column", gap: "10px", paddingTop: "20px" }}
-            >
-              <button
-                style={btnStyle(dark, { width: "31px", padding: "0", fontSize: "18px" })}
-                onClick={() => setRulesOpen(false)}
-              >
-                ×
-              </button>
-              <button
-                style={btnStyle(dark, { width: "31px", padding: "0 6px" })}
-                onClick={() => setDark(d => !d)}
-              >
-                <IconHalfCircle color={iconColor} />
-              </button>
-            </motion.div>
-
-            {/* Main content panel */}
-            <motion.div
-              initial={{ opacity: 0, x: -16 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -16 }}
-              transition={{ delay: 0.06, type: "spring", stiffness: 300, damping: 28 }}
-              style={{
-                border: `1px dashed ${BORDER_COL}`,
-                borderRadius: "4px",
-                display: "flex", flexDirection: "column", gap: "24px",
-                padding: "24px",
-                width: "277px",
-                height: "calc(100vh - 48px)",
-                background: bg,
-                overflow: "hidden",
-                boxSizing: "border-box",
-              }}
-            >
-              {/* Categories */}
-              <motion.div
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                transition={{ delay: 0.18, duration: 0.22, ease: "easeOut" }}
-                style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}
-              >
-                {CATEGORIES.map(cat => (
-                  <button key={cat} style={catStyle(dark, cat === activeCategory)}
-                    onClick={() => setActiveCategory(cat)}>
-                    {cat}
-                  </button>
-                ))}
-              </motion.div>
-
-              {/* Divider */}
-              <motion.div
-                initial={{ opacity: 0, scaleX: 0 }}
-                animate={{ opacity: 0.5, scaleX: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ delay: 0.24, duration: 0.28, ease: "easeOut" }}
-                style={{ height: "1px", background: BORDER_COL, transformOrigin: "left" }}
-              />
-
-              {/* Timer row */}
-              <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                transition={{ delay: 0.28, duration: 0.22, ease: "easeOut" }}
-                style={{ border: `1px dashed ${BORDER_COL}`, borderRadius: "4px", padding: "12px 24px" }}
-              >
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
-                  <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: textColor }}>Timer</span>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <span style={{ fontFamily: FONT_SANS, fontSize: "11px", color: BORDER_COL }}>
-                      {timerEnabled ? "An" : "Aus"}
-                    </span>
-                    <button
-                      onClick={() => setTimerEnabled(t => !t)}
-                      style={{
-                        width: "36px", height: "20px",
-                        border: `1px dashed ${BORDER_COL}`, borderRadius: "100px",
-                        background: "transparent", cursor: "pointer",
-                        padding: "3px", display: "flex", alignItems: "center",
-                        justifyContent: "flex-start", outline: "none",
-                      }}
-                    >
-                      <motion.div
-                        animate={{ x: timerEnabled ? 16 : 0 }}
-                        transition={{ type: "spring", stiffness: 400, damping: 28 }}
-                        style={{ width: "14px", height: "14px", background: BORDER_COL, borderRadius: "7px", flexShrink: 0 }}
-                      />
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            </motion.div>
-          </motion.div>
         )}
       </AnimatePresence>
 

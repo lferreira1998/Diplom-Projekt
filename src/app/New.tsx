@@ -169,7 +169,7 @@ export default function New() {
                 <motion.div
                   aria-hidden
                   animate={{
-                    y:       menuHovered && !menuOpen ? 0 : 5,
+                    y:       menuHovered && !menuOpen ? 0 : -6,
                     opacity: menuHovered && !menuOpen ? 1 : 0,
                   }}
                   transition={{ duration: 0.22, ease: "easeOut" }}
@@ -188,7 +188,7 @@ export default function New() {
                   }}
                 />
                 <button
-                  style={{ ...btnStyle(dark), position: "relative", zIndex: 1 }}
+                  style={{ ...btnStyle(dark, { background: dark ? "transparent" : "#FAF4ED" }), position: "relative", zIndex: 1 }}
                   onClick={(e) => { e.stopPropagation(); setMenuOpen(o => !o); setMenuHovered(false); }}
                 >
                   {menuOpen ? "Close" : "Menu"}

@@ -158,14 +158,39 @@ export default function New() {
       style={{ minHeight: "100vh", background: bg, position: "relative", transition: "background 0.3s" }}
       onClick={() => textareaRef.current?.focus()}
     >
-      {/* ── Left panel ─────────────────────────────────────────────────────── */}
+      {/* ── Left panel: ◑ + Rules ──────────────────────────────────────────── */}
+      <AnimatePresence>
+        {visible && (
+          <motion.div
+            key="left"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            style={{ position: "fixed", top: "44px", left: "44px", display: "flex", gap: "10px", alignItems: "center", zIndex: 20 }}
+          >
+            <button
+              style={btnStyle(dark, { width: "31px", padding: "0 6px" })}
+              onClick={(e) => { e.stopPropagation(); setDark(d => !d); }}
+            >
+              <IconHalfCircle color={iconColor} />
+            </button>
+            <button
+              style={btnStyle(dark, { width: "60px" })}
+              onClick={(e) => { e.stopPropagation(); setRulesOpen(true); }}
+            >
+              Rules
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Right panel: Menu + Eye ─────────────────────────────────────────── */}
       <AnimatePresence mode="wait">
         {visible ? (
           <motion.div
-            key="left-full"
+            key="right-full"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            style={{ position: "fixed", top: "44px", left: "44px", display: "flex", flexDirection: "column", gap: "16px", alignItems: "flex-start", zIndex: 20 }}
+            style={{ position: "fixed", top: "44px", right: "44px", display: "flex", flexDirection: "column", gap: "16px", alignItems: "flex-end", zIndex: 20 }}
           >
             <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
               {/* Menu button with peek-card hover effect */}
@@ -214,7 +239,7 @@ export default function New() {
                   key="nav"
                   variants={NAV_CONTAINER}
                   initial="hidden" animate="visible" exit="exit"
-                  style={{ display: "flex", flexDirection: "column", gap: "8px", alignItems: "flex-start" }}
+                  style={{ display: "flex", flexDirection: "column", gap: "8px", alignItems: "flex-end" }}
                 >
                   {(["Create", "Playground", "About"] as const).map((label, i) => (
                     <motion.button
@@ -236,11 +261,11 @@ export default function New() {
           </motion.div>
         ) : (
           <motion.button
-            key="left-mini"
+            key="right-mini"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
             style={{
-              position: "fixed", top: "12px", left: "12px", zIndex: 20,
+              position: "fixed", top: "12px", right: "12px", zIndex: 20,
               background: dark ? "transparent" : LIGHT_BTN_BG,
               border: "none", borderRadius: "4px", cursor: "pointer", outline: "none",
               padding: "4px 6px", display: "flex", alignItems: "center", justifyContent: "center",
@@ -249,31 +274,6 @@ export default function New() {
           >
             <IconEyeOpen color={iconColor} />
           </motion.button>
-        )}
-      </AnimatePresence>
-
-      {/* ── Right panel ────────────────────────────────────────────────────── */}
-      <AnimatePresence>
-        {visible && (
-          <motion.div
-            key="right"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-            style={{ position: "fixed", top: "44px", right: "44px", display: "flex", gap: "10px", alignItems: "center", zIndex: 20 }}
-          >
-            <button
-              style={btnStyle(dark, { width: "31px", padding: "0 6px" })}
-              onClick={(e) => { e.stopPropagation(); setDark(d => !d); }}
-            >
-              <IconHalfCircle color={iconColor} />
-            </button>
-            <button
-              style={btnStyle(dark, { width: "60px" })}
-              onClick={(e) => { e.stopPropagation(); setRulesOpen(true); }}
-            >
-              Rules
-            </button>
-          </motion.div>
         )}
       </AnimatePresence>
 

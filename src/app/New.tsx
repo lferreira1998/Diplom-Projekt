@@ -88,10 +88,17 @@ export default function New() {
   const [dark, setDark]       = useState(false);
   const [visible, setVisible] = useState(true);
   const [text, setText]       = useState("");
+  const [scrollY, setScrollY] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     textareaRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    const onScroll = () => setScrollY(window.scrollY);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   const bg        = dark ? DARK_BG : LIGHT_BG;
@@ -182,7 +189,7 @@ export default function New() {
         )}
       </AnimatePresence>
 
-      {/* ── Top gradient fade — text blends into header area when scrolling ── */}
+      {/* ── Top gradient fade — appears only when scrolled ──────────────── */}
       <div
         aria-hidden
         style={{
@@ -191,6 +198,7 @@ export default function New() {
           background: `linear-gradient(to bottom, ${bg} 0%, ${bg} 35%, transparent 100%)`,
           pointerEvents: "none",
           zIndex: 10,
+          opacity: Math.min(scrollY / 50, 1),
           transition: "background 0.3s",
         }}
       />

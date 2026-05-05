@@ -175,20 +175,20 @@ export default function New() {
                   transition={{ duration: 0.22, ease: "easeOut" }}
                   style={{
                     position: "absolute",
-                    left: "2px",
-                    top: "6px",
+                    left: "0.5px",
+                    top: "5px",
                     width: "100%",
-                    height: "27px",
-                    background: dark ? "rgba(252,246,239,0.08)" : "rgba(241,235,228,0.2)",
+                    height: "29px",
+                    background: dark ? "rgba(252,246,239,0.15)" : LIGHT_BG,
                     border: `1px dashed ${BORDER_COL}`,
                     borderRadius: "4px",
-                    rotate: 7.25,
+                    rotate: -2.42,
                     zIndex: 0,
                     pointerEvents: "none",
                   }}
                 />
                 <button
-                  style={{ ...btnStyle(dark, { background: dark ? "transparent" : "#FAF4ED" }), position: "relative", zIndex: 1 }}
+                  style={{ ...btnStyle(dark, { background: dark ? "transparent" : LIGHT_BG }), position: "relative", zIndex: 1 }}
                   onClick={(e) => { e.stopPropagation(); setMenuOpen(o => !o); setMenuHovered(false); }}
                 >
                   {menuOpen ? "Close" : "Menu"}

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 
 // ── Design tokens (exact from Figma) ─────────────────────────────────────────
 const LIGHT_BG   = "#fcf6ef";
-const DARK_BG    = "#555555";
+const DARK_BG    = "#484848";
 const BORDER_COL = "#a4a4a4";
 const LIGHT_BTN_BG = "rgba(241,235,228,0.2)";
 const LIGHT_TEXT = "#555555";

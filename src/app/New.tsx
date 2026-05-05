@@ -168,16 +168,19 @@ export default function New() {
                 {/* Ghost card — peeks only from bottom, not sides */}
                 <motion.div
                   aria-hidden
-                  animate={{
-                    y:       menuHovered && !menuOpen ? 0 : -6,
-                    opacity: menuHovered && !menuOpen ? 1 : 0,
-                  }}
+                  animate={
+                    menuOpen
+                      ? { y: 8, opacity: 0, transition: { y: { duration: 0.22, ease: "easeOut" }, opacity: { duration: 0.1 } } }
+                      : menuHovered
+                        ? { y: 0, opacity: 1 }
+                        : { y: -6, opacity: 0 }
+                  }
                   transition={{ duration: 0.22, ease: "easeOut" }}
                   style={{
                     position: "absolute",
-                    left: "1px",
+                    left: "2px",
                     top: "9px",
-                    width: "calc(100% - 8px)",
+                    width: "calc(100% - 4px)",
                     height: "28px",
                     background: dark ? "rgba(252,246,239,0.15)" : LIGHT_BG,
                     border: `1px dashed ${BORDER_COL}`,
@@ -192,8 +195,7 @@ export default function New() {
                   onClick={(e) => {
                     e.stopPropagation();
                     setMenuOpen(o => !o);
-                    // Keep hover state briefly so peek card bridges into nav items
-                    setTimeout(() => setMenuHovered(false), 200);
+                    setMenuHovered(false);
                   }}
                 >
                   {menuOpen ? "Close" : "Menu"}

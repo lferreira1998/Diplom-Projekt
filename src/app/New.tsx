@@ -176,14 +176,14 @@ export default function New() {
         {visible && (
           <motion.button
             key="float-dark"
-            layout
-            transition={SPRING}
             initial={false}
+            animate={{ x: rulesOpen ? BTN_OPEN.dark - BTN_CLOSED.dark : 0 }}
             exit={{ opacity: 0, transition: { duration: 0.12 } }}
+            transition={SPRING}
             style={{
               position: "fixed",
               top: "24px",
-              left: rulesOpen ? BTN_OPEN.dark : BTN_CLOSED.dark,
+              left: BTN_CLOSED.dark,
               width: "31px", height: "31px",
               background: darkBtnBg,
               border: `1px dashed ${BORDER_COL}`,
@@ -205,15 +205,14 @@ export default function New() {
         {visible && (
           <motion.button
             key="float-rules"
-            layout
-            transition={SPRING}
             initial={false}
+            animate={{ x: rulesOpen ? BTN_OPEN.rules - BTN_CLOSED.rules : 0, width: rulesOpen ? "31px" : "60px" }}
             exit={{ opacity: 0, transition: { duration: 0.12 } }}
+            transition={SPRING}
             style={{
               position: "fixed",
               top: "24px",
-              left: rulesOpen ? BTN_OPEN.rules : BTN_CLOSED.rules,
-              width: rulesOpen ? "31px" : "60px",
+              left: BTN_CLOSED.rules,
               height: "31px",
               background: rulesBtnBg,
               border: `1px dashed ${BORDER_COL}`,

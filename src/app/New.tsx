@@ -312,7 +312,7 @@ export default function New() {
                 border: `1px dashed ${BORDER_COL}`,
                 cursor: "pointer", outline: "none",
                 display: "flex", alignItems: "center", justifyContent: "center",
-                fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT,
+                fontFamily: FONT_SANS, fontSize: "16px", fontWeight: 400, color: dark ? DARK_TEXT : LIGHT_TEXT,
                 letterSpacing: "-0.16px", lineHeight: "22px",
                 textAlign: "center", whiteSpace: "pre-line",
               }}>{"Name,\nDescription\n& more"}</button>
@@ -321,7 +321,7 @@ export default function New() {
                 border: `1px dashed ${BORDER_COL}`,
                 cursor: "pointer", outline: "none",
                 padding: "6px 12px",
-                fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT,
+                fontFamily: FONT_SANS, fontSize: "16px", fontWeight: 400, color: dark ? DARK_TEXT : LIGHT_TEXT,
                 lineHeight: "22px", textAlign: "center",
               }}>Save</button>
             </div>
@@ -510,12 +510,21 @@ export default function New() {
       />
 
       {/* ── Center writing zone ─────────────────────────────────────────────── */}
+      <motion.div
+        animate={{ x: rulesOpen ? 233.5 : 0 }}
+        transition={SPRING}
+        style={{
+          position: "absolute", top: 0, left: 0, right: 0, minHeight: "100vh",
+          pointerEvents: "none",
+        }}
+      >
       <div
         style={{
           position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)",
           width: "848px", maxWidth: "100vw",
           padding: "36px 40px", minHeight: "100vh",
           display: "flex", flexDirection: "column", boxSizing: "border-box",
+          pointerEvents: "auto",
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -558,6 +567,7 @@ export default function New() {
           }}
         />
       </div>
+      </motion.div>
     </div>
   );
 }

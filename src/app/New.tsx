@@ -120,7 +120,7 @@ function navItemStyle(dark: boolean, active: boolean): React.CSSProperties {
     lineHeight: "normal",
     height: "31px",
     padding: "0 12px",
-    width: "fit-content",
+    width: "100%",
     whiteSpace: "nowrap",
   };
 }
@@ -461,7 +461,7 @@ export default function New() {
                   key="nav"
                   variants={NAV_CONTAINER}
                   initial="hidden" animate="visible" exit="exit"
-                  style={{ display: "flex", flexDirection: "column", gap: "8px", alignItems: "flex-start" }}
+                  style={{ display: "flex", flexDirection: "column", gap: "8px", alignItems: "flex-end" }}
                 >
                   {(["Create", "Playground", "About"] as const).map((label, i) => (
                     <motion.button

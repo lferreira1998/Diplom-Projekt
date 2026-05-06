@@ -158,9 +158,13 @@ export default function New() {
     return () => window.removeEventListener("scroll", fn);
   }, []);
 
-  const bg        = dark ? DARK_BG : LIGHT_BG;
-  const textColor = dark ? DARK_TEXT : LIGHT_TEXT;
-  const iconColor = dark ? DARK_TEXT : LIGHT_TEXT;
+  const bg             = dark ? DARK_BG : LIGHT_BG;
+  const textColor      = dark ? DARK_TEXT : LIGHT_TEXT;
+  const iconColor      = dark ? DARK_TEXT : LIGHT_TEXT;
+  const sidebarBg      = dark ? "rgba(30,29,28,0.97)"  : SIDEBAR_BG;
+  const catActiveBg    = dark ? "#484848"               : LIGHT_BG;
+  const catInactiveBg  = dark ? "#2a2928"               : "#f9f1e8";
+  const settingsCardBg = dark ? "#2a2928"               : LIGHT_BG;
 
   // Background for the floating buttons depending on state
   const darkBtnBg  = rulesOpen ? (dark ? "rgba(248,239,229,0.15)" : PANEL_BG) : (dark ? "transparent" : LIGHT_BTN_BG);
@@ -261,7 +265,7 @@ export default function New() {
             style={{
               position: "fixed", top: 0, left: 0,
               width: "153px", height: "100vh",
-              background: SIDEBAR_BG,
+              background: sidebarBg,
               borderRight: `1px dashed ${BORDER_COL}`,
               borderRadius: "4px",
               padding: "24px",
@@ -288,7 +292,7 @@ export default function New() {
                     style={{
                       width: "105px", height: cat.h,
                       borderRadius: cat.br,
-                      background: cat.en === activeCategory ? LIGHT_BG : "#f9f1e8",
+                      background: cat.en === activeCategory ? catActiveBg : catInactiveBg,
                       border: `1px dashed ${BORDER_COL}`,
                       cursor: "pointer", outline: "none",
                       display: "flex",
@@ -341,7 +345,7 @@ export default function New() {
             style={{
               position: "fixed", top: 0, left: "153px",
               width: "314px", height: "100vh",
-              background: SIDEBAR_BG,
+              background: sidebarBg,
               borderRight: `1px dashed ${BORDER_COL}`,
               borderRadius: "0 4px 4px 0",
               padding: "24px",
@@ -367,7 +371,7 @@ export default function New() {
 
               {/* Settings card */}
               <div style={{
-                background: LIGHT_BG,
+                background: settingsCardBg,
                 border: `1px dashed ${BORDER_COL}`,
                 borderRadius: "8px",
                 padding: "12px 24px",

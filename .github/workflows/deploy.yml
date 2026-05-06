@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [claude/access-figma-code-fK8az]
+    branches: [claude/access-figma-code-fK8az, claude/clarify-session-scope-5R22z]
 
 permissions:
   contents: read

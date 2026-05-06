@@ -22,7 +22,6 @@ const NAV_ROUTES: Record<string, string> = {
   About: "/about-the-project",
 };
 
-// Sidebar categories: English label shown in sidebar, German shown in detail panel
 const SIDEBAR_CATS = [
   { en: "Time",        de: "Zeit",         h: "104px", br: "100px" },
   { en: "Visibility",  de: "Sichtbarkeit", h: "63px",  br: "4px" },
@@ -40,6 +39,15 @@ const CAT_DESC: Record<string, string> = {
   "Position":    "",
   "Look & Feel": "",
 };
+
+// Closed-state positions for the floating buttons
+const BTN_CLOSED = { dark: 24, rules: 65 };        // left px
+// Open-state positions (inside detail panel header right corner)
+// Panel: left 153, width 314, padding 24 → content right edge = 153+314-24 = 443
+// × at left 412 (443-31), ◑ at left 371 (412-10-31)
+const BTN_OPEN   = { dark: 371, rules: 412 };
+
+const SPRING = { type: "spring" as const, stiffness: 300, damping: 30 };
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
 function IconEyeOpen({ color }: { color: string }) {
@@ -129,8 +137,6 @@ const NAV_ITEM = {
   exit:    { opacity: 0, y: -10, transition: { duration: 0.1 } },
 };
 
-const SPRING = { type: "spring" as const, stiffness: 300, damping: 30 };
-
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function New() {
   const navigate = useNavigate();
@@ -156,22 +162,95 @@ export default function New() {
   const textColor = dark ? DARK_TEXT : LIGHT_TEXT;
   const iconColor = dark ? DARK_TEXT : LIGHT_TEXT;
 
-  const panelBtnStyle: React.CSSProperties = {
-    width: "31px", height: "31px",
-    background: dark ? "rgba(248,239,229,0.15)" : PANEL_BG,
-    border: `1px dashed ${BORDER_COL}`,
-    borderRadius: "4px",
-    cursor: "pointer", outline: "none",
-    display: "flex", alignItems: "center", justifyContent: "center",
-    flexShrink: 0,
-  };
+  // Background for the floating buttons depending on state
+  const darkBtnBg  = rulesOpen ? (dark ? "rgba(248,239,229,0.15)" : PANEL_BG) : (dark ? "transparent" : LIGHT_BTN_BG);
+  const rulesBtnBg = rulesOpen ? (dark ? "rgba(248,239,229,0.15)" : PANEL_BG) : (dark ? "transparent" : LIGHT_BTN_BG);
 
   return (
     <div
       style={{ minHeight: "100vh", background: bg, position: "relative", transition: "background 0.3s" }}
       onClick={() => textareaRef.current?.focus()}
     >
-      {/* ── Sidebar (left, always visible when rulesOpen) ───────────────────── */}
+      {/* ── Floating ◑ button — flies between trigger pos and panel header ──── */}
+      <AnimatePresence>
+        {visible && (
+          <motion.button
+            key="float-dark"
+            layout
+            transition={SPRING}
+            initial={false}
+            exit={{ opacity: 0, transition: { duration: 0.12 } }}
+            style={{
+              position: "fixed",
+              top: "24px",
+              left: rulesOpen ? BTN_OPEN.dark : BTN_CLOSED.dark,
+              width: "31px", height: "31px",
+              background: darkBtnBg,
+              border: `1px dashed ${BORDER_COL}`,
+              borderRadius: "4px",
+              cursor: "pointer", outline: "none",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              zIndex: 25,
+              transition: "background 0.2s",
+            }}
+            onClick={(e) => { e.stopPropagation(); setDark(d => !d); }}
+          >
+            <IconHalfCircle color={iconColor} />
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      {/* ── Floating Rules/× button — flies and morphs ───────────────────────── */}
+      <AnimatePresence>
+        {visible && (
+          <motion.button
+            key="float-rules"
+            layout
+            transition={SPRING}
+            initial={false}
+            exit={{ opacity: 0, transition: { duration: 0.12 } }}
+            style={{
+              position: "fixed",
+              top: "24px",
+              left: rulesOpen ? BTN_OPEN.rules : BTN_CLOSED.rules,
+              width: rulesOpen ? "31px" : "60px",
+              height: "31px",
+              background: rulesBtnBg,
+              border: `1px dashed ${BORDER_COL}`,
+              borderRadius: "4px",
+              cursor: "pointer", outline: "none",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontFamily: FONT_SANS,
+              color: dark ? DARK_TEXT : LIGHT_TEXT,
+              lineHeight: "normal",
+              zIndex: 25,
+              overflow: "hidden",
+              transition: "background 0.2s",
+            }}
+            onClick={(e) => { e.stopPropagation(); setRulesOpen(o => !o); }}
+          >
+            <AnimatePresence mode="wait">
+              {rulesOpen ? (
+                <motion.span
+                  key="x"
+                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                  transition={{ duration: 0.1 }}
+                  style={{ fontSize: "18px", lineHeight: "1" }}
+                >×</motion.span>
+              ) : (
+                <motion.span
+                  key="r"
+                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                  transition={{ duration: 0.1 }}
+                  style={{ fontSize: "14px" }}
+                >Rules</motion.span>
+              )}
+            </AnimatePresence>
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      {/* ── Sidebar ─────────────────────────────────────────────────────────── */}
       <AnimatePresence>
         {visible && rulesOpen && (
           <motion.div
@@ -193,7 +272,6 @@ export default function New() {
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Top: title + categories */}
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                 <span style={{ fontFamily: FONT_SERIF, fontSize: "22px", color: dark ? DARK_TEXT : LIGHT_TEXT, lineHeight: "normal" }}>
@@ -224,19 +302,14 @@ export default function New() {
                       whiteSpace: "nowrap", lineHeight: "normal",
                       flexShrink: 0,
                     }}
-                  >
-                    {cat.en}
-                  </button>
+                  >{cat.en}</button>
                 ))}
               </div>
             </div>
-
-            {/* Bottom: utility buttons */}
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               <button style={{
                 width: "105px", height: "105px",
-                borderRadius: "4px",
-                background: "transparent",
+                borderRadius: "4px", background: "transparent",
                 border: `1px dashed ${BORDER_COL}`,
                 cursor: "pointer", outline: "none",
                 display: "flex", alignItems: "center", justifyContent: "center",
@@ -245,9 +318,7 @@ export default function New() {
                 textAlign: "center", whiteSpace: "pre-line",
               }}>{"Name,\nDescription\n& more"}</button>
               <button style={{
-                width: "105px",
-                borderRadius: "4px",
-                background: "transparent",
+                width: "105px", borderRadius: "4px", background: "transparent",
                 border: `1px dashed ${BORDER_COL}`,
                 cursor: "pointer", outline: "none",
                 padding: "6px 12px",
@@ -259,14 +330,15 @@ export default function New() {
         )}
       </AnimatePresence>
 
-      {/* ── Detail panel (slides in from sidebar) ──────────────────────────── */}
+      {/* ── Detail panel ────────────────────────────────────────────────────── */}
       <AnimatePresence>
         {visible && rulesOpen && (
           <motion.div
             key="detail"
             initial={{ x: -314 }}
-            animate={{ x: 0, transition: { ...SPRING, delay: 0.06 } }}
-            exit={{ x: -314, transition: SPRING }}
+            animate={{ x: 0 }}
+            exit={{ x: -314 }}
+            transition={SPRING}
             style={{
               position: "fixed", top: 0, left: "153px",
               width: "314px", height: "100vh",
@@ -282,24 +354,11 @@ export default function New() {
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-              {/* Header: German title + ◑ + × */}
-              <div style={{ display: "flex", gap: "16px", alignItems: "flex-start" }}>
-                <div style={{ flex: 1 }}>
-                  <span style={{ fontFamily: FONT_SERIF, fontSize: "22px", color: dark ? DARK_TEXT : LIGHT_TEXT, lineHeight: "normal" }}>
-                    {SIDEBAR_CATS.find(c => c.en === activeCategory)?.de}
-                  </span>
-                </div>
-                <div style={{ display: "flex", gap: "10px" }}>
-                  <button style={panelBtnStyle} onClick={(e) => { e.stopPropagation(); setDark(d => !d); }}>
-                    <IconHalfCircle color={iconColor} />
-                  </button>
-                  <button
-                    style={{ ...panelBtnStyle, fontSize: "18px", lineHeight: "1", color: dark ? DARK_TEXT : LIGHT_TEXT }}
-                    onClick={(e) => { e.stopPropagation(); setRulesOpen(false); }}
-                  >
-                    ×
-                  </button>
-                </div>
+              {/* Title row — buttons are floating elements positioned above */}
+              <div style={{ display: "flex", alignItems: "flex-start" }}>
+                <span style={{ fontFamily: FONT_SERIF, fontSize: "22px", color: dark ? DARK_TEXT : LIGHT_TEXT, lineHeight: "normal" }}>
+                  {SIDEBAR_CATS.find(c => c.en === activeCategory)?.de}
+                </span>
               </div>
 
               {/* Description */}
@@ -340,9 +399,7 @@ export default function New() {
                           width: "14px", height: "14px",
                           background: timerEnabled ? "transparent" : BORDER_COL,
                           border: timerEnabled ? "1.5px dashed white" : "none",
-                          borderRadius: "7px",
-                          flexShrink: 0,
-                          boxSizing: "border-box",
+                          borderRadius: "7px", flexShrink: 0, boxSizing: "border-box",
                         }}
                       />
                     </button>
@@ -350,32 +407,6 @@ export default function New() {
                 </div>
               </div>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ── Trigger buttons (shown when rules closed) ───────────────────────── */}
-      <AnimatePresence>
-        {visible && !rulesOpen && (
-          <motion.div
-            key="left-trigger"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-            style={{ position: "fixed", top: "24px", left: "24px", display: "flex", gap: "10px", zIndex: 20 }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              style={btnStyle(dark, { width: "31px", padding: "0" })}
-              onClick={(e) => { e.stopPropagation(); setDark(d => !d); }}
-            >
-              <IconHalfCircle color={iconColor} />
-            </button>
-            <button
-              style={btnStyle(dark)}
-              onClick={(e) => { e.stopPropagation(); setRulesOpen(true); }}
-            >
-              Rules
-            </button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -425,7 +456,6 @@ export default function New() {
                 <IconEyeClosed color={iconColor} />
               </button>
             </div>
-
             <AnimatePresence>
               {menuOpen && (
                 <motion.div
@@ -444,9 +474,7 @@ export default function New() {
                         setMenuOpen(false);
                         if (label !== "Create") navigate(NAV_ROUTES[label]);
                       }}
-                    >
-                      {label}
-                    </motion.button>
+                    >{label}</motion.button>
                   ))}
                 </motion.div>
               )}

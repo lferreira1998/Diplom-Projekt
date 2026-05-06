@@ -3,19 +3,18 @@ import { motion, AnimatePresence } from "motion/react";
 import { useNavigate } from "react-router";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
-const LIGHT_BG   = "#fcf6ef";
-const PANEL_BG   = "#f8efe5";
-const DARK_BG    = "#484848";
-const BORDER_COL = "#a4a4a4";
+const LIGHT_BG     = "#fcf6ef";
+const PANEL_BG     = "#f8efe5";
+const DARK_BG      = "#484848";
+const BORDER_COL   = "#a4a4a4";
 const LIGHT_BTN_BG = "rgba(241,235,228,0.2)";
-const LIGHT_TEXT = "#555555";
-const DARK_TEXT  = "#fcf6ef";
-const PROMPT_COL = "rgba(155,155,155,0.8)";
+const LIGHT_TEXT   = "#555555";
+const DARK_TEXT    = "#fcf6ef";
+const PROMPT_COL   = "rgba(155,155,155,0.8)";
+const SIDEBAR_BG   = "rgba(248,239,229,0.7)";
 
 const FONT_SERIF = "'freight-text-pro', 'EB Garamond', Georgia, serif";
 const FONT_SANS  = "'general-sans', 'Space Grotesk', sans-serif";
-
-const CATEGORIES = ["Zeit", "Sichtbarkeit", "Korrigieren", "Stabilität", "Position", "Look & Feel"];
 
 const NAV_ROUTES: Record<string, string> = {
   Create: "/new",
@@ -23,10 +22,29 @@ const NAV_ROUTES: Record<string, string> = {
   About: "/about-the-project",
 };
 
+// Sidebar categories: English label shown in sidebar, German shown in detail panel
+const SIDEBAR_CATS = [
+  { en: "Time",        de: "Zeit",         h: "104px", br: "100px" },
+  { en: "Visibility",  de: "Sichtbarkeit", h: "63px",  br: "4px" },
+  { en: "Correction",  de: "Korrigieren",  h: "60px",  br: "40px 4px 40px 4px" },
+  { en: "Stability",   de: "Stabilität",   h: "46px",  br: "4px" },
+  { en: "Position",    de: "Position",     h: "68px",  br: "4px", bottom: true as const },
+  { en: "Look & Feel", de: "Look & Feel",  h: "60px",  br: "100px" },
+];
+
+const CAT_DESC: Record<string, string> = {
+  "Time":        "In Schreibtools spielt Zeit keine Rolle, doch Denken und Sprechen sind zeitlich.",
+  "Visibility":  "",
+  "Correction":  "",
+  "Stability":   "",
+  "Position":    "",
+  "Look & Feel": "",
+};
+
 // ── Icons ─────────────────────────────────────────────────────────────────────
 function IconEyeOpen({ color }: { color: string }) {
   return (
-    <svg width="18" height="13" viewBox="0 0 18 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg width="18" height="13" viewBox="0 0 18 13" fill="none">
       <path d="M1 6.33C1 6.33 3.8 1 9 1C14.2 1 17 6.33 17 6.33C17 6.33 14.2 11.66 9 11.66C3.8 11.66 1 6.33 1 6.33Z" stroke={color} strokeWidth="1.1" fill="none" />
       <circle cx="9" cy="6.33" r="2.3" fill={color} />
     </svg>
@@ -35,7 +53,7 @@ function IconEyeOpen({ color }: { color: string }) {
 
 function IconEyeClosed({ color }: { color: string }) {
   return (
-    <svg width="18" height="13" viewBox="0 0 18 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg width="18" height="13" viewBox="0 0 18 13" fill="none">
       <path d="M1 6.33C1 6.33 3.8 1 9 1C14.2 1 17 6.33 17 6.33C17 6.33 14.2 11.66 9 11.66C3.8 11.66 1 6.33 1 6.33Z" stroke={color} strokeWidth="1.1" fill="none" />
       <circle cx="9" cy="6.33" r="2.3" fill={color} />
       <line x1="2" y1="0.5" x2="16" y2="12.5" stroke={color} strokeWidth="1.1" strokeLinecap="round" />
@@ -45,7 +63,7 @@ function IconEyeClosed({ color }: { color: string }) {
 
 function IconHalfCircle({ color }: { color: string }) {
   return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
       <circle cx="8" cy="8" r="6.5" stroke={color} strokeWidth="1.1" />
       <path d="M8 1.5 A6.5 6.5 0 0 0 8 14.5 Z" fill={color} />
     </svg>
@@ -99,35 +117,6 @@ function navItemStyle(dark: boolean, active: boolean): React.CSSProperties {
   };
 }
 
-const CATEGORY_SPECS: Record<string, React.CSSProperties> = {
-  "Zeit":         { width: "120px", height: "120px", borderRadius: "100px",           alignItems: "center",   justifyContent: "center",     padding: "6px 12px" },
-  "Sichtbarkeit": { width: "145px", height: "120px", borderRadius: "4px",             alignItems: "center",   justifyContent: "center",     padding: "6px 12px" },
-  "Korrigieren":  { width: "277px", height: "60px",  borderRadius: "80px 16px 80px 16px", alignItems: "center", justifyContent: "center",   padding: "6px 12px" },
-  "Stabilität":   { width: "277px", height: "60px",  borderRadius: "4px",             alignItems: "center",   justifyContent: "center",     padding: "6px 12px" },
-  "Position":     { width: "133px", height: "87px",  borderRadius: "4px",             alignItems: "flex-end", justifyContent: "flex-start", padding: "16px" },
-  "Look & Feel":  { width: "132px", height: "87px",  borderRadius: "100px",           alignItems: "center",   justifyContent: "center",     padding: "6px 12px" },
-};
-
-function catItemStyle(key: string, dark: boolean, active: boolean): React.CSSProperties {
-  const spec = CATEGORY_SPECS[key] ?? {};
-  return {
-    background: active ? "#f2e9dd" : LIGHT_BG,
-    border: `1px dashed ${BORDER_COL}`,
-    cursor: "pointer",
-    outline: "none",
-    display: "flex",
-    boxSizing: "border-box",
-    flexShrink: 0,
-    fontFamily: FONT_SANS,
-    fontSize: "16px",
-    fontWeight: 400,
-    color: dark ? DARK_TEXT : LIGHT_TEXT,
-    whiteSpace: "nowrap",
-    lineHeight: "normal",
-    ...spec,
-  };
-}
-
 // ── Motion variants ───────────────────────────────────────────────────────────
 const NAV_CONTAINER = {
   hidden: {},
@@ -140,127 +129,253 @@ const NAV_ITEM = {
   exit:    { opacity: 0, y: -10, transition: { duration: 0.1 } },
 };
 
+const SPRING = { type: "spring" as const, stiffness: 300, damping: 30 };
+
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function New() {
   const navigate = useNavigate();
-  const [dark, setDark]         = useState(false);
-  const [visible, setVisible]   = useState(true);
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [dark, setDark]               = useState(false);
+  const [visible, setVisible]         = useState(true);
+  const [menuOpen, setMenuOpen]       = useState(false);
   const [menuHovered, setMenuHovered] = useState(false);
-  const [rulesOpen, setRulesOpen] = useState(false);
-
-  const [activeCategory, setActiveCategory] = useState("Zeit");
-  const [text, setText]         = useState("");
-  const [scrollY, setScrollY]   = useState(0);
+  const [rulesOpen, setRulesOpen]     = useState(false);
+  const [timerEnabled, setTimerEnabled] = useState(false);
+  const [activeCategory, setActiveCategory] = useState("Time");
+  const [text, setText]   = useState("");
+  const [scrollY, setScrollY] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => { textareaRef.current?.focus(); }, []);
-
   useEffect(() => {
-    const onScroll = () => setScrollY(window.scrollY);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    const fn = () => setScrollY(window.scrollY);
+    window.addEventListener("scroll", fn, { passive: true });
+    return () => window.removeEventListener("scroll", fn);
   }, []);
 
   const bg        = dark ? DARK_BG : LIGHT_BG;
   const textColor = dark ? DARK_TEXT : LIGHT_TEXT;
   const iconColor = dark ? DARK_TEXT : LIGHT_TEXT;
 
+  const panelBtnStyle: React.CSSProperties = {
+    width: "31px", height: "31px",
+    background: dark ? "rgba(248,239,229,0.15)" : PANEL_BG,
+    border: `1px dashed ${BORDER_COL}`,
+    borderRadius: "4px",
+    cursor: "pointer", outline: "none",
+    display: "flex", alignItems: "center", justifyContent: "center",
+    flexShrink: 0,
+  };
+
   return (
     <div
       style={{ minHeight: "100vh", background: bg, position: "relative", transition: "background 0.3s" }}
       onClick={() => textareaRef.current?.focus()}
     >
-      {/* ── Left: ◑/Rules animate to ×/◑ column, panel shoots out right ─────── */}
+      {/* ── Sidebar (left, always visible when rulesOpen) ───────────────────── */}
       <AnimatePresence>
-        {visible && (
+        {visible && rulesOpen && (
           <motion.div
-            key="left-group"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
+            key="sidebar"
+            initial={{ x: -153 }}
+            animate={{ x: 0 }}
+            exit={{ x: -153 }}
+            transition={SPRING}
             style={{
-              position: "fixed", top: "24px", left: "44px",
-              display: "flex", gap: "24px", alignItems: "flex-start", zIndex: 20,
+              position: "fixed", top: 0, left: 0,
+              width: "153px", height: "100vh",
+              background: SIDEBAR_BG,
+              borderRight: `1px dashed ${BORDER_COL}`,
+              borderRadius: "4px",
+              padding: "24px",
+              display: "flex", flexDirection: "column", justifyContent: "space-between",
+              boxSizing: "border-box",
+              zIndex: 20,
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Button column — layout-animates between row ↔ column */}
-            <motion.div
-              layout
-              transition={{ type: "spring", stiffness: 280, damping: 26 }}
-              style={{ display: "flex", flexDirection: rulesOpen ? "column" : "row", gap: "10px", paddingTop: "20px" }}
-            >
-              {/* ◑ dark mode — moves from pos 1 to pos 2 */}
-              <motion.button
-                layout
-                transition={{ type: "spring", stiffness: 280, damping: 26 }}
-                style={{ ...btnStyle(dark, { width: "31px", padding: "0 6px" }), order: rulesOpen ? 2 : 1 }}
-                onClick={(e) => { e.stopPropagation(); setDark(d => !d); }}
-              >
-                <IconHalfCircle color={iconColor} />
-              </motion.button>
-              {/* Rules → × — moves from pos 2 to pos 1 (top) */}
-              <motion.button
-                layout
-                transition={{ type: "spring", stiffness: 280, damping: 26 }}
-                style={{ ...btnStyle(dark, rulesOpen ? { width: "31px", padding: "0" } : { width: "60px" }), order: rulesOpen ? 1 : 2 }}
-                onClick={(e) => { e.stopPropagation(); setRulesOpen(o => !o); }}
-              >
-                <AnimatePresence mode="wait">
-                  {rulesOpen ? (
-                    <motion.span key="x" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.08 }} style={{ fontSize: "18px", lineHeight: "1" }}>×</motion.span>
-                  ) : (
-                    <motion.span key="r" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.08 }}>Rules</motion.span>
-                  )}
-                </AnimatePresence>
-              </motion.button>
-            </motion.div>
+            {/* Top: title + categories */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                <span style={{ fontFamily: FONT_SERIF, fontSize: "22px", color: dark ? DARK_TEXT : LIGHT_TEXT, lineHeight: "normal" }}>
+                  Rules
+                </span>
+                <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: "#7c7c7c", lineHeight: "normal" }}>
+                  Change them.
+                </span>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                {SIDEBAR_CATS.map(cat => (
+                  <button
+                    key={cat.en}
+                    onClick={() => setActiveCategory(cat.en)}
+                    style={{
+                      width: "105px", height: cat.h,
+                      borderRadius: cat.br,
+                      background: cat.en === activeCategory ? LIGHT_BG : "#f9f1e8",
+                      border: `1px dashed ${BORDER_COL}`,
+                      cursor: "pointer", outline: "none",
+                      display: "flex",
+                      alignItems: cat.bottom ? "flex-end" : "center",
+                      justifyContent: cat.bottom ? "flex-start" : "center",
+                      padding: cat.bottom ? "12px" : "6px 12px",
+                      boxSizing: "border-box",
+                      fontFamily: FONT_SANS, fontSize: "16px", fontWeight: 400,
+                      color: dark ? DARK_TEXT : LIGHT_TEXT,
+                      whiteSpace: "nowrap", lineHeight: "normal",
+                      flexShrink: 0,
+                    }}
+                  >
+                    {cat.en}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-            {/* Rules content panel — shoots out to the right of the button column */}
-            <AnimatePresence>
-              {rulesOpen && (
-                <motion.div
-                  key="rules-content"
-                  initial={{ x: -20, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  exit={{ x: -20, opacity: 0 }}
-                  transition={{ type: "spring", stiffness: 280, damping: 26, delay: 0.1 }}
-                  style={{
-                    border: `1px dashed ${BORDER_COL}`, borderRadius: "4px",
-                    display: "flex", flexDirection: "column", gap: "24px",
-                    padding: "24px", width: "325px", height: "calc(100vh - 68px)",
-                    background: PANEL_BG, overflow: "hidden", boxSizing: "border-box",
-                    marginTop: "20px",
-                  }}
-                >
-                  {/* Title + subtitle */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                    transition={{ delay: 0.18, duration: 0.22, ease: "easeOut" }}
-                    style={{ display: "flex", flexDirection: "column", gap: "8px" }}
+            {/* Bottom: utility buttons */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              <button style={{
+                width: "105px", height: "105px",
+                borderRadius: "4px",
+                background: "transparent",
+                border: `1px dashed ${BORDER_COL}`,
+                cursor: "pointer", outline: "none",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT,
+                letterSpacing: "-0.16px", lineHeight: "22px",
+                textAlign: "center", whiteSpace: "pre-line",
+              }}>{"Name,\nDescription\n& more"}</button>
+              <button style={{
+                width: "105px",
+                borderRadius: "4px",
+                background: "transparent",
+                border: `1px dashed ${BORDER_COL}`,
+                cursor: "pointer", outline: "none",
+                padding: "6px 12px",
+                fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT,
+                lineHeight: "22px", textAlign: "center",
+              }}>Save</button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Detail panel (slides in from sidebar) ──────────────────────────── */}
+      <AnimatePresence>
+        {visible && rulesOpen && (
+          <motion.div
+            key="detail"
+            initial={{ x: -314 }}
+            animate={{ x: 0, transition: { ...SPRING, delay: 0.06 } }}
+            exit={{ x: -314, transition: SPRING }}
+            style={{
+              position: "fixed", top: 0, left: "153px",
+              width: "314px", height: "100vh",
+              background: SIDEBAR_BG,
+              borderRight: `1px dashed ${BORDER_COL}`,
+              borderRadius: "0 4px 4px 0",
+              padding: "24px",
+              display: "flex", flexDirection: "column", gap: "30px",
+              boxSizing: "border-box",
+              overflow: "hidden",
+              zIndex: 20,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              {/* Header: German title + ◑ + × */}
+              <div style={{ display: "flex", gap: "16px", alignItems: "flex-start" }}>
+                <div style={{ flex: 1 }}>
+                  <span style={{ fontFamily: FONT_SERIF, fontSize: "22px", color: dark ? DARK_TEXT : LIGHT_TEXT, lineHeight: "normal" }}>
+                    {SIDEBAR_CATS.find(c => c.en === activeCategory)?.de}
+                  </span>
+                </div>
+                <div style={{ display: "flex", gap: "10px" }}>
+                  <button style={panelBtnStyle} onClick={(e) => { e.stopPropagation(); setDark(d => !d); }}>
+                    <IconHalfCircle color={iconColor} />
+                  </button>
+                  <button
+                    style={{ ...panelBtnStyle, fontSize: "18px", lineHeight: "1", color: dark ? DARK_TEXT : LIGHT_TEXT }}
+                    onClick={(e) => { e.stopPropagation(); setRulesOpen(false); }}
                   >
-                    <span style={{ fontFamily: FONT_SERIF, fontSize: "22px", color: dark ? DARK_TEXT : LIGHT_TEXT, lineHeight: "normal" }}>
-                      Rules
+                    ×
+                  </button>
+                </div>
+              </div>
+
+              {/* Description */}
+              <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: "#7c7c7c", lineHeight: "normal" }}>
+                {CAT_DESC[activeCategory]}
+              </span>
+
+              {/* Settings card */}
+              <div style={{
+                background: LIGHT_BG,
+                border: `1px dashed ${BORDER_COL}`,
+                borderRadius: "8px",
+                padding: "12px 24px",
+              }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
+                  <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>Timer</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: dark ? DARK_TEXT : LIGHT_TEXT }}>
+                      {timerEnabled ? "An" : "Aus"}
                     </span>
-                    <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: "#7c7c7c", lineHeight: "normal" }}>
-                      Change the fixed rules of writing tools &amp; explore new ways of writing and thinking.
-                    </span>
-                  </motion.div>
-                  {/* Category cards */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                    transition={{ delay: 0.24, duration: 0.22, ease: "easeOut" }}
-                    style={{ display: "flex", flexWrap: "wrap", gap: "12px", width: "277px" }}
-                  >
-                    {CATEGORIES.map(cat => (
-                      <button key={cat} style={catItemStyle(cat, dark, cat === activeCategory)} onClick={() => setActiveCategory(cat)}>
-                        {cat}
-                      </button>
-                    ))}
-                  </motion.div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                    <button
+                      onClick={() => setTimerEnabled(t => !t)}
+                      style={{
+                        width: "36px", height: "20px",
+                        background: timerEnabled ? "#555555" : "transparent",
+                        border: timerEnabled ? "none" : `1px dashed ${BORDER_COL}`,
+                        borderRadius: "100px",
+                        cursor: "pointer", outline: "none",
+                        padding: "3px",
+                        display: "flex", alignItems: "center", justifyContent: "flex-start",
+                        boxSizing: "border-box",
+                      }}
+                    >
+                      <motion.div
+                        animate={{ x: timerEnabled ? 16 : 0 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                        style={{
+                          width: "14px", height: "14px",
+                          background: timerEnabled ? "transparent" : BORDER_COL,
+                          border: timerEnabled ? "1.5px dashed white" : "none",
+                          borderRadius: "7px",
+                          flexShrink: 0,
+                          boxSizing: "border-box",
+                        }}
+                      />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Trigger buttons (shown when rules closed) ───────────────────────── */}
+      <AnimatePresence>
+        {visible && !rulesOpen && (
+          <motion.div
+            key="left-trigger"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            style={{ position: "fixed", top: "24px", left: "24px", display: "flex", gap: "10px", zIndex: 20 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              style={btnStyle(dark, { width: "31px", padding: "0" })}
+              onClick={(e) => { e.stopPropagation(); setDark(d => !d); }}
+            >
+              <IconHalfCircle color={iconColor} />
+            </button>
+            <button
+              style={btnStyle(dark)}
+              onClick={(e) => { e.stopPropagation(); setRulesOpen(true); }}
+            >
+              Rules
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -272,10 +387,9 @@ export default function New() {
             key="right-full"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            style={{ position: "fixed", top: "44px", right: "44px", display: "flex", flexDirection: "column", gap: "16px", alignItems: "flex-end", zIndex: 20 }}
+            style={{ position: "fixed", top: "24px", right: "24px", display: "flex", flexDirection: "column", gap: "16px", alignItems: "flex-end", zIndex: 20 }}
           >
             <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-              {/* Menu button with peek-card hover effect */}
               <div
                 style={{ position: "relative" }}
                 onMouseEnter={() => { if (!menuOpen) setMenuHovered(true); }}
@@ -286,9 +400,7 @@ export default function New() {
                   animate={
                     menuOpen
                       ? { y: 8, opacity: 0, transition: { y: { duration: 0.22, ease: "easeOut" }, opacity: { duration: 0.1 } } }
-                      : menuHovered
-                        ? { y: 0, opacity: 1 }
-                        : { y: -6, opacity: 0 }
+                      : menuHovered ? { y: 0, opacity: 1 } : { y: -6, opacity: 0 }
                   }
                   transition={{ duration: 0.22, ease: "easeOut" }}
                   style={{
@@ -314,7 +426,6 @@ export default function New() {
               </button>
             </div>
 
-            {/* Nav items */}
             <AnimatePresence>
               {menuOpen && (
                 <motion.div

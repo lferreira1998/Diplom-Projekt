@@ -4,6 +4,7 @@ import { useNavigate } from "react-router";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const LIGHT_BG   = "#fcf6ef";
+const PANEL_BG   = "#f8efe5";
 const DARK_BG    = "#484848";
 const BORDER_COL = "#a4a4a4";
 const LIGHT_BTN_BG = "rgba(241,235,228,0.2)";
@@ -98,20 +99,32 @@ function navItemStyle(dark: boolean, active: boolean): React.CSSProperties {
   };
 }
 
-function catStyle(dark: boolean, active: boolean): React.CSSProperties {
+const CATEGORY_SPECS: Record<string, React.CSSProperties> = {
+  "Zeit":         { width: "120px", height: "120px", borderRadius: "100px",           alignItems: "center",   justifyContent: "center",     padding: "6px 12px" },
+  "Sichtbarkeit": { width: "145px", height: "120px", borderRadius: "4px",             alignItems: "center",   justifyContent: "center",     padding: "6px 12px" },
+  "Korrigieren":  { width: "277px", height: "60px",  borderRadius: "80px 16px 80px 16px", alignItems: "center", justifyContent: "center",   padding: "6px 12px" },
+  "Stabilität":   { width: "277px", height: "60px",  borderRadius: "4px",             alignItems: "center",   justifyContent: "center",     padding: "6px 12px" },
+  "Position":     { width: "133px", height: "87px",  borderRadius: "4px",             alignItems: "flex-end", justifyContent: "flex-start", padding: "16px" },
+  "Look & Feel":  { width: "132px", height: "87px",  borderRadius: "100px",           alignItems: "center",   justifyContent: "center",     padding: "6px 12px" },
+};
+
+function catItemStyle(key: string, dark: boolean, active: boolean): React.CSSProperties {
+  const spec = CATEGORY_SPECS[key] ?? {};
   return {
-    background: active ? "#f2e9dd" : (dark ? "transparent" : LIGHT_BG),
+    background: active ? "#f2e9dd" : LIGHT_BG,
     border: `1px dashed ${BORDER_COL}`,
-    borderRadius: "4px",
     cursor: "pointer",
     outline: "none",
-    padding: "6px 12px",
+    display: "flex",
+    boxSizing: "border-box",
+    flexShrink: 0,
     fontFamily: FONT_SANS,
-    fontSize: "14px",
+    fontSize: "16px",
     fontWeight: 400,
     color: dark ? DARK_TEXT : LIGHT_TEXT,
     whiteSpace: "nowrap",
     lineHeight: "normal",
+    ...spec,
   };
 }
 
@@ -135,7 +148,7 @@ export default function New() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuHovered, setMenuHovered] = useState(false);
   const [rulesOpen, setRulesOpen] = useState(false);
-  const [timerEnabled, setTimerEnabled] = useState(false);
+
   const [activeCategory, setActiveCategory] = useState("Zeit");
   const [text, setText]         = useState("");
   const [scrollY, setScrollY]   = useState(0);
@@ -215,38 +228,35 @@ export default function New() {
                   style={{
                     border: `1px dashed ${BORDER_COL}`, borderRadius: "4px",
                     display: "flex", flexDirection: "column", gap: "24px",
-                    padding: "24px", width: "277px", height: "calc(100vh - 48px)",
-                    background: bg, overflow: "hidden", boxSizing: "border-box",
+                    padding: "24px", width: "325px", height: "calc(100vh - 68px)",
+                    background: PANEL_BG, overflow: "hidden", boxSizing: "border-box",
+                    marginTop: "20px",
                   }}
                 >
+                  {/* Title + subtitle */}
                   <motion.div
                     initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                    transition={{ delay: 0.2, duration: 0.22, ease: "easeOut" }}
-                    style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}
+                    transition={{ delay: 0.18, duration: 0.22, ease: "easeOut" }}
+                    style={{ display: "flex", flexDirection: "column", gap: "8px" }}
                   >
-                    {CATEGORIES.map(cat => (
-                      <button key={cat} style={catStyle(dark, cat === activeCategory)} onClick={() => setActiveCategory(cat)}>{cat}</button>
-                    ))}
+                    <span style={{ fontFamily: FONT_SERIF, fontSize: "22px", color: dark ? DARK_TEXT : LIGHT_TEXT, lineHeight: "normal" }}>
+                      Rules
+                    </span>
+                    <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: "#7c7c7c", lineHeight: "normal" }}>
+                      Change the fixed rules of writing tools &amp; explore new ways of writing and thinking.
+                    </span>
                   </motion.div>
-                  <motion.div
-                    initial={{ opacity: 0, scaleX: 0 }} animate={{ opacity: 0.5, scaleX: 1 }} exit={{ opacity: 0 }}
-                    transition={{ delay: 0.26, duration: 0.28, ease: "easeOut" }}
-                    style={{ height: "1px", background: BORDER_COL, transformOrigin: "left" }}
-                  />
+                  {/* Category cards */}
                   <motion.div
                     initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                    transition={{ delay: 0.30, duration: 0.22, ease: "easeOut" }}
-                    style={{ border: `1px dashed ${BORDER_COL}`, borderRadius: "4px", padding: "12px 24px" }}
+                    transition={{ delay: 0.24, duration: 0.22, ease: "easeOut" }}
+                    style={{ display: "flex", flexWrap: "wrap", gap: "12px", width: "277px" }}
                   >
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
-                      <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: textColor }}>Timer</span>
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                        <span style={{ fontFamily: FONT_SANS, fontSize: "11px", color: BORDER_COL }}>{timerEnabled ? "An" : "Aus"}</span>
-                        <button onClick={() => setTimerEnabled(t => !t)} style={{ width: "36px", height: "20px", border: `1px dashed ${BORDER_COL}`, borderRadius: "100px", background: "transparent", cursor: "pointer", padding: "3px", display: "flex", alignItems: "center", justifyContent: "flex-start", outline: "none" }}>
-                          <motion.div animate={{ x: timerEnabled ? 16 : 0 }} transition={{ type: "spring", stiffness: 400, damping: 28 }} style={{ width: "14px", height: "14px", background: BORDER_COL, borderRadius: "7px", flexShrink: 0 }} />
-                        </button>
-                      </div>
-                    </div>
+                    {CATEGORIES.map(cat => (
+                      <button key={cat} style={catItemStyle(cat, dark, cat === activeCategory)} onClick={() => setActiveCategory(cat)}>
+                        {cat}
+                      </button>
+                    ))}
                   </motion.div>
                 </motion.div>
               )}

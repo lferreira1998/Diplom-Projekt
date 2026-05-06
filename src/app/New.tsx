@@ -120,7 +120,6 @@ function navItemStyle(dark: boolean, active: boolean): React.CSSProperties {
     lineHeight: "normal",
     height: "31px",
     padding: "0 12px",
-    width: "100%",
     whiteSpace: "nowrap",
   };
 }
@@ -175,15 +174,12 @@ export default function New() {
       style={{ minHeight: "100vh", background: bg, position: "relative", transition: "background 0.3s" }}
       onClick={() => textareaRef.current?.focus()}
     >
-      {/* ── Floating ◑ button — flies between trigger pos and panel header ──── */}
+      {/* ── Floating ◑ button ──────────────────────────────────────────────────── */}
       <AnimatePresence>
         {visible && (
           <motion.button
             key="float-dark"
-            initial={false}
-            animate={{ x: rulesOpen ? BTN_OPEN.dark - BTN_CLOSED.dark : 0 }}
             exit={{ opacity: 0, transition: { duration: 0.12 } }}
-            transition={SPRING}
             style={{
               position: "fixed",
               top: "24px",
@@ -204,20 +200,18 @@ export default function New() {
         )}
       </AnimatePresence>
 
-      {/* ── Floating Rules/× button — flies and morphs ───────────────────────── */}
+      {/* ── Floating Rules/× button ──────────────────────────────────────────── */}
       <AnimatePresence>
         {visible && (
           <motion.button
             key="float-rules"
-            initial={false}
-            animate={{ x: rulesOpen ? BTN_OPEN.rules - BTN_CLOSED.rules : 0, width: rulesOpen ? "31px" : "60px" }}
             exit={{ opacity: 0, transition: { duration: 0.12 } }}
-            transition={SPRING}
             style={{
               position: "fixed",
               top: "24px",
               left: BTN_CLOSED.rules,
               height: "31px",
+              width: rulesOpen ? "31px" : "60px",
               background: rulesBtnBg,
               border: `1px dashed ${BORDER_COL}`,
               borderRadius: "4px",
@@ -228,7 +222,7 @@ export default function New() {
               lineHeight: "normal",
               zIndex: 25,
               overflow: "hidden",
-              transition: "background 0.2s",
+              transition: "background 0.2s, width 0.18s ease",
             }}
             onClick={(e) => { e.stopPropagation(); setRulesOpen(o => !o); }}
           >

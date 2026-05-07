@@ -167,9 +167,16 @@ export default function New() {
   const [visualTimer, setVisualTimer]       = useState(false);
   const [visibility, setVisibility]         = useState<"visible" | "invisible" | "sentence" | "word" | "char">("visible");
   const [activeCategory, setActiveCategory] = useState("Time");
+  const [identityOpen, setIdentityOpen]     = useState(false);
+  const [toolImage, setToolImage]           = useState<string | null>(null);
+  const [imageDragOver, setImageDragOver]   = useState(false);
+  const [toolName, setToolName]             = useState("");
+  const [prompts, setPrompts]               = useState<string[]>([""]);
+  const [toolDescription, setToolDescription] = useState("");
   const [text, setText]   = useState("");
   const [scrollY, setScrollY] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { textareaRef.current?.focus(); }, []);
   useEffect(() => {
@@ -309,7 +316,7 @@ export default function New() {
                 {SIDEBAR_CATS.map(cat => (
                   <button
                     key={cat.en}
-                    onClick={() => setActiveCategory(cat.en)}
+                    onClick={() => { setActiveCategory(cat.en); setIdentityOpen(false); }}
                     style={{
                       width: "105px", height: cat.h,
                       borderRadius: cat.br,
@@ -331,16 +338,19 @@ export default function New() {
               </div>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              <button style={{
-                width: "105px", height: "105px",
-                borderRadius: "4px", background: "transparent",
-                border: `1px dashed ${BORDER_COL}`,
-                cursor: "pointer", outline: "none",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontFamily: FONT_SANS, fontSize: "16px", fontWeight: 400, color: dark ? DARK_TEXT : LIGHT_TEXT,
-                letterSpacing: "-0.16px", lineHeight: "22px",
-                textAlign: "center", whiteSpace: "pre-line",
-              }}>{"Name,\nDescription\n& more"}</button>
+              <button
+                onClick={() => setIdentityOpen(o => !o)}
+                style={{
+                  width: "105px", height: "105px",
+                  borderRadius: "4px",
+                  background: identityOpen ? catActiveBg : "transparent",
+                  border: `1px dashed ${BORDER_COL}`,
+                  cursor: "pointer", outline: "none",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontFamily: FONT_SANS, fontSize: "16px", fontWeight: 400, color: dark ? DARK_TEXT : LIGHT_TEXT,
+                  letterSpacing: "-0.16px", lineHeight: "22px",
+                  textAlign: "center", whiteSpace: "pre-line",
+                }}>{"Name,\nDescription\n& more"}</button>
               <button style={{
                 width: "105px", borderRadius: "4px", background: "transparent",
                 border: `1px dashed ${BORDER_COL}`,
@@ -369,168 +379,305 @@ export default function New() {
               background: sidebarBg,
               borderRight: `1px dashed ${BORDER_COL}`,
               borderRadius: "0 4px 4px 0",
-              padding: "24px",
-              display: "flex", flexDirection: "column", gap: "30px",
+              display: "flex", flexDirection: "column",
               boxSizing: "border-box",
               overflow: "hidden",
               zIndex: 20,
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-              {/* Title row — buttons are floating elements positioned above */}
-              <div style={{ display: "flex", alignItems: "flex-start" }}>
+            {identityOpen ? (
+              /* ── Identity panel ──────────────────────────────────────────────── */
+              <>
+                <div style={{ flex: 1, overflowY: "auto", padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
+                  {/* Title — floating ◑ and × are positioned above */}
+                  <span style={{ fontFamily: FONT_SERIF, fontSize: "22px", color: dark ? DARK_TEXT : LIGHT_TEXT, lineHeight: "normal" }}>
+                    Identity.
+                  </span>
+                  <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: "#7c7c7c", lineHeight: "1.45" }}>
+                    Gib deinem Tool ein Bild, einen Namen, Beschreibung und Schreibanstöße.
+                  </span>
+
+                  {/* Photo drop zone */}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    style={{ display: "none" }}
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (!f) return;
+                      const reader = new FileReader();
+                      reader.onload = (ev) => setToolImage(ev.target?.result as string);
+                      reader.readAsDataURL(f);
+                    }}
+                  />
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    onDragOver={(e) => { e.preventDefault(); setImageDragOver(true); }}
+                    onDragLeave={() => setImageDragOver(false)}
+                    onDrop={(e) => {
+                      e.preventDefault(); setImageDragOver(false);
+                      const f = e.dataTransfer.files?.[0];
+                      if (!f || !f.type.startsWith("image/")) return;
+                      const reader = new FileReader();
+                      reader.onload = (ev) => setToolImage(ev.target?.result as string);
+                      reader.readAsDataURL(f);
+                    }}
+                    style={{
+                      border: `1px dashed ${imageDragOver ? (dark ? DARK_TEXT : LIGHT_TEXT) : BORDER_COL}`,
+                      borderRadius: "8px",
+                      height: "148px",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      cursor: "pointer",
+                      overflow: "hidden",
+                      background: imageDragOver ? (dark ? "rgba(252,246,239,0.06)" : "rgba(85,85,85,0.04)") : "transparent",
+                      transition: "border-color 0.15s, background 0.15s",
+                      flexShrink: 0,
+                    }}
+                  >
+                    {toolImage ? (
+                      <img src={toolImage} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    ) : (
+                      <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: "#7c7c7c", textAlign: "center", lineHeight: "1.55", whiteSpace: "pre-line" }}>
+                        {"Foto hinzufügen\noder Drag’n’Drop"}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Name section */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                    <span style={{ fontFamily: FONT_SERIF, fontSize: "19px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>Name</span>
+                    <span style={{ fontFamily: FONT_SANS, fontSize: "13px", color: "#7c7c7c", lineHeight: "1.45" }}>
+                      Beende mit dem Namen den Satz &ldquo;Write and think&hellip;&rdquo;
+                    </span>
+                    {/* Static prefix */}
+                    <div style={{ border: `1px dashed ${BORDER_COL}`, borderRadius: "8px", padding: "10px 14px", background: settingsCardBg }}>
+                      <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? "rgba(252,246,239,0.38)" : "rgba(85,85,85,0.38)" }}>
+                        Write and think&hellip;
+                      </span>
+                    </div>
+                    {/* Name input */}
+                    <input
+                      placeholder="Name eingeben"
+                      value={toolName}
+                      onChange={(e) => setToolName(e.target.value)}
+                      onClick={(e) => e.stopPropagation()}
+                      style={{
+                        border: `1px dashed ${BORDER_COL}`, borderRadius: "8px",
+                        padding: "10px 14px", background: settingsCardBg,
+                        fontFamily: FONT_SANS, fontSize: "15px",
+                        color: dark ? DARK_TEXT : LIGHT_TEXT,
+                        outline: "none",
+                      }}
+                    />
+                  </div>
+
+                  {/* Prompts section */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                    <span style={{ fontFamily: FONT_SERIF, fontSize: "19px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>Schreibanstoß oder Aufgabe</span>
+                    <span style={{ fontFamily: FONT_SANS, fontSize: "13px", color: "#7c7c7c", lineHeight: "1.45" }}>
+                      Das hilft Menschen beim Schreiben. Von allgemein bis sehr spezifisch. Du kannst auch mehrere anlegen.
+                    </span>
+                    {prompts.map((p, i) => (
+                      <textarea
+                        key={i}
+                        placeholder="Beispiel: Schreibe etwas über dich…"
+                        value={p}
+                        onChange={(e) => setPrompts(ps => ps.map((x, j) => j === i ? e.target.value : x))}
+                        onClick={(e) => e.stopPropagation()}
+                        rows={3}
+                        style={{
+                          border: `1px dashed ${BORDER_COL}`, borderRadius: "8px",
+                          padding: "10px 14px", background: settingsCardBg,
+                          fontFamily: FONT_SANS, fontSize: "15px",
+                          color: dark ? DARK_TEXT : LIGHT_TEXT,
+                          outline: "none", resize: "none",
+                          lineHeight: "1.5",
+                        }}
+                      />
+                    ))}
+                    <button
+                      onClick={() => setPrompts(ps => [...ps, ""])}
+                      style={{
+                        background: "transparent", border: "none", outline: "none",
+                        cursor: "pointer", padding: 0, textAlign: "left",
+                        fontFamily: FONT_SANS, fontSize: "14px",
+                        color: dark ? "rgba(252,246,239,0.6)" : "rgba(85,85,85,0.6)",
+                      }}
+                    >+ Weiteren hinzufügen</button>
+                  </div>
+
+                  {/* Description section */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                    <span style={{ fontFamily: FONT_SERIF, fontSize: "19px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>Beschreibung oder Regel</span>
+                    <textarea
+                      placeholder="Beispiel: Dieses Tool hilft anonym in öffentlichen Plätzen zu schreiben"
+                      value={toolDescription}
+                      onChange={(e) => setToolDescription(e.target.value)}
+                      onClick={(e) => e.stopPropagation()}
+                      rows={4}
+                      style={{
+                        border: `1px dashed ${BORDER_COL}`, borderRadius: "8px",
+                        padding: "10px 14px", background: settingsCardBg,
+                        fontFamily: FONT_SANS, fontSize: "15px",
+                        color: dark ? DARK_TEXT : LIGHT_TEXT,
+                        outline: "none", resize: "none", lineHeight: "1.5",
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* Sticky Save */}
+                <div style={{ padding: "16px 24px", flexShrink: 0 }}>
+                  <button style={{
+                    width: "100%", padding: "12px",
+                    background: "transparent", border: `1px dashed ${BORDER_COL}`,
+                    borderRadius: "8px", cursor: "pointer", outline: "none",
+                    fontFamily: FONT_SANS, fontSize: "16px",
+                    color: dark ? DARK_TEXT : LIGHT_TEXT,
+                  }}>Save</button>
+                </div>
+              </>
+            ) : (
+              /* ── Category detail panel ───────────────────────────────────────── */
+              <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "16px", overflowY: "auto" }}>
+                {/* Title row — floating ◑ and × are positioned above */}
                 <span style={{ fontFamily: FONT_SERIF, fontSize: "22px", color: dark ? DARK_TEXT : LIGHT_TEXT, lineHeight: "normal" }}>
                   {SIDEBAR_CATS.find(c => c.en === activeCategory)?.de}
                 </span>
-              </div>
 
-              {/* Description */}
-              <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: "#7c7c7c", lineHeight: "normal" }}>
-                {CAT_DESC[activeCategory]}
-              </span>
+                <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: "#7c7c7c", lineHeight: "normal" }}>
+                  {CAT_DESC[activeCategory]}
+                </span>
 
-              {/* ── Zeit content ─────────────────────────────────────────────────── */}
-              {activeCategory === "Time" && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                  {/* Timer toggle */}
-                  <div style={{ background: settingsCardBg, border: `1px dashed ${BORDER_COL}`, borderRadius: "8px", padding: "12px 24px" }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
-                      <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>Timer</span>
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                        <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: dark ? DARK_TEXT : LIGHT_TEXT }}>
-                          {timerEnabled ? "An" : "Aus"}
-                        </span>
-                        <button
-                          onClick={() => setTimerEnabled(t => !t)}
-                          style={{ width: "36px", height: "20px", background: timerEnabled ? "#555555" : "transparent", border: timerEnabled ? "none" : `1px dashed ${BORDER_COL}`, borderRadius: "100px", cursor: "pointer", outline: "none", padding: "3px", display: "flex", alignItems: "center", justifyContent: "flex-start", boxSizing: "border-box" }}
-                        >
-                          <motion.div
-                            animate={{ x: timerEnabled ? 16 : 0 }}
-                            transition={{ type: "spring", stiffness: 400, damping: 28 }}
-                            style={{ width: "14px", height: "14px", background: timerEnabled ? "transparent" : BORDER_COL, border: timerEnabled ? "1.5px dashed white" : "none", borderRadius: "7px", flexShrink: 0, boxSizing: "border-box" }}
-                          />
-                        </button>
+                {/* ── Zeit content ───────────────────────────────────────────────── */}
+                {activeCategory === "Time" && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    <div style={{ background: settingsCardBg, border: `1px dashed ${BORDER_COL}`, borderRadius: "8px", padding: "12px 24px" }}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>Timer</span>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                          <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: dark ? DARK_TEXT : LIGHT_TEXT }}>
+                            {timerEnabled ? "An" : "Aus"}
+                          </span>
+                          <button
+                            onClick={() => setTimerEnabled(t => !t)}
+                            style={{ width: "36px", height: "20px", background: timerEnabled ? "#555555" : "transparent", border: timerEnabled ? "none" : `1px dashed ${BORDER_COL}`, borderRadius: "100px", cursor: "pointer", outline: "none", padding: "3px", display: "flex", alignItems: "center", justifyContent: "flex-start", boxSizing: "border-box" }}
+                          >
+                            <motion.div
+                              animate={{ x: timerEnabled ? 16 : 0 }}
+                              transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                              style={{ width: "14px", height: "14px", background: timerEnabled ? "transparent" : BORDER_COL, border: timerEnabled ? "1.5px dashed white" : "none", borderRadius: "7px", flexShrink: 0, boxSizing: "border-box" }}
+                            />
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-
-                  {/* Timer sub-options */}
-                  <AnimatePresence>
-                    {timerEnabled && (
-                      <motion.div
-                        key="timer-opts"
-                        initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
-                        transition={{ duration: 0.18 }}
-                        style={{ display: "flex", flexDirection: "column", gap: "8px" }}
-                      >
-                        {/* Mode buttons */}
-                        <div style={{ display: "flex", gap: "8px" }}>
-                          {(["fixed", "free"] as const).map((m) => (
-                            <button
-                              key={m}
-                              onClick={() => setTimerMode(m)}
-                              style={{ flex: 1, height: "36px", background: timerMode === m ? (dark ? "rgba(252,246,239,0.15)" : "rgba(85,85,85,0.08)") : settingsCardBg, border: `1px dashed ${timerMode === m ? (dark ? DARK_TEXT : LIGHT_TEXT) : BORDER_COL}`, borderRadius: "8px", cursor: "pointer", outline: "none", fontFamily: FONT_SANS, fontSize: "14px", color: dark ? DARK_TEXT : LIGHT_TEXT }}
-                            >
-                              {m === "fixed" ? "Feste Zeit" : "Freie Wahl"}
-                            </button>
-                          ))}
-                        </div>
-
-                        {/* Minutes input */}
-                        <div style={{ background: settingsCardBg, border: `1px dashed ${BORDER_COL}`, borderRadius: "8px", padding: "12px 24px" }}>
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
-                            <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>Minuten</span>
-                            <input
-                              type="text"
-                              value={timerMinutes === 0 ? "" : timerMinutes}
-                              onChange={(e) => { const v = e.target.value; if (v === "") { setTimerMinutes(0); return; } if (/^\d+$/.test(v)) setTimerMinutes(Number(v)); }}
-                              onClick={(e) => e.stopPropagation()}
-                              style={{ width: "48px", height: "28px", background: "transparent", border: `1px dashed ${BORDER_COL}`, borderRadius: "4px", textAlign: "center", fontFamily: FONT_SANS, fontSize: "14px", color: dark ? DARK_TEXT : LIGHT_TEXT, outline: "none" }}
-                            />
-                          </div>
-                        </div>
-
-                        {/* Visual timer toggle */}
-                        <div style={{ background: settingsCardBg, border: `1px dashed ${BORDER_COL}`, borderRadius: "8px", padding: "12px 24px" }}>
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
-                            <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>Visueller Timer</span>
-                            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                              <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: dark ? DARK_TEXT : LIGHT_TEXT }}>
-                                {visualTimer ? "An" : "Aus"}
-                              </span>
+                    <AnimatePresence>
+                      {timerEnabled && (
+                        <motion.div
+                          key="timer-opts"
+                          initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+                          transition={{ duration: 0.18 }}
+                          style={{ display: "flex", flexDirection: "column", gap: "8px" }}
+                        >
+                          <div style={{ display: "flex", gap: "8px" }}>
+                            {(["fixed", "free"] as const).map((m) => (
                               <button
-                                onClick={() => setVisualTimer(v => !v)}
-                                style={{ width: "36px", height: "20px", background: visualTimer ? "#555555" : "transparent", border: visualTimer ? "none" : `1px dashed ${BORDER_COL}`, borderRadius: "100px", cursor: "pointer", outline: "none", padding: "3px", display: "flex", alignItems: "center", justifyContent: "flex-start", boxSizing: "border-box" }}
+                                key={m}
+                                onClick={() => setTimerMode(m)}
+                                style={{ flex: 1, height: "36px", background: timerMode === m ? (dark ? "rgba(252,246,239,0.15)" : "rgba(85,85,85,0.08)") : settingsCardBg, border: `1px dashed ${timerMode === m ? (dark ? DARK_TEXT : LIGHT_TEXT) : BORDER_COL}`, borderRadius: "8px", cursor: "pointer", outline: "none", fontFamily: FONT_SANS, fontSize: "14px", color: dark ? DARK_TEXT : LIGHT_TEXT }}
                               >
-                                <motion.div
-                                  animate={{ x: visualTimer ? 16 : 0 }}
-                                  transition={{ type: "spring", stiffness: 400, damping: 28 }}
-                                  style={{ width: "14px", height: "14px", background: visualTimer ? "transparent" : BORDER_COL, border: visualTimer ? "1.5px dashed white" : "none", borderRadius: "7px", flexShrink: 0, boxSizing: "border-box" }}
-                                />
+                                {m === "fixed" ? "Feste Zeit" : "Freie Wahl"}
                               </button>
+                            ))}
+                          </div>
+                          <div style={{ background: settingsCardBg, border: `1px dashed ${BORDER_COL}`, borderRadius: "8px", padding: "12px 24px" }}>
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
+                              <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>Minuten</span>
+                              <input
+                                type="text"
+                                value={timerMinutes === 0 ? "" : timerMinutes}
+                                onChange={(e) => { const v = e.target.value; if (v === "") { setTimerMinutes(0); return; } if (/^\d+$/.test(v)) setTimerMinutes(Number(v)); }}
+                                onClick={(e) => e.stopPropagation()}
+                                style={{ width: "48px", height: "28px", background: "transparent", border: `1px dashed ${BORDER_COL}`, borderRadius: "4px", textAlign: "center", fontFamily: FONT_SANS, fontSize: "14px", color: dark ? DARK_TEXT : LIGHT_TEXT, outline: "none" }}
+                              />
                             </div>
                           </div>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              )}
+                          <div style={{ background: settingsCardBg, border: `1px dashed ${BORDER_COL}`, borderRadius: "8px", padding: "12px 24px" }}>
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
+                              <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>Visueller Timer</span>
+                              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                                <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: dark ? DARK_TEXT : LIGHT_TEXT }}>
+                                  {visualTimer ? "An" : "Aus"}
+                                </span>
+                                <button
+                                  onClick={() => setVisualTimer(v => !v)}
+                                  style={{ width: "36px", height: "20px", background: visualTimer ? "#555555" : "transparent", border: visualTimer ? "none" : `1px dashed ${BORDER_COL}`, borderRadius: "100px", cursor: "pointer", outline: "none", padding: "3px", display: "flex", alignItems: "center", justifyContent: "flex-start", boxSizing: "border-box" }}
+                                >
+                                  <motion.div
+                                    animate={{ x: visualTimer ? 16 : 0 }}
+                                    transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                                    style={{ width: "14px", height: "14px", background: visualTimer ? "transparent" : BORDER_COL, border: visualTimer ? "1.5px dashed white" : "none", borderRadius: "7px", flexShrink: 0, boxSizing: "border-box" }}
+                                  />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                )}
 
-              {/* ── Sichtbarkeit content ──────────────────────────────────────────── */}
-              {activeCategory === "Visibility" && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                  {/* Sichtbar / Unsichtbar side-by-side */}
-                  <div style={{ display: "flex", background: settingsCardBg, border: `1px dashed ${BORDER_COL}`, borderRadius: "8px", overflow: "hidden" }}>
-                    {(["visible", "invisible"] as const).map((val, i) => (
+                {/* ── Sichtbarkeit content ────────────────────────────────────────── */}
+                {activeCategory === "Visibility" && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    <div style={{ display: "flex", background: settingsCardBg, border: `1px dashed ${BORDER_COL}`, borderRadius: "8px", overflow: "hidden" }}>
+                      {(["visible", "invisible"] as const).map((val, i) => (
+                        <button
+                          key={val}
+                          onClick={() => setVisibility(val)}
+                          style={{
+                            flex: 1, height: "44px", background: "transparent",
+                            border: "none", borderLeft: i === 1 ? `1px dashed ${BORDER_COL}` : "none",
+                            cursor: "pointer", outline: "none",
+                            display: "flex", alignItems: "center", justifyContent: "space-between",
+                            padding: "0 16px", boxSizing: "border-box",
+                            fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT,
+                          }}
+                        >
+                          {val === "visible" ? "Sichtbar" : "Unsichtbar"}
+                          <RadioCircle selected={visibility === val} dark={dark} />
+                        </button>
+                      ))}
+                    </div>
+                    {([
+                      { val: "sentence" as const, label: "Nur aktueller Satz sichtbar" },
+                      { val: "word"     as const, label: "Nur aktuelles Wort sichtbar" },
+                      { val: "char"     as const, label: "Nur aktl. Buchstabe sichtbar" },
+                    ]).map(({ val, label }) => (
                       <button
                         key={val}
                         onClick={() => setVisibility(val)}
                         style={{
-                          flex: 1, height: "44px",
-                          background: "transparent",
-                          border: "none",
-                          borderLeft: i === 1 ? `1px dashed ${BORDER_COL}` : "none",
-                          cursor: "pointer", outline: "none",
+                          background: settingsCardBg, border: `1px dashed ${BORDER_COL}`,
+                          borderRadius: "8px", height: "44px", padding: "0 16px",
                           display: "flex", alignItems: "center", justifyContent: "space-between",
-                          padding: "0 16px", boxSizing: "border-box",
+                          cursor: "pointer", outline: "none",
                           fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT,
+                          boxSizing: "border-box",
                         }}
                       >
-                        {val === "visible" ? "Sichtbar" : "Unsichtbar"}
+                        {label}
                         <RadioCircle selected={visibility === val} dark={dark} />
                       </button>
                     ))}
                   </div>
-
-                  {/* Single-row options */}
-                  {([
-                    { val: "sentence" as const, label: "Nur aktueller Satz sichtbar" },
-                    { val: "word"     as const, label: "Nur aktuelles Wort sichtbar" },
-                    { val: "char"     as const, label: "Nur aktl. Buchstabe sichtbar" },
-                  ]).map(({ val, label }) => (
-                    <button
-                      key={val}
-                      onClick={() => setVisibility(val)}
-                      style={{
-                        background: settingsCardBg,
-                        border: `1px dashed ${BORDER_COL}`,
-                        borderRadius: "8px",
-                        height: "44px", padding: "0 16px",
-                        display: "flex", alignItems: "center", justifyContent: "space-between",
-                        cursor: "pointer", outline: "none",
-                        fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT,
-                        boxSizing: "border-box",
-                      }}
-                    >
-                      {label}
-                      <RadioCircle selected={visibility === val} dark={dark} />
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

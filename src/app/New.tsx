@@ -208,7 +208,7 @@ export default function New() {
             key="sidebar"
             initial={{ x: -153 }}
             animate={{ x: 0 }}
-            exit={{ x: -153 }}
+            exit={{ x: -153, opacity: 0, transition: { duration: 0.22, ease: "easeIn" } }}
             transition={SPRING}
             style={{
               position: "fixed", top: 0, left: 0,
@@ -288,7 +288,7 @@ export default function New() {
             key="detail"
             initial={{ x: -314 }}
             animate={{ x: 0 }}
-            exit={{ x: -314 }}
+            exit={{ x: -314, opacity: 0, transition: { duration: 0.22, ease: "easeIn" } }}
             transition={SPRING}
             style={{
               position: "fixed", top: 0, left: "153px",

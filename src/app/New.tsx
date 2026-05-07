@@ -32,7 +32,7 @@ const SIDEBAR_CATS = [
 ];
 
 const CAT_DESC: Record<string, string> = {
-  "Time":        "In Schreibtools spielt Zeit keine Rolle, doch Denken und Sprechen sind zeitlich.",
+  "Time":        "In üblichen Schreibtools spielt Zeit keine Rolle, doch unser Denken und Sprechen sind zeitlich.",
   "Visibility":  "",
   "Correction":  "",
   "Stability":   "",
@@ -145,6 +145,9 @@ export default function New() {
   const [menuHovered, setMenuHovered] = useState(false);
   const [rulesOpen, setRulesOpen]     = useState(false);
   const [timerEnabled, setTimerEnabled] = useState(false);
+  const [timerMinutes, setTimerMinutes] = useState(10);
+  const [timerUserReset, setTimerUserReset] = useState(false);
+  const [cursorRunning, setCursorRunning] = useState(false);
   const [activeCategory, setActiveCategory] = useState("Time");
   const [text, setText]   = useState("");
   const [scrollY, setScrollY] = useState(0);
@@ -369,46 +372,139 @@ export default function New() {
                 {CAT_DESC[activeCategory]}
               </span>
 
-              {/* Settings card */}
-              <div style={{
-                background: settingsCardBg,
-                border: `1px dashed ${BORDER_COL}`,
-                borderRadius: "8px",
-                padding: "12px 24px",
-              }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
-                  <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>Timer</span>
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                    <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: dark ? DARK_TEXT : LIGHT_TEXT }}>
-                      {timerEnabled ? "An" : "Aus"}
-                    </span>
-                    <button
-                      onClick={() => setTimerEnabled(t => !t)}
-                      style={{
-                        width: "36px", height: "20px",
-                        background: timerEnabled ? "#555555" : "transparent",
-                        border: timerEnabled ? "none" : `1px dashed ${BORDER_COL}`,
-                        borderRadius: "100px",
-                        cursor: "pointer", outline: "none",
-                        padding: "3px",
-                        display: "flex", alignItems: "center", justifyContent: "flex-start",
-                        boxSizing: "border-box",
-                      }}
-                    >
-                      <motion.div
-                        animate={{ x: timerEnabled ? 16 : 0 }}
-                        transition={{ type: "spring", stiffness: 400, damping: 28 }}
+              {/* Zeit settings — only shown for Time category */}
+              {activeCategory === "Time" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  {/* Timer card */}
+                  <div style={{
+                    background: settingsCardBg,
+                    border: `1px dashed ${BORDER_COL}`,
+                    borderRadius: "8px",
+                    padding: "12px 24px",
+                    display: "flex", flexDirection: "column", gap: "12px",
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
+                      <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>Timer</span>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: dark ? DARK_TEXT : LIGHT_TEXT }}>
+                          {timerEnabled ? "An" : "Aus"}
+                        </span>
+                        <button
+                          onClick={() => setTimerEnabled(t => !t)}
+                          style={{
+                            width: "36px", height: "20px",
+                            background: timerEnabled ? "#555555" : "transparent",
+                            border: timerEnabled ? "none" : `1px dashed ${BORDER_COL}`,
+                            borderRadius: "100px",
+                            cursor: "pointer", outline: "none",
+                            padding: "3px",
+                            display: "flex", alignItems: "center", justifyContent: "flex-start",
+                            boxSizing: "border-box",
+                          }}
+                        >
+                          <motion.div
+                            animate={{ x: timerEnabled ? 16 : 0 }}
+                            transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                            style={{
+                              width: "14px", height: "14px",
+                              background: timerEnabled ? "transparent" : BORDER_COL,
+                              border: timerEnabled ? "1.5px dashed white" : "none",
+                              borderRadius: "7px", flexShrink: 0, boxSizing: "border-box",
+                            }}
+                          />
+                        </button>
+                      </div>
+                    </div>
+                    {/* Duration input */}
+                    <div style={{
+                      background: dark ? "rgba(255,255,255,0.06)" : "rgba(241,235,228,0.6)",
+                      border: `1px dashed ${BORDER_COL}`,
+                      borderRadius: "6px",
+                      height: "40px",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      gap: "6px", padding: "0 12px",
+                    }}>
+                      <input
+                        type="number"
+                        min={1}
+                        max={999}
+                        value={timerMinutes}
+                        onChange={e => setTimerMinutes(Math.max(1, Math.min(999, Number(e.target.value) || 1)))}
                         style={{
-                          width: "14px", height: "14px",
-                          background: timerEnabled ? "transparent" : BORDER_COL,
-                          border: timerEnabled ? "1.5px dashed white" : "none",
-                          borderRadius: "7px", flexShrink: 0, boxSizing: "border-box",
-                        }}
+                          background: "transparent", border: "none", outline: "none",
+                          fontFamily: FONT_SANS, fontSize: "16px", fontWeight: 400,
+                          color: dark ? DARK_TEXT : LIGHT_TEXT,
+                          width: "48px", textAlign: "center",
+                          MozAppearance: "textfield",
+                        } as React.CSSProperties}
+                        onClick={e => e.stopPropagation()}
                       />
-                    </button>
+                      <span style={{ fontFamily: FONT_SANS, fontSize: "13px", color: "#a4a4a4" }}>min</span>
+                    </div>
+                    {/* Radio option */}
+                    <div
+                      style={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer" }}
+                      onClick={e => { e.stopPropagation(); setTimerUserReset(v => !v); }}
+                    >
+                      <span style={{ fontFamily: FONT_SANS, fontSize: "13px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>
+                        User setzt Timer jedes mal neu
+                      </span>
+                      <div style={{
+                        width: "16px", height: "16px",
+                        borderRadius: "50%",
+                        border: `1px solid ${BORDER_COL}`,
+                        background: timerUserReset ? BORDER_COL : "transparent",
+                        flexShrink: 0,
+                      }} />
+                    </div>
+                  </div>
+
+                  {/* Cursor läuft weiter card */}
+                  <div style={{
+                    background: settingsCardBg,
+                    border: `1px dashed ${BORDER_COL}`,
+                    borderRadius: "8px",
+                    padding: "12px 24px",
+                    display: "flex", flexDirection: "column", gap: "10px",
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
+                      <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>Cursor läuft weiter</span>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: dark ? DARK_TEXT : LIGHT_TEXT }}>
+                          {cursorRunning ? "An" : "Aus"}
+                        </span>
+                        <button
+                          onClick={() => setCursorRunning(v => !v)}
+                          style={{
+                            width: "36px", height: "20px",
+                            background: cursorRunning ? "#555555" : "transparent",
+                            border: cursorRunning ? "none" : `1px dashed ${BORDER_COL}`,
+                            borderRadius: "100px",
+                            cursor: "pointer", outline: "none",
+                            padding: "3px",
+                            display: "flex", alignItems: "center", justifyContent: "flex-start",
+                            boxSizing: "border-box",
+                          }}
+                        >
+                          <motion.div
+                            animate={{ x: cursorRunning ? 16 : 0 }}
+                            transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                            style={{
+                              width: "14px", height: "14px",
+                              background: cursorRunning ? "transparent" : BORDER_COL,
+                              border: cursorRunning ? "1.5px dashed white" : "none",
+                              borderRadius: "7px", flexShrink: 0, boxSizing: "border-box",
+                            }}
+                          />
+                        </button>
+                      </div>
+                    </div>
+                    <p style={{ fontFamily: FONT_SANS, fontSize: "13px", color: "#7c7c7c", lineHeight: "1.45", margin: 0 }}>
+                      Der Cursor läuft automatisch weiter, egal ob man schreibt oder nicht. Damit werden Pausen sichtbar.
+                    </p>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           </motion.div>
         )}

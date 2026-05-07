@@ -40,13 +40,6 @@ const CAT_DESC: Record<string, string> = {
   "Look & Feel": "",
 };
 
-// Closed-state positions for the floating buttons
-const BTN_CLOSED = { dark: 24, rules: 65 };        // left px
-// Open-state positions (inside detail panel header right corner)
-// Panel: left 153, width 314, padding 24 → content right edge = 153+314-24 = 443
-// × at left 412 (443-31), ◑ at left 371 (412-10-31)
-const BTN_OPEN   = { dark: 371, rules: 412 };
-
 const SPRING = { type: "spring" as const, stiffness: 300, damping: 30 };
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
@@ -165,93 +158,48 @@ export default function New() {
   const catInactiveBg  = dark ? "#2a2928"               : "#f9f1e8";
   const settingsCardBg = dark ? "#2a2928"               : LIGHT_BG;
 
-  // Background for the floating buttons depending on state
-  const darkBtnBg  = rulesOpen ? (dark ? "rgba(248,239,229,0.15)" : PANEL_BG) : (dark ? "transparent" : LIGHT_BTN_BG);
-  const rulesBtnBg = rulesOpen ? (dark ? "rgba(248,239,229,0.15)" : PANEL_BG) : (dark ? "transparent" : LIGHT_BTN_BG);
-
   return (
     <div
       style={{ minHeight: "100vh", background: bg, position: "relative", transition: "background 0.3s" }}
       onClick={() => textareaRef.current?.focus()}
     >
-      {/* ── Floating ◑ button ──────────────────────────────────────────────────── */}
-      <AnimatePresence>
-        {visible && (
-          <motion.button
-            key="float-dark"
-            initial={false}
-            animate={{ x: rulesOpen ? BTN_OPEN.dark - BTN_CLOSED.dark : 0 }}
-            exit={{ opacity: 0, transition: { duration: 0.12 } }}
-            transition={SPRING}
-            style={{
-              position: "fixed",
-              top: "24px",
-              left: BTN_CLOSED.dark,
-              width: "31px", height: "31px",
-              background: darkBtnBg,
-              border: `1px dashed ${BORDER_COL}`,
-              borderRadius: "4px",
-              cursor: "pointer", outline: "none",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              zIndex: 25,
-              transition: "background 0.2s",
-            }}
-            onClick={(e) => { e.stopPropagation(); setDark(d => !d); }}
-          >
-            <IconHalfCircle color={iconColor} />
-          </motion.button>
-        )}
-      </AnimatePresence>
+      {/* ── Floating ◑ button — closed state only, sits under the sliding panel */}
+      {visible && !rulesOpen && (
+        <button
+          style={{
+            position: "fixed", top: "24px", left: "24px",
+            width: "31px", height: "31px",
+            background: dark ? "transparent" : LIGHT_BTN_BG,
+            border: `1px dashed ${BORDER_COL}`,
+            borderRadius: "4px", cursor: "pointer", outline: "none",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            zIndex: 15, transition: "background 0.2s",
+          }}
+          onClick={(e) => { e.stopPropagation(); setDark(d => !d); }}
+        >
+          <IconHalfCircle color={iconColor} />
+        </button>
+      )}
 
-      {/* ── Floating Rules/× button ──────────────────────────────────────────── */}
-      <AnimatePresence>
-        {visible && (
-          <motion.button
-            key="float-rules"
-            initial={false}
-            animate={{ x: rulesOpen ? BTN_OPEN.rules - BTN_CLOSED.rules : 0 }}
-            exit={{ opacity: 0, transition: { duration: 0.12 } }}
-            transition={SPRING}
-            style={{
-              position: "fixed",
-              top: "24px",
-              left: BTN_CLOSED.rules,
-              height: "31px",
-              width: rulesOpen ? "31px" : "60px",
-              background: rulesBtnBg,
-              border: `1px dashed ${BORDER_COL}`,
-              borderRadius: "4px",
-              cursor: "pointer", outline: "none",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontFamily: FONT_SANS,
-              color: dark ? DARK_TEXT : LIGHT_TEXT,
-              lineHeight: "normal",
-              zIndex: 25,
-              overflow: "hidden",
-              transition: "background 0.2s, width 0.2s ease",
-            }}
-            onClick={(e) => { e.stopPropagation(); setRulesOpen(o => !o); }}
-          >
-            <AnimatePresence mode="wait">
-              {rulesOpen ? (
-                <motion.span
-                  key="x"
-                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                  transition={{ duration: 0.1 }}
-                  style={{ fontSize: "18px", lineHeight: "1" }}
-                >×</motion.span>
-              ) : (
-                <motion.span
-                  key="r"
-                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                  transition={{ duration: 0.1 }}
-                  style={{ fontSize: "14px" }}
-                >Rules</motion.span>
-              )}
-            </AnimatePresence>
-          </motion.button>
-        )}
-      </AnimatePresence>
+      {/* ── Floating Rules button — closed state only, sits under the sliding panel */}
+      {visible && !rulesOpen && (
+        <button
+          style={{
+            position: "fixed", top: "24px", left: "65px",
+            height: "31px", width: "60px",
+            background: dark ? "transparent" : LIGHT_BTN_BG,
+            border: `1px dashed ${BORDER_COL}`,
+            borderRadius: "4px", cursor: "pointer", outline: "none",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontFamily: FONT_SANS, fontSize: "14px",
+            color: dark ? DARK_TEXT : LIGHT_TEXT,
+            zIndex: 15,
+          }}
+          onClick={(e) => { e.stopPropagation(); setRulesOpen(o => !o); }}
+        >
+          Rules
+        </button>
+      )}
 
       {/* ── Sidebar ─────────────────────────────────────────────────────────── */}
       <AnimatePresence>
@@ -356,8 +304,37 @@ export default function New() {
             }}
             onClick={(e) => e.stopPropagation()}
           >
+            {/* ◑ button — embedded, slides with panel */}
+            <button
+              style={{
+                position: "absolute", top: "24px", right: "65px",
+                width: "31px", height: "31px",
+                background: dark ? "rgba(248,239,229,0.15)" : PANEL_BG,
+                border: `1px dashed ${BORDER_COL}`,
+                borderRadius: "4px", cursor: "pointer", outline: "none",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                transition: "background 0.2s",
+              }}
+              onClick={(e) => { e.stopPropagation(); setDark(d => !d); }}
+            >
+              <IconHalfCircle color={iconColor} />
+            </button>
+            {/* × button — embedded, slides with panel */}
+            <button
+              style={{
+                position: "absolute", top: "24px", right: "24px",
+                width: "31px", height: "31px",
+                background: dark ? "rgba(248,239,229,0.15)" : PANEL_BG,
+                border: `1px dashed ${BORDER_COL}`,
+                borderRadius: "4px", cursor: "pointer", outline: "none",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: "18px", lineHeight: "1",
+                color: dark ? DARK_TEXT : LIGHT_TEXT,
+              }}
+              onClick={(e) => { e.stopPropagation(); setRulesOpen(false); }}
+            >×</button>
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-              {/* Title row — buttons are floating elements positioned above */}
+              {/* Title row */}
               <div style={{ display: "flex", alignItems: "flex-start" }}>
                 <span style={{ fontFamily: FONT_SERIF, fontSize: "22px", color: dark ? DARK_TEXT : LIGHT_TEXT, lineHeight: "normal" }}>
                   {SIDEBAR_CATS.find(c => c.en === activeCategory)?.de}

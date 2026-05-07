@@ -35,7 +35,7 @@ const CAT_DESC: Record<string, string> = {
   "Time":        "In Schreibtools spielt Zeit keine Rolle, doch Denken und Sprechen sind zeitlich.",
   "Visibility":  "",
   "Correction":  "",
-  "Stability":   "",
+  "Stability":   "In üblichen Schreibtools ist der Text stabil und permanent. Doch Gedanken sind flüchtig und vergehen.",
   "Position":    "",
   "Look & Feel": "",
 };
@@ -136,6 +136,60 @@ const NAV_ITEM = {
   exit:    { opacity: 0, y: -10, transition: { duration: 0.1 } },
 };
 
+// ── Shared sub-components ─────────────────────────────────────────────────────
+function Toggle({ enabled, onToggle, dark }: { enabled: boolean; onToggle: () => void; dark: boolean }) {
+  return (
+    <button
+      onClick={onToggle}
+      style={{
+        width: "36px", height: "20px",
+        background: enabled ? (dark ? "#888" : "#555555") : "transparent",
+        border: enabled ? "none" : `1px dashed ${BORDER_COL}`,
+        borderRadius: "100px",
+        cursor: "pointer", outline: "none",
+        padding: "3px",
+        display: "flex", alignItems: "center", justifyContent: "flex-start",
+        boxSizing: "border-box",
+        flexShrink: 0,
+      }}
+    >
+      <motion.div
+        animate={{ x: enabled ? 16 : 0 }}
+        transition={{ type: "spring", stiffness: 400, damping: 28 }}
+        style={{
+          width: "14px", height: "14px",
+          background: enabled ? "transparent" : BORDER_COL,
+          border: enabled ? "1.5px dashed white" : "none",
+          borderRadius: "7px", flexShrink: 0, boxSizing: "border-box",
+        }}
+      />
+    </button>
+  );
+}
+
+function DoubleSlider({ value, min, max, onChange, dark }: {
+  value: number; min: number; max: number;
+  onChange: (v: number) => void; dark: boolean;
+}) {
+  const pct = ((value - min) / (max - min)) * 100;
+  const filled  = dark ? DARK_TEXT : LIGHT_TEXT;
+  const unfilled = dark ? "rgba(252,246,239,0.25)" : "rgba(164,164,164,0.45)";
+  return (
+    <div style={{ position: "relative", height: "16px", display: "flex", alignItems: "center" }}>
+      <div style={{ position: "absolute", left: 0, right: 0 }}>
+        <div style={{ position: "absolute", left: 0, width: `${pct}%`, height: "2px", background: filled, top: "3px", borderRadius: "1px" }} />
+        <div style={{ position: "absolute", left: 0, width: `${pct}%`, height: "2px", background: filled, top: "8px", borderRadius: "1px" }} />
+        <div style={{ position: "absolute", left: `${pct}%`, right: 0, height: "1px", background: unfilled, top: "6px" }} />
+      </div>
+      <input
+        type="range" min={min} max={max} value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        style={{ position: "absolute", width: "100%", opacity: 0, cursor: "pointer", height: "100%", margin: 0, padding: 0 }}
+      />
+    </div>
+  );
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function New() {
   const navigate = useNavigate();
@@ -145,6 +199,13 @@ export default function New() {
   const [menuHovered, setMenuHovered] = useState(false);
   const [rulesOpen, setRulesOpen]     = useState(false);
   const [timerEnabled, setTimerEnabled] = useState(false);
+  const [textFliegtEnabled, setTextFliegtEnabled]   = useState(true);
+  const [fliegtUnit, setFliegtUnit]                 = useState<"Sätze" | "Wörter" | "Buchstabe">("Sätze");
+  const [fliegtZeitpunkt, setFliegtZeitpunkt]       = useState(5);
+  const [fliegtSchnelligkeit, setFliegtSchnelligkeit] = useState(3);
+  const [textVerblassEnabled, setTextVerblassEnabled] = useState(false);
+  const [verblassZeitpunkt, setVerblassZeitpunkt]     = useState(5);
+  const [verblassSchnelligkeit, setVerblassSchnelligkeit] = useState(3);
   const [activeCategory, setActiveCategory] = useState("Time");
   const [text, setText]   = useState("");
   const [scrollY, setScrollY] = useState(0);
@@ -351,7 +412,8 @@ export default function New() {
               padding: "24px",
               display: "flex", flexDirection: "column", gap: "30px",
               boxSizing: "border-box",
-              overflow: "hidden",
+              overflowY: "auto",
+              overflowX: "hidden",
               zIndex: 20,
             }}
             onClick={(e) => e.stopPropagation()}
@@ -369,46 +431,96 @@ export default function New() {
                 {CAT_DESC[activeCategory]}
               </span>
 
-              {/* Settings card */}
-              <div style={{
-                background: settingsCardBg,
-                border: `1px dashed ${BORDER_COL}`,
-                borderRadius: "8px",
-                padding: "12px 24px",
-              }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
-                  <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>Timer</span>
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                    <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: dark ? DARK_TEXT : LIGHT_TEXT }}>
-                      {timerEnabled ? "An" : "Aus"}
-                    </span>
-                    <button
-                      onClick={() => setTimerEnabled(t => !t)}
-                      style={{
-                        width: "36px", height: "20px",
-                        background: timerEnabled ? "#555555" : "transparent",
-                        border: timerEnabled ? "none" : `1px dashed ${BORDER_COL}`,
-                        borderRadius: "100px",
-                        cursor: "pointer", outline: "none",
-                        padding: "3px",
-                        display: "flex", alignItems: "center", justifyContent: "flex-start",
-                        boxSizing: "border-box",
-                      }}
-                    >
-                      <motion.div
-                        animate={{ x: timerEnabled ? 16 : 0 }}
-                        transition={{ type: "spring", stiffness: 400, damping: 28 }}
-                        style={{
-                          width: "14px", height: "14px",
-                          background: timerEnabled ? "transparent" : BORDER_COL,
-                          border: timerEnabled ? "1.5px dashed white" : "none",
-                          borderRadius: "7px", flexShrink: 0, boxSizing: "border-box",
-                        }}
-                      />
-                    </button>
+              {/* Category-specific settings */}
+              {activeCategory === "Time" && (
+                <div style={{ background: settingsCardBg, border: `1px dashed ${BORDER_COL}`, borderRadius: "8px", padding: "12px 24px" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
+                    <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>Timer</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: dark ? DARK_TEXT : LIGHT_TEXT }}>
+                        {timerEnabled ? "An" : "Aus"}
+                      </span>
+                      <Toggle enabled={timerEnabled} onToggle={() => setTimerEnabled(t => !t)} dark={dark} />
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
+
+              {activeCategory === "Stability" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  {/* Card 1: Text fliegt davon */}
+                  <div style={{ background: settingsCardBg, border: `1px dashed ${BORDER_COL}`, borderRadius: "8px", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "14px" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>Text fliegt davon</span>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: dark ? DARK_TEXT : LIGHT_TEXT }}>
+                          {textFliegtEnabled ? "An" : "Aus"}
+                        </span>
+                        <Toggle enabled={textFliegtEnabled} onToggle={() => setTextFliegtEnabled(e => !e)} dark={dark} />
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                      <div style={{ display: "flex", gap: "6px" }}>
+                        {(["Sätze", "Wörter"] as const).map(u => (
+                          <button key={u} onClick={() => setFliegtUnit(u)} style={{
+                            flex: 1, height: "36px",
+                            background: fliegtUnit === u ? (dark ? DARK_BG : LIGHT_BG) : "transparent",
+                            border: `1px dashed ${fliegtUnit === u ? (dark ? DARK_TEXT : LIGHT_TEXT) : BORDER_COL}`,
+                            borderRadius: "4px", cursor: "pointer", outline: "none",
+                            fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT,
+                          }}>{u}</button>
+                        ))}
+                      </div>
+                      <button onClick={() => setFliegtUnit("Buchstabe")} style={{
+                        width: "100%", height: "36px",
+                        background: fliegtUnit === "Buchstabe" ? (dark ? DARK_BG : LIGHT_BG) : "transparent",
+                        border: `1px dashed ${fliegtUnit === "Buchstabe" ? (dark ? DARK_TEXT : LIGHT_TEXT) : BORDER_COL}`,
+                        borderRadius: "4px", cursor: "pointer", outline: "none",
+                        fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT,
+                        textAlign: "left", padding: "0 12px", boxSizing: "border-box",
+                      }}>Buchstabe</button>
+                    </div>
+                    <div style={{ borderTop: `1px dashed ${BORDER_COL}` }} />
+                    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                      <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>Zeitpunkt des Fliegens</span>
+                      <DoubleSlider value={fliegtZeitpunkt} min={1} max={15} onChange={setFliegtZeitpunkt} dark={dark} />
+                      <div style={{ border: `1px dashed ${BORDER_COL}`, borderRadius: "4px", padding: "8px", textAlign: "center", fontFamily: FONT_SANS, fontSize: "15px", color: PROMPT_COL }}>
+                        Nach {fliegtZeitpunkt} min
+                      </div>
+                    </div>
+                    <div style={{ borderTop: `1px dashed ${BORDER_COL}` }} />
+                    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                      <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>Schnelligkeit des Fliegens</span>
+                      <DoubleSlider value={fliegtSchnelligkeit} min={1} max={10} onChange={setFliegtSchnelligkeit} dark={dark} />
+                    </div>
+                  </div>
+
+                  {/* Card 2: Text verblasst */}
+                  <div style={{ background: settingsCardBg, border: `1px dashed ${BORDER_COL}`, borderRadius: "8px", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "14px" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>Text verblasst</span>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: dark ? DARK_TEXT : LIGHT_TEXT }}>
+                          {textVerblassEnabled ? "An" : "Aus"}
+                        </span>
+                        <Toggle enabled={textVerblassEnabled} onToggle={() => setTextVerblassEnabled(e => !e)} dark={dark} />
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                      <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>Zeitpunkt des Verblassens</span>
+                      <DoubleSlider value={verblassZeitpunkt} min={1} max={15} onChange={setVerblassZeitpunkt} dark={dark} />
+                      <div style={{ border: `1px dashed ${BORDER_COL}`, borderRadius: "4px", padding: "8px", textAlign: "center", fontFamily: FONT_SANS, fontSize: "15px", color: PROMPT_COL }}>
+                        Nach {verblassZeitpunkt} min
+                      </div>
+                    </div>
+                    <div style={{ borderTop: `1px dashed ${BORDER_COL}` }} />
+                    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                      <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>Schnelligkeit des Verblassens</span>
+                      <DoubleSlider value={verblassSchnelligkeit} min={1} max={10} onChange={setVerblassSchnelligkeit} dark={dark} />
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </motion.div>
         )}

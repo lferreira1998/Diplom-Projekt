@@ -6,10 +6,12 @@ import { useNavigate } from "react-router";
 const LIGHT_BG     = "#fcf6ef";
 const PANEL_BG     = "#f8efe5";
 const DARK_BG      = "#484848";
-const BORDER_COL   = "#a4a4a4";
+const BORDER_COL   = "#a4a4a4";       // light mode borders
+const DARK_BORDER  = "rgba(252,246,239,0.16)"; // panel-internal borders in dark
 const LIGHT_BTN_BG = "rgba(241,235,228,0.2)";
 const LIGHT_TEXT   = "#555555";
-const DARK_TEXT    = "#fcf6ef";
+const DARK_TEXT    = "#f0e8dc";        // warm cream
+const DARK_MUTED   = "rgba(240,232,220,0.5)"; // secondary / description text
 const PROMPT_COL   = "rgba(155,155,155,0.8)";
 const SIDEBAR_BG   = "rgba(248,239,229,0.7)";
 
@@ -92,7 +94,7 @@ function RadioCircle({ selected, dark }: { selected: boolean; dark: boolean }) {
   return (
     <div style={{
       width: "18px", height: "18px",
-      border: `1.5px solid ${dark ? "rgba(252,246,239,0.45)" : BORDER_COL}`,
+      border: `1.5px solid ${dark ? "rgba(240,232,220,0.5)" : BORDER_COL}`,
       borderRadius: "50%",
       display: "flex", alignItems: "center", justifyContent: "center",
       flexShrink: 0,
@@ -108,14 +110,18 @@ function RadioCircle({ selected, dark }: { selected: boolean; dark: boolean }) {
 }
 
 // ── Toggle button ─────────────────────────────────────────────────────────────
-function ToggleBtn({ on, onToggle }: { on: boolean; onToggle: () => void }) {
+function ToggleBtn({ on, onToggle, dark = false }: { on: boolean; onToggle: () => void; dark?: boolean }) {
   return (
     <button
       onClick={onToggle}
       style={{
         width: "36px", height: "20px",
-        background: on ? "#555555" : "transparent",
-        border: on ? "none" : `1px dashed ${BORDER_COL}`,
+        background: on
+          ? (dark ? "rgba(240,232,220,0.28)" : "#555555")
+          : "transparent",
+        border: on
+          ? "none"
+          : `1px dashed ${dark ? "rgba(240,232,220,0.3)" : BORDER_COL}`,
         borderRadius: "100px",
         cursor: "pointer", outline: "none",
         padding: "3px",
@@ -128,8 +134,8 @@ function ToggleBtn({ on, onToggle }: { on: boolean; onToggle: () => void }) {
         transition={{ type: "spring", stiffness: 400, damping: 28 }}
         style={{
           width: "14px", height: "14px",
-          background: on ? "transparent" : BORDER_COL,
-          border: on ? "1.5px dashed white" : "none",
+          background: on ? "transparent" : (dark ? "rgba(240,232,220,0.55)" : BORDER_COL),
+          border: on ? `1.5px dashed ${dark ? "rgba(240,232,220,0.9)" : "white"}` : "none",
           borderRadius: "7px", flexShrink: 0, boxSizing: "border-box",
         }}
       />
@@ -140,7 +146,7 @@ function ToggleBtn({ on, onToggle }: { on: boolean; onToggle: () => void }) {
 // ── Style helpers ─────────────────────────────────────────────────────────────
 function btnStyle(dark: boolean, extra?: React.CSSProperties): React.CSSProperties {
   return {
-    background: dark ? "transparent" : LIGHT_BTN_BG,
+    background: dark ? "rgba(240,232,220,0.06)" : LIGHT_BTN_BG,
     border: `1px dashed ${BORDER_COL}`,
     borderRadius: "4px",
     cursor: "pointer",
@@ -163,8 +169,8 @@ function btnStyle(dark: boolean, extra?: React.CSSProperties): React.CSSProperti
 function navItemStyle(dark: boolean, active: boolean): React.CSSProperties {
   return {
     background: active
-      ? (dark ? "rgba(252,246,239,0.12)" : "rgba(85,85,85,0.1)")
-      : (dark ? "transparent" : LIGHT_BTN_BG),
+      ? (dark ? "rgba(240,232,220,0.12)" : "rgba(85,85,85,0.1)")
+      : (dark ? "rgba(240,232,220,0.06)" : LIGHT_BTN_BG),
     border: `1px dashed ${active ? (dark ? DARK_TEXT : LIGHT_TEXT) : BORDER_COL}`,
     borderRadius: "4px",
     cursor: "pointer",
@@ -230,14 +236,16 @@ export default function New() {
       : LIGHT_BG;
   const textColor      = dark ? DARK_TEXT : LIGHT_TEXT;
   const iconColor      = dark ? DARK_TEXT : LIGHT_TEXT;
-  const sidebarBg      = dark ? "rgba(30,29,28,0.97)"  : SIDEBAR_BG;
-  const catActiveBg    = dark ? "#484848"               : LIGHT_BG;
-  const catInactiveBg  = dark ? "#2a2928"               : "#f9f1e8";
-  const settingsCardBg = dark ? "#2a2928"               : LIGHT_BG;
+  const sidebarBg      = dark ? "#1c1b19"                : SIDEBAR_BG;
+  const catActiveBg    = dark ? "#3c3a37"                : LIGHT_BG;
+  const catInactiveBg  = dark ? "#252321"                : "#f9f1e8";
+  const settingsCardBg = dark ? "#2d2b28"                : LIGHT_BG;
+  const descColor      = dark ? DARK_MUTED               : "#7c7c7c";
+  const innerBorder    = dark ? DARK_BORDER              : BORDER_COL;
 
   // Background for the floating buttons depending on state
-  const darkBtnBg  = rulesOpen ? (dark ? "rgba(248,239,229,0.15)" : PANEL_BG) : (dark ? "transparent" : LIGHT_BTN_BG);
-  const rulesBtnBg = rulesOpen ? (dark ? "rgba(248,239,229,0.15)" : PANEL_BG) : (dark ? "transparent" : LIGHT_BTN_BG);
+  const darkBtnBg  = rulesOpen ? (dark ? "rgba(240,232,220,0.1)" : PANEL_BG) : (dark ? "rgba(240,232,220,0.06)" : LIGHT_BTN_BG);
+  const rulesBtnBg = rulesOpen ? (dark ? "rgba(240,232,220,0.1)" : PANEL_BG) : (dark ? "rgba(240,232,220,0.06)" : LIGHT_BTN_BG);
 
   return (
     <div
@@ -350,7 +358,7 @@ export default function New() {
                 <span style={{ fontFamily: FONT_SERIF, fontSize: "22px", color: dark ? DARK_TEXT : LIGHT_TEXT, lineHeight: "normal" }}>
                   Rules
                 </span>
-                <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: "#7c7c7c", lineHeight: "normal" }}>
+                <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: descColor, lineHeight: "normal" }}>
                   Change them.
                 </span>
               </div>
@@ -363,7 +371,7 @@ export default function New() {
                       width: "105px", height: cat.h,
                       borderRadius: cat.br,
                       background: cat.en === activeCategory ? catActiveBg : catInactiveBg,
-                      border: `1px dashed ${BORDER_COL}`,
+                      border: `1px dashed ${cat.en === activeCategory ? (dark ? "rgba(240,232,220,0.4)" : BORDER_COL) : innerBorder}`,
                       cursor: "pointer", outline: "none",
                       display: "flex",
                       alignItems: cat.bottom ? "flex-end" : "center",
@@ -374,6 +382,7 @@ export default function New() {
                       color: dark ? DARK_TEXT : LIGHT_TEXT,
                       whiteSpace: "nowrap", lineHeight: "normal",
                       flexShrink: 0,
+                      transition: "background 0.15s",
                     }}
                   >{cat.en}</button>
                 ))}
@@ -383,7 +392,7 @@ export default function New() {
               <button style={{
                 width: "105px", height: "105px",
                 borderRadius: "4px", background: "transparent",
-                border: `1px dashed ${BORDER_COL}`,
+                border: `1px dashed ${innerBorder}`,
                 cursor: "pointer", outline: "none",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 fontFamily: FONT_SANS, fontSize: "16px", fontWeight: 400, color: dark ? DARK_TEXT : LIGHT_TEXT,
@@ -392,7 +401,7 @@ export default function New() {
               }}>{"Name,\nDescription\n& more"}</button>
               <button style={{
                 width: "105px", borderRadius: "4px", background: "transparent",
-                border: `1px dashed ${BORDER_COL}`,
+                border: `1px dashed ${innerBorder}`,
                 cursor: "pointer", outline: "none",
                 padding: "6px 12px",
                 fontFamily: FONT_SANS, fontSize: "16px", fontWeight: 400, color: dark ? DARK_TEXT : LIGHT_TEXT,
@@ -421,7 +430,7 @@ export default function New() {
               padding: "24px",
               display: "flex", flexDirection: "column", gap: "30px",
               boxSizing: "border-box",
-              overflow: "hidden",
+              overflowY: "auto",
               zIndex: 20,
             }}
             onClick={(e) => e.stopPropagation()}
@@ -435,24 +444,26 @@ export default function New() {
               </div>
 
               {/* Description */}
-              <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: "#7c7c7c", lineHeight: "normal" }}>
-                {CAT_DESC[activeCategory]}
-              </span>
+              {CAT_DESC[activeCategory] && (
+                <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: descColor, lineHeight: "1.5" }}>
+                  {CAT_DESC[activeCategory]}
+                </span>
+              )}
 
               {/* ── Time settings ────────────────────────────────── */}
               {activeCategory === "Time" && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                   <div style={{
-                    background: settingsCardBg, border: `1px dashed ${BORDER_COL}`,
+                    background: settingsCardBg, border: `1px dashed ${innerBorder}`,
                     borderRadius: "8px", padding: "12px 24px",
                   }}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
                       <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>Timer</span>
                       <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                        <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: dark ? DARK_TEXT : LIGHT_TEXT }}>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: descColor }}>
                           {timerEnabled ? "An" : "Aus"}
                         </span>
-                        <ToggleBtn on={timerEnabled} onToggle={() => setTimerEnabled(t => !t)} />
+                        <ToggleBtn on={timerEnabled} onToggle={() => setTimerEnabled(t => !t)} dark={dark} />
                       </div>
                     </div>
                   </div>
@@ -464,7 +475,7 @@ export default function New() {
                 <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                   {/* Löschen card */}
                   <div style={{
-                    background: settingsCardBg, border: `1px dashed ${BORDER_COL}`,
+                    background: settingsCardBg, border: `1px dashed ${innerBorder}`,
                     borderRadius: "8px", padding: "16px 24px",
                     display: "flex", flexDirection: "column", gap: "10px",
                   }}>
@@ -478,13 +489,14 @@ export default function New() {
                           onClick={() => setDeleteMode(opt.value)}
                           style={{
                             display: "flex", alignItems: "center", justifyContent: "space-between",
-                            border: `1px dashed ${BORDER_COL}`,
+                            border: `1px dashed ${innerBorder}`,
                             borderRadius: "4px",
                             padding: "9px 12px",
                             cursor: "pointer",
                             background: deleteMode === opt.value
-                              ? (dark ? "rgba(252,246,239,0.08)" : "rgba(85,85,85,0.06)")
+                              ? (dark ? "rgba(240,232,220,0.08)" : "rgba(85,85,85,0.06)")
                               : "transparent",
+                            transition: "background 0.12s",
                           }}
                         >
                           <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>
@@ -498,7 +510,7 @@ export default function New() {
 
                   {/* Korrigieren sichtbar card */}
                   <div style={{
-                    background: settingsCardBg, border: `1px dashed ${BORDER_COL}`,
+                    background: settingsCardBg, border: `1px dashed ${innerBorder}`,
                     borderRadius: "8px", padding: "16px 24px",
                     display: "flex", flexDirection: "column", gap: "10px",
                   }}>
@@ -507,14 +519,14 @@ export default function New() {
                         Korrigieren sichtbar
                       </span>
                       <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                        <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: dark ? DARK_TEXT : LIGHT_TEXT }}>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: descColor }}>
                           {correctionVisible ? "An" : "Aus"}
                         </span>
-                        <ToggleBtn on={correctionVisible} onToggle={() => setCorrectionVisible(v => !v)} />
+                        <ToggleBtn on={correctionVisible} onToggle={() => setCorrectionVisible(v => !v)} dark={dark} />
                       </div>
                     </div>
-                    <span style={{ fontFamily: FONT_SANS, fontSize: "14px", lineHeight: "1.45", color: "#7c7c7c" }}>
-                      <span style={{ color: "#6b82b0" }}>Mit Tipp-Ex-Schicht</span>{" "}über alten Text. Das Korrigieren hinterlässt Spuren.
+                    <span style={{ fontFamily: FONT_SANS, fontSize: "14px", lineHeight: "1.5", color: descColor }}>
+                      <span style={{ color: dark ? "#8faee0" : "#6b82b0" }}>Mit Tipp-Ex-Schicht</span>{" "}über alten Text. Das Korrigieren hinterlässt Spuren.
                     </span>
                   </div>
                 </div>
@@ -533,13 +545,14 @@ export default function New() {
                       onClick={() => setPositionMode(opt.value)}
                       style={{
                         display: "flex", alignItems: "center", justifyContent: "space-between",
-                        border: `1px dashed ${BORDER_COL}`,
+                        border: `1px dashed ${innerBorder}`,
                         borderRadius: "4px",
                         padding: "12px 16px",
                         cursor: "pointer",
                         background: positionMode === opt.value
-                          ? (dark ? "rgba(252,246,239,0.08)" : "rgba(85,85,85,0.06)")
+                          ? (dark ? "rgba(240,232,220,0.08)" : "rgba(85,85,85,0.06)")
                           : settingsCardBg,
+                        transition: "background 0.12s",
                       }}
                     >
                       <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT, lineHeight: "1.4" }}>
@@ -559,17 +572,17 @@ export default function New() {
                       -webkit-appearance: none; appearance: none;
                       width: 100%; height: 2px;
                       border-radius: 2px; cursor: pointer; outline: none;
-                      background: ${dark ? "rgba(252,246,239,0.25)" : "#c8bfb5"};
+                      background: ${dark ? "rgba(240,232,220,0.22)" : "#c8bfb5"};
                     }
                     .lf-slider::-webkit-slider-thumb {
                       -webkit-appearance: none; appearance: none;
                       width: 18px; height: 18px; border-radius: 50%;
-                      background: ${dark ? DARK_TEXT : "#888"};
+                      background: ${dark ? "rgba(240,232,220,0.85)" : "#888"};
                       cursor: grab; border: none;
                     }
                     .lf-slider::-moz-range-thumb {
                       width: 18px; height: 18px; border-radius: 50%;
-                      background: ${dark ? DARK_TEXT : "#888"};
+                      background: ${dark ? "rgba(240,232,220,0.85)" : "#888"};
                       cursor: grab; border: none;
                     }
                     .hue-slider {
@@ -580,20 +593,20 @@ export default function New() {
                     }
                     .hue-slider::-webkit-slider-thumb {
                       -webkit-appearance: none; appearance: none;
-                      width: 2px; height: 36px; border-radius: 1px;
-                      background: rgba(100,100,100,0.6);
+                      width: 2px; height: 44px; border-radius: 1px;
+                      background: rgba(80,70,60,0.55);
                       cursor: crosshair; border: none;
                     }
                     .hue-slider::-moz-range-thumb {
-                      width: 2px; height: 36px; border-radius: 1px;
-                      background: rgba(100,100,100,0.6);
+                      width: 2px; height: 44px; border-radius: 1px;
+                      background: rgba(80,70,60,0.55);
                       cursor: crosshair; border: none;
                     }
                   `}</style>
 
                   {/* Körnung & Textur */}
                   <div style={{
-                    background: settingsCardBg, border: `1px dashed ${BORDER_COL}`,
+                    background: settingsCardBg, border: `1px dashed ${innerBorder}`,
                     borderRadius: "8px", padding: "16px 24px",
                     display: "flex", flexDirection: "column", gap: "16px",
                   }}>
@@ -609,7 +622,7 @@ export default function New() {
 
                   {/* Textgröße */}
                   <div style={{
-                    background: settingsCardBg, border: `1px dashed ${BORDER_COL}`,
+                    background: settingsCardBg, border: `1px dashed ${innerBorder}`,
                     borderRadius: "8px", padding: "16px 24px",
                     display: "flex", flexDirection: "column", gap: "16px",
                   }}>
@@ -630,7 +643,7 @@ export default function New() {
 
                   {/* Hintergrundfarbe */}
                   <div style={{
-                    background: settingsCardBg, border: `1px dashed ${BORDER_COL}`,
+                    background: settingsCardBg, border: `1px dashed ${innerBorder}`,
                     borderRadius: "8px", padding: "16px 24px",
                     display: "flex", flexDirection: "column", gap: "16px",
                   }}>
@@ -638,7 +651,7 @@ export default function New() {
                       Hintergrundfarbe anpassen
                     </span>
                     <div style={{
-                      borderRadius: "4px", border: `1px dashed ${BORDER_COL}`,
+                      borderRadius: "4px", border: `1px dashed ${innerBorder}`,
                       height: "44px", position: "relative", overflow: "hidden",
                       background: "linear-gradient(to right, oklch(90% 0.06 300), oklch(92% 0.05 0), oklch(93% 0.05 60), oklch(92% 0.05 120), oklch(91% 0.06 180), oklch(91% 0.06 240), oklch(90% 0.06 300))",
                     }}>
@@ -686,13 +699,13 @@ export default function New() {
                   style={{
                     position: "absolute", left: "2px", top: "9px",
                     width: "calc(100% - 4px)", height: "28px",
-                    background: dark ? "rgba(252,246,239,0.15)" : LIGHT_BG,
+                    background: dark ? "rgba(240,232,220,0.1)" : LIGHT_BG,
                     border: `1px dashed ${BORDER_COL}`,
                     borderRadius: "4px", rotate: -2.42, zIndex: 0, pointerEvents: "none",
                   }}
                 />
                 <button
-                  style={{ ...btnStyle(dark, { background: dark ? "transparent" : LIGHT_BG }), position: "relative", zIndex: 1 }}
+                  style={{ ...btnStyle(dark, { background: dark ? "rgba(240,232,220,0.06)" : LIGHT_BG }), position: "relative", zIndex: 1 }}
                   onClick={(e) => { e.stopPropagation(); setMenuOpen(o => !o); setMenuHovered(false); }}
                 >
                   {menuOpen ? "Close" : "Menu"}
@@ -737,7 +750,7 @@ export default function New() {
             transition={{ duration: 0.15 }}
             style={{
               position: "fixed", top: "12px", right: "12px", zIndex: 20,
-              background: dark ? "transparent" : LIGHT_BTN_BG,
+              background: dark ? "rgba(240,232,220,0.06)" : LIGHT_BTN_BG,
               border: "none", borderRadius: "4px", cursor: "pointer", outline: "none",
               padding: "4px 6px", display: "flex", alignItems: "center", justifyContent: "center",
             }}
@@ -791,11 +804,11 @@ export default function New() {
           ::-webkit-scrollbar { width: 4px; }
           ::-webkit-scrollbar-track { background: transparent; }
           ::-webkit-scrollbar-thumb {
-            background: ${dark ? "rgba(252,246,239,0.18)" : "rgba(85,85,85,0.15)"};
+            background: ${dark ? "rgba(240,232,220,0.18)" : "rgba(85,85,85,0.15)"};
             border-radius: 2px;
           }
           ::-webkit-scrollbar-thumb:hover {
-            background: ${dark ? "rgba(252,246,239,0.32)" : "rgba(85,85,85,0.28)"};
+            background: ${dark ? "rgba(240,232,220,0.32)" : "rgba(85,85,85,0.28)"};
           }
         `}</style>
         <textarea

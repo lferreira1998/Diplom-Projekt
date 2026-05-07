@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useNavigate } from "react-router";
+import AsciiImagePanel from "./components/AsciiImagePanel";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const LIGHT_BG     = "#fcf6ef";
@@ -265,8 +266,6 @@ export default function New() {
 
   // Identity panel
   const [identityOpen, setIdentityOpen]       = useState(false);
-  const [toolImage, setToolImage]             = useState<string | null>(null);
-  const [imageDragOver, setImageDragOver]     = useState(false);
   const [toolName, setToolName]               = useState("");
   const [prompts, setPrompts]                 = useState<string[]>([""]);
   const [toolDescription, setToolDescription] = useState("");
@@ -274,7 +273,6 @@ export default function New() {
   const [text, setText]   = useState("");
   const [scrollY, setScrollY] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { textareaRef.current?.focus(); }, []);
   useEffect(() => {
@@ -484,51 +482,13 @@ export default function New() {
                     Gib deinem Tool ein Bild, einen Namen, Beschreibung und Schreibanstöße.
                   </span>
 
-                  {/* Hidden file input */}
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    style={{ display: "none" }}
-                    onChange={(e) => {
-                      const f = e.target.files?.[0];
-                      if (!f) return;
-                      const reader = new FileReader();
-                      reader.onload = (ev) => setToolImage(ev.target?.result as string);
-                      reader.readAsDataURL(f);
-                    }}
+                  {/* ASCII image panel */}
+                  <AsciiImagePanel
+                    dark={dark}
+                    background={settingsCardBg}
+                    textColor={dark ? DARK_TEXT : LIGHT_TEXT}
+                    fontSans={FONT_SANS}
                   />
-
-                  {/* Photo drop zone */}
-                  <div
-                    onClick={() => fileInputRef.current?.click()}
-                    onDragOver={(e) => { e.preventDefault(); setImageDragOver(true); }}
-                    onDragLeave={() => setImageDragOver(false)}
-                    onDrop={(e) => {
-                      e.preventDefault(); setImageDragOver(false);
-                      const f = e.dataTransfer.files?.[0];
-                      if (!f || !f.type.startsWith("image/")) return;
-                      const reader = new FileReader();
-                      reader.onload = (ev) => setToolImage(ev.target?.result as string);
-                      reader.readAsDataURL(f);
-                    }}
-                    style={{
-                      border: `1px dashed ${imageDragOver ? (dark ? DARK_TEXT : LIGHT_TEXT) : innerBorder}`,
-                      borderRadius: "8px", height: "148px",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      cursor: "pointer", overflow: "hidden",
-                      background: imageDragOver ? (dark ? "rgba(240,232,220,0.06)" : "rgba(85,85,85,0.04)") : "transparent",
-                      transition: "border-color 0.15s, background 0.15s", flexShrink: 0,
-                    }}
-                  >
-                    {toolImage ? (
-                      <img src={toolImage} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                    ) : (
-                      <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: descColor, textAlign: "center", lineHeight: "1.55", whiteSpace: "pre-line" }}>
-                        {"Foto hinzufügen\noder Drag'n'Drop"}
-                      </span>
-                    )}
-                  </div>
 
                   {/* Name section */}
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>

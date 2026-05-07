@@ -2,33 +2,41 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [claude/access-figma-code-fK8az, claude/clarify-session-scope-5R22z, claude/add-correction-page-RZqTR]
+    branches:
+      - claude/access-figma-code-fK8az
+      - claude/clarify-session-scope-5R22z
+      - claude/add-correction-page-RZqTR
+      - claude/add-time-page-deploy-u33h3
+      - claude/add-visibility-page-Ajf8Y
+      - claude/fix-closing-animation-Pv4TW
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+
       - run: npm install
       - run: npm install @supabase/supabase-js
+
       - run: npm run build
         env:
           VITE_SUPABASE_URL: https://lrppyiremhutnwtdhogt.supabase.co
           VITE_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxycHB5aXJlbWh1dG53dGRob2d0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NjgyMjUsImV4cCI6MjA5MzA0NDIyNX0.hetcvdF-C2HpaqbuWcy16GcuGsRtsZ8CZzh7-EHfTX4
-      - uses: actions/configure-pages@v4
-      - uses: actions/upload-pages-artifact@v3
+
+      - name: Deploy to gh-pages branch
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          path: dist
-      - id: deployment
-        uses: actions/deploy-pages@v4
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          publish_branch: gh-pages
+          force_orphan: false

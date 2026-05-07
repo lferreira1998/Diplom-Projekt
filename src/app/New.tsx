@@ -258,7 +258,7 @@ export default function New() {
               overflow: "hidden",
               transition: "background 0.2s, width 0.2s ease",
             }}
-            onClick={(e) => { e.stopPropagation(); setRulesOpen(o => !o); }}
+            onClick={(e) => { e.stopPropagation(); setRulesOpen(o => { if (o) setIdentityOpen(false); return !o; }); }}
           >
             <AnimatePresence mode="wait">
               {rulesOpen ? (
@@ -320,7 +320,7 @@ export default function New() {
                     style={{
                       width: "105px", height: cat.h,
                       borderRadius: cat.br,
-                      background: cat.en === activeCategory ? catActiveBg : catInactiveBg,
+                      background: !identityOpen && cat.en === activeCategory ? catActiveBg : catInactiveBg,
                       border: `1px dashed ${BORDER_COL}`,
                       cursor: "pointer", outline: "none",
                       display: "flex",
@@ -389,6 +389,12 @@ export default function New() {
             {identityOpen ? (
               /* ── Identity panel ──────────────────────────────────────────────── */
               <>
+                <style>{`
+                  .identity-input::placeholder, .identity-textarea::placeholder {
+                    color: ${dark ? "rgba(252,246,239,0.35)" : "rgba(85,85,85,0.38)"};
+                    font-family: ${FONT_SANS};
+                  }
+                `}</style>
                 <div style={{ flex: 1, overflowY: "auto", padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
                   {/* Title — floating ◑ and × are positioned above */}
                   <span style={{ fontFamily: FONT_SERIF, fontSize: "22px", color: dark ? DARK_TEXT : LIGHT_TEXT, lineHeight: "normal" }}>
@@ -459,16 +465,19 @@ export default function New() {
                     </div>
                     {/* Name input */}
                     <input
+                      className="identity-input"
                       placeholder="Name eingeben"
                       value={toolName}
                       onChange={(e) => setToolName(e.target.value)}
                       onClick={(e) => e.stopPropagation()}
                       style={{
+                        width: "100%", boxSizing: "border-box",
                         border: `1px dashed ${BORDER_COL}`, borderRadius: "8px",
                         padding: "10px 14px", background: settingsCardBg,
                         fontFamily: FONT_SANS, fontSize: "15px",
                         color: dark ? DARK_TEXT : LIGHT_TEXT,
                         outline: "none",
+                        transition: "color 0.3s, background 0.3s",
                       }}
                     />
                   </div>
@@ -482,18 +491,20 @@ export default function New() {
                     {prompts.map((p, i) => (
                       <textarea
                         key={i}
+                        className="identity-textarea"
                         placeholder="Beispiel: Schreibe etwas über dich…"
                         value={p}
                         onChange={(e) => setPrompts(ps => ps.map((x, j) => j === i ? e.target.value : x))}
                         onClick={(e) => e.stopPropagation()}
                         rows={3}
                         style={{
+                          width: "100%", boxSizing: "border-box",
                           border: `1px dashed ${BORDER_COL}`, borderRadius: "8px",
                           padding: "10px 14px", background: settingsCardBg,
                           fontFamily: FONT_SANS, fontSize: "15px",
                           color: dark ? DARK_TEXT : LIGHT_TEXT,
-                          outline: "none", resize: "none",
-                          lineHeight: "1.5",
+                          outline: "none", resize: "none", lineHeight: "1.5",
+                          transition: "color 0.3s, background 0.3s",
                         }}
                       />
                     ))}
@@ -512,17 +523,20 @@ export default function New() {
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                     <span style={{ fontFamily: FONT_SERIF, fontSize: "19px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>Beschreibung oder Regel</span>
                     <textarea
+                      className="identity-textarea"
                       placeholder="Beispiel: Dieses Tool hilft anonym in öffentlichen Plätzen zu schreiben"
                       value={toolDescription}
                       onChange={(e) => setToolDescription(e.target.value)}
                       onClick={(e) => e.stopPropagation()}
                       rows={4}
                       style={{
+                        width: "100%", boxSizing: "border-box",
                         border: `1px dashed ${BORDER_COL}`, borderRadius: "8px",
                         padding: "10px 14px", background: settingsCardBg,
                         fontFamily: FONT_SANS, fontSize: "15px",
                         color: dark ? DARK_TEXT : LIGHT_TEXT,
                         outline: "none", resize: "none", lineHeight: "1.5",
+                        transition: "color 0.3s, background 0.3s",
                       }}
                     />
                   </div>

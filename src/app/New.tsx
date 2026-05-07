@@ -36,7 +36,7 @@ const CAT_DESC: Record<string, string> = {
   "Visibility":  "",
   "Correction":  "In üblichen Schreibtools kann man den Text jederzeit editieren, löschen etc. Hier wird löschen unmöglich...oder sichtbar.",
   "Stability":   "",
-  "Position":    "",
+  "Position":    "In üblichen Schreibtools ist der Text linear und wird von links nach rechts geschrieben. Hier ändert sich das.",
   "Look & Feel": "Moderne Schreibtools sind glatt, sauber und statisch. Eigenschaften, die in unserem Denken unmöglich sind.",
 };
 
@@ -206,6 +206,7 @@ export default function New() {
   const [timerEnabled, setTimerEnabled] = useState(false);
   const [deleteMode, setDeleteMode] = useState<DeleteMode>("all");
   const [correctionVisible, setCorrectionVisible] = useState(false);
+  const [positionMode, setPositionMode] = useState<"spiral"|"random"|"custom">("spiral");
   const [grainLevel, setGrainLevel] = useState(40);
   const [textSizeLevel, setTextSizeLevel] = useState(20);
   const [bgHue, setBgHue] = useState<number | null>(null);
@@ -516,6 +517,37 @@ export default function New() {
                       <span style={{ color: "#6b82b0" }}>Mit Tipp-Ex-Schicht</span>{" "}über alten Text. Das Korrigieren hinterlässt Spuren.
                     </span>
                   </div>
+                </div>
+              )}
+
+              {/* ── Position settings ────────────────────────────── */}
+              {activeCategory === "Position" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  {([
+                    { value: "spiral",  label: "Spiraling Text" },
+                    { value: "random",  label: "Text appears random" },
+                    { value: "custom",  label: "Zeichne deine eigene Linie" },
+                  ] as const).map(opt => (
+                    <div
+                      key={opt.value}
+                      onClick={() => setPositionMode(opt.value)}
+                      style={{
+                        display: "flex", alignItems: "center", justifyContent: "space-between",
+                        border: `1px dashed ${BORDER_COL}`,
+                        borderRadius: "4px",
+                        padding: "12px 16px",
+                        cursor: "pointer",
+                        background: positionMode === opt.value
+                          ? (dark ? "rgba(252,246,239,0.08)" : "rgba(85,85,85,0.06)")
+                          : settingsCardBg,
+                      }}
+                    >
+                      <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT, lineHeight: "1.4" }}>
+                        {opt.label}
+                      </span>
+                      <RadioCircle selected={positionMode === opt.value} dark={dark} />
+                    </div>
+                  ))}
                 </div>
               )}
 

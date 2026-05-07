@@ -37,7 +37,7 @@ const CAT_DESC: Record<string, string> = {
   "Correction":  "In üblichen Schreibtools kann man den Text jederzeit editieren, löschen etc. Hier wird löschen unmöglich...oder sichtbar.",
   "Stability":   "",
   "Position":    "",
-  "Look & Feel": "",
+  "Look & Feel": "Moderne Schreibtools sind glatt, sauber und statisch. Eigenschaften, die in unserem Denken unmöglich sind.",
 };
 
 const DELETE_OPTS = [
@@ -206,6 +206,9 @@ export default function New() {
   const [timerEnabled, setTimerEnabled] = useState(false);
   const [deleteMode, setDeleteMode] = useState<DeleteMode>("all");
   const [correctionVisible, setCorrectionVisible] = useState(false);
+  const [grainLevel, setGrainLevel] = useState(40);
+  const [textSizeLevel, setTextSizeLevel] = useState(20);
+  const [bgHue, setBgHue] = useState<number | null>(null);
   const [activeCategory, setActiveCategory] = useState("Time");
   const [text, setText]   = useState("");
   const [scrollY, setScrollY] = useState(0);
@@ -218,7 +221,12 @@ export default function New() {
     return () => window.removeEventListener("scroll", fn);
   }, []);
 
-  const bg             = dark ? DARK_BG : LIGHT_BG;
+  const computedFontSize = 16 + Math.round(textSizeLevel / 100 * 24); // 16px → 40px
+  const bg = dark
+    ? DARK_BG
+    : bgHue !== null
+      ? `oklch(95% 0.035 ${bgHue})`
+      : LIGHT_BG;
   const textColor      = dark ? DARK_TEXT : LIGHT_TEXT;
   const iconColor      = dark ? DARK_TEXT : LIGHT_TEXT;
   const sidebarBg      = dark ? "rgba(30,29,28,0.97)"  : SIDEBAR_BG;
@@ -510,6 +518,110 @@ export default function New() {
                   </div>
                 </div>
               )}
+
+              {/* ── Look & Feel settings ──────────────────────────── */}
+              {activeCategory === "Look & Feel" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  <style>{`
+                    .lf-slider {
+                      -webkit-appearance: none; appearance: none;
+                      width: 100%; height: 2px;
+                      border-radius: 2px; cursor: pointer; outline: none;
+                      background: ${dark ? "rgba(252,246,239,0.25)" : "#c8bfb5"};
+                    }
+                    .lf-slider::-webkit-slider-thumb {
+                      -webkit-appearance: none; appearance: none;
+                      width: 18px; height: 18px; border-radius: 50%;
+                      background: ${dark ? DARK_TEXT : "#888"};
+                      cursor: grab; border: none;
+                    }
+                    .lf-slider::-moz-range-thumb {
+                      width: 18px; height: 18px; border-radius: 50%;
+                      background: ${dark ? DARK_TEXT : "#888"};
+                      cursor: grab; border: none;
+                    }
+                    .hue-slider {
+                      -webkit-appearance: none; appearance: none;
+                      width: 100%; height: 100%;
+                      border-radius: 4px; cursor: crosshair; outline: none;
+                      background: transparent;
+                    }
+                    .hue-slider::-webkit-slider-thumb {
+                      -webkit-appearance: none; appearance: none;
+                      width: 2px; height: 36px; border-radius: 1px;
+                      background: rgba(100,100,100,0.6);
+                      cursor: crosshair; border: none;
+                    }
+                    .hue-slider::-moz-range-thumb {
+                      width: 2px; height: 36px; border-radius: 1px;
+                      background: rgba(100,100,100,0.6);
+                      cursor: crosshair; border: none;
+                    }
+                  `}</style>
+
+                  {/* Körnung & Textur */}
+                  <div style={{
+                    background: settingsCardBg, border: `1px dashed ${BORDER_COL}`,
+                    borderRadius: "8px", padding: "16px 24px",
+                    display: "flex", flexDirection: "column", gap: "16px",
+                  }}>
+                    <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>
+                      Körnung & Textur
+                    </span>
+                    <input
+                      type="range" min={0} max={100} value={grainLevel}
+                      onChange={e => setGrainLevel(Number(e.target.value))}
+                      className="lf-slider"
+                    />
+                  </div>
+
+                  {/* Textgröße */}
+                  <div style={{
+                    background: settingsCardBg, border: `1px dashed ${BORDER_COL}`,
+                    borderRadius: "8px", padding: "16px 24px",
+                    display: "flex", flexDirection: "column", gap: "16px",
+                  }}>
+                    <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>
+                      Textgröße
+                    </span>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <span style={{ fontFamily: FONT_SERIF, fontSize: "12px", color: dark ? DARK_TEXT : LIGHT_TEXT, flexShrink: 0 }}>A</span>
+                      <input
+                        type="range" min={0} max={100} value={textSizeLevel}
+                        onChange={e => setTextSizeLevel(Number(e.target.value))}
+                        className="lf-slider"
+                        style={{ flex: 1 }}
+                      />
+                      <span style={{ fontFamily: FONT_SERIF, fontSize: "28px", color: dark ? DARK_TEXT : LIGHT_TEXT, flexShrink: 0, lineHeight: 1 }}>A</span>
+                    </div>
+                  </div>
+
+                  {/* Hintergrundfarbe */}
+                  <div style={{
+                    background: settingsCardBg, border: `1px dashed ${BORDER_COL}`,
+                    borderRadius: "8px", padding: "16px 24px",
+                    display: "flex", flexDirection: "column", gap: "16px",
+                  }}>
+                    <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>
+                      Hintergrundfarbe anpassen
+                    </span>
+                    <div style={{
+                      borderRadius: "4px", border: `1px dashed ${BORDER_COL}`,
+                      height: "44px", position: "relative", overflow: "hidden",
+                      background: "linear-gradient(to right, oklch(90% 0.06 300), oklch(92% 0.05 0), oklch(93% 0.05 60), oklch(92% 0.05 120), oklch(91% 0.06 180), oklch(91% 0.06 240), oklch(90% 0.06 300))",
+                    }}>
+                      <input
+                        type="range" min={0} max={360} value={bgHue ?? 0}
+                        onChange={e => setBgHue(Number(e.target.value))}
+                        onDoubleClick={() => setBgHue(null)}
+                        className="hue-slider"
+                        style={{ position: "absolute", inset: 0 }}
+                        title="Doppelklick zum Zurücksetzen"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </motion.div>
         )}
@@ -668,7 +780,7 @@ export default function New() {
           style={{
             background: "transparent", border: "none", outline: "none",
             resize: "none", overflow: "hidden",
-            fontFamily: FONT_SERIF, fontSize: "24px", lineHeight: "1.5",
+            fontFamily: FONT_SERIF, fontSize: `${computedFontSize}px`, lineHeight: "1.5",
             color: textColor, width: "100%", minHeight: "calc(100vh - 80px)",
             padding: 0, caretColor: textColor, transition: "color 0.3s",
           }}

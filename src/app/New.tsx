@@ -34,11 +34,20 @@ const SIDEBAR_CATS = [
 const CAT_DESC: Record<string, string> = {
   "Time":        "In Schreibtools spielt Zeit keine Rolle, doch Denken und Sprechen sind zeitlich.",
   "Visibility":  "",
-  "Correction":  "",
+  "Correction":  "In üblichen Schreibtools kann man den Text jederzeit editieren, löschen etc. Hier wird löschen unmöglich...oder sichtbar.",
   "Stability":   "",
   "Position":    "",
   "Look & Feel": "",
 };
+
+const DELETE_OPTS = [
+  { value: "all",      label: "Text ist löschbar" },
+  { value: "none",     label: "Kein Löschen" },
+  { value: "sentence", label: "Nur aktl. Satz löschbar" },
+  { value: "word",     label: "Nur aktl. Wort löschbar" },
+] as const;
+
+type DeleteMode = typeof DELETE_OPTS[number]["value"];
 
 // Closed-state positions for the floating buttons
 const BTN_CLOSED = { dark: 24, rules: 65 };        // left px
@@ -75,6 +84,56 @@ function IconHalfCircle({ color }: { color: string }) {
       <circle cx="8" cy="8" r="6.5" stroke={color} strokeWidth="1.1" />
       <path d="M8 1.5 A6.5 6.5 0 0 0 8 14.5 Z" fill={color} />
     </svg>
+  );
+}
+
+// ── Radio circle ──────────────────────────────────────────────────────────────
+function RadioCircle({ selected, dark }: { selected: boolean; dark: boolean }) {
+  return (
+    <div style={{
+      width: "18px", height: "18px",
+      border: `1.5px solid ${dark ? "rgba(252,246,239,0.45)" : BORDER_COL}`,
+      borderRadius: "50%",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      flexShrink: 0,
+    }}>
+      {selected && (
+        <div style={{
+          width: "10px", height: "10px", borderRadius: "50%",
+          background: dark ? DARK_TEXT : LIGHT_TEXT,
+        }} />
+      )}
+    </div>
+  );
+}
+
+// ── Toggle button ─────────────────────────────────────────────────────────────
+function ToggleBtn({ on, onToggle }: { on: boolean; onToggle: () => void }) {
+  return (
+    <button
+      onClick={onToggle}
+      style={{
+        width: "36px", height: "20px",
+        background: on ? "#555555" : "transparent",
+        border: on ? "none" : `1px dashed ${BORDER_COL}`,
+        borderRadius: "100px",
+        cursor: "pointer", outline: "none",
+        padding: "3px",
+        display: "flex", alignItems: "center", justifyContent: "flex-start",
+        boxSizing: "border-box",
+      }}
+    >
+      <motion.div
+        animate={{ x: on ? 16 : 0 }}
+        transition={{ type: "spring", stiffness: 400, damping: 28 }}
+        style={{
+          width: "14px", height: "14px",
+          background: on ? "transparent" : BORDER_COL,
+          border: on ? "1.5px dashed white" : "none",
+          borderRadius: "7px", flexShrink: 0, boxSizing: "border-box",
+        }}
+      />
+    </button>
   );
 }
 
@@ -145,6 +204,8 @@ export default function New() {
   const [menuHovered, setMenuHovered] = useState(false);
   const [rulesOpen, setRulesOpen]     = useState(false);
   const [timerEnabled, setTimerEnabled] = useState(false);
+  const [deleteMode, setDeleteMode] = useState<DeleteMode>("all");
+  const [correctionVisible, setCorrectionVisible] = useState(false);
   const [activeCategory, setActiveCategory] = useState("Time");
   const [text, setText]   = useState("");
   const [scrollY, setScrollY] = useState(0);
@@ -369,46 +430,86 @@ export default function New() {
                 {CAT_DESC[activeCategory]}
               </span>
 
-              {/* Settings card */}
-              <div style={{
-                background: settingsCardBg,
-                border: `1px dashed ${BORDER_COL}`,
-                borderRadius: "8px",
-                padding: "12px 24px",
-              }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
-                  <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>Timer</span>
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                    <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: dark ? DARK_TEXT : LIGHT_TEXT }}>
-                      {timerEnabled ? "An" : "Aus"}
-                    </span>
-                    <button
-                      onClick={() => setTimerEnabled(t => !t)}
-                      style={{
-                        width: "36px", height: "20px",
-                        background: timerEnabled ? "#555555" : "transparent",
-                        border: timerEnabled ? "none" : `1px dashed ${BORDER_COL}`,
-                        borderRadius: "100px",
-                        cursor: "pointer", outline: "none",
-                        padding: "3px",
-                        display: "flex", alignItems: "center", justifyContent: "flex-start",
-                        boxSizing: "border-box",
-                      }}
-                    >
-                      <motion.div
-                        animate={{ x: timerEnabled ? 16 : 0 }}
-                        transition={{ type: "spring", stiffness: 400, damping: 28 }}
-                        style={{
-                          width: "14px", height: "14px",
-                          background: timerEnabled ? "transparent" : BORDER_COL,
-                          border: timerEnabled ? "1.5px dashed white" : "none",
-                          borderRadius: "7px", flexShrink: 0, boxSizing: "border-box",
-                        }}
-                      />
-                    </button>
+              {/* ── Time settings ────────────────────────────────── */}
+              {activeCategory === "Time" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  <div style={{
+                    background: settingsCardBg, border: `1px dashed ${BORDER_COL}`,
+                    borderRadius: "8px", padding: "12px 24px",
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
+                      <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>Timer</span>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: dark ? DARK_TEXT : LIGHT_TEXT }}>
+                          {timerEnabled ? "An" : "Aus"}
+                        </span>
+                        <ToggleBtn on={timerEnabled} onToggle={() => setTimerEnabled(t => !t)} />
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
+
+              {/* ── Correction settings ───────────────────────────── */}
+              {activeCategory === "Correction" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  {/* Löschen card */}
+                  <div style={{
+                    background: settingsCardBg, border: `1px dashed ${BORDER_COL}`,
+                    borderRadius: "8px", padding: "16px 24px",
+                    display: "flex", flexDirection: "column", gap: "10px",
+                  }}>
+                    <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>
+                      Löschen
+                    </span>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                      {DELETE_OPTS.map(opt => (
+                        <div
+                          key={opt.value}
+                          onClick={() => setDeleteMode(opt.value)}
+                          style={{
+                            display: "flex", alignItems: "center", justifyContent: "space-between",
+                            border: `1px dashed ${BORDER_COL}`,
+                            borderRadius: "4px",
+                            padding: "9px 12px",
+                            cursor: "pointer",
+                            background: deleteMode === opt.value
+                              ? (dark ? "rgba(252,246,239,0.08)" : "rgba(85,85,85,0.06)")
+                              : "transparent",
+                          }}
+                        >
+                          <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>
+                            {opt.label}
+                          </span>
+                          <RadioCircle selected={deleteMode === opt.value} dark={dark} />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Korrigieren sichtbar card */}
+                  <div style={{
+                    background: settingsCardBg, border: `1px dashed ${BORDER_COL}`,
+                    borderRadius: "8px", padding: "16px 24px",
+                    display: "flex", flexDirection: "column", gap: "10px",
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>
+                        Korrigieren sichtbar
+                      </span>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: dark ? DARK_TEXT : LIGHT_TEXT }}>
+                          {correctionVisible ? "An" : "Aus"}
+                        </span>
+                        <ToggleBtn on={correctionVisible} onToggle={() => setCorrectionVisible(v => !v)} />
+                      </div>
+                    </div>
+                    <span style={{ fontFamily: FONT_SANS, fontSize: "14px", lineHeight: "1.45", color: "#7c7c7c" }}>
+                      <span style={{ color: "#6b82b0" }}>Mit Tipp-Ex-Schicht</span>{" "}über alten Text. Das Korrigieren hinterlässt Spuren.
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           </motion.div>
         )}

@@ -33,7 +33,7 @@ const SIDEBAR_CATS = [
 
 const CAT_DESC: Record<string, string> = {
   "Time":        "In Schreibtools spielt Zeit keine Rolle, doch Denken und Sprechen sind zeitlich.",
-  "Visibility":  "",
+  "Visibility":  "In üblichen Schreibtools ist der Text jederzeit sichtbar, doch was passiert, wenn wir damit spielen?",
   "Correction":  "",
   "Stability":   "",
   "Position":    "",
@@ -136,6 +136,23 @@ const NAV_ITEM = {
   exit:    { opacity: 0, y: -10, transition: { duration: 0.1 } },
 };
 
+function RadioCircle({ selected, dark }: { selected: boolean; dark: boolean }) {
+  return (
+    <div style={{
+      width: "18px", height: "18px", borderRadius: "50%", flexShrink: 0,
+      border: `1px dashed ${selected ? (dark ? DARK_TEXT : LIGHT_TEXT) : BORDER_COL}`,
+      display: "flex", alignItems: "center", justifyContent: "center",
+    }}>
+      {selected && (
+        <div style={{
+          width: "8px", height: "8px", borderRadius: "50%",
+          background: dark ? DARK_TEXT : LIGHT_TEXT,
+        }} />
+      )}
+    </div>
+  );
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function New() {
   const navigate = useNavigate();
@@ -144,7 +161,11 @@ export default function New() {
   const [menuOpen, setMenuOpen]       = useState(false);
   const [menuHovered, setMenuHovered] = useState(false);
   const [rulesOpen, setRulesOpen]     = useState(false);
-  const [timerEnabled, setTimerEnabled] = useState(false);
+  const [timerEnabled, setTimerEnabled]     = useState(false);
+  const [timerMode, setTimerMode]           = useState<"fixed" | "free">("fixed");
+  const [timerMinutes, setTimerMinutes]     = useState(10);
+  const [visualTimer, setVisualTimer]       = useState(false);
+  const [visibility, setVisibility]         = useState<"visible" | "invisible" | "sentence" | "word" | "char">("visible");
   const [activeCategory, setActiveCategory] = useState("Time");
   const [text, setText]   = useState("");
   const [scrollY, setScrollY] = useState(0);
@@ -369,46 +390,146 @@ export default function New() {
                 {CAT_DESC[activeCategory]}
               </span>
 
-              {/* Settings card */}
-              <div style={{
-                background: settingsCardBg,
-                border: `1px dashed ${BORDER_COL}`,
-                borderRadius: "8px",
-                padding: "12px 24px",
-              }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
-                  <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>Timer</span>
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                    <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: dark ? DARK_TEXT : LIGHT_TEXT }}>
-                      {timerEnabled ? "An" : "Aus"}
-                    </span>
+              {/* ── Zeit content ─────────────────────────────────────────────────── */}
+              {activeCategory === "Time" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  {/* Timer toggle */}
+                  <div style={{ background: settingsCardBg, border: `1px dashed ${BORDER_COL}`, borderRadius: "8px", padding: "12px 24px" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
+                      <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>Timer</span>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: dark ? DARK_TEXT : LIGHT_TEXT }}>
+                          {timerEnabled ? "An" : "Aus"}
+                        </span>
+                        <button
+                          onClick={() => setTimerEnabled(t => !t)}
+                          style={{ width: "36px", height: "20px", background: timerEnabled ? "#555555" : "transparent", border: timerEnabled ? "none" : `1px dashed ${BORDER_COL}`, borderRadius: "100px", cursor: "pointer", outline: "none", padding: "3px", display: "flex", alignItems: "center", justifyContent: "flex-start", boxSizing: "border-box" }}
+                        >
+                          <motion.div
+                            animate={{ x: timerEnabled ? 16 : 0 }}
+                            transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                            style={{ width: "14px", height: "14px", background: timerEnabled ? "transparent" : BORDER_COL, border: timerEnabled ? "1.5px dashed white" : "none", borderRadius: "7px", flexShrink: 0, boxSizing: "border-box" }}
+                          />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Timer sub-options */}
+                  <AnimatePresence>
+                    {timerEnabled && (
+                      <motion.div
+                        key="timer-opts"
+                        initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+                        transition={{ duration: 0.18 }}
+                        style={{ display: "flex", flexDirection: "column", gap: "8px" }}
+                      >
+                        {/* Mode buttons */}
+                        <div style={{ display: "flex", gap: "8px" }}>
+                          {(["fixed", "free"] as const).map((m) => (
+                            <button
+                              key={m}
+                              onClick={() => setTimerMode(m)}
+                              style={{ flex: 1, height: "36px", background: timerMode === m ? (dark ? "rgba(252,246,239,0.15)" : "rgba(85,85,85,0.08)") : settingsCardBg, border: `1px dashed ${timerMode === m ? (dark ? DARK_TEXT : LIGHT_TEXT) : BORDER_COL}`, borderRadius: "8px", cursor: "pointer", outline: "none", fontFamily: FONT_SANS, fontSize: "14px", color: dark ? DARK_TEXT : LIGHT_TEXT }}
+                            >
+                              {m === "fixed" ? "Feste Zeit" : "Freie Wahl"}
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Minutes input */}
+                        <div style={{ background: settingsCardBg, border: `1px dashed ${BORDER_COL}`, borderRadius: "8px", padding: "12px 24px" }}>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
+                            <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>Minuten</span>
+                            <input
+                              type="text"
+                              value={timerMinutes === 0 ? "" : timerMinutes}
+                              onChange={(e) => { const v = e.target.value; if (v === "") { setTimerMinutes(0); return; } if (/^\d+$/.test(v)) setTimerMinutes(Number(v)); }}
+                              onClick={(e) => e.stopPropagation()}
+                              style={{ width: "48px", height: "28px", background: "transparent", border: `1px dashed ${BORDER_COL}`, borderRadius: "4px", textAlign: "center", fontFamily: FONT_SANS, fontSize: "14px", color: dark ? DARK_TEXT : LIGHT_TEXT, outline: "none" }}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Visual timer toggle */}
+                        <div style={{ background: settingsCardBg, border: `1px dashed ${BORDER_COL}`, borderRadius: "8px", padding: "12px 24px" }}>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
+                            <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>Visueller Timer</span>
+                            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                              <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: dark ? DARK_TEXT : LIGHT_TEXT }}>
+                                {visualTimer ? "An" : "Aus"}
+                              </span>
+                              <button
+                                onClick={() => setVisualTimer(v => !v)}
+                                style={{ width: "36px", height: "20px", background: visualTimer ? "#555555" : "transparent", border: visualTimer ? "none" : `1px dashed ${BORDER_COL}`, borderRadius: "100px", cursor: "pointer", outline: "none", padding: "3px", display: "flex", alignItems: "center", justifyContent: "flex-start", boxSizing: "border-box" }}
+                              >
+                                <motion.div
+                                  animate={{ x: visualTimer ? 16 : 0 }}
+                                  transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                                  style={{ width: "14px", height: "14px", background: visualTimer ? "transparent" : BORDER_COL, border: visualTimer ? "1.5px dashed white" : "none", borderRadius: "7px", flexShrink: 0, boxSizing: "border-box" }}
+                                />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
+
+              {/* ── Sichtbarkeit content ──────────────────────────────────────────── */}
+              {activeCategory === "Visibility" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  {/* Sichtbar / Unsichtbar side-by-side */}
+                  <div style={{ display: "flex", background: settingsCardBg, border: `1px dashed ${BORDER_COL}`, borderRadius: "8px", overflow: "hidden" }}>
+                    {(["visible", "invisible"] as const).map((val, i) => (
+                      <button
+                        key={val}
+                        onClick={() => setVisibility(val)}
+                        style={{
+                          flex: 1, height: "44px",
+                          background: "transparent",
+                          border: "none",
+                          borderLeft: i === 1 ? `1px dashed ${BORDER_COL}` : "none",
+                          cursor: "pointer", outline: "none",
+                          display: "flex", alignItems: "center", justifyContent: "space-between",
+                          padding: "0 16px", boxSizing: "border-box",
+                          fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT,
+                        }}
+                      >
+                        {val === "visible" ? "Sichtbar" : "Unsichtbar"}
+                        <RadioCircle selected={visibility === val} dark={dark} />
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Single-row options */}
+                  {([
+                    { val: "sentence" as const, label: "Nur aktueller Satz sichtbar" },
+                    { val: "word"     as const, label: "Nur aktuelles Wort sichtbar" },
+                    { val: "char"     as const, label: "Nur aktl. Buchstabe sichtbar" },
+                  ]).map(({ val, label }) => (
                     <button
-                      onClick={() => setTimerEnabled(t => !t)}
+                      key={val}
+                      onClick={() => setVisibility(val)}
                       style={{
-                        width: "36px", height: "20px",
-                        background: timerEnabled ? "#555555" : "transparent",
-                        border: timerEnabled ? "none" : `1px dashed ${BORDER_COL}`,
-                        borderRadius: "100px",
+                        background: settingsCardBg,
+                        border: `1px dashed ${BORDER_COL}`,
+                        borderRadius: "8px",
+                        height: "44px", padding: "0 16px",
+                        display: "flex", alignItems: "center", justifyContent: "space-between",
                         cursor: "pointer", outline: "none",
-                        padding: "3px",
-                        display: "flex", alignItems: "center", justifyContent: "flex-start",
+                        fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT,
                         boxSizing: "border-box",
                       }}
                     >
-                      <motion.div
-                        animate={{ x: timerEnabled ? 16 : 0 }}
-                        transition={{ type: "spring", stiffness: 400, damping: 28 }}
-                        style={{
-                          width: "14px", height: "14px",
-                          background: timerEnabled ? "transparent" : BORDER_COL,
-                          border: timerEnabled ? "1.5px dashed white" : "none",
-                          borderRadius: "7px", flexShrink: 0, boxSizing: "border-box",
-                        }}
-                      />
+                      {label}
+                      <RadioCircle selected={visibility === val} dark={dark} />
                     </button>
-                  </div>
+                  ))}
                 </div>
-              </div>
+              )}
             </div>
           </motion.div>
         )}

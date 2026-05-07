@@ -179,7 +179,10 @@ export default function New() {
         {visible && (
           <motion.button
             key="float-dark"
+            initial={false}
+            animate={{ x: rulesOpen ? BTN_OPEN.dark - BTN_CLOSED.dark : 0 }}
             exit={{ opacity: 0, transition: { duration: 0.12 } }}
+            transition={SPRING}
             style={{
               position: "fixed",
               top: "24px",
@@ -205,7 +208,10 @@ export default function New() {
         {visible && (
           <motion.button
             key="float-rules"
+            initial={false}
+            animate={{ x: rulesOpen ? BTN_OPEN.rules - BTN_CLOSED.rules : 0 }}
             exit={{ opacity: 0, transition: { duration: 0.12 } }}
+            transition={SPRING}
             style={{
               position: "fixed",
               top: "24px",
@@ -222,7 +228,7 @@ export default function New() {
               lineHeight: "normal",
               zIndex: 25,
               overflow: "hidden",
-              transition: "background 0.2s, width 0.18s ease",
+              transition: "background 0.2s, width 0.2s ease",
             }}
             onClick={(e) => { e.stopPropagation(); setRulesOpen(o => !o); }}
           >
@@ -415,9 +421,10 @@ export default function New() {
             key="right-full"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            style={{ position: "fixed", top: "24px", right: "24px", display: "flex", flexDirection: "column", gap: "16px", alignItems: "flex-end", zIndex: 20 }}
+            style={{ position: "fixed", top: "24px", right: "24px", display: "flex", flexDirection: "row", alignItems: "flex-start", gap: "10px", zIndex: 20 }}
           >
-            <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+            {/* Close/Menu + nav items — right edge of this column = right edge of Close button */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px", alignItems: "flex-end" }}>
               <div
                 style={{ position: "relative" }}
                 onMouseEnter={() => { if (!menuOpen) setMenuHovered(true); }}
@@ -446,36 +453,37 @@ export default function New() {
                   {menuOpen ? "Close" : "Menu"}
                 </button>
               </div>
-              <button
-                style={btnStyle(dark)}
-                onClick={(e) => { e.stopPropagation(); setVisible(false); setMenuOpen(false); }}
-              >
-                <IconEyeClosed color={iconColor} />
-              </button>
+              <AnimatePresence>
+                {menuOpen && (
+                  <motion.div
+                    key="nav"
+                    variants={NAV_CONTAINER}
+                    initial="hidden" animate="visible" exit="exit"
+                    style={{ display: "flex", flexDirection: "column", gap: "8px", alignItems: "flex-end" }}
+                  >
+                    {(["Create", "Playground", "About"] as const).map((label, i) => (
+                      <motion.button
+                        key={label}
+                        variants={NAV_ITEM}
+                        style={navItemStyle(dark, i === 0)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setMenuOpen(false);
+                          if (label !== "Create") navigate(NAV_ROUTES[label]);
+                        }}
+                      >{label}</motion.button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-            <AnimatePresence>
-              {menuOpen && (
-                <motion.div
-                  key="nav"
-                  variants={NAV_CONTAINER}
-                  initial="hidden" animate="visible" exit="exit"
-                  style={{ display: "flex", flexDirection: "column", gap: "8px", alignItems: "flex-end" }}
-                >
-                  {(["Create", "Playground", "About"] as const).map((label, i) => (
-                    <motion.button
-                      key={label}
-                      variants={NAV_ITEM}
-                      style={navItemStyle(dark, i === 0)}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setMenuOpen(false);
-                        if (label !== "Create") navigate(NAV_ROUTES[label]);
-                      }}
-                    >{label}</motion.button>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {/* Eye button — anchored to the right, separate from nav alignment */}
+            <button
+              style={btnStyle(dark)}
+              onClick={(e) => { e.stopPropagation(); setVisible(false); setMenuOpen(false); }}
+            >
+              <IconEyeClosed color={iconColor} />
+            </button>
           </motion.div>
         ) : (
           <motion.button

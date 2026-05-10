@@ -1152,63 +1152,69 @@ export default function New() {
             key="right-full"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            style={{ position: "fixed", top: "24px", right: "24px", display: "flex", flexDirection: "row", alignItems: "flex-start", gap: "10px", zIndex: 20 }}
+            style={{ position: "fixed", top: "24px", right: "24px", display: "flex", flexDirection: "row", alignItems: "center", gap: "10px", zIndex: 20 }}
           >
-            <div style={{ display: "flex", flexDirection: "column", gap: "16px", alignItems: "flex-end" }}>
-              {/* Timer countdown display */}
-              {timerEnabled && timerRunning && (
-                <div style={{
-                  height: "31px", padding: "0 12px",
-                  display: "flex", alignItems: "center",
-                  fontFamily: FONT_SANS, fontSize: "13px",
-                  color: timeLeft <= 10 ? "#e05252" : (dark ? DARK_TEXT : LIGHT_TEXT),
-                  opacity: 0.7, letterSpacing: "0.04em",
-                  transition: "color 0.3s",
-                }}>
-                  {formatTime(timeLeft)}
-                </div>
-              )}
-              {/* Word count */}
-              {positions.length > 0 && !timerRunning && (
-                <div style={{ height: "31px", padding: "0 12px", display: "flex", alignItems: "center", fontFamily: FONT_SANS, fontSize: "13px", color: dark ? DARK_MUTED : "#9a9daa" }}>
-                  {wordCount} {wordCount === 1 ? "word" : "words"}
-                </div>
-              )}
-              <div
-                style={{ position: "relative" }}
-                onMouseEnter={() => { if (!menuOpen) setMenuHovered(true); }}
-                onMouseLeave={() => setMenuHovered(false)}
-              >
-                <motion.div
-                  aria-hidden
-                  animate={
-                    menuOpen
-                      ? { y: 8, opacity: 0, transition: { y: { duration: 0.22, ease: "easeOut" }, opacity: { duration: 0.1 } } }
-                      : menuHovered ? { y: 0, opacity: 1 } : { y: -6, opacity: 0 }
-                  }
-                  transition={{ duration: 0.22, ease: "easeOut" }}
-                  style={{
-                    position: "absolute", left: "2px", top: "9px",
-                    width: "calc(100% - 4px)", height: "28px",
-                    background: dark ? "rgba(240,232,220,0.1)" : LIGHT_BG,
-                    border: `1px dashed ${BORDER_COL}`,
-                    borderRadius: "4px", rotate: -2.42, zIndex: 0, pointerEvents: "none",
-                  }}
-                />
-                <button
-                  style={{ ...btnStyle(dark, { background: dark ? "rgba(240,232,220,0.06)" : LIGHT_BG }), position: "relative", zIndex: 1 }}
-                  onClick={(e) => { e.stopPropagation(); setMenuOpen(o => !o); setMenuHovered(false); }}
-                >
-                  {menuOpen ? "Close" : "Menu"}
-                </button>
+            {/* Timer countdown */}
+            {timerEnabled && timerRunning && (
+              <div style={{
+                height: "31px", padding: "0 12px",
+                display: "flex", alignItems: "center",
+                fontFamily: FONT_SANS, fontSize: "13px",
+                color: timeLeft <= 10 ? "#e05252" : (dark ? DARK_TEXT : LIGHT_TEXT),
+                opacity: 0.7, letterSpacing: "0.04em",
+                transition: "color 0.3s",
+              }}>
+                {formatTime(timeLeft)}
               </div>
+            )}
+            {/* Word count */}
+            {positions.length > 0 && !timerRunning && (
+              <div style={{ height: "31px", padding: "0 12px", display: "flex", alignItems: "center", fontFamily: FONT_SANS, fontSize: "13px", color: dark ? DARK_MUTED : "#9a9daa" }}>
+                {wordCount} {wordCount === 1 ? "word" : "words"}
+              </div>
+            )}
+            {/* Eye toggle */}
+            <button
+              style={btnStyle(dark)}
+              onClick={(e) => { e.stopPropagation(); setVisible(false); setMenuOpen(false); }}
+            >
+              <IconEyeClosed color={iconColor} />
+            </button>
+            {/* Menu button + dropdown */}
+            <div
+              style={{ position: "relative" }}
+              onMouseEnter={() => { if (!menuOpen) setMenuHovered(true); }}
+              onMouseLeave={() => setMenuHovered(false)}
+            >
+              <motion.div
+                aria-hidden
+                animate={
+                  menuOpen
+                    ? { y: 8, opacity: 0, transition: { y: { duration: 0.22, ease: "easeOut" }, opacity: { duration: 0.1 } } }
+                    : menuHovered ? { y: 0, opacity: 1 } : { y: -6, opacity: 0 }
+                }
+                transition={{ duration: 0.22, ease: "easeOut" }}
+                style={{
+                  position: "absolute", left: "2px", top: "9px",
+                  width: "calc(100% - 4px)", height: "28px",
+                  background: dark ? "rgba(240,232,220,0.1)" : LIGHT_BG,
+                  border: `1px dashed ${BORDER_COL}`,
+                  borderRadius: "4px", rotate: -2.42, zIndex: 0, pointerEvents: "none",
+                }}
+              />
+              <button
+                style={{ ...btnStyle(dark, { background: dark ? "rgba(240,232,220,0.06)" : LIGHT_BG }), position: "relative", zIndex: 1 }}
+                onClick={(e) => { e.stopPropagation(); setMenuOpen(o => !o); setMenuHovered(false); }}
+              >
+                {menuOpen ? "Close" : "Menu"}
+              </button>
               <AnimatePresence>
                 {menuOpen && (
                   <motion.div
                     key="nav"
                     variants={NAV_CONTAINER}
                     initial="hidden" animate="visible" exit="exit"
-                    style={{ display: "flex", flexDirection: "column", gap: "8px", alignItems: "flex-end" }}
+                    style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, display: "flex", flexDirection: "column", gap: "8px", alignItems: "flex-end" }}
                   >
                     {(["Create", "Playground", "About"] as const).map((label, i) => (
                       <motion.button
@@ -1226,12 +1232,6 @@ export default function New() {
                 )}
               </AnimatePresence>
             </div>
-            <button
-              style={btnStyle(dark)}
-              onClick={(e) => { e.stopPropagation(); setVisible(false); setMenuOpen(false); }}
-            >
-              <IconEyeClosed color={iconColor} />
-            </button>
           </motion.div>
         ) : (
           <motion.button

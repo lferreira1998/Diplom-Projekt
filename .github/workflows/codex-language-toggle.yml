@@ -1,0 +1,237 @@
+name: Codex language toggle patch
+
+on:
+  push:
+    branches:
+      - claude/access-figma-code-fK8az
+    paths:
+      - .github/workflows/codex-language-toggle.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: claude/access-figma-code-fK8az
+          fetch-depth: 2
+
+      - name: Patch New page
+        run: |
+          node <<'JS'
+          const fs = require('fs');
+          const file = 'src/app/New.tsx';
+          let src = fs.readFileSync(file, 'utf8');
+
+          const languageBlock = String.raw`
+type Lang = "de" | "en";
+
+const COPY_PAIRS: Array<{ de: string; en: string }> = [
+  { de: "Zeit", en: "Time" },
+  { de: "Sichtbarkeit", en: "Visibility" },
+  { de: "Korrigieren", en: "Correction" },
+  { de: "Stabilität", en: "Stability" },
+  { de: "Position", en: "Position" },
+  { de: "Aussehen & Gefühl", en: "Look & Feel" },
+  { de: "Regeln", en: "Rules" },
+  { de: "Ändere sie.", en: "Change them." },
+  { de: "Name,\nBeschreibung\n& mehr", en: "Name,\nDescription\n& more" },
+  { de: "Name, Beschreibung & mehr", en: "Name, Description & more" },
+  { de: "Identität.", en: "Identity." },
+  { de: "Gib deinem Tool ein Bild, einen Namen, eine Beschreibung und Schreibanstöße.", en: "Give your tool an image, a name, a description and writing prompts." },
+  { de: "Foto hinzufügen", en: "Add photo" },
+  { de: "oder Drag and Drop", en: "or drag and drop" },
+  { de: "ersetzen", en: "replace" },
+  { de: "Helligkeit", en: "Brightness" },
+  { de: "Bildfarbe", en: "Image color" },
+  { de: "ASCII-Bild speichern", en: "Save ASCII image" },
+  { de: "Name", en: "Name" },
+  { de: "Beende mit dem Namen den Satz “Write and think…”", en: "Use the name to finish the sentence “Write and think…”" },
+  { de: "Schreiben und denken…", en: "Write and think…" },
+  { de: "Name eingeben", en: "Enter name" },
+  { de: "Schreibanstoß oder Aufgabe", en: "Writing prompt or task" },
+  { de: "Das hilft Menschen beim Schreiben. Du kannst auch mehrere anlegen.", en: "This helps people write. You can add more than one." },
+  { de: "Beispiel: Schreibe etwas über dich…", en: "Example: Write something about yourself…" },
+  { de: "+ Weiteren hinzufügen", en: "+ Add another" },
+  { de: "Beschreibung oder Regel", en: "Description or rule" },
+  { de: "Beispiel: Dieses Tool hilft anonym in öffentlichen Plätzen zu schreiben", en: "Example: This tool helps people write anonymously in public places" },
+  { de: "In üblichen Schreibtools spielt Zeit keine Rolle, doch unser Denken und Sprechen sind zeitlich.", en: "In standard writing tools, time does not matter, but our thinking and speaking are temporal." },
+  { de: "In üblichen Schreibtools ist der Text jederzeit sichtbar, doch was passiert, wenn wir damit spielen?", en: "In standard writing tools, text is always visible, but what happens when we play with that?" },
+  { de: "In üblichen Schreibtools kann man den Text jederzeit editieren, löschen etc. Hier wird löschen unmöglich...oder sichtbar.", en: "In standard writing tools, you can edit, delete, and change text at any time. Here, deleting becomes impossible...or visible." },
+  { de: "In üblichen Schreibtools ist der Text stabil und permanent. Doch Gedanken sind flüchtig und vergehen.", en: "In standard writing tools, text is stable and permanent. But thoughts are fleeting and disappear." },
+  { de: "In üblichen Schreibtools ist der Text linear und wird von links nach rechts geschrieben. Hier ändert sich das.", en: "In standard writing tools, text is linear and written from left to right. Here, that changes." },
+  { de: "Moderne Schreibtools sind glatt, sauber und statisch. Eigenschaften, die in unserem Denken unmöglich sind.", en: "Modern writing tools are smooth, clean and static. Qualities that are impossible in our thinking." },
+  { de: "An", en: "On" },
+  { de: "Aus", en: "Off" },
+  { de: "Zeitmodus", en: "Time mode" },
+  { de: "Feste Schreibzeit", en: "Fixed writing time" },
+  { de: "Freies Schreiben", en: "Free writing" },
+  { de: "Minuten", en: "Minutes" },
+  { de: "Visueller Timer", en: "Visual timer" },
+  { de: "Cursor läuft weiter", en: "Cursor keeps moving" },
+  { de: "Der Cursor läuft automatisch weiter, egal ob man schreibt oder nicht. Damit werden Pausen sichtbar.", en: "The cursor keeps moving automatically, whether you write or not. This makes pauses visible." },
+  { de: "Sichtbar", en: "Visible" },
+  { de: "Unsichtbar", en: "Invisible" },
+  { de: "Nur aktueller Satz sichtbar", en: "Only current sentence visible" },
+  { de: "Nur aktuelles Wort sichtbar", en: "Only current word visible" },
+  { de: "Nur aktl. Buchstabe sichtbar", en: "Only current letter visible" },
+  { de: "Löschen", en: "Deleting" },
+  { de: "Text ist löschbar", en: "Text can be deleted" },
+  { de: "Kein Löschen", en: "No deleting" },
+  { de: "Nur aktl. Satz löschbar", en: "Only current sentence can be deleted" },
+  { de: "Nur aktl. Wort löschbar", en: "Only current word can be deleted" },
+  { de: "Korrigieren sichtbar", en: "Corrections visible" },
+  { de: "Mit Tipp-Ex-Schicht", en: "With a correction-fluid layer" },
+  { de: "über alten Text. Das Korrigieren hinterlässt Spuren.", en: "over old text. Correcting leaves traces." },
+  { de: "Text fliegt davon", en: "Text flies away" },
+  { de: "Sätze", en: "Sentences" },
+  { de: "Wörter", en: "Words" },
+  { de: "Buchstabe", en: "Letter" },
+  { de: "Zeitpunkt des Fliegens", en: "Moment of flying away" },
+  { de: "Schnelligkeit des Fliegens", en: "Speed of flying away" },
+  { de: "Text verblasst", en: "Text fades" },
+  { de: "Zeitpunkt des Verblassens", en: "Moment of fading" },
+  { de: "Schnelligkeit des Verblassens", en: "Speed of fading" },
+  { de: "Spiraling Text", en: "Spiraling Text" },
+  { de: "Text erscheint zufällig", en: "Text appears random" },
+  { de: "Text appears random", en: "Text appears random" },
+  { de: "Zeichne deine eigene Linie", en: "Draw your own line" },
+  { de: "Körnung & Textur", en: "Grain & texture" },
+  { de: "Textgröße", en: "Text size" },
+  { de: "Hintergrundfarbe anpassen", en: "Adjust background color" },
+  { de: "Doppelklick zum Zurücksetzen", en: "Double-click to reset" },
+  { de: "Menü", en: "Menu" },
+  { de: "Menu", en: "Menu" },
+  { de: "Schließen", en: "Close" },
+  { de: "Close", en: "Close" },
+  { de: "Erstellen", en: "Create" },
+  { de: "Create", en: "Create" },
+  { de: "Spielwiese", en: "Playground" },
+  { de: "Playground", en: "Playground" },
+  { de: "Über das Projekt", en: "About" },
+  { de: "About", en: "About" },
+  { de: "Wort", en: "word" },
+  { de: "Wörter", en: "words" },
+  { de: "word", en: "word" },
+  { de: "words", en: "words" },
+  { de: "Zeit abgelaufen.", en: "Time is up." },
+  { de: "Dein Text wartet hinter dem Dunkel.", en: "Your text waits behind the darkness." },
+  { de: "Text löschen", en: "Delete text" },
+  { de: "Text sehen", en: "Show text" },
+  { de: "Text kopieren", en: "Copy text" },
+  { de: "Kopiert ✓", en: "Copied ✓" },
+  { de: "Entdecke neue Denkweisen, indem du die Regeln klassischer Schreibtools brichst...", en: "Explore new ways of thinking by breaking the rules of standard writing tools..." },
+  { de: "Zum Englischen wechseln", en: "Switch to English" },
+  { de: "Auf Deutsch wechseln", en: "Switch to German" },
+];
+
+const normalizeCopy = (value: string) => value.trim().replace(/\s+/g, " ");
+const COPY_MAPS: Record<Lang, Map<string, string>> = {
+  de: new Map(COPY_PAIRS.flatMap(({ de, en }) => [[normalizeCopy(de), de], [normalizeCopy(en), de]])),
+  en: new Map(COPY_PAIRS.flatMap(({ de, en }) => [[normalizeCopy(de), en], [normalizeCopy(en), en]])),
+};
+
+function translateCopy(value: string, lang: Lang) {
+  const normalized = normalizeCopy(value);
+  let next = COPY_MAPS[lang].get(normalized);
+  if (!next) {
+    const afterMatch = normalized.match(/^After (\d+) min$/);
+    const nachMatch = normalized.match(/^Nach (\d+) min$/);
+    if (lang === "de" && afterMatch) next = `Nach ${afterMatch[1]} min`;
+    if (lang === "en" && nachMatch) next = `After ${nachMatch[1]} min`;
+  }
+  if (!next) return value;
+  const leading = value.match(/^\s*/)?.[0] ?? "";
+  const trailing = value.match(/\s*$/)?.[0] ?? "";
+  return `${leading}${next}${trailing}`;
+}
+`;
+
+          if (!src.includes('type Lang = "de" | "en";')) {
+            const marker = 'export default function New()';
+            if (src.includes(marker)) src = src.replace(marker, `${languageBlock}\n${marker}`);
+          }
+
+          if (!src.includes('const [lang, setLang]')) {
+            src = src.replace(
+              '  const navigate = useNavigate();\n',
+              '  const navigate = useNavigate();\n  const [lang, setLang] = useState<Lang>("de");\n'
+            );
+          }
+
+          if (!src.includes('MutationObserver(() => {\n      if (queued) return;')) {
+            const effect = String.raw`  useEffect(() => {
+    const root = document.body;
+    if (!root) return;
+
+    let queued = false;
+    const skipTags = new Set(["SCRIPT", "STYLE", "TEXTAREA", "INPUT"]);
+    const applyLanguage = () => {
+      queued = false;
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      let node = walker.nextNode();
+      while (node) {
+        const parent = node.parentElement;
+        if (parent && !skipTags.has(parent.tagName) && !parent.closest('[contenteditable="true"]')) {
+          const next = translateCopy(node.textContent ?? "", lang);
+          if (next !== node.textContent) node.textContent = next;
+        }
+        node = walker.nextNode();
+      }
+
+      root.querySelectorAll<HTMLElement>("[placeholder], [title], [aria-label]").forEach((el) => {
+        (["placeholder", "title", "aria-label"] as const).forEach((attr) => {
+          const value = el.getAttribute(attr);
+          if (!value) return;
+          const next = translateCopy(value, lang);
+          if (next !== value) el.setAttribute(attr, next);
+        });
+      });
+    };
+
+    applyLanguage();
+    const observer = new MutationObserver(() => {
+      if (queued) return;
+      queued = true;
+      window.requestAnimationFrame(applyLanguage);
+    });
+    observer.observe(root, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ["placeholder", "title", "aria-label"] });
+    return () => observer.disconnect();
+  }, [lang]);
+
+`;
+            const marker = '  // ── Computed values';
+            if (src.includes(marker)) src = src.replace(marker, effect + marker);
+          }
+
+          if (!src.includes('setLang(current => current === "de" ? "en" : "de")')) {
+            const languageButton = String.raw`            <button
+              style={btnStyle(dark, { minWidth: "48px", background: dark ? "rgba(240,232,220,0.06)" : LIGHT_BG })}
+              title={lang === "de" ? "Zum Englischen wechseln" : "Auf Deutsch wechseln"}
+              onClick={(e) => { e.stopPropagation(); setLang(current => current === "de" ? "en" : "de"); }}
+            >
+              {lang === "de" ? "DE" : "ENG"}
+            </button>
+`;
+            const marker = '            {/* Menu button + dropdown */}';
+            if (src.includes(marker)) src = src.replace(marker, languageButton + marker);
+          }
+
+          fs.writeFileSync(file, src);
+          JS
+
+      - name: Commit patch and remove temporary workflow
+        run: |
+          rm -f .github/workflows/codex-language-toggle.yml
+          git config user.name "codex-cloud"
+          git config user.email "codex-cloud@users.noreply.github.com"
+          git add src/app/New.tsx .github/workflows/codex-language-toggle.yml
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git commit -m "Add DE ENG language toggle"
+          git push origin HEAD:claude/access-figma-code-fK8az

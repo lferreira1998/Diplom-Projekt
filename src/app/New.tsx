@@ -1,13 +1,14 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import AsciiImagePanel from "./components/AsciiImagePanel";
 import {
   WritingZone,
   type Position,
   extractText,
 } from "./projects/parametrischestool/components/writing-zone";
+import { saveNewTool, getNewToolById } from "./utils/storage";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const LIGHT_BG     = "#fcf6ef";
@@ -26,7 +27,7 @@ const FONT_SANS  = "'general-sans', 'Space Grotesk', sans-serif";
 
 const NAV_ROUTES: Record<string, string> = {
   Create:     "/new",
-  Playground: "/parametrisches-tool",
+  Playground: "/playground",
   About:      "/about-the-project",
 };
 
@@ -464,9 +465,114 @@ const NAV_ITEM = {
   exit:    { opacity: 0, y: -10, transition: { duration: 0.1 } },
 };
 
+// ── Session ID ────────────────────────────────────────────────────────────────
+function getOrCreateSessionId(): string {
+  const key = "diplom_session_id";
+  let id = localStorage.getItem(key);
+  if (!id) { id = crypto.randomUUID(); localStorage.setItem(key, id); }
+  return id;
+}
+
+// ── Saved modal ───────────────────────────────────────────────────────────────
+function SavedModal({ dark, savedId, lang, onClose, onPlayground }: {
+  dark: boolean; savedId: string; lang: "de" | "en";
+  onClose: () => void; onPlayground: () => void;
+}) {
+  const navigate = useNavigate();
+  const [copied, setCopied] = useState(false);
+  const link = `${window.location.origin}/Diplom-Projekt/new?tool=${savedId}`;
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(link).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2200);
+    });
+  };
+
+  const DE = lang === "de";
+
+  return createPortal(
+    <motion.div
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      transition={{ duration: 0.25 }}
+      style={{
+        position: "fixed", inset: 0, zIndex: 400,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        backgroundColor: dark ? "rgba(30,29,26,0.9)" : "rgba(252,246,239,0.9)",
+        backdropFilter: "blur(6px)",
+      }}
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 14, scale: 0.97 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 14, scale: 0.97 }}
+        transition={{ duration: 0.25, delay: 0.06 }}
+        onClick={e => e.stopPropagation()}
+        style={{
+          display: "flex", flexDirection: "column", alignItems: "center", gap: "24px",
+          background: dark ? "#2d2b28" : LIGHT_BG,
+          border: `1px dashed ${dark ? DARK_BORDER : BORDER_COL}`,
+          borderRadius: "16px", padding: "36px 44px",
+          maxWidth: "340px", width: "90vw", boxSizing: "border-box",
+        }}
+      >
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
+          <span style={{ fontFamily: FONT_SERIF, fontSize: "24px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>
+            {DE ? "Gespeichert." : "Saved."}
+          </span>
+          <span style={{ fontFamily: FONT_SANS, fontSize: "13px", color: dark ? DARK_MUTED : "#9a9daa", textAlign: "center" }}>
+            {DE ? "Dein Tool ist bereit." : "Your tool is ready."}
+          </span>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px", width: "100%" }}>
+          <button
+            onClick={onPlayground}
+            style={{
+              fontFamily: FONT_SANS, fontSize: "14px", padding: "10px 18px",
+              borderRadius: "8px", border: `1px dashed ${dark ? DARK_BORDER : BORDER_COL}`,
+              background: "transparent", color: dark ? DARK_TEXT : LIGHT_TEXT,
+              cursor: "pointer", textAlign: "center",
+            }}
+          >{DE ? "Im Playground ansehen" : "View in Playground"}</button>
+          <button
+            onClick={handleCopyLink}
+            style={{
+              fontFamily: FONT_SANS, fontSize: "14px", padding: "10px 18px",
+              borderRadius: "8px", border: `1px solid ${dark ? "rgba(240,232,220,0.4)" : BORDER_COL}`,
+              background: dark ? "rgba(240,232,220,0.06)" : "rgba(85,85,85,0.04)",
+              color: dark ? DARK_TEXT : LIGHT_TEXT,
+              cursor: "pointer", textAlign: "center",
+            }}
+          >{copied ? (DE ? "Kopiert ✓" : "Copied ✓") : (DE ? "Link kopieren" : "Copy link")}</button>
+          <button
+            onClick={() => navigate(`/new?tool=${savedId}`)}
+            style={{
+              fontFamily: FONT_SANS, fontSize: "14px", padding: "10px 18px",
+              borderRadius: "8px", border: "none",
+              background: dark ? DARK_TEXT : LIGHT_TEXT,
+              color: dark ? DARK_BG : LIGHT_BG,
+              cursor: "pointer", textAlign: "center",
+            }}
+          >{DE ? "Benutzen" : "Use"}</button>
+        </div>
+      </motion.div>
+    </motion.div>,
+    document.body
+  );
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function New() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const sessionId = useMemo(() => getOrCreateSessionId(), []);
+  const asciiSnapshotRef = useRef<() => string | null>(() => null);
+
+  // Save state
+  const [saving, setSaving]         = useState(false);
+  const [savedId, setSavedId]       = useState<string | null>(null);
+  const [saveError, setSaveError]   = useState<string | null>(null);
 
   // UI
   const [lang, setLang]               = useState<"de" | "en">("de");
@@ -560,6 +666,40 @@ export default function New() {
     }
   }, [positions.length, timerUserReset, timerEnabled, timerMinutes, timerRunning]);
 
+  // Load tool from URL ?tool=ID
+  useEffect(() => {
+    const toolId = searchParams.get("tool");
+    if (!toolId) return;
+    getNewToolById(toolId).then(tool => {
+      if (!tool) return;
+      const p = tool.params;
+      setToolName(p.displayName ?? tool.name);
+      setToolDescription(tool.description);
+      setPrompts(p.prompts?.length ? p.prompts : [""]);
+      setTimerEnabled(p.timerEnabled ?? false);
+      setTimerMode((p.timerMode as "fixed" | "free") ?? "fixed");
+      setTimerMinutes(p.timerMinutes ?? 10);
+      setVisualTimer(p.visualTimer ?? false);
+      setTimerUserReset(p.timerUserReset ?? false);
+      setCursorRunning(p.cursorRunning ?? false);
+      setVisibility((p.visibility as typeof visibility) ?? "visible");
+      setDeleteMode((p.deleteMode as typeof deleteMode) ?? "all");
+      setCorrectionVisible(p.correctionVisible ?? false);
+      setTextFliegtEnabled(p.textFliegtEnabled ?? false);
+      setFliegtUnit((p.fliegtUnit as typeof fliegtUnit) ?? "Sätze");
+      setFliegtZeitpunkt(p.fliegtZeitpunkt ?? 2);
+      setFliegtSchnelligkeit(p.fliegtSchnelligkeit ?? 3);
+      setTextVerblassEnabled(p.textVerblassEnabled ?? false);
+      setVerblassZeitpunkt(p.verblassZeitpunkt ?? 2);
+      setVerblassSchnelligkeit(p.verblassSchnelligkeit ?? 3);
+      setPositionMode((p.positionMode as typeof positionMode) ?? "spiral");
+      setGrainLevel(p.grainLevel ?? 0);
+      setTextSizeLevel(p.textSizeLevel ?? 20);
+      setBgHue(p.bgHue ?? null);
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleUpdate = useCallback((newPos: Position[], newCursor: number) => {
     setPositions(newPos); setCursor(newCursor);
   }, []);
@@ -579,6 +719,41 @@ export default function New() {
   }, []);
 
   const handleReveal = useCallback(() => setTextRevealed(true), []);
+
+  const handleSave = useCallback(async () => {
+    if (!toolName.trim()) {
+      setSaveError(lang === "de" ? "Bitte gib deinem Tool einen Namen." : "Please give your tool a name.");
+      return;
+    }
+    setSaving(true);
+    setSaveError(null);
+    try {
+      const asciiImage = asciiSnapshotRef.current?.() ?? null;
+      const id = await saveNewTool(toolName, toolDescription, {
+        source: "new",
+        sessionId,
+        prompts,
+        asciiImage,
+        timerEnabled, timerMode, timerMinutes, visualTimer, timerUserReset, cursorRunning,
+        visibility, deleteMode, correctionVisible,
+        textFliegtEnabled, fliegtUnit, fliegtZeitpunkt, fliegtSchnelligkeit,
+        textVerblassEnabled, verblassZeitpunkt, verblassSchnelligkeit,
+        positionMode, grainLevel, textSizeLevel, bgHue,
+      });
+      setSavedId(id);
+    } catch {
+      setSaveError(lang === "de" ? "Fehler beim Speichern. Bitte erneut versuchen." : "Error saving. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  }, [
+    toolName, toolDescription, prompts, sessionId, lang,
+    timerEnabled, timerMode, timerMinutes, visualTimer, timerUserReset, cursorRunning,
+    visibility, deleteMode, correctionVisible,
+    textFliegtEnabled, fliegtUnit, fliegtZeitpunkt, fliegtSchnelligkeit,
+    textVerblassEnabled, verblassZeitpunkt, verblassSchnelligkeit,
+    positionMode, grainLevel, textSizeLevel, bgHue,
+  ]);
 
   // ── Computed values ──────────────────────────────────────────────────────
   const computedFontSize = 14 + Math.round(textSizeLevel / 100 * 22);
@@ -821,15 +996,19 @@ export default function New() {
                   letterSpacing: "-0.16px", lineHeight: "22px",
                   textAlign: "center", whiteSpace: "pre-line",
                 }}>{t.identityBtn}</button>
-              <button style={{
-                width: "105px", borderRadius: "4px", background: "transparent",
-                border: `1px dashed ${innerBorder}`,
-                cursor: "pointer", outline: "none",
-                padding: "6px 12px",
-                fontFamily: FONT_SANS, fontSize: "16px", fontWeight: 400,
-                color: dark ? DARK_TEXT : LIGHT_TEXT,
-                lineHeight: "22px", textAlign: "center",
-              }}>{t.saveBtn}</button>
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                style={{
+                  width: "105px", borderRadius: "4px", background: "transparent",
+                  border: `1px dashed ${innerBorder}`,
+                  cursor: saving ? "wait" : "pointer", outline: "none",
+                  padding: "6px 12px",
+                  fontFamily: FONT_SANS, fontSize: "16px", fontWeight: 400,
+                  color: dark ? DARK_TEXT : LIGHT_TEXT,
+                  lineHeight: "22px", textAlign: "center",
+                  opacity: saving ? 0.6 : 1,
+                }}>{saving ? "…" : t.saveBtn}</button>
             </div>
           </motion.div>
         )}
@@ -875,6 +1054,7 @@ export default function New() {
                     background={settingsCardBg}
                     textColor={dark ? DARK_TEXT : LIGHT_TEXT}
                     fontSans={FONT_SANS}
+                    snapshotRef={asciiSnapshotRef}
                   />
 
                   {/* Name */}
@@ -961,14 +1141,23 @@ export default function New() {
                     />
                   </div>
                 </div>
-                <div style={{ padding: "16px 24px", flexShrink: 0 }}>
-                  <button style={{
-                    width: "100%", padding: "12px",
-                    background: "transparent", border: `1px dashed ${innerBorder}`,
-                    borderRadius: "8px", cursor: "pointer", outline: "none",
-                    fontFamily: FONT_SANS, fontSize: "16px",
-                    color: dark ? DARK_TEXT : LIGHT_TEXT,
-                  }}>{t.saveBtn}</button>
+                <div style={{ padding: "16px 24px", flexShrink: 0, display: "flex", flexDirection: "column", gap: "8px" }}>
+                  {saveError && (
+                    <span style={{ fontFamily: FONT_SANS, fontSize: "12px", color: "#e05252", textAlign: "center" }}>{saveError}</span>
+                  )}
+                  <button
+                    onClick={handleSave}
+                    disabled={saving}
+                    style={{
+                      width: "100%", padding: "12px",
+                      background: saving ? "transparent" : (dark ? "rgba(240,232,220,0.1)" : "rgba(85,85,85,0.07)"),
+                      border: `1px dashed ${innerBorder}`,
+                      borderRadius: "8px", cursor: saving ? "wait" : "pointer", outline: "none",
+                      fontFamily: FONT_SANS, fontSize: "16px",
+                      color: dark ? DARK_TEXT : LIGHT_TEXT,
+                      opacity: saving ? 0.6 : 1,
+                    }}
+                  >{saving ? (lang === "de" ? "Speichert…" : "Saving…") : t.saveBtn}</button>
                 </div>
               </>
             ) : (
@@ -1406,6 +1595,19 @@ export default function New() {
           >
             <IconEyeOpen color={iconColor} />
           </motion.button>
+        )}
+      </AnimatePresence>
+
+      {/* ── Saved modal ───────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {savedId && (
+          <SavedModal
+            dark={dark}
+            savedId={savedId}
+            lang={lang}
+            onClose={() => setSavedId(null)}
+            onPlayground={() => navigate("/playground")}
+          />
         )}
       </AnimatePresence>
 

@@ -15,6 +15,7 @@ import OffTheGrid from "./projects/offthegrid/App";
 import InASpiral from "./projects/inaspiral/App";
 import RandomlySpatially from "./projects/randomlyspatially/App";
 import New from "./New";
+import Playground from "./Playground";
 
 export default function App() {
   return (
@@ -34,6 +35,7 @@ export default function App() {
       <Route path="/randomly-spatially" element={<RandomlySpatially />} />
       <Route path="/about-the-project" element={<AboutTheProject />} />
       <Route path="/all-tools" element={<AllTools />} />
+      <Route path="/playground" element={<Playground />} />
       <Route path="/new" element={<New />} />
     </Routes>
   );

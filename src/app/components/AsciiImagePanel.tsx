@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
 const CANVAS_W = 900;
 const CANVAS_H = 600;
@@ -79,9 +79,10 @@ type AsciiImagePanelProps = {
   background: string;
   textColor: string;
   fontSans: string;
+  snapshotRef?: React.MutableRefObject<() => string | null>;
 };
 
-export default function AsciiImagePanel({ dark, background, textColor, fontSans }: AsciiImagePanelProps) {
+export default function AsciiImagePanel({ dark, background, textColor, fontSans, snapshotRef }: AsciiImagePanelProps) {
   const [image, setImage] = useState<HTMLImageElement | null>(null);
   const [draggingFile, setDraggingFile] = useState(false);
   const [hasRendered, setHasRendered] = useState(false);
@@ -126,6 +127,9 @@ export default function AsciiImagePanel({ dark, background, textColor, fontSans 
     renderTimer.current = setTimeout(() => {
       renderAscii(image, canvasRef.current!, offset.x, offset.y, brightness, colorHue);
       setHasRendered(true);
+      if (snapshotRef) {
+        snapshotRef.current = () => canvasRef.current?.toDataURL("image/webp", 0.8) ?? null;
+      }
     }, 16);
 
     return () => {

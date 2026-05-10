@@ -19,16 +19,15 @@ const LIGHT_BTN_BG = "rgba(241,235,228,0.2)";
 const LIGHT_TEXT   = "#555555";
 const DARK_TEXT    = "#f0e8dc";
 const DARK_MUTED   = "rgba(240,232,220,0.5)";
-const PROMPT_COL   = "rgba(155,155,155,0.8)";
 const SIDEBAR_BG   = "rgba(248,239,229,0.7)";
 
 const FONT_SERIF = "'freight-text-pro', 'EB Garamond', Georgia, serif";
 const FONT_SANS  = "'general-sans', 'Space Grotesk', sans-serif";
 
 const NAV_ROUTES: Record<string, string> = {
-  Create: "/new",
+  Create:     "/new",
   Playground: "/parametrisches-tool",
-  About: "/about-the-project",
+  About:      "/about-the-project",
 };
 
 const SIDEBAR_CATS = [
@@ -40,23 +39,189 @@ const SIDEBAR_CATS = [
   { en: "Look & Feel", de: "Look & Feel",  h: "60px",  br: "100px" },
 ];
 
-const CAT_DESC: Record<string, string> = {
-  "Time":        "In üblichen Schreibtools spielt Zeit keine Rolle, doch unser Denken und Sprechen sind zeitlich.",
-  "Visibility":  "In üblichen Schreibtools ist der Text jederzeit sichtbar, doch was passiert, wenn wir damit spielen?",
-  "Correction":  "In üblichen Schreibtools kann man den Text jederzeit editieren, löschen etc. Hier wird löschen unmöglich...oder sichtbar.",
-  "Stability":   "In üblichen Schreibtools ist der Text stabil und permanent. Doch Gedanken sind flüchtig und vergehen.",
-  "Position":    "In üblichen Schreibtools ist der Text linear und wird von links nach rechts geschrieben. Hier ändert sich das.",
-  "Look & Feel": "Moderne Schreibtools sind glatt, sauber und statisch. Eigenschaften, die in unserem Denken unmöglich sind.",
+// ── Translations ──────────────────────────────────────────────────────────────
+const TRANSLATIONS = {
+  de: {
+    langBtn: "DE",
+    rulesBtn: "Regeln",
+    rulesHeading: "Regeln",
+    rulesSubtitle: "Ändere sie.",
+    identityBtn: "Name,\nBeschreibung\n& mehr",
+    saveBtn: "Speichern",
+    menuClosed: "Menü",
+    menuOpen: "Schließen",
+    word: "Wort",
+    words: "Wörter",
+    navLabels: { Create: "Erstellen", Playground: "Playground", About: "Über das Projekt" },
+    // Identity panel
+    identityHeading: "Identität.",
+    identitySubtitle: "Gib deinem Tool ein Bild, einen Namen, Beschreibung und Schreibanstöße.",
+    nameHeading: "Name",
+    nameHint: 'Beende mit dem Namen den Satz „Write and think…“',
+    namePlaceholder: "Name eingeben",
+    promptHeading: "Schreibanstoß",
+    promptHint: "Das hilft Menschen beim Schreiben. Du kannst mehrere anlegen.",
+    promptPlaceholder: "Beispiel: Schreibe etwas über dich…",
+    promptAdd: "+ Weiteren hinzufügen",
+    descHeading: "Beschreibung",
+    descPlaceholder: "Beispiel: Dieses Tool hilft anonym zu schreiben",
+    // Time
+    timerLabel: "Timer",
+    on: "An", off: "Aus",
+    timerFixed: "Feste Zeit", timerFree: "Freie Wahl",
+    minutes: "Minuten",
+    visualTimer: "Visueller Timer",
+    userReset: "User setzt Timer neu",
+    cursorRunning: "Cursor läuft weiter",
+    cursorRunningDesc: "Der Cursor läuft automatisch weiter, egal ob man schreibt oder nicht.",
+    // Visibility
+    visVisible: "Sichtbar", visInvisible: "Unsichtbar",
+    visSentence: "Nur aktueller Satz sichtbar",
+    visWord: "Nur aktuelles Wort sichtbar",
+    visChar: "Nur aktl. Buchstabe sichtbar",
+    // Correction
+    deleteHeading: "Löschen",
+    deleteAll: "Text ist löschbar",
+    deleteNone: "Kein Löschen",
+    deleteSentence: "Nur aktl. Satz löschbar",
+    deleteWord: "Nur aktl. Wort löschbar",
+    correctionVisible: "Korrigieren sichtbar",
+    correctionDescHighlight: "Mit Tipp-Ex-Schicht",
+    correctionDescRest: " über alten Text. Das Korrigieren hinterlässt Spuren.",
+    // Stability
+    driftLabel: "Text fliegt davon",
+    driftSentences: "Sätze", driftWords: "Wörter", driftLetters: "Buchstabe",
+    driftTiming: "Zeitpunkt des Fliegens",
+    driftAfter: (n: number) => `Nach ${n} min`,
+    driftSpeed: "Schnelligkeit des Fliegens",
+    fadeLabel: "Text verblasst",
+    fadeTiming: "Zeitpunkt des Verblassens",
+    fadeAfter: (n: number) => `Nach ${n} min`,
+    fadeSpeed: "Schnelligkeit des Verblassens",
+    // Position
+    posSpiral: "Spiralförmiger Text",
+    posRandom: "Text erscheint zufällig",
+    posCustom: "Zeichne deine eigene Linie",
+    // Look & Feel
+    lfGrain: "Körnung & Textur",
+    lfTextSize: "Textgröße",
+    lfBgColor: "Hintergrundfarbe anpassen",
+    lfBgReset: "Doppelklick zum Zurücksetzen",
+    // Timer overlay
+    timesUp: "Zeit abgelaufen.",
+    timesUpSub: "Dein Text wartet hinter dem Dunkel.",
+    deleteText: "Text löschen",
+    revealText: "Text sehen",
+    copyText: "Text kopieren",
+    copied: "Kopiert ✓",
+    // Category labels (what shows on sidebar buttons)
+    catLabel: (cat: { en: string; de: string }) => cat.de,
+    // Category heading in detail panel
+    catHeading: (cat: { en: string; de: string }) => cat.de,
+    // Category descriptions
+    catDesc: {
+      "Time":        "In üblichen Schreibtools spielt Zeit keine Rolle, doch unser Denken und Sprechen sind zeitlich.",
+      "Visibility":  "In üblichen Schreibtools ist der Text jederzeit sichtbar, doch was passiert, wenn wir damit spielen?",
+      "Correction":  "In üblichen Schreibtools kann man den Text jederzeit editieren, löschen etc. Hier wird löschen unmöglich...oder sichtbar.",
+      "Stability":   "In üblichen Schreibtools ist der Text stabil und permanent. Doch Gedanken sind flüchtig und vergehen.",
+      "Position":    "In üblichen Schreibtools ist der Text linear und wird von links nach rechts geschrieben. Hier ändert sich das.",
+      "Look & Feel": "Moderne Schreibtools sind glatt, sauber und statisch. Eigenschaften, die in unserem Denken unmöglich sind.",
+    } as Record<string, string>,
+    writingPrompt: "Erkunde neue Denkwege, indem du die Regeln üblicher Schreibtools brichst…",
+  },
+  en: {
+    langBtn: "ENG",
+    rulesBtn: "Rules",
+    rulesHeading: "Rules",
+    rulesSubtitle: "Change them.",
+    identityBtn: "Name,\nDescription\n& more",
+    saveBtn: "Save",
+    menuClosed: "Menu",
+    menuOpen: "Close",
+    word: "word",
+    words: "words",
+    navLabels: { Create: "Create", Playground: "Playground", About: "About" },
+    // Identity panel
+    identityHeading: "Identity.",
+    identitySubtitle: "Give your tool an image, a name, description, and writing prompts.",
+    nameHeading: "Name",
+    nameHint: 'Complete the sentence “Write and think…” with the name',
+    namePlaceholder: "Enter name",
+    promptHeading: "Writing Prompt",
+    promptHint: "This helps people start writing. You can add multiple.",
+    promptPlaceholder: "Example: Write something about yourself…",
+    promptAdd: "+ Add another",
+    descHeading: "Description",
+    descPlaceholder: "Example: This tool helps writing anonymously",
+    // Time
+    timerLabel: "Timer",
+    on: "On", off: "Off",
+    timerFixed: "Fixed Time", timerFree: "Free Choice",
+    minutes: "Minutes",
+    visualTimer: "Visual Timer",
+    userReset: "User resets timer",
+    cursorRunning: "Cursor keeps running",
+    cursorRunningDesc: "The cursor moves automatically whether you type or not.",
+    // Visibility
+    visVisible: "Visible", visInvisible: "Invisible",
+    visSentence: "Current sentence only",
+    visWord: "Current word only",
+    visChar: "Current letter only",
+    // Correction
+    deleteHeading: "Delete",
+    deleteAll: "Text is deletable",
+    deleteNone: "No deletion",
+    deleteSentence: "Current sentence only",
+    deleteWord: "Current word only",
+    correctionVisible: "Correction visible",
+    correctionDescHighlight: "With a Tipp-Ex layer",
+    correctionDescRest: " over old text. Corrections leave traces.",
+    // Stability
+    driftLabel: "Text drifts away",
+    driftSentences: "Sentences", driftWords: "Words", driftLetters: "Letters",
+    driftTiming: "Drift timing",
+    driftAfter: (n: number) => `After ${n} min`,
+    driftSpeed: "Drift speed",
+    fadeLabel: "Text fades",
+    fadeTiming: "Fade timing",
+    fadeAfter: (n: number) => `After ${n} min`,
+    fadeSpeed: "Fade speed",
+    // Position
+    posSpiral: "Spiraling Text",
+    posRandom: "Text appears random",
+    posCustom: "Draw your own path",
+    // Look & Feel
+    lfGrain: "Grain & Texture",
+    lfTextSize: "Text Size",
+    lfBgColor: "Adjust background color",
+    lfBgReset: "Double-click to reset",
+    // Timer overlay
+    timesUp: "Time's up.",
+    timesUpSub: "Your text waits behind the dark.",
+    deleteText: "Delete text",
+    revealText: "Reveal text",
+    copyText: "Copy text",
+    copied: "Copied ✓",
+    // Category labels
+    catLabel: (cat: { en: string; de: string }) => cat.en,
+    catHeading: (cat: { en: string; de: string }) => cat.en,
+    // Category descriptions
+    catDesc: {
+      "Time":        "In typical writing tools, time plays no role — yet our thinking and speaking are inherently temporal.",
+      "Visibility":  "In typical writing tools, text is always visible. But what happens when we play with that?",
+      "Correction":  "In typical writing tools you can always edit and delete. Here, deletion becomes impossible… or visible.",
+      "Stability":   "In typical writing tools, text is stable and permanent. But thoughts are fleeting and fade away.",
+      "Position":    "In typical writing tools, text is linear, written left to right. Here, that changes.",
+      "Look & Feel": "Modern writing tools are smooth, clean, and static — qualities impossible in our actual thinking.",
+    } as Record<string, string>,
+    writingPrompt: "Explore new ways of thinking by breaking the rules of standard writing tools…",
+  },
 };
 
-const DELETE_OPTS = [
-  { value: "all",      label: "Text ist löschbar" },
-  { value: "none",     label: "Kein Löschen" },
-  { value: "sentence", label: "Nur aktl. Satz löschbar" },
-  { value: "word",     label: "Nur aktl. Wort löschbar" },
-] as const;
+type Tr = typeof TRANSLATIONS["de"];
 
-type DeleteMode = typeof DELETE_OPTS[number]["value"];
+const DELETE_OPTS_KEYS = ["all", "none", "sentence", "word"] as const;
+type DeleteMode = typeof DELETE_OPTS_KEYS[number];
 
 const BTN_CLOSED = { dark: 24, rules: 65 };
 const BTN_OPEN   = { dark: 371, rules: 412 };
@@ -181,10 +346,11 @@ function DoubleSlider({ value, min, max, onChange, dark }: {
 
 // ── Timer done overlay ────────────────────────────────────────────────────────
 function TimerDoneOverlay({
-  dark, isVisual, onDelete, onReveal, onCopy, copied,
+  dark, isVisual, onDelete, onReveal, onCopy, copied, t,
 }: {
   dark: boolean; isVisual: boolean;
   onDelete: () => void; onReveal: () => void; onCopy: () => void; copied: boolean;
+  t: Tr;
 }) {
   return createPortal(
     <motion.div
@@ -213,11 +379,11 @@ function TimerDoneOverlay({
       >
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
           <span style={{ fontFamily: FONT_SERIF, fontSize: "24px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>
-            Zeit abgelaufen.
+            {t.timesUp}
           </span>
           {isVisual && (
             <span style={{ fontFamily: FONT_SANS, fontSize: "13px", color: dark ? DARK_MUTED : "#9a9daa", fontStyle: "italic", textAlign: "center" }}>
-              Dein Text wartet hinter dem Dunkel.
+              {t.timesUpSub}
             </span>
           )}
         </div>
@@ -229,7 +395,7 @@ function TimerDoneOverlay({
               borderRadius: "100px", border: `1px dashed ${dark ? DARK_BORDER : BORDER_COL}`,
               background: "transparent", color: dark ? DARK_MUTED : "#9a9daa", cursor: "pointer",
             }}
-          >Text löschen</button>
+          >{t.deleteText}</button>
           {isVisual && (
             <button
               onClick={onReveal}
@@ -239,7 +405,7 @@ function TimerDoneOverlay({
                 background: dark ? "rgba(240,232,220,0.08)" : "rgba(85,85,85,0.06)",
                 color: dark ? DARK_TEXT : LIGHT_TEXT, cursor: "pointer",
               }}
-            >Text sehen</button>
+            >{t.revealText}</button>
           )}
           <button
             onClick={onCopy}
@@ -249,7 +415,7 @@ function TimerDoneOverlay({
               background: dark ? DARK_TEXT : LIGHT_TEXT,
               color: dark ? DARK_BG : LIGHT_BG, cursor: "pointer",
             }}
-          >{copied ? "Kopiert ✓" : "Text kopieren"}</button>
+          >{copied ? t.copied : t.copyText}</button>
         </div>
       </motion.div>
     </motion.div>,
@@ -303,6 +469,7 @@ export default function New() {
   const navigate = useNavigate();
 
   // UI
+  const [lang, setLang]               = useState<"de" | "en">("de");
   const [dark, setDark]               = useState(false);
   const [visible, setVisible]         = useState(true);
   const [menuOpen, setMenuOpen]       = useState(false);
@@ -339,9 +506,9 @@ export default function New() {
   const [positionMode, setPositionMode] = useState<"spiral" | "random" | "custom">("spiral");
 
   // Look & Feel params
-  const [grainLevel, setGrainLevel]     = useState(0);
+  const [grainLevel, setGrainLevel]       = useState(0);
   const [textSizeLevel, setTextSizeLevel] = useState(20);
-  const [bgHue, setBgHue]               = useState<number | null>(null);
+  const [bgHue, setBgHue]                 = useState<number | null>(null);
 
   // Identity panel state
   const [toolName, setToolName]               = useState("");
@@ -360,20 +527,16 @@ export default function New() {
   const [textRevealed, setTextRevealed] = useState(false);
   const [copied, setCopied]             = useState(false);
 
+  const t: Tr = TRANSLATIONS[lang];
+
   // Timer initialization
   useEffect(() => {
     if (!timerEnabled) {
-      setTimerRunning(false);
-      setTimeLeft(0);
-      setTimerDone(false);
-      setTextRevealed(false);
+      setTimerRunning(false); setTimeLeft(0); setTimerDone(false); setTextRevealed(false);
       return;
     }
     const total = (timerMinutes || 1) * 60;
-    setTimeLeft(total);
-    setTimerRunning(true);
-    setTimerDone(false);
-    setTextRevealed(false);
+    setTimeLeft(total); setTimerRunning(true); setTimerDone(false); setTextRevealed(false);
   }, [timerEnabled, timerMode, timerMinutes]);
 
   // Timer countdown
@@ -388,21 +551,17 @@ export default function New() {
     return () => clearInterval(id);
   }, [timerRunning]);
 
-  // Timer reset on first keystroke (when timerUserReset is on)
+  // Timer reset on first keystroke
   useEffect(() => {
     if (!timerUserReset || !timerEnabled) return;
     if (positions.length === 1 && !timerRunning) {
       const total = (timerMinutes || 1) * 60;
-      setTimeLeft(total);
-      setTimerRunning(true);
-      setTimerDone(false);
-      setTextRevealed(false);
+      setTimeLeft(total); setTimerRunning(true); setTimerDone(false); setTextRevealed(false);
     }
   }, [positions.length, timerUserReset, timerEnabled, timerMinutes, timerRunning]);
 
   const handleUpdate = useCallback((newPos: Position[], newCursor: number) => {
-    setPositions(newPos);
-    setCursor(newCursor);
+    setPositions(newPos); setCursor(newCursor);
   }, []);
 
   const handleCopy = useCallback(() => {
@@ -414,34 +573,27 @@ export default function New() {
   }, [positions]);
 
   const handleDelete = useCallback(() => {
-    setPositions([]);
-    setCursor(0);
-    setTimerDone(false);
-    setTextRevealed(false);
-    setTimerRunning(false);
-    setTimeLeft(0);
+    setPositions([]); setCursor(0);
+    setTimerDone(false); setTextRevealed(false);
+    setTimerRunning(false); setTimeLeft(0);
   }, []);
 
   const handleReveal = useCallback(() => setTextRevealed(true), []);
 
-  // ── Computed values ────────────────────────────────────────────────────────
-  const computedFontSize = 14 + Math.round(textSizeLevel / 100 * 22); // 14→36px
+  // ── Computed values ──────────────────────────────────────────────────────
+  const computedFontSize = 14 + Math.round(textSizeLevel / 100 * 22);
   const timerTotalSecs   = (timerMinutes || 1) * 60;
   const timerProgress    = timerEnabled && timerTotalSecs > 0
     ? Math.max(0, 1 - timeLeft / timerTotalSecs) : 0;
 
-  // Background: visual timer lerps LIGHT_BG → DARK_BG
   const bg = dark
     ? DARK_BG
     : timerEnabled && visualTimer && timerRunning
       ? lerpColor(LIGHT_BG, DARK_BG, timerProgress)
       : timerEnabled && visualTimer && timerDone && !textRevealed
         ? DARK_BG
-        : bgHue !== null
-          ? `oklch(95% 0.035 ${bgHue})`
-          : LIGHT_BG;
+        : bgHue !== null ? `oklch(95% 0.035 ${bgHue})` : LIGHT_BG;
 
-  // Text color follows background for visual timer
   const textColor = dark
     ? DARK_TEXT
     : timerEnabled && visualTimer && (timerRunning || (timerDone && !textRevealed))
@@ -461,24 +613,30 @@ export default function New() {
   const darkBtnBg  = rulesOpen ? (dark ? "rgba(240,232,220,0.1)" : PANEL_BG) : (dark ? "rgba(240,232,220,0.06)" : LIGHT_BTN_BG);
   const rulesBtnBg = rulesOpen ? (dark ? "rgba(240,232,220,0.1)" : PANEL_BG) : (dark ? "rgba(240,232,220,0.06)" : LIGHT_BTN_BG);
 
-  // Map New.tsx params → WritingZone types
-  const wzVisibility   = visibility === "invisible" ? "hidden" : visibility as "visible"|"hidden"|"sentence"|"word"|"char";
-  const wzDeleteMode   = deleteMode === "all" ? "deletable" : deleteMode === "none" ? "no-delete" : deleteMode as "sentence"|"word";
-  const wzCorrection   = correctionVisible ? "tippex" as const : "hidden" as const;
-  const wzDriftSpeed   = fliegtSchnelligkeit * 50;    // 1-10 → 50-500
-  const wzVerblSpeed   = verblassSchnelligkeit * 50;
-  const wzDriftDelay   = fliegtZeitpunkt * 60;        // minutes → seconds
-  const wzVerblDelay   = verblassZeitpunkt * 60;
+  const wzVisibility = visibility === "invisible" ? "hidden" : visibility as "visible"|"hidden"|"sentence"|"word"|"char";
+  const wzDeleteMode = deleteMode === "all" ? "deletable" : deleteMode === "none" ? "no-delete" : deleteMode as "sentence"|"word";
+  const wzCorrection = correctionVisible ? "tippex" as const : "hidden" as const;
+  const wzDriftSpeed = fliegtSchnelligkeit * 50;
+  const wzVerblSpeed = verblassSchnelligkeit * 50;
+  const wzDriftDelay = fliegtZeitpunkt * 60;
+  const wzVerblDelay = verblassZeitpunkt * 60;
 
-  const showDoneModal  = timerDone && !textRevealed;
-  const showRevealBar  = timerDone && textRevealed && visualTimer;
-  const wordCount      = extractText(positions).split(/\s+/).filter(Boolean).length;
+  const showDoneModal = timerDone && !textRevealed;
+  const showRevealBar = timerDone && textRevealed && visualTimer;
+  const wordCount     = extractText(positions).split(/\s+/).filter(Boolean).length;
+
+  // Delete option labels keyed by value
+  const deleteOptLabels: Record<DeleteMode, string> = {
+    all:      t.deleteAll,
+    none:     t.deleteNone,
+    sentence: t.deleteSentence,
+    word:     t.deleteWord,
+  };
 
   return (
     <div
       style={{ minHeight: "100vh", background: bg, position: "relative", transition: "background 1s linear" }}
     >
-      {/* IBM Plex Mono font for writing zone */}
       <link
         href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap"
         rel="stylesheet"
@@ -498,15 +656,14 @@ export default function New() {
         />
       )}
 
-      {/* ── Writing zone (fixed, shifts when panel opens) ────────────────── */}
+      {/* ── Writing zone ─────────────────────────────────────────────────── */}
       <motion.div
         animate={{ x: rulesOpen ? 233.5 : 0 }}
         transition={SPRING}
         style={{
           position: "fixed", inset: 0,
           display: "flex", flexDirection: "column",
-          paddingTop: "80px",
-          zIndex: 1,
+          paddingTop: "80px", zIndex: 1,
         }}
       >
         <WritingZone
@@ -533,7 +690,7 @@ export default function New() {
           spiralModus={positionMode === "spiral"}
           textAppearsRandom={positionMode === "random"}
           randomMode="words"
-          writingPrompt={prompts[0] || "Explore new ways of thinking by breaking the rules of standard writing tools..."}
+          writingPrompt={prompts[0] || t.writingPrompt}
           fontSize={computedFontSize}
         />
       </motion.div>
@@ -591,7 +748,7 @@ export default function New() {
               {rulesOpen ? (
                 <motion.span key="x" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.1 }} style={{ fontSize: "18px", lineHeight: "1" }}>×</motion.span>
               ) : (
-                <motion.span key="r" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.1 }} style={{ fontSize: "14px" }}>Rules</motion.span>
+                <motion.span key="r" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.1 }} style={{ fontSize: "14px" }}>{t.rulesBtn}</motion.span>
               )}
             </AnimatePresence>
           </motion.button>
@@ -621,8 +778,8 @@ export default function New() {
           >
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                <span style={{ fontFamily: FONT_SERIF, fontSize: "22px", color: dark ? DARK_TEXT : LIGHT_TEXT, lineHeight: "normal" }}>Rules</span>
-                <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: descColor, lineHeight: "normal" }}>Change them.</span>
+                <span style={{ fontFamily: FONT_SERIF, fontSize: "22px", color: dark ? DARK_TEXT : LIGHT_TEXT, lineHeight: "normal" }}>{t.rulesHeading}</span>
+                <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: descColor, lineHeight: "normal" }}>{t.rulesSubtitle}</span>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                 {SIDEBAR_CATS.map(cat => (
@@ -645,7 +802,7 @@ export default function New() {
                       whiteSpace: "nowrap", lineHeight: "normal",
                       flexShrink: 0, transition: "background 0.15s",
                     }}
-                  >{cat.en}</button>
+                  >{t.catLabel(cat)}</button>
                 ))}
               </div>
             </div>
@@ -663,7 +820,7 @@ export default function New() {
                   color: dark ? DARK_TEXT : LIGHT_TEXT,
                   letterSpacing: "-0.16px", lineHeight: "22px",
                   textAlign: "center", whiteSpace: "pre-line",
-                }}>{"Name,\nDescription\n& more"}</button>
+                }}>{t.identityBtn}</button>
               <button style={{
                 width: "105px", borderRadius: "4px", background: "transparent",
                 border: `1px dashed ${innerBorder}`,
@@ -672,7 +829,7 @@ export default function New() {
                 fontFamily: FONT_SANS, fontSize: "16px", fontWeight: 400,
                 color: dark ? DARK_TEXT : LIGHT_TEXT,
                 lineHeight: "22px", textAlign: "center",
-              }}>Save</button>
+              }}>{t.saveBtn}</button>
             </div>
           </motion.div>
         )}
@@ -708,9 +865,9 @@ export default function New() {
                   }
                 `}</style>
                 <div style={{ flex: 1, overflowY: "auto", padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
-                  <span style={{ fontFamily: FONT_SERIF, fontSize: "22px", color: dark ? DARK_TEXT : LIGHT_TEXT, lineHeight: "normal" }}>Identity.</span>
+                  <span style={{ fontFamily: FONT_SERIF, fontSize: "22px", color: dark ? DARK_TEXT : LIGHT_TEXT, lineHeight: "normal" }}>{t.identityHeading}</span>
                   <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: descColor, lineHeight: "1.45" }}>
-                    Gib deinem Tool ein Bild, einen Namen, Beschreibung und Schreibanstöße.
+                    {t.identitySubtitle}
                   </span>
 
                   <AsciiImagePanel
@@ -722,9 +879,9 @@ export default function New() {
 
                   {/* Name */}
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                    <span style={{ fontFamily: FONT_SERIF, fontSize: "19px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>Name</span>
+                    <span style={{ fontFamily: FONT_SERIF, fontSize: "19px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.nameHeading}</span>
                     <span style={{ fontFamily: FONT_SANS, fontSize: "13px", color: descColor, lineHeight: "1.45" }}>
-                      Beende mit dem Namen den Satz &ldquo;Write and think&hellip;&rdquo;
+                      {t.nameHint}
                     </span>
                     <div style={{ border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "10px 14px", background: settingsCardBg }}>
                       <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? "rgba(240,232,220,0.38)" : "rgba(85,85,85,0.38)" }}>
@@ -733,7 +890,7 @@ export default function New() {
                     </div>
                     <input
                       className="identity-input"
-                      placeholder="Name eingeben"
+                      placeholder={t.namePlaceholder}
                       value={toolName}
                       onChange={(e) => setToolName(e.target.value)}
                       onClick={(e) => e.stopPropagation()}
@@ -742,23 +899,22 @@ export default function New() {
                         border: `1px dashed ${innerBorder}`, borderRadius: "8px",
                         padding: "10px 14px", background: settingsCardBg,
                         fontFamily: FONT_SANS, fontSize: "15px",
-                        color: dark ? DARK_TEXT : LIGHT_TEXT,
-                        outline: "none",
+                        color: dark ? DARK_TEXT : LIGHT_TEXT, outline: "none",
                       }}
                     />
                   </div>
 
                   {/* Prompts */}
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                    <span style={{ fontFamily: FONT_SERIF, fontSize: "19px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>Schreibanstoß</span>
+                    <span style={{ fontFamily: FONT_SERIF, fontSize: "19px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.promptHeading}</span>
                     <span style={{ fontFamily: FONT_SANS, fontSize: "13px", color: descColor, lineHeight: "1.45" }}>
-                      Das hilft Menschen beim Schreiben. Du kannst mehrere anlegen.
+                      {t.promptHint}
                     </span>
                     {prompts.map((p, i) => (
                       <textarea
                         key={i}
                         className="identity-textarea"
-                        placeholder="Beispiel: Schreibe etwas über dich…"
+                        placeholder={t.promptPlaceholder}
                         value={p}
                         onChange={(e) => setPrompts(ps => ps.map((x, j) => j === i ? e.target.value : x))}
                         onClick={(e) => e.stopPropagation()}
@@ -781,15 +937,15 @@ export default function New() {
                         fontFamily: FONT_SANS, fontSize: "14px",
                         color: dark ? "rgba(240,232,220,0.6)" : "rgba(85,85,85,0.6)",
                       }}
-                    >+ Weiteren hinzufügen</button>
+                    >{t.promptAdd}</button>
                   </div>
 
                   {/* Description */}
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                    <span style={{ fontFamily: FONT_SERIF, fontSize: "19px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>Beschreibung</span>
+                    <span style={{ fontFamily: FONT_SERIF, fontSize: "19px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.descHeading}</span>
                     <textarea
                       className="identity-textarea"
-                      placeholder="Beispiel: Dieses Tool hilft anonym zu schreiben"
+                      placeholder={t.descPlaceholder}
                       value={toolDescription}
                       onChange={(e) => setToolDescription(e.target.value)}
                       onClick={(e) => e.stopPropagation()}
@@ -812,33 +968,33 @@ export default function New() {
                     borderRadius: "8px", cursor: "pointer", outline: "none",
                     fontFamily: FONT_SANS, fontSize: "16px",
                     color: dark ? DARK_TEXT : LIGHT_TEXT,
-                  }}>Save</button>
+                  }}>{t.saveBtn}</button>
                 </div>
               </>
             ) : (
               /* ── Category detail ────────────────────────────────────────── */
               <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "16px", overflowY: "auto", flex: 1 }}>
                 <span style={{ fontFamily: FONT_SERIF, fontSize: "22px", color: dark ? DARK_TEXT : LIGHT_TEXT, lineHeight: "normal" }}>
-                  {SIDEBAR_CATS.find(c => c.en === activeCategory)?.de}
+                  {t.catHeading(SIDEBAR_CATS.find(c => c.en === activeCategory) ?? { en: activeCategory, de: activeCategory })}
                 </span>
 
-                {CAT_DESC[activeCategory] && (
+                {t.catDesc[activeCategory] && (
                   <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: descColor, lineHeight: "1.5" }}>
-                    {CAT_DESC[activeCategory]}
+                    {t.catDesc[activeCategory]}
                   </span>
                 )}
 
-                {/* ── Zeit ─────────────────────────────────────────────── */}
+                {/* ── Zeit / Time ───────────────────────────────────────── */}
                 {activeCategory === "Time" && (
                   <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                     <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px" }}>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
-                        <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>Timer</span>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.timerLabel}</span>
                         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                           <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: descColor }}>
-                            {timerEnabled ? "An" : "Aus"}
+                            {timerEnabled ? t.on : t.off}
                           </span>
-                          <ToggleBtn on={timerEnabled} onToggle={() => setTimerEnabled(t => !t)} dark={dark} />
+                          <ToggleBtn on={timerEnabled} onToggle={() => setTimerEnabled(v => !v)} dark={dark} />
                         </div>
                       </div>
                     </div>
@@ -859,12 +1015,12 @@ export default function New() {
                                 border: `1px dashed ${timerMode === m ? (dark ? DARK_TEXT : LIGHT_TEXT) : innerBorder}`,
                                 borderRadius: "8px", cursor: "pointer", outline: "none",
                                 fontFamily: FONT_SANS, fontSize: "14px", color: dark ? DARK_TEXT : LIGHT_TEXT,
-                              }}>{m === "fixed" ? "Feste Zeit" : "Freie Wahl"}</button>
+                              }}>{m === "fixed" ? t.timerFixed : t.timerFree}</button>
                             ))}
                           </div>
                           <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px" }}>
                             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
-                              <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>Minuten</span>
+                              <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.minutes}</span>
                               <input
                                 type="text"
                                 value={timerMinutes === 0 ? "" : timerMinutes}
@@ -876,22 +1032,18 @@ export default function New() {
                           </div>
                           <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px" }}>
                             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
-                              <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>Visueller Timer</span>
+                              <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.visualTimer}</span>
                               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                                <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: descColor }}>{visualTimer ? "An" : "Aus"}</span>
+                                <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: descColor }}>{visualTimer ? t.on : t.off}</span>
                                 <ToggleBtn on={visualTimer} onToggle={() => setVisualTimer(v => !v)} dark={dark} />
                               </div>
                             </div>
                           </div>
                           <div
-                            style={{
-                              background: settingsCardBg, border: `1px dashed ${innerBorder}`,
-                              borderRadius: "8px", padding: "12px 24px",
-                              display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer",
-                            }}
+                            style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer" }}
                             onClick={e => { e.stopPropagation(); setTimerUserReset(v => !v); }}
                           >
-                            <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>User setzt Timer neu</span>
+                            <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.userReset}</span>
                             <RadioCircle selected={timerUserReset} dark={dark} />
                           </div>
                         </motion.div>
@@ -900,20 +1052,20 @@ export default function New() {
 
                     <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px", display: "flex", flexDirection: "column", gap: "10px" }}>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
-                        <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>Cursor läuft weiter</span>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.cursorRunning}</span>
                         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                          <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: descColor }}>{cursorRunning ? "An" : "Aus"}</span>
+                          <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: descColor }}>{cursorRunning ? t.on : t.off}</span>
                           <ToggleBtn on={cursorRunning} onToggle={() => setCursorRunning(v => !v)} dark={dark} />
                         </div>
                       </div>
                       <p style={{ fontFamily: FONT_SANS, fontSize: "13px", color: descColor, lineHeight: "1.45", margin: 0 }}>
-                        Der Cursor läuft automatisch weiter, egal ob man schreibt oder nicht.
+                        {t.cursorRunningDesc}
                       </p>
                     </div>
                   </div>
                 )}
 
-                {/* ── Sichtbarkeit ──────────────────────────────────────── */}
+                {/* ── Sichtbarkeit / Visibility ─────────────────────────── */}
                 {activeCategory === "Visibility" && (
                   <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                     <div style={{ display: "flex", background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", overflow: "hidden" }}>
@@ -926,15 +1078,15 @@ export default function New() {
                           padding: "0 16px", boxSizing: "border-box",
                           fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT,
                         }}>
-                          {val === "visible" ? "Sichtbar" : "Unsichtbar"}
+                          {val === "visible" ? t.visVisible : t.visInvisible}
                           <RadioCircle selected={visibility === val} dark={dark} />
                         </button>
                       ))}
                     </div>
                     {([
-                      { val: "sentence" as const, label: "Nur aktueller Satz sichtbar" },
-                      { val: "word"     as const, label: "Nur aktuelles Wort sichtbar" },
-                      { val: "char"     as const, label: "Nur aktl. Buchstabe sichtbar" },
+                      { val: "sentence" as const, label: t.visSentence },
+                      { val: "word"     as const, label: t.visWord },
+                      { val: "char"     as const, label: t.visChar },
                     ]).map(({ val, label }) => (
                       <button key={val} onClick={() => setVisibility(val)} style={{
                         background: settingsCardBg, border: `1px dashed ${innerBorder}`,
@@ -951,50 +1103,50 @@ export default function New() {
                   </div>
                 )}
 
-                {/* ── Korrigieren ───────────────────────────────────────── */}
+                {/* ── Korrigieren / Correction ──────────────────────────── */}
                 {activeCategory === "Correction" && (
                   <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                     <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "10px" }}>
-                      <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>Löschen</span>
+                      <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.deleteHeading}</span>
                       <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                        {DELETE_OPTS.map(opt => (
-                          <div key={opt.value} onClick={() => setDeleteMode(opt.value)} style={{
+                        {DELETE_OPTS_KEYS.map(key => (
+                          <div key={key} onClick={() => setDeleteMode(key)} style={{
                             display: "flex", alignItems: "center", justifyContent: "space-between",
                             border: `1px dashed ${innerBorder}`, borderRadius: "4px",
                             padding: "9px 12px", cursor: "pointer",
-                            background: deleteMode === opt.value ? (dark ? "rgba(240,232,220,0.08)" : "rgba(85,85,85,0.06)") : "transparent",
+                            background: deleteMode === key ? (dark ? "rgba(240,232,220,0.08)" : "rgba(85,85,85,0.06)") : "transparent",
                             transition: "background 0.12s",
                           }}>
-                            <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{opt.label}</span>
-                            <RadioCircle selected={deleteMode === opt.value} dark={dark} />
+                            <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{deleteOptLabels[key]}</span>
+                            <RadioCircle selected={deleteMode === key} dark={dark} />
                           </div>
                         ))}
                       </div>
                     </div>
                     <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "10px" }}>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>Korrigieren sichtbar</span>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.correctionVisible}</span>
                         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                          <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: descColor }}>{correctionVisible ? "An" : "Aus"}</span>
+                          <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: descColor }}>{correctionVisible ? t.on : t.off}</span>
                           <ToggleBtn on={correctionVisible} onToggle={() => setCorrectionVisible(v => !v)} dark={dark} />
                         </div>
                       </div>
                       <span style={{ fontFamily: FONT_SANS, fontSize: "14px", lineHeight: "1.5", color: descColor }}>
-                        <span style={{ color: dark ? "#8faee0" : "#6b82b0" }}>Mit Tipp-Ex-Schicht</span>{" "}über alten Text. Das Korrigieren hinterlässt Spuren.
+                        <span style={{ color: dark ? "#8faee0" : "#6b82b0" }}>{t.correctionDescHighlight}</span>
+                        {t.correctionDescRest}
                       </span>
                     </div>
                   </div>
                 )}
 
-                {/* ── Stabilität ────────────────────────────────────────── */}
+                {/* ── Stabilität / Stability ────────────────────────────── */}
                 {activeCategory === "Stability" && (
                   <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                    {/* Text fliegt davon */}
                     <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "14px" }}>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>Text fliegt davon</span>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.driftLabel}</span>
                         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                          <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: descColor }}>{textFliegtEnabled ? "An" : "Aus"}</span>
+                          <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: descColor }}>{textFliegtEnabled ? t.on : t.off}</span>
                           <ToggleBtn on={textFliegtEnabled} onToggle={() => setTextFliegtEnabled(e => !e)} dark={dark} />
                         </div>
                       </div>
@@ -1007,7 +1159,7 @@ export default function New() {
                               border: `1px dashed ${fliegtUnit === u ? (dark ? DARK_TEXT : LIGHT_TEXT) : innerBorder}`,
                               borderRadius: "4px", cursor: "pointer", outline: "none",
                               fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT,
-                            }}>{u}</button>
+                            }}>{u === "Sätze" ? t.driftSentences : t.driftWords}</button>
                           ))}
                         </div>
                         <button onClick={() => setFliegtUnit("Buchstabe")} style={{
@@ -1017,42 +1169,41 @@ export default function New() {
                           borderRadius: "4px", cursor: "pointer", outline: "none",
                           fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT,
                           textAlign: "left", padding: "0 12px", boxSizing: "border-box",
-                        }}>Buchstabe</button>
+                        }}>{t.driftLetters}</button>
                       </div>
                       <div style={{ borderTop: `1px dashed ${innerBorder}` }} />
                       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                        <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>Zeitpunkt des Fliegens</span>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.driftTiming}</span>
                         <DoubleSlider value={fliegtZeitpunkt} min={1} max={15} onChange={setFliegtZeitpunkt} dark={dark} />
                         <div style={{ border: `1px dashed ${innerBorder}`, borderRadius: "4px", padding: "8px", textAlign: "center", fontFamily: FONT_SANS, fontSize: "15px", color: descColor }}>
-                          Nach {fliegtZeitpunkt} min
+                          {t.driftAfter(fliegtZeitpunkt)}
                         </div>
                       </div>
                       <div style={{ borderTop: `1px dashed ${innerBorder}` }} />
                       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                        <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>Schnelligkeit des Fliegens</span>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.driftSpeed}</span>
                         <DoubleSlider value={fliegtSchnelligkeit} min={1} max={10} onChange={setFliegtSchnelligkeit} dark={dark} />
                       </div>
                     </div>
 
-                    {/* Text verblasst */}
                     <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "14px" }}>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>Text verblasst</span>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.fadeLabel}</span>
                         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                          <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: descColor }}>{textVerblassEnabled ? "An" : "Aus"}</span>
+                          <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: descColor }}>{textVerblassEnabled ? t.on : t.off}</span>
                           <ToggleBtn on={textVerblassEnabled} onToggle={() => setTextVerblassEnabled(e => !e)} dark={dark} />
                         </div>
                       </div>
                       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                        <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>Zeitpunkt des Verblassens</span>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.fadeTiming}</span>
                         <DoubleSlider value={verblassZeitpunkt} min={1} max={15} onChange={setVerblassZeitpunkt} dark={dark} />
                         <div style={{ border: `1px dashed ${innerBorder}`, borderRadius: "4px", padding: "8px", textAlign: "center", fontFamily: FONT_SANS, fontSize: "15px", color: descColor }}>
-                          Nach {verblassZeitpunkt} min
+                          {t.fadeAfter(verblassZeitpunkt)}
                         </div>
                       </div>
                       <div style={{ borderTop: `1px dashed ${innerBorder}` }} />
                       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                        <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>Schnelligkeit des Verblassens</span>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.fadeSpeed}</span>
                         <DoubleSlider value={verblassSchnelligkeit} min={1} max={10} onChange={setVerblassSchnelligkeit} dark={dark} />
                       </div>
                     </div>
@@ -1063,9 +1214,9 @@ export default function New() {
                 {activeCategory === "Position" && (
                   <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                     {([
-                      { value: "spiral" as const, label: "Spiraling Text" },
-                      { value: "random" as const, label: "Text appears random" },
-                      { value: "custom" as const, label: "Zeichne deine eigene Linie" },
+                      { value: "spiral" as const, label: t.posSpiral },
+                      { value: "random" as const, label: t.posRandom },
+                      { value: "custom" as const, label: t.posCustom },
                     ]).map(opt => (
                       <div key={opt.value} onClick={() => setPositionMode(opt.value)} style={{
                         display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -1118,12 +1269,12 @@ export default function New() {
                     `}</style>
 
                     <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
-                      <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>Körnung & Textur</span>
+                      <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.lfGrain}</span>
                       <input type="range" min={0} max={100} value={grainLevel} onChange={e => setGrainLevel(Number(e.target.value))} className="lf-slider" />
                     </div>
 
                     <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
-                      <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>Textgröße</span>
+                      <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.lfTextSize}</span>
                       <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                         <span style={{ fontFamily: FONT_SERIF, fontSize: "12px", color: dark ? DARK_TEXT : LIGHT_TEXT, flexShrink: 0 }}>A</span>
                         <input type="range" min={0} max={100} value={textSizeLevel} onChange={e => setTextSizeLevel(Number(e.target.value))} className="lf-slider" style={{ flex: 1 }} />
@@ -1132,9 +1283,9 @@ export default function New() {
                     </div>
 
                     <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
-                      <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>Hintergrundfarbe anpassen</span>
+                      <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.lfBgColor}</span>
                       <div style={{ borderRadius: "4px", border: `1px dashed ${innerBorder}`, height: "44px", position: "relative", overflow: "hidden", background: "linear-gradient(to right, oklch(90% 0.06 300), oklch(92% 0.05 0), oklch(93% 0.05 60), oklch(92% 0.05 120), oklch(91% 0.06 180), oklch(91% 0.06 240), oklch(90% 0.06 300))" }}>
-                        <input type="range" min={0} max={360} value={bgHue ?? 0} onChange={e => setBgHue(Number(e.target.value))} onDoubleClick={() => setBgHue(null)} className="hue-slider" style={{ position: "absolute", inset: 0 }} title="Doppelklick zum Zurücksetzen" />
+                        <input type="range" min={0} max={360} value={bgHue ?? 0} onChange={e => setBgHue(Number(e.target.value))} onDoubleClick={() => setBgHue(null)} className="hue-slider" style={{ position: "absolute", inset: 0 }} title={t.lfBgReset} />
                       </div>
                     </div>
                   </div>
@@ -1145,7 +1296,7 @@ export default function New() {
         )}
       </AnimatePresence>
 
-      {/* ── Right panel: Menu + Eye + timer ──────────────────────────────── */}
+      {/* ── Right panel: word count + eye + lang + menu ───────────────────── */}
       <AnimatePresence mode="wait">
         {visible ? (
           <motion.div
@@ -1170,7 +1321,7 @@ export default function New() {
             {/* Word count */}
             {positions.length > 0 && !timerRunning && (
               <div style={{ height: "31px", padding: "0 12px", display: "flex", alignItems: "center", fontFamily: FONT_SANS, fontSize: "13px", color: dark ? DARK_MUTED : "#9a9daa" }}>
-                {wordCount} {wordCount === 1 ? "word" : "words"}
+                {wordCount} {wordCount === 1 ? t.word : t.words}
               </div>
             )}
             {/* Eye toggle */}
@@ -1179,6 +1330,13 @@ export default function New() {
               onClick={(e) => { e.stopPropagation(); setVisible(false); setMenuOpen(false); }}
             >
               <IconEyeClosed color={iconColor} />
+            </button>
+            {/* Language toggle */}
+            <button
+              style={btnStyle(dark)}
+              onClick={(e) => { e.stopPropagation(); setLang(l => l === "de" ? "en" : "de"); }}
+            >
+              {t.langBtn}
             </button>
             {/* Menu button + dropdown */}
             <div
@@ -1206,7 +1364,7 @@ export default function New() {
                 style={{ ...btnStyle(dark, { background: dark ? "rgba(240,232,220,0.06)" : LIGHT_BG }), position: "relative", zIndex: 1 }}
                 onClick={(e) => { e.stopPropagation(); setMenuOpen(o => !o); setMenuHovered(false); }}
               >
-                {menuOpen ? "Close" : "Menu"}
+                {menuOpen ? t.menuOpen : t.menuClosed}
               </button>
               <AnimatePresence>
                 {menuOpen && (
@@ -1216,17 +1374,17 @@ export default function New() {
                     initial="hidden" animate="visible" exit="exit"
                     style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, display: "flex", flexDirection: "column", gap: "8px", alignItems: "flex-end" }}
                   >
-                    {(["Create", "Playground", "About"] as const).map((label, i) => (
+                    {(["Create", "Playground", "About"] as const).map((key, i) => (
                       <motion.button
-                        key={label}
+                        key={key}
                         variants={NAV_ITEM}
                         style={navItemStyle(dark, i === 0)}
                         onClick={(e) => {
                           e.stopPropagation();
                           setMenuOpen(false);
-                          if (label !== "Create") navigate(NAV_ROUTES[label]);
+                          if (key !== "Create") navigate(NAV_ROUTES[key]);
                         }}
-                      >{label}</motion.button>
+                      >{t.navLabels[key]}</motion.button>
                     ))}
                   </motion.div>
                 )}
@@ -1261,6 +1419,7 @@ export default function New() {
             onReveal={handleReveal}
             onCopy={handleCopy}
             copied={copied}
+            t={t}
           />
         )}
       </AnimatePresence>
@@ -1288,12 +1447,12 @@ export default function New() {
               <button
                 onClick={handleCopy}
                 style={{ fontFamily: FONT_SANS, fontSize: "12px", letterSpacing: "0.04em", padding: "8px 20px", background: "transparent", border: "none", color: "rgba(240,232,220,0.8)", cursor: "pointer" }}
-              >{copied ? "Kopiert ✓" : "Text kopieren"}</button>
+              >{copied ? t.copied : t.copyText}</button>
               <div style={{ width: "1px", height: "14px", background: DARK_BORDER }} />
               <button
                 onClick={handleDelete}
                 style={{ fontFamily: FONT_SANS, fontSize: "12px", letterSpacing: "0.04em", padding: "8px 20px", background: "transparent", border: "none", color: "rgba(240,232,220,0.45)", cursor: "pointer" }}
-              >Text löschen</button>
+              >{t.deleteText}</button>
             </div>
           </motion.div>,
           document.body

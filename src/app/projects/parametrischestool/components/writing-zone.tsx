@@ -31,6 +31,7 @@ interface WritingZoneProps {
   driftDelay?: number;
   driftSpeed?: number;   // 10–500, default 100
   verblasst?: boolean;
+  fontSize?: number;
   verblassenDelay?: number;
   verblassenSpeed?: number; // 10–500, default 100
   spiralModus?: boolean;
@@ -769,6 +770,7 @@ export function WritingZone({
   textAppearsRandom  = false,
   randomMode         = "words" as const,
   writingPrompt      = "",
+  fontSize           = 20,
 }: WritingZoneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const cursorDomRef = useRef<HTMLSpanElement>(null);
@@ -1345,7 +1347,7 @@ export function WritingZone({
             marginRight:  "auto",
             color:        textColor,
             fontFamily:   "'IBM Plex Mono', 'Courier New', monospace",
-            fontSize:     "20px",
+            fontSize:     `${fontSize}px`,
             lineHeight:   1.6,
             caretColor:   "transparent",
             wordBreak:    "break-all",
@@ -1379,7 +1381,7 @@ export function WritingZone({
         className="absolute left-0 top-0 pointer-events-none"
         style={{
           fontFamily: "'IBM Plex Mono', 'Courier New', monospace",
-          fontSize: "20px",
+          fontSize: `${fontSize}px`,
           lineHeight: 1.6,
           visibility: "hidden",
           userSelect: "none",

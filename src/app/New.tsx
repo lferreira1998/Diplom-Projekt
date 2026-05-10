@@ -8,7 +8,7 @@ import {
   type Position,
   extractText,
 } from "./projects/parametrischestool/components/writing-zone";
-import { saveNewTool, getNewToolById } from "./utils/storage";
+import { saveNewTool, updateNewTool, getNewToolById } from "./utils/storage";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const LIGHT_BG     = "#fcf6ef";
@@ -570,9 +570,10 @@ export default function New() {
   const asciiSnapshotRef = useRef<() => string | null>(() => null);
 
   // Save state
-  const [saving, setSaving]         = useState(false);
-  const [savedId, setSavedId]       = useState<string | null>(null);
-  const [saveError, setSaveError]   = useState<string | null>(null);
+  const [saving, setSaving]           = useState(false);
+  const [savedId, setSavedId]         = useState<string | null>(null);
+  const [saveError, setSaveError]     = useState<string | null>(null);
+  const [currentToolId, setCurrentToolId] = useState<string | null>(null);
 
   // UI
   const [lang, setLang]               = useState<"de" | "en">("de");
@@ -672,6 +673,7 @@ export default function New() {
     if (!toolId) return;
     getNewToolById(toolId).then(tool => {
       if (!tool) return;
+      setCurrentToolId(toolId);
       const p = tool.params;
       setToolName(p.displayName ?? tool.name);
       setToolDescription(tool.description);
@@ -722,6 +724,9 @@ export default function New() {
 
   const handleSave = useCallback(async () => {
     if (!toolName.trim()) {
+      // Fix 1: Auto-open Identity panel so user sees the error + name field
+      setRulesOpen(true);
+      setIdentityOpen(true);
       setSaveError(lang === "de" ? "Bitte gib deinem Tool einen Namen." : "Please give your tool a name.");
       return;
     }
@@ -729,8 +734,8 @@ export default function New() {
     setSaveError(null);
     try {
       const asciiImage = asciiSnapshotRef.current?.() ?? null;
-      const id = await saveNewTool(toolName, toolDescription, {
-        source: "new",
+      const params = {
+        source: "new" as const,
         sessionId,
         prompts,
         asciiImage,
@@ -739,7 +744,12 @@ export default function New() {
         textFliegtEnabled, fliegtUnit, fliegtZeitpunkt, fliegtSchnelligkeit,
         textVerblassEnabled, verblassZeitpunkt, verblassSchnelligkeit,
         positionMode, grainLevel, textSizeLevel, bgHue,
-      });
+      };
+      // Fix 3: update existing tool if loaded via URL, otherwise create new
+      const id = currentToolId
+        ? await updateNewTool(currentToolId, toolName, toolDescription, params)
+        : await saveNewTool(toolName, toolDescription, params);
+      if (!currentToolId) setCurrentToolId(id);
       setSavedId(id);
     } catch {
       setSaveError(lang === "de" ? "Fehler beim Speichern. Bitte erneut versuchen." : "Error saving. Please try again.");
@@ -747,7 +757,7 @@ export default function New() {
       setSaving(false);
     }
   }, [
-    toolName, toolDescription, prompts, sessionId, lang,
+    toolName, toolDescription, prompts, sessionId, lang, currentToolId,
     timerEnabled, timerMode, timerMinutes, visualTimer, timerUserReset, cursorRunning,
     visibility, deleteMode, correctionVisible,
     textFliegtEnabled, fliegtUnit, fliegtZeitpunkt, fliegtSchnelligkeit,
@@ -1072,7 +1082,7 @@ export default function New() {
                       className="identity-input"
                       placeholder={t.namePlaceholder}
                       value={toolName}
-                      onChange={(e) => setToolName(e.target.value)}
+                      onChange={(e) => { setToolName(e.target.value); if (e.target.value.trim()) setSaveError(null); }}
                       onClick={(e) => e.stopPropagation()}
                       style={{
                         width: "100%", boxSizing: "border-box",

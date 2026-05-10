@@ -65,6 +65,21 @@ export async function saveNewTool(
   return (data as { id: string }).id;
 }
 
+export async function updateNewTool(
+  id: string,
+  displayName: string,
+  description: string,
+  params: Omit<NewToolParams, "displayName">
+): Promise<string> {
+  const fullParams: NewToolParams = { ...params, displayName: displayName.trim() || "Untitled" };
+  const { error } = await supabase
+    .from("tools")
+    .update({ description, params: fullParams })
+    .eq("id", id);
+  if (error) throw error;
+  return id;
+}
+
 export async function getAllNewTools(): Promise<NewToolData[]> {
   const { data, error } = await supabase
     .from("tools")

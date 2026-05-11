@@ -80,9 +80,10 @@ type AsciiImagePanelProps = {
   textColor: string;
   fontSans: string;
   snapshotRef?: React.MutableRefObject<() => string | null>;
+  initialImage?: string | null;
 };
 
-export default function AsciiImagePanel({ dark, background, textColor, fontSans, snapshotRef }: AsciiImagePanelProps) {
+export default function AsciiImagePanel({ dark, background, textColor, fontSans, snapshotRef, initialImage }: AsciiImagePanelProps) {
   const [image, setImage] = useState<HTMLImageElement | null>(null);
   const [draggingFile, setDraggingFile] = useState(false);
   const [hasRendered, setHasRendered] = useState(false);
@@ -119,6 +120,21 @@ export default function AsciiImagePanel({ dark, background, textColor, fontSans,
     };
     reader.readAsDataURL(file);
   }, []);
+
+  useEffect(() => {
+    if (!initialImage) return;
+    const img = new window.Image();
+    img.onload = () => {
+      const scale = Math.max(CANVAS_W / img.naturalWidth, CANVAS_H / img.naturalHeight);
+      const maxX = Math.max(0, img.naturalWidth * scale - CANVAS_W);
+      const maxY = Math.max(0, img.naturalHeight * scale - CANVAS_H);
+      setMaxOffset({ x: maxX, y: maxY });
+      setOffset({ x: maxX / 2, y: maxY / 2 });
+      setImage(img);
+      setHasRendered(false);
+    };
+    img.src = initialImage;
+  }, [initialImage]);
 
   useEffect(() => {
     if (!image || !canvasRef.current) return;

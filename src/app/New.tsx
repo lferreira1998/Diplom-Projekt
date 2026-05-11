@@ -570,10 +570,11 @@ export default function New() {
   const asciiSnapshotRef = useRef<() => string | null>(() => null);
 
   // Save state
-  const [saving, setSaving]           = useState(false);
-  const [savedId, setSavedId]         = useState<string | null>(null);
-  const [saveError, setSaveError]     = useState<string | null>(null);
+  const [saving, setSaving]               = useState(false);
+  const [savedId, setSavedId]             = useState<string | null>(null);
+  const [saveError, setSaveError]         = useState<string | null>(null);
   const [currentToolId, setCurrentToolId] = useState<string | null>(null);
+  const [loadedAsciiImage, setLoadedAsciiImage] = useState<string | null>(null);
 
   // UI
   const [lang, setLang]               = useState<"de" | "en">("de");
@@ -698,6 +699,7 @@ export default function New() {
       setGrainLevel(p.grainLevel ?? 0);
       setTextSizeLevel(p.textSizeLevel ?? 20);
       setBgHue(p.bgHue ?? null);
+      if (p.asciiImage) setLoadedAsciiImage(p.asciiImage);
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -1065,6 +1067,7 @@ export default function New() {
                     textColor={dark ? DARK_TEXT : LIGHT_TEXT}
                     fontSans={FONT_SANS}
                     snapshotRef={asciiSnapshotRef}
+                    initialImage={loadedAsciiImage}
                   />
 
                   {/* Name */}
@@ -1270,12 +1273,16 @@ export default function New() {
                     <div style={{ display: "flex", background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", overflow: "hidden" }}>
                       {(["visible", "invisible"] as const).map((val, i) => (
                         <button key={val} onClick={() => setVisibility(val)} style={{
-                          flex: 1, height: "44px", background: "transparent",
+                          flex: 1, height: "44px",
+                          background: visibility === val ? (dark ? "rgba(240,232,220,0.12)" : "rgba(85,85,85,0.07)") : "transparent",
                           border: "none", borderLeft: i === 1 ? `1px dashed ${innerBorder}` : "none",
                           cursor: "pointer", outline: "none",
                           display: "flex", alignItems: "center", justifyContent: "space-between",
                           padding: "0 16px", boxSizing: "border-box",
-                          fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT,
+                          fontFamily: FONT_SANS, fontSize: "15px",
+                          color: dark ? DARK_TEXT : LIGHT_TEXT,
+                          fontWeight: visibility === val ? 500 : 400,
+                          transition: "background 0.12s",
                         }}>
                           {val === "visible" ? t.visVisible : t.visInvisible}
                           <RadioCircle selected={visibility === val} dark={dark} />
@@ -1288,12 +1295,14 @@ export default function New() {
                       { val: "char"     as const, label: t.visChar },
                     ]).map(({ val, label }) => (
                       <button key={val} onClick={() => setVisibility(val)} style={{
-                        background: settingsCardBg, border: `1px dashed ${innerBorder}`,
+                        background: visibility === val ? (dark ? "rgba(240,232,220,0.08)" : "rgba(85,85,85,0.06)") : settingsCardBg,
+                        border: `1px dashed ${visibility === val ? (dark ? "rgba(240,232,220,0.55)" : LIGHT_TEXT) : innerBorder}`,
                         borderRadius: "8px", height: "44px", padding: "0 16px",
                         display: "flex", alignItems: "center", justifyContent: "space-between",
                         cursor: "pointer", outline: "none",
                         fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT,
-                        boxSizing: "border-box",
+                        fontWeight: visibility === val ? 500 : 400,
+                        boxSizing: "border-box", transition: "background 0.12s, border-color 0.12s",
                       }}>
                         {label}
                         <RadioCircle selected={visibility === val} dark={dark} />
@@ -1311,12 +1320,13 @@ export default function New() {
                         {DELETE_OPTS_KEYS.map(key => (
                           <div key={key} onClick={() => setDeleteMode(key)} style={{
                             display: "flex", alignItems: "center", justifyContent: "space-between",
-                            border: `1px dashed ${innerBorder}`, borderRadius: "4px",
+                            border: `1px dashed ${deleteMode === key ? (dark ? "rgba(240,232,220,0.55)" : LIGHT_TEXT) : innerBorder}`,
+                            borderRadius: "4px",
                             padding: "9px 12px", cursor: "pointer",
                             background: deleteMode === key ? (dark ? "rgba(240,232,220,0.08)" : "rgba(85,85,85,0.06)") : "transparent",
-                            transition: "background 0.12s",
+                            transition: "background 0.12s, border-color 0.12s",
                           }}>
-                            <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{deleteOptLabels[key]}</span>
+                            <span style={{ fontFamily: FONT_SANS, fontSize: "15px", fontWeight: deleteMode === key ? 500 : 400, color: dark ? DARK_TEXT : LIGHT_TEXT }}>{deleteOptLabels[key]}</span>
                             <RadioCircle selected={deleteMode === key} dark={dark} />
                           </div>
                         ))}
@@ -1419,12 +1429,13 @@ export default function New() {
                     ]).map(opt => (
                       <div key={opt.value} onClick={() => setPositionMode(opt.value)} style={{
                         display: "flex", alignItems: "center", justifyContent: "space-between",
-                        border: `1px dashed ${innerBorder}`, borderRadius: "4px",
+                        border: `1px dashed ${positionMode === opt.value ? (dark ? "rgba(240,232,220,0.55)" : LIGHT_TEXT) : innerBorder}`,
+                        borderRadius: "4px",
                         padding: "12px 16px", cursor: "pointer",
                         background: positionMode === opt.value ? (dark ? "rgba(240,232,220,0.08)" : "rgba(85,85,85,0.06)") : settingsCardBg,
-                        transition: "background 0.12s",
+                        transition: "background 0.12s, border-color 0.12s",
                       }}>
-                        <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT, lineHeight: "1.4" }}>{opt.label}</span>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "15px", fontWeight: positionMode === opt.value ? 500 : 400, color: dark ? DARK_TEXT : LIGHT_TEXT, lineHeight: "1.4" }}>{opt.label}</span>
                         <RadioCircle selected={positionMode === opt.value} dark={dark} />
                       </div>
                     ))}

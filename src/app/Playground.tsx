@@ -137,7 +137,7 @@ export default function Playground() {
   }, []);
 
   const myTools  = tools.filter(t => t.params.sessionId === sessionId);
-  const allTools = tools;
+  const allTools = tools.filter(t => t.params.sessionId !== sessionId);
 
   const openTool = (id: string) => navigate(`/new?tool=${id}`);
 

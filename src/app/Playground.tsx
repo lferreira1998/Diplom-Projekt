@@ -136,7 +136,14 @@ export default function Playground() {
       .finally(() => setLoading(false));
   }, []);
 
-  const myTools  = tools.filter(t => t.params.sessionId === sessionId);
+  const myToolsRaw = tools.filter(t => t.params.sessionId === sessionId);
+  const myToolsMap = new Map<string, NewToolData>();
+  for (const tool of myToolsRaw) {
+    const key = tool.params.displayName || tool.name || tool.id;
+    const existing = myToolsMap.get(key);
+    if (!existing || tool.savedAt > existing.savedAt) myToolsMap.set(key, tool);
+  }
+  const myTools  = Array.from(myToolsMap.values()).sort((a, b) => b.savedAt.localeCompare(a.savedAt));
   const allTools = tools.filter(t => t.params.sessionId !== sessionId);
 
   const openTool = (id: string) => navigate(`/new?tool=${id}`);

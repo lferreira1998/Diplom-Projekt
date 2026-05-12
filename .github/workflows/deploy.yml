@@ -16,6 +16,65 @@ permissions:
   id-token: write
 
 jobs:
+  codex-remove-custom-line:
+    if: contains(github.event.head_commit.message, 'codex remove custom line mode')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: claude/access-figma-code-fK8az
+          fetch-depth: 2
+
+      - name: Remove custom line mode
+        run: |
+          node <<'JS'
+          const fs = require('fs');
+
+          const newPath = 'src/app/New.tsx';
+          const wzPath = 'src/app/projects/parametrischestool/components/writing-zone.tsx';
+
+          let wz = fs.readFileSync(wzPath, 'utf8');
+          wz = wz.replace('import { FallingText } from "../../offthegrid/components/FallingText";\n', '');
+          wz = wz.replace('  customLineMode?: boolean;\n', '');
+          wz = wz.replace('  customLineMode     = false,\n', '');
+          wz = wz.replace(/\n  if \(customLineMode\) \{\n    return \(\n      <div\n        className="flex-1 relative transition-all duration-300"\n        style=\{\{ paddingRight: panelOpen \? "343px" : "0px", minHeight: "100vh" \}\}\n      >\n        <FallingText \/>\n      <\/div>\n    \);\n  \}\n/g, '\n');
+          fs.writeFileSync(wzPath, wz);
+
+          let src = fs.readFileSync(newPath, 'utf8');
+          src = src.replace(/"standard" \| "spiral" \| "random" \| "custom"/g, '"standard" | "spiral" | "random"');
+          src = src.replace('          customLineMode={positionMode === "custom"}\n', '');
+          src = src.replace('                      { value: "custom" as const, label: t.posCustom },\n', '');
+          src = src.replace('    posCustom: "Zeichne deine eigene Linie",\n', '');
+          src = src.replace('    posCustom: "Draw your own path",\n', '');
+          fs.writeFileSync(newPath, src);
+          JS
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - run: npm install
+      - run: npm install @supabase/supabase-js
+
+      - run: npm run build
+        env:
+          VITE_SUPABASE_URL: https://lrppyiremhutnwtdhogt.supabase.co
+          VITE_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxycHB5aXJlbWh1dG53dGRob2d0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NjgyMjUsImV4cCI6MjA5MzA0NDIyNX0.hetcvdF-C2HpaqbuWcy16GcuGsRtsZ8CZzh7-EHfTX4
+
+      - name: Commit removal and restore workflow
+        run: |
+          git checkout HEAD^ -- .github/workflows/deploy.yml
+          git rm -f .github/codex-deploy-trigger.txt || true
+          git config user.name "codex-cloud"
+          git config user.email "codex-cloud@users.noreply.github.com"
+          git add src/app/New.tsx src/app/projects/parametrischestool/components/writing-zone.tsx .github/workflows/deploy.yml
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git commit -m "Remove custom line position mode"
+          git push origin HEAD:claude/access-figma-code-fK8az
+
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:

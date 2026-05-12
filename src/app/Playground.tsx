@@ -150,7 +150,7 @@ export default function Playground() {
   const sessionId = useMemo(() => getSessionId(), []);
   const [tools, setTools]   = useState<NewToolData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [lang, setLang]     = useState<"de" | "en">("de");
+  const [lang, setLang]     = useState<"de" | "en">(() => (localStorage.getItem("appLang") as "de" | "en") ?? "de");
 
   const DE = lang === "de";
 
@@ -209,7 +209,7 @@ export default function Playground() {
         <span style={{ fontFamily: FONT_SERIF, fontSize: "20px", color: LIGHT_TEXT }}>Playground</span>
 
         <button
-          onClick={() => setLang(l => l === "de" ? "en" : "de")}
+          onClick={() => setLang(l => { const next = l === "de" ? "en" : "de"; localStorage.setItem("appLang", next); return next; })}
           style={{
             background: "transparent", border: `1px dashed ${BORDER_COL}`,
             borderRadius: "4px", cursor: "pointer", outline: "none",
@@ -239,10 +239,10 @@ export default function Playground() {
                 : "No tools saved yet. Create one at /new."}
             />
             <Section
-              title={DE ? "Alle Tools" : "All Tools"}
+              title={DE ? "Öffentliche Tools" : "Public Tools"}
               tools={allTools}
               onOpen={openTool}
-              emptyMsg={DE ? "Noch keine Tools vorhanden." : "No tools yet."}
+              emptyMsg={DE ? "Noch keine öffentlichen Tools vorhanden." : "No public tools yet."}
             />
           </div>
         )}

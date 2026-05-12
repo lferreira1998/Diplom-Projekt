@@ -609,7 +609,7 @@ export default function New() {
   const [infoModalOpen, setInfoModalOpen]               = useState(false);
 
   // UI
-  const [lang, setLang]               = useState<"de" | "en">("de");
+  const [lang, setLang]               = useState<"de" | "en">(() => (localStorage.getItem("appLang") as "de" | "en") ?? "de");
   const [dark, setDark]               = useState(false);
   const [visible, setVisible]         = useState(true);
   const [menuOpen, setMenuOpen]       = useState(false);
@@ -1737,7 +1737,7 @@ export default function New() {
             {/* Language toggle */}
             <button
               style={btnStyle(dark, undefined, surfaceLight)}
-              onClick={(e) => { e.stopPropagation(); setLang(l => l === "de" ? "en" : "de"); }}
+              onClick={(e) => { e.stopPropagation(); setLang(l => { const next = l === "de" ? "en" : "de"; localStorage.setItem("appLang", next); return next; }); }}
             >
               {t.langBtn}
             </button>

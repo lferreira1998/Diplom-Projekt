@@ -1357,7 +1357,7 @@ export function WritingZone({
         </div>
       )}
       <div
-        className="flex-1 flex items-start pt-6 md:pt-12"
+        className="flex-1 flex items-start"
       >
         <div
           ref={containerRef}
@@ -1385,7 +1385,7 @@ export function WritingZone({
           {positions.length === 0 && !centeredPrompt && (
             <span
               className="select-none absolute top-0 left-0 pointer-events-none"
-              style={{ color: "#C0C2CA", fontStyle: "italic" }}
+              style={{ color: "#C0C2CA" }}
             >
               {writingPrompt || "Fang einfach an zu schreiben…"}
             </span>

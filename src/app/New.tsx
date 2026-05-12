@@ -985,7 +985,7 @@ export default function New() {
         style={{
           position: "fixed", inset: 0,
           display: "flex", flexDirection: "column",
-          paddingTop: positionMode === "custom" ? "0px" : "80px", zIndex: 1,
+          paddingTop: positionMode === "custom" ? "0px" : "24px", zIndex: 1,
         }}
       >
         {positionMode === "custom" ? (

@@ -576,6 +576,11 @@ export default function New() {
   const [currentToolId, setCurrentToolId] = useState<string | null>(null);
   const [loadedAsciiImage, setLoadedAsciiImage] = useState<string | null>(null);
 
+  // Loaded-tool ownership & edit mode
+  const [loadedToolIsOwn, setLoadedToolIsOwn]         = useState(false);
+  const [editModeEnabledState, setEditModeEnabledState] = useState(false);
+  const [infoModalOpen, setInfoModalOpen]               = useState(false);
+
   // UI
   const [lang, setLang]               = useState<"de" | "en">("de");
   const [dark, setDark]               = useState(false);
@@ -675,6 +680,8 @@ export default function New() {
     getNewToolById(toolId).then(tool => {
       if (!tool) return;
       setCurrentToolId(toolId);
+      setLoadedToolIsOwn(tool.params.sessionId === sessionId);
+      setEditModeEnabledState(false);
       const p = tool.params;
       setToolName(p.displayName ?? tool.name);
       setToolDescription(tool.description ?? "");
@@ -770,6 +777,7 @@ export default function New() {
   ]);
 
   // ── Computed values ──────────────────────────────────────────────────────
+  const canEdit = currentToolId === null || editModeEnabledState;
   const computedFontSize = 14 + Math.round(textSizeLevel / 100 * 22);
   const timerTotalSecs   = (timerMinutes || 1) * 60;
   const timerProgress    = timerEnabled && timerTotalSecs > 0
@@ -831,6 +839,101 @@ export default function New() {
         rel="stylesheet"
       />
       <style>{`@keyframes cursorBlink { 0%,100%{opacity:1} 50%{opacity:0} }`}</style>
+
+      {/* ── Tool name header (center top, when loaded from URL) ──────────── */}
+      {currentToolId && visible && (
+        <div style={{
+          position: "fixed", top: "24px", left: "50%", transform: "translateX(-50%)",
+          display: "flex", alignItems: "center", gap: "8px", zIndex: 20,
+          pointerEvents: "none",
+        }}>
+          <span style={{
+            fontFamily: FONT_SERIF, fontSize: "15px",
+            color: dark ? DARK_TEXT : LIGHT_TEXT,
+            opacity: 0.75, whiteSpace: "nowrap", maxWidth: "280px",
+            overflow: "hidden", textOverflow: "ellipsis",
+          }}>
+            {toolName || "Untitled"}
+          </span>
+          <button
+            onClick={(e) => { e.stopPropagation(); setInfoModalOpen(true); }}
+            style={{
+              width: "22px", height: "22px", borderRadius: "50%",
+              border: `1px dashed ${BORDER_COL}`,
+              background: "transparent", cursor: "pointer", outline: "none",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontFamily: FONT_SANS, fontSize: "12px",
+              color: dark ? DARK_MUTED : "#9a9daa",
+              flexShrink: 0, pointerEvents: "all",
+            }}
+          >ⓘ</button>
+        </div>
+      )}
+
+      {/* ── Info modal ────────────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {infoModalOpen && createPortal(
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            style={{
+              position: "fixed", inset: 0, zIndex: 500,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              backgroundColor: dark ? "rgba(30,29,26,0.85)" : "rgba(252,246,239,0.88)",
+              backdropFilter: "blur(6px)",
+            }}
+            onClick={() => setInfoModalOpen(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 12, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 12, scale: 0.97 }}
+              transition={{ duration: 0.2, delay: 0.05 }}
+              onClick={e => e.stopPropagation()}
+              style={{
+                background: dark ? "#2d2b28" : LIGHT_BG,
+                border: `1px dashed ${dark ? DARK_BORDER : BORDER_COL}`,
+                borderRadius: "16px", padding: "36px 40px",
+                maxWidth: "380px", width: "90vw", boxSizing: "border-box",
+                display: "flex", flexDirection: "column", gap: "20px",
+              }}
+            >
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                <span style={{ fontFamily: FONT_SERIF, fontSize: "24px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>
+                  {toolName || "Untitled"}
+                </span>
+                {toolDescription && (
+                  <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: dark ? DARK_MUTED : "#7c7c7c", lineHeight: "1.55" }}>
+                    {toolDescription}
+                  </span>
+                )}
+              </div>
+              {prompts.filter(p => p.trim()).length > 0 && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 600, letterSpacing: "0.08em", color: dark ? DARK_MUTED : "#9a9daa", textTransform: "uppercase" }}>
+                    {lang === "de" ? "Schreibanstöße" : "Writing Prompts"}
+                  </span>
+                  {prompts.filter(p => p.trim()).map((pr, i) => (
+                    <span key={i} style={{ fontFamily: FONT_SANS, fontSize: "14px", color: dark ? DARK_TEXT : LIGHT_TEXT, lineHeight: "1.5", paddingLeft: "8px", borderLeft: `2px solid ${dark ? "rgba(240,232,220,0.25)" : "rgba(164,164,164,0.4)"}` }}>
+                      {pr}
+                    </span>
+                  ))}
+                </div>
+              )}
+              <button
+                onClick={() => setInfoModalOpen(false)}
+                style={{
+                  alignSelf: "flex-end",
+                  fontFamily: FONT_SANS, fontSize: "13px", padding: "7px 18px",
+                  borderRadius: "100px", border: `1px dashed ${dark ? DARK_BORDER : BORDER_COL}`,
+                  background: "transparent", color: dark ? DARK_MUTED : "#9a9daa", cursor: "pointer",
+                }}
+              >{lang === "de" ? "Schließen" : "Close"}</button>
+            </motion.div>
+          </motion.div>,
+          document.body
+        )}
+      </AnimatePresence>
 
       {/* ── Noise overlay ─────────────────────────────────────────────────── */}
       {grainLevel > 0 && (
@@ -998,33 +1101,61 @@ export default function New() {
               </div>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              <button
-                onClick={() => setIdentityOpen(o => !o)}
-                style={{
-                  width: "105px", height: "105px",
-                  borderRadius: "4px",
-                  background: identityOpen ? catActiveBg : "transparent",
-                  border: `1px dashed ${innerBorder}`,
-                  cursor: "pointer", outline: "none",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontFamily: FONT_SANS, fontSize: "16px", fontWeight: 400,
-                  color: dark ? DARK_TEXT : LIGHT_TEXT,
-                  letterSpacing: "-0.16px", lineHeight: "22px",
-                  textAlign: "center", whiteSpace: "pre-line",
-                }}>{t.identityBtn}</button>
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                style={{
-                  width: "105px", borderRadius: "4px", background: "transparent",
-                  border: `1px dashed ${innerBorder}`,
-                  cursor: saving ? "wait" : "pointer", outline: "none",
-                  padding: "6px 12px",
-                  fontFamily: FONT_SANS, fontSize: "16px", fontWeight: 400,
-                  color: dark ? DARK_TEXT : LIGHT_TEXT,
-                  lineHeight: "22px", textAlign: "center",
-                  opacity: saving ? 0.6 : 1,
-                }}>{saving ? "…" : t.saveBtn}</button>
+              {canEdit ? (
+                <>
+                  <button
+                    onClick={() => setIdentityOpen(o => !o)}
+                    style={{
+                      width: "105px", height: "105px",
+                      borderRadius: "4px",
+                      background: identityOpen ? catActiveBg : "transparent",
+                      border: `1px dashed ${innerBorder}`,
+                      cursor: "pointer", outline: "none",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontFamily: FONT_SANS, fontSize: "16px", fontWeight: 400,
+                      color: dark ? DARK_TEXT : LIGHT_TEXT,
+                      letterSpacing: "-0.16px", lineHeight: "22px",
+                      textAlign: "center", whiteSpace: "pre-line",
+                    }}>{t.identityBtn}</button>
+                  <button
+                    onClick={handleSave}
+                    disabled={saving}
+                    style={{
+                      width: "105px", borderRadius: "4px", background: "transparent",
+                      border: `1px dashed ${innerBorder}`,
+                      cursor: saving ? "wait" : "pointer", outline: "none",
+                      padding: "6px 12px",
+                      fontFamily: FONT_SANS, fontSize: "16px", fontWeight: 400,
+                      color: dark ? DARK_TEXT : LIGHT_TEXT,
+                      lineHeight: "22px", textAlign: "center",
+                      opacity: saving ? 0.6 : 1,
+                    }}>{saving ? "…" : t.saveBtn}</button>
+                </>
+              ) : loadedToolIsOwn ? (
+                <button
+                  onClick={() => { setEditModeEnabledState(true); setIdentityOpen(false); }}
+                  style={{
+                    width: "105px", borderRadius: "4px", background: "transparent",
+                    border: `1px dashed ${innerBorder}`,
+                    cursor: "pointer", outline: "none",
+                    padding: "10px 12px",
+                    fontFamily: FONT_SANS, fontSize: "15px", fontWeight: 400,
+                    color: dark ? DARK_TEXT : LIGHT_TEXT,
+                    lineHeight: "22px", textAlign: "center",
+                  }}
+                >
+                  {lang === "de" ? "Bearbeiten" : "Edit"}
+                </button>
+              ) : (
+                <span style={{
+                  fontFamily: FONT_SANS, fontSize: "12px",
+                  color: dark ? DARK_MUTED : "#9a9daa",
+                  lineHeight: "1.4", textAlign: "center",
+                  opacity: 0.7,
+                }}>
+                  {lang === "de" ? "Nur ansehen" : "View only"}
+                </span>
+              )}
             </div>
           </motion.div>
         )}
@@ -1050,6 +1181,21 @@ export default function New() {
             }}
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Read-only banner for non-editable tools */}
+            {!canEdit && !identityOpen && (
+              <div style={{
+                position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 10,
+                padding: "8px 16px",
+                background: dark ? "rgba(30,28,26,0.9)" : "rgba(252,246,239,0.9)",
+                borderTop: `1px dashed ${dark ? DARK_BORDER : BORDER_COL}`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                backdropFilter: "blur(4px)",
+              }}>
+                <span style={{ fontFamily: FONT_SANS, fontSize: "12px", color: dark ? DARK_MUTED : "#9a9daa" }}>
+                  {lang === "de" ? "Nur ansehen – Regeln nicht änderbar" : "View only – rules cannot be changed"}
+                </span>
+              </div>
+            )}
             {identityOpen ? (
               /* ── Identity panel ─────────────────────────────────────────── */
               <>
@@ -1179,7 +1325,7 @@ export default function New() {
               </>
             ) : (
               /* ── Category detail ────────────────────────────────────────── */
-              <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "16px", overflowY: "auto", flex: 1 }}>
+              <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "16px", overflowY: "auto", flex: 1, pointerEvents: canEdit ? "auto" : "none", opacity: canEdit ? 1 : 0.75 }}>
                 <span style={{ fontFamily: FONT_SERIF, fontSize: "22px", color: dark ? DARK_TEXT : LIGHT_TEXT, lineHeight: "normal" }}>
                   {t.catHeading(SIDEBAR_CATS.find(c => c.en === activeCategory) ?? { en: activeCategory, de: activeCategory })}
                 </span>

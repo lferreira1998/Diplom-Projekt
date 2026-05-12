@@ -1,6 +1,5 @@
 import { useRef, useEffect, useLayoutEffect, useCallback, useState } from "react";
 import { createPortal } from "react-dom";
-import { FallingText } from "../../offthegrid/components/FallingText";
 
 // ── Model ─────────────────────────────────────────────────────────────────────
 
@@ -37,7 +36,6 @@ interface WritingZoneProps {
   verblassenSpeed?: number; // 10–500, default 100
   spiralModus?: boolean;
   textAppearsRandom?: boolean;
-  customLineMode?: boolean;
   randomMode?: "words" | "sentences";
   writingPrompt?: string;
   fontFamily?: string;
@@ -772,7 +770,6 @@ export function WritingZone({
   verblassenSpeed    = 100,
   spiralModus        = false,
   textAppearsRandom  = false,
-  customLineMode     = false,
   randomMode         = "words" as const,
   writingPrompt      = "",
   fontSize           = 20,
@@ -1282,16 +1279,6 @@ export function WritingZone({
 
   // ── JSX ──────────────────────────────────────────────────────────────────
 
-  if (customLineMode) {
-    return (
-      <div
-        className="flex-1 relative transition-all duration-300"
-        style={{ paddingRight: panelOpen ? "343px" : "0px", minHeight: "100vh" }}
-      >
-        <FallingText />
-      </div>
-    );
-  }
 
   if (textAppearsRandom) {
     return (

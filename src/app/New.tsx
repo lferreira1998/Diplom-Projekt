@@ -103,7 +103,6 @@ const TRANSLATIONS = {
     posStandard: "Standard",
     posSpiral: "Spiralförmiger Text",
     posRandom: "Text erscheint zufällig",
-    posCustom: "Zeichne deine eigene Linie",
     // Look & Feel
     lfGrain: "Körnung & Textur",
     lfTextSize: "Textgröße",
@@ -192,7 +191,6 @@ const TRANSLATIONS = {
     posStandard: "Standard",
     posSpiral: "Spiraling Text",
     posRandom: "Text appears random",
-    posCustom: "Draw your own path",
     // Look & Feel
     lfGrain: "Grain & Texture",
     lfTextSize: "Text Size",
@@ -613,7 +611,7 @@ export default function New() {
   const [verblassSchnelligkeit, setVerblassSchnelligkeit] = useState(3);
 
   // Position params
-  const [positionMode, setPositionMode] = useState<"standard" | "spiral" | "random" | "custom">("custom");
+  const [positionMode, setPositionMode] = useState<"standard" | "spiral" | "random">("custom");
 
   // Look & Feel params
   const [grainLevel, setGrainLevel]       = useState(0);
@@ -878,7 +876,6 @@ export default function New() {
           verblassenSpeed={wzVerblSpeed}
           spiralModus={positionMode === "spiral"}
           textAppearsRandom={positionMode === "random"}
-          customLineMode={positionMode === "custom"}
           randomMode="words"
           writingPrompt={prompts[0] || t.writingPrompt}
           fontSize={computedFontSize}
@@ -1418,7 +1415,6 @@ export default function New() {
                       { value: "standard" as const, label: t.posStandard },
                       { value: "spiral" as const, label: t.posSpiral },
                       { value: "random" as const, label: t.posRandom },
-                      { value: "custom" as const, label: t.posCustom },
                     ]).map(opt => (
                       <div key={opt.value} onClick={() => setPositionMode(opt.value)} style={{
                         display: "flex", alignItems: "center", justifyContent: "space-between",

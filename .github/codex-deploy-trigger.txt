@@ -1,1 +1,0 @@
-Deploy trigger after removing custom line mode on 2026-05-12.

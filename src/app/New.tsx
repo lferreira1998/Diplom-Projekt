@@ -880,6 +880,7 @@ export default function New() {
           writingPrompt={prompts[0] || t.writingPrompt}
           fontSize={computedFontSize}
           fontFamily={FONT_SERIF}
+          centeredPrompt={true}
         />
       </motion.div>
 

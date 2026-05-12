@@ -39,6 +39,7 @@ interface WritingZoneProps {
   randomMode?: "words" | "sentences";
   writingPrompt?: string;
   fontFamily?: string;
+  centeredPrompt?: boolean;
 }
 
 // ── Pure helpers ──────────────────────────────────────────────────────────────
@@ -773,6 +774,7 @@ export function WritingZone({
   writingPrompt      = "",
   fontSize           = 20,
   fontFamily         = "'IBM Plex Mono', 'Courier New', monospace",
+  centeredPrompt     = false,
 }: WritingZoneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const cursorDomRef = useRef<HTMLSpanElement>(null);
@@ -1333,6 +1335,26 @@ export function WritingZone({
 
   return (
     <>
+      {centeredPrompt && positions.length === 0 && (
+        <div style={{
+          position: "fixed", inset: 0,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          pointerEvents: "none", zIndex: 0,
+        }}>
+          <p style={{
+            fontFamily: fontFamily,
+            fontSize: "24px",
+            lineHeight: "1.875",
+            color: "rgba(155,155,155,0.8)",
+            textAlign: "center",
+            maxWidth: "800px",
+            padding: "0 40px",
+            margin: 0,
+          }}>
+            {writingPrompt}
+          </p>
+        </div>
+      )}
       <div
         className="flex-1 flex items-start pt-6 md:pt-12"
       >
@@ -1359,7 +1381,7 @@ export function WritingZone({
             boxShadow:    selectAll ? "inset 0 0 0 2px rgba(100,130,200,0.35)" : undefined,
           }}
         >
-          {positions.length === 0 && (
+          {positions.length === 0 && !centeredPrompt && (
             <span
               className="select-none absolute top-0 left-0 pointer-events-none"
               style={{ color: "#C0C2CA", fontStyle: "italic" }}

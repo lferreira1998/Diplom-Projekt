@@ -20,11 +20,17 @@ function getSessionId(): string {
 // ── Tool Card ─────────────────────────────────────────────────────────────────
 function ToolCard({ tool, onClick, onDelete }: { tool: NewToolData; onClick: () => void; onDelete?: () => void }) {
   const [hovered, setHovered] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+
+  const handleMouseLeave = () => {
+    setHovered(false);
+    setConfirming(false);
+  };
 
   return (
     <div
       onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      onMouseLeave={handleMouseLeave}
       style={{
         border: `1px dashed ${hovered ? LIGHT_TEXT : BORDER_COL}`,
         borderRadius: "8px",
@@ -40,23 +46,60 @@ function ToolCard({ tool, onClick, onDelete }: { tool: NewToolData; onClick: () 
     >
       {/* Delete button (only for "Meine Tools") */}
       {onDelete && (
-        <button
-          onClick={(e) => { e.stopPropagation(); onDelete(); }}
-          title="Löschen"
+        <div
           style={{
             position: "absolute", top: "8px", right: "8px",
-            width: "24px", height: "24px",
-            background: "rgba(252,246,239,0.85)",
-            border: `1px dashed ${BORDER_COL}`,
-            borderRadius: "50%",
-            cursor: "pointer", outline: "none",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontFamily: FONT_SANS, fontSize: "13px", color: MUTED,
-            zIndex: 2, lineHeight: 1,
+            display: "flex", alignItems: "center", gap: "4px",
             opacity: hovered ? 1 : 0,
             transition: "opacity 0.15s",
+            zIndex: 2,
           }}
-        >×</button>
+        >
+          {confirming ? (
+            <>
+              <span style={{ fontFamily: FONT_SANS, fontSize: "11px", color: MUTED, whiteSpace: "nowrap" }}>
+                Löschen?
+              </span>
+              <button
+                onClick={(e) => { e.stopPropagation(); onDelete(); }}
+                style={{
+                  height: "22px", padding: "0 8px",
+                  background: "rgba(180,60,60,0.12)",
+                  border: `1px dashed rgba(180,60,60,0.4)`,
+                  borderRadius: "4px",
+                  cursor: "pointer", outline: "none",
+                  fontFamily: FONT_SANS, fontSize: "11px", color: "#b43c3c",
+                }}
+              >Ja</button>
+              <button
+                onClick={(e) => { e.stopPropagation(); setConfirming(false); }}
+                style={{
+                  height: "22px", padding: "0 8px",
+                  background: "rgba(252,246,239,0.85)",
+                  border: `1px dashed ${BORDER_COL}`,
+                  borderRadius: "4px",
+                  cursor: "pointer", outline: "none",
+                  fontFamily: FONT_SANS, fontSize: "11px", color: MUTED,
+                }}
+              >Nein</button>
+            </>
+          ) : (
+            <button
+              onClick={(e) => { e.stopPropagation(); setConfirming(true); }}
+              title="Aus meinen Tools entfernen"
+              style={{
+                width: "24px", height: "24px",
+                background: "rgba(252,246,239,0.85)",
+                border: `1px dashed ${BORDER_COL}`,
+                borderRadius: "50%",
+                cursor: "pointer", outline: "none",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontFamily: FONT_SANS, fontSize: "13px", color: MUTED,
+                lineHeight: 1,
+              }}
+            >×</button>
+          )}
+        </div>
       )}
 
       {/* Image area */}

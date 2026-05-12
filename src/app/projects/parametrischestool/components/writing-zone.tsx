@@ -38,6 +38,7 @@ interface WritingZoneProps {
   textAppearsRandom?: boolean;
   randomMode?: "words" | "sentences";
   writingPrompt?: string;
+  fontFamily?: string;
 }
 
 // ── Pure helpers ──────────────────────────────────────────────────────────────
@@ -493,7 +494,7 @@ function RandomTextZone({ textColor, randomMode }: RandomTextZoneProps) {
             style={{
               position: "absolute", left: "50%", top: "50%",
               color: `rgb(${r},${g},${b})`,
-              fontFamily: "'IBM Plex Mono', 'Courier New', monospace",
+              fontFamily: fontFamily,
               fontSize: "clamp(0.9rem, 2vw, 1.15rem)",
               fontWeight: 400, letterSpacing: "0.02em",
               whiteSpace: "nowrap", userSelect: "none", pointerEvents: "none",
@@ -694,7 +695,7 @@ function SpiralCanvas({
         }
       }
 
-      ctx.font = `${fs}px 'IBM Plex Mono', monospace`;
+      ctx.font = `${fs}px ${fontFamily}`;
       const cw    = ctx.measureText(chars[i]).width;
       const aStep = (cw * 0.78 + fs * 0.1) / Math.max(curRad, 4);
       curAngle += aStep;
@@ -771,6 +772,7 @@ export function WritingZone({
   randomMode         = "words" as const,
   writingPrompt      = "",
   fontSize           = 20,
+  fontFamily         = "'IBM Plex Mono', 'Courier New', monospace",
 }: WritingZoneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const cursorDomRef = useRef<HTMLSpanElement>(null);
@@ -1251,7 +1253,7 @@ export function WritingZone({
                   position: "fixed",
                   left: `${cloneX}px`,
                   top: `${rect.top}px`,
-                  fontFamily: "'IBM Plex Mono', 'Courier New', monospace",
+                  fontFamily: fontFamily,
                   fontSize: "clamp(0.9rem, 2vw, 1.15rem)",
                   lineHeight: 1.95,
                   color: textColor,

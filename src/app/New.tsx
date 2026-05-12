@@ -611,7 +611,7 @@ export default function New() {
   const [verblassSchnelligkeit, setVerblassSchnelligkeit] = useState(3);
 
   // Position params
-  const [positionMode, setPositionMode] = useState<"spiral" | "random" | "custom">("spiral");
+  const [positionMode, setPositionMode] = useState<"spiral" | "random" | "custom">("custom");
 
   // Look & Feel params
   const [grainLevel, setGrainLevel]       = useState(0);
@@ -695,7 +695,7 @@ export default function New() {
       setTextVerblassEnabled(p.textVerblassEnabled ?? false);
       setVerblassZeitpunkt(p.verblassZeitpunkt ?? 2);
       setVerblassSchnelligkeit(p.verblassSchnelligkeit ?? 3);
-      setPositionMode((p.positionMode as typeof positionMode) ?? "spiral");
+      setPositionMode((p.positionMode as typeof positionMode) ?? "custom");
       setGrainLevel(p.grainLevel ?? 0);
       setTextSizeLevel(p.textSizeLevel ?? 20);
       setBgHue(p.bgHue ?? null);
@@ -879,6 +879,7 @@ export default function New() {
           randomMode="words"
           writingPrompt={prompts[0] || t.writingPrompt}
           fontSize={computedFontSize}
+          fontFamily={FONT_SERIF}
         />
       </motion.div>
 

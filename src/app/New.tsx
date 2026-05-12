@@ -132,6 +132,7 @@ const TRANSLATIONS = {
     lfTextSize: "Textgröße",
     lfBgColor: "Hintergrundfarbe anpassen",
     lfBgColorReset: "Farbe zurücksetzen",
+    lfNoColor: "Keine Farbe",
     // Timer overlay
     timesUp: "Zeit abgelaufen.",
     timesUpSub: "Dein Text wartet hinter dem Dunkel.",
@@ -221,6 +222,7 @@ const TRANSLATIONS = {
     lfTextSize: "Text Size",
     lfBgColor: "Adjust background color",
     lfBgColorReset: "Reset color",
+    lfNoColor: "No color",
     // Timer overlay
     timesUp: "Time's up.",
     timesUpSub: "Your text waits behind the dark.",
@@ -1023,7 +1025,7 @@ export default function New() {
             writingPrompt={prompts[0] || t.writingPrompt}
             fontSize={computedFontSize}
             fontFamily={FONT_SERIF}
-            centeredPrompt={true}
+            centeredPrompt={false}
           />
         )}
       </motion.div>
@@ -1673,23 +1675,21 @@ export default function New() {
 
                     <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
                       <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.lfBgColor}</span>
-                      <div style={{ borderRadius: "4px", border: `1px dashed ${innerBorder}`, height: "44px", position: "relative", overflow: "hidden", background: "linear-gradient(to right, oklch(97.5% 0.015 0), oklch(97.5% 0.015 60), oklch(97.5% 0.015 120), oklch(97.5% 0.015 180), oklch(97.5% 0.015 240), oklch(97.5% 0.015 300), oklch(97.5% 0.015 360))" }}>
+                      <div style={{ borderRadius: "4px", border: `1px dashed ${innerBorder}`, height: "44px", position: "relative", overflow: "hidden", background: dark ? "linear-gradient(to right, oklch(32% 0.028 0), oklch(32% 0.028 60), oklch(32% 0.028 120), oklch(32% 0.028 180), oklch(32% 0.028 240), oklch(32% 0.028 300), oklch(32% 0.028 360))" : "linear-gradient(to right, oklch(97.5% 0.015 0), oklch(97.5% 0.015 60), oklch(97.5% 0.015 120), oklch(97.5% 0.015 180), oklch(97.5% 0.015 240), oklch(97.5% 0.015 300), oklch(97.5% 0.015 360))" }}>
                         <input type="range" min={0} max={360} value={bgHue ?? 0} onChange={e => setBgHue(Number(e.target.value))} className="hue-slider" style={{ position: "absolute", inset: 0 }} />
                       </div>
-                      {bgHue !== null && (
-                        <button
-                          onClick={() => setBgHue(null)}
-                          style={{
-                            alignSelf: "flex-start",
-                            fontFamily: FONT_SANS, fontSize: "13px",
-                            padding: "5px 14px", borderRadius: "100px",
-                            border: `1px dashed ${innerBorder}`,
-                            background: "transparent",
-                            color: dark ? DARK_MUTED : "#9a9daa",
-                            cursor: "pointer", outline: "none",
-                          }}
-                        >{t.lfBgColorReset}</button>
-                      )}
+                      <button
+                        onClick={() => setBgHue(null)}
+                        style={{
+                          alignSelf: "flex-start",
+                          fontFamily: FONT_SANS, fontSize: "13px",
+                          padding: "5px 14px", borderRadius: "100px",
+                          border: `1px dashed ${innerBorder}`,
+                          background: bgHue === null ? (dark ? "rgba(240,232,220,0.12)" : "rgba(0,0,0,0.06)") : "transparent",
+                          color: dark ? DARK_MUTED : "#9a9daa",
+                          cursor: "pointer", outline: "none",
+                        }}
+                      >{t.lfNoColor}</button>
                     </div>
                   </div>
                 )}

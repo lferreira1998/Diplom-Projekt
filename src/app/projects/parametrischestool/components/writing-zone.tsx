@@ -1371,7 +1371,7 @@ export function WritingZone({
             marginLeft:   panelOpen ? "auto" : "0",
             marginRight:  "auto",
             color:        textColor,
-            fontFamily:   "'IBM Plex Mono', 'Courier New', monospace",
+            fontFamily:   fontFamily,
             fontSize:     `${fontSize}px`,
             lineHeight:   1.6,
             caretColor:   "transparent",
@@ -1405,7 +1405,7 @@ export function WritingZone({
         ref={measSpanRef}
         className="absolute left-0 top-0 pointer-events-none"
         style={{
-          fontFamily: "'IBM Plex Mono', 'Courier New', monospace",
+          fontFamily: fontFamily,
           fontSize: `${fontSize}px`,
           lineHeight: 1.6,
           visibility: "hidden",

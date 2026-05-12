@@ -647,7 +647,7 @@ export default function New() {
 
   // Look & Feel params
   const [grainLevel, setGrainLevel]       = useState(0);
-  const [textSizeLevel, setTextSizeLevel] = useState(20);
+  const [textSizeLevel, setTextSizeLevel] = useState(46);
   const [bgHue, setBgHue]                 = useState<number | null>(null);
 
   // Identity panel state
@@ -1025,7 +1025,8 @@ export default function New() {
             writingPrompt={prompts[0] || t.writingPrompt}
             fontSize={computedFontSize}
             fontFamily={FONT_SERIF}
-            centeredPrompt={true}
+            centeredPrompt={false}
+            containerWidth="764px"
           />
         )}
       </motion.div>

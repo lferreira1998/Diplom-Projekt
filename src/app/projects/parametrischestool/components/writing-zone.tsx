@@ -40,6 +40,7 @@ interface WritingZoneProps {
   writingPrompt?: string;
   fontFamily?: string;
   centeredPrompt?: boolean;
+  containerWidth?: string;
 }
 
 // ── Pure helpers ──────────────────────────────────────────────────────────────
@@ -775,6 +776,7 @@ export function WritingZone({
   fontSize           = 20,
   fontFamily         = "'IBM Plex Mono', 'Courier New', monospace",
   centeredPrompt     = false,
+  containerWidth     = "1010px",
 }: WritingZoneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const cursorDomRef = useRef<HTMLSpanElement>(null);
@@ -1366,7 +1368,7 @@ export function WritingZone({
           onBlur={() => { selectAllRef.current = false; setSelectAll(false); }}
           className="outline-none cursor-text min-h-[60vh] relative"
           style={{
-            width:        "1010px",
+            width:        containerWidth,
             maxWidth:     "100%",
             marginLeft:   panelOpen ? "auto" : "0",
             marginRight:  "auto",

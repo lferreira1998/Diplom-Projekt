@@ -1344,12 +1344,12 @@ export function WritingZone({
         }}>
           <p style={{
             fontFamily: fontFamily,
-            fontSize: "24px",
-            lineHeight: "1.875",
+            fontSize: "clamp(20px, 2.8vw, 56px)",
+            lineHeight: "1.5",
             color: "rgba(155,155,155,0.8)",
             textAlign: "center",
-            maxWidth: "800px",
-            padding: "0 40px",
+            width: "100%",
+            padding: "0 48px",
             margin: 0,
           }}>
             {writingPrompt}

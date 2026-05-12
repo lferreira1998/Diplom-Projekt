@@ -100,6 +100,7 @@ const TRANSLATIONS = {
     fadeAfter: (n: number) => `Nach ${n} min`,
     fadeSpeed: "Schnelligkeit des Verblassens",
     // Position
+    posStandard: "Standard",
     posSpiral: "Spiralförmiger Text",
     posRandom: "Text erscheint zufällig",
     posCustom: "Zeichne deine eigene Linie",
@@ -188,6 +189,7 @@ const TRANSLATIONS = {
     fadeAfter: (n: number) => `After ${n} min`,
     fadeSpeed: "Fade speed",
     // Position
+    posStandard: "Standard",
     posSpiral: "Spiraling Text",
     posRandom: "Text appears random",
     posCustom: "Draw your own path",
@@ -611,7 +613,7 @@ export default function New() {
   const [verblassSchnelligkeit, setVerblassSchnelligkeit] = useState(3);
 
   // Position params
-  const [positionMode, setPositionMode] = useState<"spiral" | "random" | "custom">("custom");
+  const [positionMode, setPositionMode] = useState<"standard" | "spiral" | "random" | "custom">("custom");
 
   // Look & Feel params
   const [grainLevel, setGrainLevel]       = useState(0);
@@ -876,6 +878,7 @@ export default function New() {
           verblassenSpeed={wzVerblSpeed}
           spiralModus={positionMode === "spiral"}
           textAppearsRandom={positionMode === "random"}
+          customLineMode={positionMode === "custom"}
           randomMode="words"
           writingPrompt={prompts[0] || t.writingPrompt}
           fontSize={computedFontSize}
@@ -1412,6 +1415,7 @@ export default function New() {
                 {activeCategory === "Position" && (
                   <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                     {([
+                      { value: "standard" as const, label: t.posStandard },
                       { value: "spiral" as const, label: t.posSpiral },
                       { value: "random" as const, label: t.posRandom },
                       { value: "custom" as const, label: t.posCustom },

@@ -677,29 +677,31 @@ export default function New() {
       setCurrentToolId(toolId);
       const p = tool.params;
       setToolName(p.displayName ?? tool.name);
-      setToolDescription(tool.description);
+      setToolDescription(tool.description ?? "");
       setPrompts(p.prompts?.length ? p.prompts : [""]);
-      setTimerEnabled(p.timerEnabled ?? false);
+      setTimerEnabled(p.timerEnabled === true);
       setTimerMode((p.timerMode as "fixed" | "free") ?? "fixed");
-      setTimerMinutes(p.timerMinutes ?? 10);
-      setVisualTimer(p.visualTimer ?? false);
-      setTimerUserReset(p.timerUserReset ?? false);
-      setCursorRunning(p.cursorRunning ?? false);
+      setTimerMinutes(typeof p.timerMinutes === "number" ? p.timerMinutes : 10);
+      setVisualTimer(p.visualTimer === true);
+      setTimerUserReset(p.timerUserReset === true);
+      setCursorRunning(p.cursorRunning === true);
       setVisibility((p.visibility as typeof visibility) ?? "visible");
       setDeleteMode((p.deleteMode as typeof deleteMode) ?? "all");
-      setCorrectionVisible(p.correctionVisible ?? false);
-      setTextFliegtEnabled(p.textFliegtEnabled ?? false);
+      setCorrectionVisible(p.correctionVisible === true);
+      setTextFliegtEnabled(p.textFliegtEnabled === true);
       setFliegtUnit((p.fliegtUnit as typeof fliegtUnit) ?? "Sätze");
-      setFliegtZeitpunkt(p.fliegtZeitpunkt ?? 2);
-      setFliegtSchnelligkeit(p.fliegtSchnelligkeit ?? 3);
-      setTextVerblassEnabled(p.textVerblassEnabled ?? false);
-      setVerblassZeitpunkt(p.verblassZeitpunkt ?? 2);
-      setVerblassSchnelligkeit(p.verblassSchnelligkeit ?? 3);
+      setFliegtZeitpunkt(typeof p.fliegtZeitpunkt === "number" ? p.fliegtZeitpunkt : 2);
+      setFliegtSchnelligkeit(typeof p.fliegtSchnelligkeit === "number" ? p.fliegtSchnelligkeit : 3);
+      setTextVerblassEnabled(p.textVerblassEnabled === true);
+      setVerblassZeitpunkt(typeof p.verblassZeitpunkt === "number" ? p.verblassZeitpunkt : 2);
+      setVerblassSchnelligkeit(typeof p.verblassSchnelligkeit === "number" ? p.verblassSchnelligkeit : 3);
       setPositionMode((p.positionMode as typeof positionMode) ?? "custom");
-      setGrainLevel(p.grainLevel ?? 0);
-      setTextSizeLevel(p.textSizeLevel ?? 20);
-      setBgHue(p.bgHue ?? null);
+      setGrainLevel(typeof p.grainLevel === "number" ? p.grainLevel : 0);
+      setTextSizeLevel(typeof p.textSizeLevel === "number" ? p.textSizeLevel : 20);
+      setBgHue(typeof p.bgHue === "number" ? p.bgHue : null);
       if (p.asciiImage) setLoadedAsciiImage(p.asciiImage);
+    }).catch((err) => {
+      console.error("[New] Failed to load tool:", err);
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -1275,16 +1277,16 @@ export default function New() {
                     {(["visible", "invisible", "sentence", "word", "char"] as const).map((val) => (
                       <button key={val} onClick={() => setVisibility(val)} style={{
                         width: "100%", height: "44px",
-                        background: visibility === val ? (dark ? "rgba(240,232,220,0.14)" : "rgba(85,85,85,0.09)") : settingsCardBg,
+                        background: visibility === val ? (dark ? "rgba(240,232,220,0.22)" : "rgba(85,85,85,0.13)") : settingsCardBg,
                         border: visibility === val
-                          ? `1.5px solid ${dark ? "rgba(240,232,220,0.7)" : LIGHT_TEXT}`
+                          ? `2px solid ${dark ? "rgba(240,232,220,0.85)" : LIGHT_TEXT}`
                           : `1px dashed ${innerBorder}`,
                         borderRadius: "8px", padding: "0 16px",
                         display: "flex", alignItems: "center", justifyContent: "space-between",
                         cursor: "pointer", outline: "none",
                         fontFamily: FONT_SANS, fontSize: "15px",
                         color: dark ? DARK_TEXT : LIGHT_TEXT,
-                        fontWeight: visibility === val ? 500 : 400,
+                        fontWeight: visibility === val ? 600 : 400,
                         boxSizing: "border-box", transition: "background 0.12s, border 0.12s",
                       }}>
                         {val === "visible" ? t.visVisible
@@ -1308,14 +1310,14 @@ export default function New() {
                           <div key={key} onClick={() => setDeleteMode(key)} style={{
                             display: "flex", alignItems: "center", justifyContent: "space-between",
                             border: deleteMode === key
-                              ? `1.5px solid ${dark ? "rgba(240,232,220,0.7)" : LIGHT_TEXT}`
+                              ? `2px solid ${dark ? "rgba(240,232,220,0.85)" : LIGHT_TEXT}`
                               : `1px dashed ${innerBorder}`,
                             borderRadius: "4px",
                             padding: "9px 12px", cursor: "pointer",
-                            background: deleteMode === key ? (dark ? "rgba(240,232,220,0.14)" : "rgba(85,85,85,0.09)") : "transparent",
+                            background: deleteMode === key ? (dark ? "rgba(240,232,220,0.22)" : "rgba(85,85,85,0.13)") : "transparent",
                             transition: "background 0.12s, border 0.12s",
                           }}>
-                            <span style={{ fontFamily: FONT_SANS, fontSize: "15px", fontWeight: deleteMode === key ? 500 : 400, color: dark ? DARK_TEXT : LIGHT_TEXT }}>{deleteOptLabels[key]}</span>
+                            <span style={{ fontFamily: FONT_SANS, fontSize: "15px", fontWeight: deleteMode === key ? 600 : 400, color: dark ? DARK_TEXT : LIGHT_TEXT }}>{deleteOptLabels[key]}</span>
                             <RadioCircle selected={deleteMode === key} dark={dark} />
                           </div>
                         ))}
@@ -1419,14 +1421,14 @@ export default function New() {
                       <div key={opt.value} onClick={() => setPositionMode(opt.value)} style={{
                         display: "flex", alignItems: "center", justifyContent: "space-between",
                         border: positionMode === opt.value
-                          ? `1.5px solid ${dark ? "rgba(240,232,220,0.7)" : LIGHT_TEXT}`
+                          ? `2px solid ${dark ? "rgba(240,232,220,0.85)" : LIGHT_TEXT}`
                           : `1px dashed ${innerBorder}`,
                         borderRadius: "4px",
                         padding: "12px 16px", cursor: "pointer",
-                        background: positionMode === opt.value ? (dark ? "rgba(240,232,220,0.14)" : "rgba(85,85,85,0.09)") : settingsCardBg,
+                        background: positionMode === opt.value ? (dark ? "rgba(240,232,220,0.22)" : "rgba(85,85,85,0.13)") : settingsCardBg,
                         transition: "background 0.12s, border 0.12s",
                       }}>
-                        <span style={{ fontFamily: FONT_SANS, fontSize: "15px", fontWeight: positionMode === opt.value ? 500 : 400, color: dark ? DARK_TEXT : LIGHT_TEXT, lineHeight: "1.4" }}>{opt.label}</span>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "15px", fontWeight: positionMode === opt.value ? 600 : 400, color: dark ? DARK_TEXT : LIGHT_TEXT, lineHeight: "1.4" }}>{opt.label}</span>
                         <RadioCircle selected={positionMode === opt.value} dark={dark} />
                       </div>
                     ))}

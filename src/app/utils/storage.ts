@@ -90,6 +90,11 @@ export async function getAllNewTools(): Promise<NewToolData[]> {
   return (data ?? []).filter((row: any) => row.params?.source === "new").map(mapNewRow);
 }
 
+export async function deleteNewTool(id: string): Promise<void> {
+  const { error } = await supabase.from("tools").delete().eq("id", id);
+  if (error) throw error;
+}
+
 export async function getNewToolById(id: string): Promise<NewToolData | null> {
   const { data, error } = await supabase
     .from("tools").select("*").eq("id", id).single();

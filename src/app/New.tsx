@@ -980,12 +980,16 @@ export default function New() {
 
       {/* ── Writing zone ─────────────────────────────────────────────────── */}
       <motion.div
-        animate={{ x: rulesOpen ? 233.5 : 0 }}
+        animate={{
+          paddingLeft: rulesOpen ? "507px" : "165px",
+        }}
         transition={SPRING}
         style={{
           position: "fixed", inset: 0,
           display: "flex", flexDirection: "column",
-          paddingTop: positionMode === "custom" ? "0px" : "24px", zIndex: 1,
+          paddingTop: positionMode === "custom" ? "0px" : "24px",
+          paddingRight: "240px",
+          zIndex: 1,
         }}
       >
         {positionMode === "custom" ? (
@@ -1026,7 +1030,7 @@ export default function New() {
             fontSize={computedFontSize}
             fontFamily={FONT_SERIF}
             centeredPrompt={false}
-            containerWidth="764px"
+            containerWidth="100%"
           />
         )}
       </motion.div>

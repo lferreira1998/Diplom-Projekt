@@ -214,24 +214,6 @@ export default function AsciiImagePanel({ dark, background, textColor, fontSans,
     document.addEventListener("mouseup", onUp);
   };
 
-  const exportWebP = () => {
-    if (!canvasRef.current || !hasRendered) return;
-
-    canvasRef.current.toBlob(
-      (blob) => {
-        if (!blob) return;
-        const url = URL.createObjectURL(blob);
-        const anchor = document.createElement("a");
-        anchor.href = url;
-        anchor.download = `ascii-art-${Date.now()}.webp`;
-        anchor.click();
-        URL.revokeObjectURL(url);
-      },
-      "image/webp",
-      0.95
-    );
-  };
-
   const indicatorPct = (colorHue / 360) * 100;
   const sliderChars = buildSliderChars(brightness, 40, 220);
   const sliderParts = sliderChars.split("⬤");
@@ -313,86 +295,71 @@ export default function AsciiImagePanel({ dark, background, textColor, fontSans,
         )}
       </div>
 
-      <div style={{ background, border: `1px dashed ${BORDER_COL}`, borderRadius: "8px", padding: "12px 16px" }}>
-        <div style={{ color: textColor, fontSize: "15px", marginBottom: "12px" }}>Helligkeit</div>
-        <div style={{ position: "relative", height: "18px", overflow: "hidden" }}>
-          <input
-            type="range"
-            min={40}
-            max={220}
-            value={brightness}
-            onChange={(event) => setBrightness(Number(event.target.value))}
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0, cursor: "pointer", zIndex: 2 }}
-          />
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              display: "flex",
-              alignItems: "center",
-              fontFamily: "'IBM Plex Mono', monospace",
-              fontSize: "15px",
-              lineHeight: "18px",
-              pointerEvents: "none",
-              userSelect: "none",
-              color: dark ? "#fcf6ef" : "#313642",
-            }}
-          >
-            <span>{sliderParts[0]}</span>
-            <span style={{ color: dark ? "#8f8f8f" : "#9a9daa" }}>{"⬤" + sliderParts[1]}</span>
+      {image && (
+        <>
+          <div style={{ background, border: `1px dashed ${BORDER_COL}`, borderRadius: "8px", padding: "12px 16px" }}>
+            <div style={{ color: textColor, fontSize: "15px", marginBottom: "12px" }}>Helligkeit</div>
+            <div style={{ position: "relative", height: "18px", overflow: "hidden" }}>
+              <input
+                type="range"
+                min={40}
+                max={220}
+                value={brightness}
+                onChange={(event) => setBrightness(Number(event.target.value))}
+                style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0, cursor: "pointer", zIndex: 2 }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontSize: "15px",
+                  lineHeight: "18px",
+                  pointerEvents: "none",
+                  userSelect: "none",
+                  color: dark ? "#fcf6ef" : "#313642",
+                }}
+              >
+                <span>{sliderParts[0]}</span>
+                <span style={{ color: dark ? "#8f8f8f" : "#9a9daa" }}>{"⬤" + sliderParts[1]}</span>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
 
-      <div style={{ background, border: `1px dashed ${BORDER_COL}`, borderRadius: "8px", padding: "12px 16px 16px" }}>
-        <div style={{ color: textColor, fontSize: "15px", marginBottom: "12px" }}>Bildfarbe</div>
-        <div
-          ref={colorBarRef}
-          style={{
-            position: "relative",
-            height: "42px",
-            border: `1px dashed ${BORDER_COL}`,
-            borderRadius: "8px",
-            backgroundImage:
-              "linear-gradient(90deg, rgba(255,174,174,0.45) 0%, rgba(255,225,174,0.45) 15%, rgba(227,255,174,0.45) 28%, rgba(174,255,208,0.45) 43%, rgba(174,247,255,0.45) 59%, rgba(174,186,255,0.45) 73%, rgba(229,174,255,0.45) 87%, rgba(255,174,219,0.45) 100%)",
-            cursor: "crosshair",
-          }}
-          onMouseDown={handleColorBarMouseDown}
-        >
-          <div
-            style={{
-              position: "absolute",
-              top: "50%",
-              left: `calc(${indicatorPct}% - 2px)`,
-              width: "4px",
-              height: "28px",
-              borderRadius: "100px",
-              background: BORDER_COL,
-              transform: "translateY(-50%)",
-              pointerEvents: "none",
-            }}
-          />
-        </div>
-      </div>
-
-      <button
-        onClick={exportWebP}
-        disabled={!hasRendered}
-        style={{
-          width: "100%",
-          height: "36px",
-          background,
-          border: `1px dashed ${BORDER_COL}`,
-          borderRadius: "4px",
-          color: textColor,
-          cursor: hasRendered ? "pointer" : "not-allowed",
-          fontFamily: fontSans,
-          fontSize: "15px",
-          opacity: hasRendered ? 1 : 0.45,
-        }}
-      >
-        Save ASCII image
-      </button>
+          <div style={{ background, border: `1px dashed ${BORDER_COL}`, borderRadius: "8px", padding: "12px 16px 16px" }}>
+            <div style={{ color: textColor, fontSize: "15px", marginBottom: "12px" }}>Bildfarbe</div>
+            <div
+              ref={colorBarRef}
+              style={{
+                position: "relative",
+                height: "42px",
+                border: `1px dashed ${BORDER_COL}`,
+                borderRadius: "8px",
+                backgroundImage:
+                  "linear-gradient(90deg, rgba(255,174,174,0.45) 0%, rgba(255,225,174,0.45) 15%, rgba(227,255,174,0.45) 28%, rgba(174,255,208,0.45) 43%, rgba(174,247,255,0.45) 59%, rgba(174,186,255,0.45) 73%, rgba(229,174,255,0.45) 87%, rgba(255,174,219,0.45) 100%)",
+                cursor: "crosshair",
+              }}
+              onMouseDown={handleColorBarMouseDown}
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  top: "50%",
+                  left: `calc(${indicatorPct}% - 2px)`,
+                  width: "4px",
+                  height: "28px",
+                  borderRadius: "100px",
+                  background: BORDER_COL,
+                  transform: "translateY(-50%)",
+                  pointerEvents: "none",
+                }}
+              />
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

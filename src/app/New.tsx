@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { useNavigate, useSearchParams } from "react-router";
 import AsciiImagePanel from "./components/AsciiImagePanel";
+import { CustomPathWriter } from "./components/CustomPathWriter";
 import {
   WritingZone,
   type Position,
@@ -11,16 +12,38 @@ import {
 import { saveNewTool, updateNewTool, getNewToolById } from "./utils/storage";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
-const LIGHT_BG     = "#fcf6ef";
-const PANEL_BG     = "#f8efe5";
-const DARK_BG      = "#484848";
-const BORDER_COL   = "#a4a4a4";
-const DARK_BORDER  = "rgba(252,246,239,0.16)";
-const LIGHT_BTN_BG = "rgba(241,235,228,0.2)";
-const LIGHT_TEXT   = "#555555";
-const DARK_TEXT    = "#f0e8dc";
-const DARK_MUTED   = "rgba(240,232,220,0.5)";
-const SIDEBAR_BG   = "rgba(248,239,229,0.7)";
+const LIGHT_BG    = "#fcf6ef";
+const DARK_BG     = "#484848";
+const BORDER_COL  = "#a4a4a4";
+const DARK_BORDER = "rgba(252,246,239,0.16)";
+const LIGHT_TEXT  = "#555555";
+const DARK_TEXT   = "#f0e8dc";
+const DARK_MUTED  = "rgba(240,232,220,0.5)";
+
+// Hue-aware surface colors: only hue changes, lightness/chroma are fixed
+function getLookFeelColors(bgHue: number | null): { surfaceLight: string; surfaceDark: string } {
+  if (bgHue === null) return { surfaceLight: "#fcf6ef", surfaceDark: "#f9f1e8" };
+  return {
+    surfaceLight: `oklch(97.5% 0.015 ${bgHue})`,
+    surfaceDark:  `oklch(95.5% 0.022 ${bgHue})`,
+  };
+}
+
+function getLookFeelDarkColors(bgHue: number | null): {
+  darkBg: string; darkSidebarBg: string; darkCardBg: string;
+  darkActiveCatBg: string; darkInactiveCatBg: string;
+} {
+  if (bgHue === null) {
+    return { darkBg: "#484848", darkSidebarBg: "#1c1b19", darkCardBg: "#2d2b28", darkActiveCatBg: "#3c3a37", darkInactiveCatBg: "#252321" };
+  }
+  return {
+    darkBg:            `oklch(32% 0.028 ${bgHue})`,
+    darkSidebarBg:     `oklch(14% 0.020 ${bgHue})`,
+    darkCardBg:        `oklch(22% 0.025 ${bgHue})`,
+    darkActiveCatBg:   `oklch(27% 0.025 ${bgHue})`,
+    darkInactiveCatBg: `oklch(17% 0.020 ${bgHue})`,
+  };
+}
 
 const FONT_SERIF = "'freight-text-pro', 'EB Garamond', Georgia, serif";
 const FONT_SANS  = "'general-sans', 'Space Grotesk', sans-serif";
@@ -103,11 +126,12 @@ const TRANSLATIONS = {
     posStandard: "Standard",
     posSpiral: "Spiralförmiger Text",
     posRandom: "Text erscheint zufällig",
+    posCustom: "Zeichne deine eigene Linie",
     // Look & Feel
     lfGrain: "Körnung & Textur",
     lfTextSize: "Textgröße",
     lfBgColor: "Hintergrundfarbe anpassen",
-    lfBgReset: "Doppelklick zum Zurücksetzen",
+    lfBgColorReset: "Farbe zurücksetzen",
     // Timer overlay
     timesUp: "Zeit abgelaufen.",
     timesUpSub: "Dein Text wartet hinter dem Dunkel.",
@@ -191,11 +215,12 @@ const TRANSLATIONS = {
     posStandard: "Standard",
     posSpiral: "Spiraling Text",
     posRandom: "Text appears random",
+    posCustom: "Draw your own path",
     // Look & Feel
     lfGrain: "Grain & Texture",
     lfTextSize: "Text Size",
     lfBgColor: "Adjust background color",
-    lfBgReset: "Double-click to reset",
+    lfBgColorReset: "Reset color",
     // Timer overlay
     timesUp: "Time's up.",
     timesUpSub: "Your text waits behind the dark.",
@@ -347,11 +372,11 @@ function DoubleSlider({ value, min, max, onChange, dark }: {
 
 // ── Timer done overlay ────────────────────────────────────────────────────────
 function TimerDoneOverlay({
-  dark, isVisual, onDelete, onReveal, onCopy, copied, t,
+  dark, isVisual, onDelete, onReveal, onCopy, copied, t, surfaceLight,
 }: {
   dark: boolean; isVisual: boolean;
   onDelete: () => void; onReveal: () => void; onCopy: () => void; copied: boolean;
-  t: Tr;
+  t: Tr; surfaceLight: string;
 }) {
   return createPortal(
     <motion.div
@@ -371,7 +396,7 @@ function TimerDoneOverlay({
         transition={{ duration: 0.28, delay: 0.08 }}
         style={{
           display: "flex", flexDirection: "column", alignItems: "center", gap: "24px",
-          background: dark ? "#2d2b28" : LIGHT_BG,
+          background: dark ? "#2d2b28" : surfaceLight,
           border: `1px dashed ${dark ? DARK_BORDER : BORDER_COL}`,
           borderRadius: "16px",
           padding: "36px 44px",
@@ -425,9 +450,9 @@ function TimerDoneOverlay({
 }
 
 // ── Style helpers ─────────────────────────────────────────────────────────────
-function btnStyle(dark: boolean, extra?: React.CSSProperties): React.CSSProperties {
+function btnStyle(dark: boolean, extra?: React.CSSProperties, surfaceLight = "#fcf6ef"): React.CSSProperties {
   return {
-    background: dark ? "rgba(240,232,220,0.06)" : LIGHT_BTN_BG,
+    background: dark ? "rgba(240,232,220,0.06)" : surfaceLight,
     border: `1px dashed ${BORDER_COL}`,
     borderRadius: "4px",
     cursor: "pointer", outline: "none",
@@ -440,11 +465,11 @@ function btnStyle(dark: boolean, extra?: React.CSSProperties): React.CSSProperti
   };
 }
 
-function navItemStyle(dark: boolean, active: boolean): React.CSSProperties {
+function navItemStyle(dark: boolean, active: boolean, surfaceLight = "#fcf6ef"): React.CSSProperties {
   return {
     background: active
       ? (dark ? "rgba(240,232,220,0.12)" : "rgba(85,85,85,0.1)")
-      : (dark ? "rgba(240,232,220,0.06)" : LIGHT_BTN_BG),
+      : (dark ? "rgba(240,232,220,0.06)" : surfaceLight),
     border: `1px dashed ${active ? (dark ? DARK_TEXT : LIGHT_TEXT) : BORDER_COL}`,
     borderRadius: "4px", cursor: "pointer", outline: "none",
     display: "flex", alignItems: "center", justifyContent: "flex-start",
@@ -474,9 +499,9 @@ function getOrCreateSessionId(): string {
 }
 
 // ── Saved modal ───────────────────────────────────────────────────────────────
-function SavedModal({ dark, savedId, lang, onClose, onPlayground }: {
+function SavedModal({ dark, savedId, lang, onClose, onPlayground, surfaceLight }: {
   dark: boolean; savedId: string; lang: "de" | "en";
-  onClose: () => void; onPlayground: () => void;
+  onClose: () => void; onPlayground: () => void; surfaceLight: string;
 }) {
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
@@ -511,7 +536,7 @@ function SavedModal({ dark, savedId, lang, onClose, onPlayground }: {
         onClick={e => e.stopPropagation()}
         style={{
           display: "flex", flexDirection: "column", alignItems: "center", gap: "24px",
-          background: dark ? "#2d2b28" : LIGHT_BG,
+          background: dark ? "#2d2b28" : surfaceLight,
           border: `1px dashed ${dark ? DARK_BORDER : BORDER_COL}`,
           borderRadius: "16px", padding: "36px 44px",
           maxWidth: "340px", width: "90vw", boxSizing: "border-box",
@@ -616,7 +641,7 @@ export default function New() {
   const [verblassSchnelligkeit, setVerblassSchnelligkeit] = useState(3);
 
   // Position params
-  const [positionMode, setPositionMode] = useState<"standard" | "spiral" | "random">("custom");
+  const [positionMode, setPositionMode] = useState<"standard" | "spiral" | "random" | "custom">("standard");
 
   // Look & Feel params
   const [grainLevel, setGrainLevel]       = useState(0);
@@ -702,7 +727,7 @@ export default function New() {
       setTextVerblassEnabled(p.textVerblassEnabled === true);
       setVerblassZeitpunkt(typeof p.verblassZeitpunkt === "number" ? p.verblassZeitpunkt : 2);
       setVerblassSchnelligkeit(typeof p.verblassSchnelligkeit === "number" ? p.verblassSchnelligkeit : 3);
-      setPositionMode((p.positionMode as typeof positionMode) ?? "custom");
+      setPositionMode((p.positionMode as typeof positionMode) ?? "standard");
       setGrainLevel(typeof p.grainLevel === "number" ? p.grainLevel : 0);
       setTextSizeLevel(typeof p.textSizeLevel === "number" ? p.textSizeLevel : 20);
       setBgHue(typeof p.bgHue === "number" ? p.bgHue : null);
@@ -783,13 +808,16 @@ export default function New() {
   const timerProgress    = timerEnabled && timerTotalSecs > 0
     ? Math.max(0, 1 - timeLeft / timerTotalSecs) : 0;
 
+  const { surfaceLight, surfaceDark } = getLookFeelColors(bgHue);
+  const darkColors = getLookFeelDarkColors(bgHue);
+
   const bg = dark
-    ? DARK_BG
+    ? darkColors.darkBg
     : timerEnabled && visualTimer && timerRunning
       ? lerpColor(LIGHT_BG, DARK_BG, timerProgress)
       : timerEnabled && visualTimer && timerDone && !textRevealed
         ? DARK_BG
-        : bgHue !== null ? `oklch(95% 0.035 ${bgHue})` : LIGHT_BG;
+        : surfaceLight;
 
   const textColor = dark
     ? DARK_TEXT
@@ -800,15 +828,15 @@ export default function New() {
         : LIGHT_TEXT;
 
   const iconColor      = textColor;
-  const sidebarBg      = dark ? "#1c1b19" : SIDEBAR_BG;
-  const catActiveBg    = dark ? "#3c3a37" : LIGHT_BG;
-  const catInactiveBg  = dark ? "#252321" : "#f9f1e8";
-  const settingsCardBg = dark ? "#2d2b28" : LIGHT_BG;
+  const sidebarBg      = dark ? darkColors.darkSidebarBg : surfaceDark;
+  const catActiveBg    = dark ? darkColors.darkActiveCatBg : surfaceLight;
+  const catInactiveBg  = dark ? darkColors.darkInactiveCatBg : surfaceDark;
+  const settingsCardBg = dark ? darkColors.darkCardBg : surfaceLight;
   const descColor      = dark ? DARK_MUTED : "#7c7c7c";
   const innerBorder    = dark ? DARK_BORDER : BORDER_COL;
 
-  const darkBtnBg  = rulesOpen ? (dark ? "rgba(240,232,220,0.1)" : PANEL_BG) : (dark ? "rgba(240,232,220,0.06)" : LIGHT_BTN_BG);
-  const rulesBtnBg = rulesOpen ? (dark ? "rgba(240,232,220,0.1)" : PANEL_BG) : (dark ? "rgba(240,232,220,0.06)" : LIGHT_BTN_BG);
+  const darkBtnBg  = rulesOpen ? (dark ? "rgba(240,232,220,0.1)" : surfaceDark) : (dark ? "rgba(240,232,220,0.06)" : surfaceLight);
+  const rulesBtnBg = rulesOpen ? (dark ? "rgba(240,232,220,0.1)" : surfaceDark) : (dark ? "rgba(240,232,220,0.06)" : surfaceLight);
 
   const wzVisibility = visibility === "invisible" ? "hidden" : visibility as "visible"|"hidden"|"sentence"|"word"|"char";
   const wzDeleteMode = deleteMode === "all" ? "deletable" : deleteMode === "none" ? "no-delete" : deleteMode as "sentence"|"word";
@@ -891,7 +919,7 @@ export default function New() {
               transition={{ duration: 0.2, delay: 0.05 }}
               onClick={e => e.stopPropagation()}
               style={{
-                background: dark ? "#2d2b28" : LIGHT_BG,
+                background: dark ? darkColors.darkCardBg : surfaceLight,
                 border: `1px dashed ${dark ? DARK_BORDER : BORDER_COL}`,
                 borderRadius: "16px", padding: "36px 40px",
                 maxWidth: "380px", width: "90vw", boxSizing: "border-box",
@@ -955,38 +983,49 @@ export default function New() {
         style={{
           position: "fixed", inset: 0,
           display: "flex", flexDirection: "column",
-          paddingTop: "80px", zIndex: 1,
+          paddingTop: positionMode === "custom" ? "0px" : "80px", zIndex: 1,
         }}
       >
-        <WritingZone
-          positions={positions}
-          cursor={cursor}
-          onUpdate={handleUpdate}
-          lastKeyPressTimestamp={lastKeyPressTimestamp}
-          panelOpen={true}
-          textColor={textColor}
-          coverBgColor={bg}
-          visibility={wzVisibility}
-          deleteMode={wzDeleteMode}
-          correctionMode={wzCorrection}
-          cursorLaeuftWeiter={cursorRunning}
-          driftet={textFliegtEnabled}
-          driftSaetze={fliegtUnit === "Sätze"}
-          driftWoerter={fliegtUnit === "Wörter"}
-          driftBuchstaben={fliegtUnit === "Buchstabe"}
-          driftDelay={wzDriftDelay}
-          driftSpeed={wzDriftSpeed}
-          verblasst={textVerblassEnabled}
-          verblassenDelay={wzVerblDelay}
-          verblassenSpeed={wzVerblSpeed}
-          spiralModus={positionMode === "spiral"}
-          textAppearsRandom={positionMode === "random"}
-          randomMode="words"
-          writingPrompt={prompts[0] || t.writingPrompt}
-          fontSize={computedFontSize}
-          fontFamily={FONT_SERIF}
-          centeredPrompt={true}
-        />
+        {positionMode === "custom" ? (
+          <CustomPathWriter
+            textColor={textColor}
+            bgColor={bg}
+            fontSize={computedFontSize}
+            fontFamily={FONT_SERIF}
+            dark={dark}
+            writingPrompt={prompts[0] || t.writingPrompt}
+          />
+        ) : (
+          <WritingZone
+            positions={positions}
+            cursor={cursor}
+            onUpdate={handleUpdate}
+            lastKeyPressTimestamp={lastKeyPressTimestamp}
+            panelOpen={true}
+            textColor={textColor}
+            coverBgColor={bg}
+            visibility={wzVisibility}
+            deleteMode={wzDeleteMode}
+            correctionMode={wzCorrection}
+            cursorLaeuftWeiter={cursorRunning}
+            driftet={textFliegtEnabled}
+            driftSaetze={fliegtUnit === "Sätze"}
+            driftWoerter={fliegtUnit === "Wörter"}
+            driftBuchstaben={fliegtUnit === "Buchstabe"}
+            driftDelay={wzDriftDelay}
+            driftSpeed={wzDriftSpeed}
+            verblasst={textVerblassEnabled}
+            verblassenDelay={wzVerblDelay}
+            verblassenSpeed={wzVerblSpeed}
+            spiralModus={positionMode === "spiral"}
+            textAppearsRandom={positionMode === "random"}
+            randomMode="words"
+            writingPrompt={prompts[0] || t.writingPrompt}
+            fontSize={computedFontSize}
+            fontFamily={FONT_SERIF}
+            centeredPrompt={true}
+          />
+        )}
       </motion.div>
 
       {/* ── Floating ◑ button ─────────────────────────────────────────────── */}
@@ -1563,6 +1602,7 @@ export default function New() {
                       { value: "standard" as const, label: t.posStandard },
                       { value: "spiral" as const, label: t.posSpiral },
                       { value: "random" as const, label: t.posRandom },
+                      { value: "custom" as const, label: t.posCustom },
                     ]).map(opt => (
                       <div key={opt.value} onClick={() => setPositionMode(opt.value)} style={{
                         display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -1633,9 +1673,23 @@ export default function New() {
 
                     <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
                       <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.lfBgColor}</span>
-                      <div style={{ borderRadius: "4px", border: `1px dashed ${innerBorder}`, height: "44px", position: "relative", overflow: "hidden", background: "linear-gradient(to right, oklch(90% 0.06 300), oklch(92% 0.05 0), oklch(93% 0.05 60), oklch(92% 0.05 120), oklch(91% 0.06 180), oklch(91% 0.06 240), oklch(90% 0.06 300))" }}>
-                        <input type="range" min={0} max={360} value={bgHue ?? 0} onChange={e => setBgHue(Number(e.target.value))} onDoubleClick={() => setBgHue(null)} className="hue-slider" style={{ position: "absolute", inset: 0 }} title={t.lfBgReset} />
+                      <div style={{ borderRadius: "4px", border: `1px dashed ${innerBorder}`, height: "44px", position: "relative", overflow: "hidden", background: "linear-gradient(to right, oklch(97.5% 0.015 0), oklch(97.5% 0.015 60), oklch(97.5% 0.015 120), oklch(97.5% 0.015 180), oklch(97.5% 0.015 240), oklch(97.5% 0.015 300), oklch(97.5% 0.015 360))" }}>
+                        <input type="range" min={0} max={360} value={bgHue ?? 0} onChange={e => setBgHue(Number(e.target.value))} className="hue-slider" style={{ position: "absolute", inset: 0 }} />
                       </div>
+                      {bgHue !== null && (
+                        <button
+                          onClick={() => setBgHue(null)}
+                          style={{
+                            alignSelf: "flex-start",
+                            fontFamily: FONT_SANS, fontSize: "13px",
+                            padding: "5px 14px", borderRadius: "100px",
+                            border: `1px dashed ${innerBorder}`,
+                            background: "transparent",
+                            color: dark ? DARK_MUTED : "#9a9daa",
+                            cursor: "pointer", outline: "none",
+                          }}
+                        >{t.lfBgColorReset}</button>
+                      )}
                     </div>
                   </div>
                 )}
@@ -1675,14 +1729,14 @@ export default function New() {
             )}
             {/* Eye toggle */}
             <button
-              style={btnStyle(dark)}
+              style={btnStyle(dark, undefined, surfaceLight)}
               onClick={(e) => { e.stopPropagation(); setVisible(false); setMenuOpen(false); }}
             >
               <IconEyeClosed color={iconColor} />
             </button>
             {/* Language toggle */}
             <button
-              style={btnStyle(dark)}
+              style={btnStyle(dark, undefined, surfaceLight)}
               onClick={(e) => { e.stopPropagation(); setLang(l => l === "de" ? "en" : "de"); }}
             >
               {t.langBtn}
@@ -1704,13 +1758,13 @@ export default function New() {
                 style={{
                   position: "absolute", left: "2px", top: "9px",
                   width: "calc(100% - 4px)", height: "28px",
-                  background: dark ? "rgba(240,232,220,0.1)" : LIGHT_BG,
+                  background: dark ? "rgba(240,232,220,0.1)" : surfaceLight,
                   border: `1px dashed ${BORDER_COL}`,
                   borderRadius: "4px", rotate: -2.42, zIndex: 0, pointerEvents: "none",
                 }}
               />
               <button
-                style={{ ...btnStyle(dark, { background: dark ? "rgba(240,232,220,0.06)" : LIGHT_BG }), position: "relative", zIndex: 1 }}
+                style={{ ...btnStyle(dark, { background: dark ? "rgba(240,232,220,0.06)" : surfaceLight }), position: "relative", zIndex: 1 }}
                 onClick={(e) => { e.stopPropagation(); setMenuOpen(o => !o); setMenuHovered(false); }}
               >
                 {menuOpen ? t.menuOpen : t.menuClosed}
@@ -1727,7 +1781,7 @@ export default function New() {
                       <motion.button
                         key={key}
                         variants={NAV_ITEM}
-                        style={navItemStyle(dark, i === 0)}
+                        style={navItemStyle(dark, i === 0, surfaceLight)}
                         onClick={(e) => {
                           e.stopPropagation();
                           setMenuOpen(false);
@@ -1747,7 +1801,7 @@ export default function New() {
             transition={{ duration: 0.15 }}
             style={{
               position: "fixed", top: "12px", right: "12px", zIndex: 20,
-              background: dark ? "rgba(240,232,220,0.06)" : LIGHT_BTN_BG,
+              background: dark ? "rgba(240,232,220,0.06)" : surfaceLight,
               border: "none", borderRadius: "4px", cursor: "pointer", outline: "none",
               padding: "4px 6px", display: "flex", alignItems: "center", justifyContent: "center",
             }}
@@ -1767,6 +1821,7 @@ export default function New() {
             lang={lang}
             onClose={() => setSavedId(null)}
             onPlayground={() => navigate("/playground")}
+            surfaceLight={surfaceLight}
           />
         )}
       </AnimatePresence>
@@ -1782,6 +1837,7 @@ export default function New() {
             onCopy={handleCopy}
             copied={copied}
             t={t}
+            surfaceLight={surfaceLight}
           />
         )}
       </AnimatePresence>

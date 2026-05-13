@@ -593,6 +593,16 @@ function SavedModal({ dark, savedId, lang, onClose, onPlayground, surfaceLight }
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
+function useWindowWidth() {
+  const [width, setWidth] = useState(() => window.innerWidth);
+  useEffect(() => {
+    const handler = () => setWidth(window.innerWidth);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
+  return width;
+}
+
 export default function New() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -610,6 +620,8 @@ export default function New() {
   const [loadedToolIsOwn, setLoadedToolIsOwn]         = useState(false);
   const [editModeEnabledState, setEditModeEnabledState] = useState(false);
   const [infoModalOpen, setInfoModalOpen]               = useState(false);
+
+  const windowWidth = useWindowWidth();
 
   // UI
   const [lang, setLang]               = useState<"de" | "en">(() => (localStorage.getItem("appLang") as "de" | "en") ?? "de");
@@ -672,6 +684,62 @@ export default function New() {
   const [copied, setCopied]             = useState(false);
 
   const t: Tr = TRANSLATIONS[lang];
+  const DE_new = lang === "de";
+
+  // ── Mobile blocker (< 1000px) ─────────────────────────────────────────────
+  if (windowWidth < 1000) {
+    return (
+      <div style={{
+        minHeight: "100svh", background: LIGHT_BG,
+        display: "flex", flexDirection: "column",
+        fontFamily: FONT_SANS, boxSizing: "border-box",
+      }}>
+        {/* Top bar — same as full UI */}
+        <div style={{
+          position: "fixed", top: 0, left: 0, right: 0, height: "56px",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "0 20px",
+          background: LIGHT_BG,
+          borderBottom: `1px dashed ${BORDER_COL}`,
+          boxSizing: "border-box", zIndex: 10,
+        }}>
+          <span style={{ fontFamily: FONT_SERIF, fontSize: "18px", color: LIGHT_TEXT }}>
+            {DE_new ? "Schreibwerkzeug" : "Writing Tool"}
+          </span>
+          <div style={{ display: "flex", gap: "8px" }}>
+            <button
+              onClick={() => setLang(l => { const next = l === "de" ? "en" : "de"; localStorage.setItem("appLang", next); return next; })}
+              style={{ background: "transparent", border: `1px dashed ${BORDER_COL}`, borderRadius: "4px", cursor: "pointer", outline: "none", fontFamily: FONT_SANS, fontSize: "13px", color: LIGHT_TEXT, height: "29px", padding: "0 10px" }}
+            >{lang === "de" ? "DE" : "ENG"}</button>
+            <button
+              onClick={() => navigate("/about-the-project")}
+              style={{ background: "transparent", border: `1px dashed ${BORDER_COL}`, borderRadius: "4px", cursor: "pointer", outline: "none", fontFamily: FONT_SANS, fontSize: "13px", color: LIGHT_TEXT, height: "29px", padding: "0 10px" }}
+            >{DE_new ? "Über das Projekt" : "About"}</button>
+          </div>
+        </div>
+
+        {/* Blocker message */}
+        <div style={{
+          flex: 1, display: "flex", flexDirection: "column",
+          alignItems: "center", justifyContent: "center",
+          padding: "80px 32px 40px", textAlign: "center", gap: "24px",
+        }}>
+          <span style={{ fontFamily: FONT_SERIF, fontSize: "28px", color: LIGHT_TEXT, lineHeight: "1.3" }}>
+            {DE_new ? "Bitte auf einem Desktop benutzen." : "Please use on a desktop."}
+          </span>
+          <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: "#9a9daa", lineHeight: "1.55", maxWidth: "280px" }}>
+            {DE_new
+              ? "Dieses Tool ist für größere Bildschirme ausgelegt und benötigt mindestens 1000px Breite."
+              : "This tool is designed for larger screens and requires at least 1000px width."}
+          </span>
+          <button
+            onClick={() => navigate("/playground")}
+            style={{ marginTop: "8px", background: "transparent", border: `1px dashed ${BORDER_COL}`, borderRadius: "4px", cursor: "pointer", outline: "none", fontFamily: FONT_SANS, fontSize: "14px", color: LIGHT_TEXT, height: "36px", padding: "0 18px" }}
+          >{DE_new ? "Tools entdecken" : "Explore tools"}</button>
+        </div>
+      </div>
+    );
+  }
 
   // Timer initialization
   useEffect(() => {

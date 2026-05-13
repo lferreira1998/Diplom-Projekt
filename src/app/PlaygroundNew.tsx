@@ -70,30 +70,14 @@ function HalfCircleIcon() {
 function HiddenEyeIcon() {
   return (
     <svg width="18" height="13" viewBox="0 0 24 18" fill="none" aria-hidden>
-      <path
-        d="M2.4 9C4.8 5.7 8 4.05 12 4.05C16 4.05 19.2 5.7 21.6 9C20.78 10.13 19.87 11.08 18.87 11.84M15.85 13.28C14.67 13.73 13.39 13.95 12 13.95C8 13.95 4.8 12.3 2.4 9Z"
-        stroke={TOOL_TEXT}
-        strokeWidth="1.7"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M9.35 9.04C9.35 7.58 10.54 6.39 12 6.39C13.46 6.39 14.65 7.58 14.65 9.04C14.65 10.5 13.46 11.69 12 11.69C10.54 11.69 9.35 10.5 9.35 9.04Z"
-        stroke={TOOL_TEXT}
-        strokeWidth="1.7"
-      />
+      <path d="M2.4 9C4.8 5.7 8 4.05 12 4.05C16 4.05 19.2 5.7 21.6 9C20.78 10.13 19.87 11.08 18.87 11.84M15.85 13.28C14.67 13.73 13.39 13.95 12 13.95C8 13.95 4.8 12.3 2.4 9Z" stroke={TOOL_TEXT} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M9.35 9.04C9.35 7.58 10.54 6.39 12 6.39C13.46 6.39 14.65 7.58 14.65 9.04C14.65 10.5 13.46 11.69 12 11.69C10.54 11.69 9.35 10.5 9.35 9.04Z" stroke={TOOL_TEXT} strokeWidth="1.7" />
       <path d="M4.1 2.1L19.9 15.9" stroke={TOOL_TEXT} strokeWidth="1.7" strokeLinecap="round" />
     </svg>
   );
 }
 
-function ToolShape({
-  label,
-  style,
-  textStyle,
-  href,
-  video,
-}: {
+function ToolShape({ label, style, textStyle, href, video }: {
   label: string;
   style: CSSProperties;
   textStyle?: CSSProperties;
@@ -114,27 +98,21 @@ function ToolShape({
     setIsPreviewing(true);
     const target = videoRef.current;
     if (!target) return;
-
     prepareVideo(target);
     try {
       if (target.readyState > 0) target.currentTime = 0;
     } catch {
       // Some browsers disallow seeking before metadata is ready.
     }
-
     const play = () => target.play().catch(() => undefined);
     play();
-
-    if (target.readyState < 2) {
-      target.addEventListener("canplay", play, { once: true });
-    }
+    if (target.readyState < 2) target.addEventListener("canplay", play, { once: true });
   }
 
   function stopPreview() {
     setIsPreviewing(false);
     const target = videoRef.current;
     if (!target) return;
-
     target.pause();
     try {
       if (target.readyState > 0) target.currentTime = 0;
@@ -214,7 +192,7 @@ function ToolShape({
           zIndex: 1,
         }}
       />
-      <span className="playground-tool-label" style={{ position: "relative", zIndex: 2, ...textStyle }}>{label}</span>
+      <span className="playground-tool-label" style={{ position: "relative", zIndex: 2, transition: "opacity 120ms ease", ...textStyle }}>{label}</span>
     </a>
   );
 }
@@ -416,12 +394,7 @@ function ToolShelf({
   onDelete?: (id: string) => void;
 }) {
   return (
-    <section
-      style={{
-        padding: "70px 44px 86px",
-        borderTop: `1px dashed ${BORDER}`,
-      }}
-    >
+    <section style={{ padding: "70px 44px 86px", borderTop: `1px dashed ${BORDER}` }}>
       <div
         style={{
           display: "grid",
@@ -552,17 +525,20 @@ export default function PlaygroundNew() {
   return (
     <main
       style={{
-        minHeight: "100vh",
+        height: "100vh",
         width: "100vw",
         overflowX: "hidden",
+        overflowY: "auto",
         position: "relative",
         backgroundColor: PAGE_BG,
         backgroundImage: "radial-gradient(circle, rgba(164,164,164,0.7) 1px, transparent 1.2px)",
         backgroundSize: "42px 42px",
         color: HEADLINE_TEXT,
+        WebkitOverflowScrolling: "touch",
       }}
     >
       <style>{`
+        html, body, #root { height: 100%; overflow: hidden; }
         .playground-tool-shape:hover .playground-preview-video,
         .playground-tool-shape:focus-visible .playground-preview-video,
         .playground-tool-shape:hover .playground-preview-wash,
@@ -601,14 +577,7 @@ export default function PlaygroundNew() {
         </TopButton>
       </div>
 
-      <section
-        aria-label="Writing tools playground"
-        style={{
-          position: "relative",
-          minHeight: "100vh",
-          overflow: "hidden",
-        }}
-      >
+      <section aria-label="Writing tools playground" style={{ position: "relative", minHeight: "100vh", overflow: "hidden" }}>
         <div
           style={{
             position: "absolute",
@@ -620,57 +589,14 @@ export default function PlaygroundNew() {
             transformOrigin: "center",
           }}
         >
-          <ToolShape
-            label="...without stopping"
-            href="/Diplom-Projekt/dont-stop-writing"
-            video="without-stopping"
-            style={{ left: 40, top: 197, width: 236, height: 233, transform: "rotate(5.1deg)", borderRadius: 200 }}
-            textStyle={{ transform: "rotate(-5.1deg)", transition: "opacity 120ms ease" }}
-          />
-          <ToolShape
-            label="...uninvited thoughts"
-            href="/Diplom-Projekt/uninvited-thoughts"
-            video="uninvited-thoughts"
-            style={{ left: 420, top: 57, width: 317, height: 155, transform: "rotate(-9.25deg)", borderRadius: 4 }}
-            textStyle={{ transform: "rotate(9.25deg)", transition: "opacity 120ms ease" }}
-          />
-          <ToolShape
-            label="...off the grid"
-            href="/Diplom-Projekt/off-the-grid"
-            video="off-the-grid"
-            style={{ left: 1220, top: 112, width: 251, height: 163, transform: "rotate(4.18deg)", borderRadius: 4, justifyContent: "flex-start", alignItems: "flex-end", padding: 12 }}
-            textStyle={{ transform: "rotate(-4.18deg)", marginBottom: 0, transition: "opacity 120ms ease" }}
-          />
-          <ToolShape
-            label="...blind & then witness"
-            href="/Diplom-Projekt/anonymously-in-public"
-            video="blind-then-witness"
-            style={{ left: 213, top: 579, width: 324, height: 163, transform: "rotate(6.45deg)", borderRadius: 100 }}
-            textStyle={{ transform: "rotate(-6.45deg)", transition: "opacity 120ms ease" }}
-          />
-          <ToolShape
-            label="...with visible corrections"
-            href="/Diplom-Projekt/loschen-korrigieren"
-            video="visible-corrections"
-            style={{ left: 774, top: 526, width: 363, height: 174, borderRadius: "40px 4px 40px 4px" }}
-            textStyle={{ transition: "opacity 120ms ease" }}
-          />
-          <ToolShape
-            label="...in a spiral"
-            href="/Diplom-Projekt/in-a-spiral"
-            video="in-a-spiral"
-            style={{ left: 1321, top: 414, width: 211, height: 309, transform: "rotate(12.11deg)", borderRadius: 200 }}
-            textStyle={{ transform: "rotate(-12.11deg)", transition: "opacity 120ms ease" }}
-          />
+          <ToolShape label="...without stopping" href="/Diplom-Projekt/dont-stop-writing" video="without-stopping" style={{ left: 40, top: 197, width: 236, height: 233, transform: "rotate(5.1deg)", borderRadius: 200 }} textStyle={{ transform: "rotate(-5.1deg)" }} />
+          <ToolShape label="...uninvited thoughts" href="/Diplom-Projekt/uninvited-thoughts" video="uninvited-thoughts" style={{ left: 420, top: 57, width: 317, height: 155, transform: "rotate(-9.25deg)", borderRadius: 4 }} textStyle={{ transform: "rotate(9.25deg)" }} />
+          <ToolShape label="...off the grid" href="/Diplom-Projekt/off-the-grid" video="off-the-grid" style={{ left: 1220, top: 112, width: 251, height: 163, transform: "rotate(4.18deg)", borderRadius: 4, justifyContent: "flex-start", alignItems: "flex-end", padding: 12 }} textStyle={{ transform: "rotate(-4.18deg)", marginBottom: 0 }} />
+          <ToolShape label="...blind & then witness" href="/Diplom-Projekt/anonymously-in-public" video="blind-then-witness" style={{ left: 213, top: 579, width: 324, height: 163, transform: "rotate(6.45deg)", borderRadius: 100 }} textStyle={{ transform: "rotate(-6.45deg)" }} />
+          <ToolShape label="...with visible corrections" href="/Diplom-Projekt/loschen-korrigieren" video="visible-corrections" style={{ left: 774, top: 526, width: 363, height: 174, borderRadius: "40px 4px 40px 4px" }} />
+          <ToolShape label="...in a spiral" href="/Diplom-Projekt/in-a-spiral" video="in-a-spiral" style={{ left: 1321, top: 414, width: 211, height: 309, transform: "rotate(12.11deg)", borderRadius: 200 }} textStyle={{ transform: "rotate(-12.11deg)" }} />
 
-          <div
-            style={{
-              position: "absolute",
-              left: 456,
-              top: 300,
-              width: 768,
-            }}
-          >
+          <div style={{ position: "absolute", left: 456, top: 300, width: 768 }}>
             <h1
               style={{
                 margin: 0,

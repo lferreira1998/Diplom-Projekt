@@ -1370,8 +1370,8 @@ export function WritingZone({
           style={{
             width:        containerWidth,
             maxWidth:     "100%",
-            marginLeft:   (containerWidth === "100%" || !panelOpen) ? "0" : "auto",
-            marginRight:  containerWidth === "100%" ? "0" : "auto",
+            marginLeft:   "auto",
+            marginRight:  "auto",
             color:        textColor,
             fontFamily:   fontFamily,
             fontSize:     `${fontSize}px`,

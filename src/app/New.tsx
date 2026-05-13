@@ -1030,7 +1030,7 @@ export default function New() {
             fontSize={computedFontSize}
             fontFamily={FONT_SERIF}
             centeredPrompt={false}
-            containerWidth="100%"
+            containerWidth="764px"
           />
         )}
       </motion.div>

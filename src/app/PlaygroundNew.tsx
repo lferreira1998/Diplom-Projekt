@@ -1,7 +1,9 @@
+import type { CSSProperties, ReactNode } from "react";
+
 const FONT_SERIF = "'freight-text-pro', 'EB Garamond', Georgia, serif";
 const FONT_SANS = "'general-sans', 'Space Grotesk', sans-serif";
 
-function TopButton({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
+function TopButton({ children, style }: { children: ReactNode; style?: CSSProperties }) {
   return (
     <button
       style={{
@@ -62,8 +64,8 @@ function ToolShape({
   href,
 }: {
   label: string;
-  style: React.CSSProperties;
-  textStyle?: React.CSSProperties;
+  style: CSSProperties;
+  textStyle?: CSSProperties;
   href: string;
 }) {
   return (

@@ -131,9 +131,12 @@ function ToolShape({
 
   return (
     <a
+      className="playground-tool-shape"
       href={href}
       onPointerEnter={playPreview}
       onPointerLeave={stopPreview}
+      onMouseEnter={playPreview}
+      onMouseLeave={stopPreview}
       onFocus={playPreview}
       onBlur={stopPreview}
       style={{
@@ -159,6 +162,7 @@ function ToolShape({
     >
       <video
         ref={videoRef}
+        className="playground-preview-video"
         autoPlay
         muted
         loop
@@ -183,6 +187,7 @@ function ToolShape({
       </video>
       <span
         aria-hidden
+        className="playground-preview-wash"
         style={{
           position: "absolute",
           inset: 0,
@@ -212,6 +217,15 @@ export default function PlaygroundNew() {
         color: HEADLINE_TEXT,
       }}
     >
+      <style>{`
+        .playground-tool-shape:hover .playground-preview-video,
+        .playground-tool-shape:focus-visible .playground-preview-video,
+        .playground-tool-shape:hover .playground-preview-wash,
+        .playground-tool-shape:focus-visible .playground-preview-wash {
+          opacity: 1 !important;
+        }
+      `}</style>
+
       <div style={{ position: "fixed", top: 44, left: 44, display: "flex", gap: 10, zIndex: 5 }}>
         <TopButton style={{ width: 31, padding: 6 }}>
           <HalfCircleIcon />

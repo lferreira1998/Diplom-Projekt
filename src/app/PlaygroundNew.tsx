@@ -48,12 +48,20 @@ function HalfCircleIcon() {
 
 function HiddenEyeIcon() {
   return (
-    <svg width="18" height="14" viewBox="0 0 36 25" fill="none" aria-hidden>
-      <path d="M23.318 2.9355V4.46104C21.7844 2.56568 19.7599 1.61799 17.7232 1.61799C15.6988 1.61799 13.6744 2.56568 12.1407 4.46104V2.9355C13.6744 1.04014 15.6988 0 17.7232 0C19.7599 0 21.7844 1.04014 23.318 2.9355Z" fill="#555555" />
-      <path d="M11.7952 21.6912V20.1656C13.3289 22.061 15.3533 23.0087 17.39 23.0087C19.4144 23.0087 21.4389 22.061 22.9725 20.1656V21.6912C21.4389 23.5865 19.4144 24.6267 17.39 24.6267C15.3533 24.6267 13.3289 23.5865 11.7952 21.6912Z" fill="#555555" />
-      <path d="M35.113 11.2229L26.682 2.65537V5.03092L33.8989 12.3133L26.682 19.5957V21.9713L35.113 13.4037V11.2229Z" fill="#555555" />
-      <path d="M0 13.4037L8.43094 21.9713V19.5957L1.21406 12.3133L8.43094 5.03092V2.65537L0 11.2229V13.4037Z" fill="#555555" />
-      <path d="M21.9794 12.3497C21.9794 14.9757 20.0828 16.9453 17.3839 16.9453C14.7579 16.9453 12.7883 14.9757 12.7883 12.3497C12.7883 9.57782 14.7579 7.68125 17.3839 7.68125C20.0828 7.68125 21.9794 9.57782 21.9794 12.3497Z" fill="#555555" />
+    <svg width="18" height="14" viewBox="0 0 24 18" fill="none" aria-hidden>
+      <path
+        d="M2.4 9C4.8 5.7 8 4.05 12 4.05C16 4.05 19.2 5.7 21.6 9C20.78 10.13 19.87 11.08 18.87 11.84M15.85 13.28C14.67 13.73 13.39 13.95 12 13.95C8 13.95 4.8 12.3 2.4 9Z"
+        stroke="#555555"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M9.35 9.04C9.35 7.58 10.54 6.39 12 6.39C13.46 6.39 14.65 7.58 14.65 9.04C14.65 10.5 13.46 11.69 12 11.69C10.54 11.69 9.35 10.5 9.35 9.04Z"
+        stroke="#555555"
+        strokeWidth="1.7"
+      />
+      <path d="M4.1 2.1L19.9 15.9" stroke="#555555" strokeWidth="1.7" strokeLinecap="round" />
     </svg>
   );
 }
@@ -239,15 +247,11 @@ export default function PlaygroundNew() {
         <div
           style={{
             position: "absolute",
-            left: 585,
-            top: 306,
-            width: 610,
-            display: "flex",
-            alignItems: "flex-start",
-            gap: 15,
+            left: 460,
+            top: 300,
+            width: 760,
           }}
         >
-          <div style={{ width: 1, height: 36, background: "#555555", marginTop: 8 }} />
           <h1
             style={{
               margin: 0,
@@ -257,6 +261,8 @@ export default function PlaygroundNew() {
               fontWeight: 400,
               letterSpacing: 0,
               color: "#3f3f3f",
+              textAlign: "center",
+              whiteSpace: "nowrap",
             }}
           >
             Writing Tools shape how we think & write.<br />

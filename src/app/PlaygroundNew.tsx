@@ -6,6 +6,7 @@ import { deleteNewTool, getAllNewTools, type NewToolData } from "./utils/storage
 const FONT_SERIF = "'FreightTextCmp Pro', 'freight-text-compressed-pro', 'freight-text-pro', 'EB Garamond', Georgia, serif";
 const FONT_SANS = "'General Sans', 'general-sans', 'Space Grotesk', sans-serif";
 const PAGE_BG = "#fcf6ef";
+const PANEL_BG = "#f3ebe0";
 const TOOL_BG = "#f9f1e8";
 const BORDER = "#a4a4a4";
 const TOOL_TEXT = "#555555";
@@ -197,61 +198,63 @@ function ToolShape({ label, style, textStyle, href, video }: {
   );
 }
 
-function SavedToolCard({ tool, onOpen, onDelete }: { tool: NewToolData; onOpen: () => void; onDelete?: () => void }) {
+function ToolCard({ tool, onClick, onDelete }: { tool: NewToolData; onClick: () => void; onDelete?: () => void }) {
   const [hovered, setHovered] = useState(false);
   const [confirming, setConfirming] = useState(false);
 
   return (
-    <article
+    <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => {
         setHovered(false);
         setConfirming(false);
       }}
       style={{
-        width: 286,
-        minWidth: 286,
         border: `1px dashed ${hovered ? TOOL_TEXT : BORDER}`,
-        borderRadius: 4,
-        background: TOOL_BG,
+        borderRadius: 8,
         overflow: "hidden",
+        background: PAGE_BG,
+        display: "flex",
+        flexDirection: "column",
+        transition: "border-color 0.15s, transform 0.15s",
+        transform: hovered ? "translateY(-2px)" : "none",
+        boxSizing: "border-box",
         position: "relative",
-        cursor: "pointer",
-        transition: "border-color 150ms ease, transform 150ms ease",
-        transform: hovered ? "translateY(-3px)" : "none",
       }}
     >
       {onDelete && (
         <div
           style={{
             position: "absolute",
-            top: 10,
-            right: 10,
+            top: 8,
+            right: 8,
             display: "flex",
             alignItems: "center",
-            gap: 6,
+            gap: 4,
             opacity: hovered ? 1 : 0,
-            transition: "opacity 150ms ease",
-            zIndex: 3,
+            transition: "opacity 0.15s",
+            zIndex: 2,
           }}
         >
           {confirming ? (
             <>
+              <span style={{ fontFamily: FONT_SANS, fontSize: 11, color: MUTED_TEXT, whiteSpace: "nowrap" }}>Loschen?</span>
               <button
                 onClick={(event) => {
                   event.stopPropagation();
                   onDelete();
                 }}
                 style={{
-                  height: 25,
-                  border: "1px dashed rgba(180,60,60,0.5)",
+                  height: 22,
+                  padding: "0 8px",
+                  background: "rgba(180,60,60,0.12)",
+                  border: "1px dashed rgba(180,60,60,0.4)",
                   borderRadius: 4,
-                  background: "rgba(180,60,60,0.1)",
-                  color: "#b43c3c",
-                  fontFamily: FONT_SANS,
-                  fontSize: 12,
                   cursor: "pointer",
-                  padding: "0 10px",
+                  outline: "none",
+                  fontFamily: FONT_SANS,
+                  fontSize: 11,
+                  color: "#b43c3c",
                 }}
               >
                 Ja
@@ -262,15 +265,16 @@ function SavedToolCard({ tool, onOpen, onDelete }: { tool: NewToolData; onOpen: 
                   setConfirming(false);
                 }}
                 style={{
-                  height: 25,
+                  height: 22,
+                  padding: "0 8px",
+                  background: "rgba(252,246,239,0.85)",
                   border: `1px dashed ${BORDER}`,
                   borderRadius: 4,
-                  background: PAGE_BG,
-                  color: MUTED_TEXT,
-                  fontFamily: FONT_SANS,
-                  fontSize: 12,
                   cursor: "pointer",
-                  padding: "0 10px",
+                  outline: "none",
+                  fontFamily: FONT_SANS,
+                  fontSize: 11,
+                  color: MUTED_TEXT,
                 }}
               >
                 Nein
@@ -282,18 +286,22 @@ function SavedToolCard({ tool, onOpen, onDelete }: { tool: NewToolData; onOpen: 
                 event.stopPropagation();
                 setConfirming(true);
               }}
-              aria-label="Tool entfernen"
+              title="Aus meinen Tools entfernen"
               style={{
-                width: 28,
-                height: 28,
+                width: 24,
+                height: 24,
+                background: "rgba(252,246,239,0.85)",
                 border: `1px dashed ${BORDER}`,
-                borderRadius: 4,
-                background: PAGE_BG,
-                color: MUTED_TEXT,
-                fontFamily: FONT_SANS,
-                fontSize: 17,
-                lineHeight: 1,
+                borderRadius: "50%",
                 cursor: "pointer",
+                outline: "none",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontFamily: FONT_SANS,
+                fontSize: 13,
+                color: MUTED_TEXT,
+                lineHeight: 1,
               }}
             >
               x
@@ -302,56 +310,34 @@ function SavedToolCard({ tool, onOpen, onDelete }: { tool: NewToolData; onOpen: 
         </div>
       )}
 
-      <button
-        onClick={onOpen}
+      <div
+        onClick={onClick}
         style={{
           width: "100%",
-          aspectRatio: "1 / 1",
-          border: "none",
-          borderBottom: `1px dashed ${BORDER}`,
-          background: PAGE_BG,
-          padding: 0,
+          aspectRatio: "3 / 2",
+          background: PANEL_BG,
+          overflow: "hidden",
+          flexShrink: 0,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           cursor: "pointer",
-          overflow: "hidden",
         }}
       >
         {tool.params.asciiImage ? (
-          <img
-            src={tool.params.asciiImage}
-            alt={tool.name || "Saved tool"}
-            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-          />
+          <img src={tool.params.asciiImage} alt={tool.name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
         ) : (
-          <span style={{ fontFamily: FONT_SERIF, fontSize: 58, color: BORDER, lineHeight: 1 }}>+</span>
+          <span style={{ fontFamily: FONT_SERIF, fontSize: 36, color: BORDER, userSelect: "none" }}>+</span>
         )}
-      </button>
+      </div>
 
-      <button
-        onClick={onOpen}
-        style={{
-          width: "100%",
-          minHeight: 124,
-          border: "none",
-          background: "transparent",
-          padding: "17px 18px 18px",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "flex-start",
-          gap: 8,
-          textAlign: "left",
-          cursor: "pointer",
-        }}
-      >
+      <div onClick={onClick} style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 4, cursor: "pointer" }}>
         <span
           style={{
             fontFamily: FONT_SERIF,
-            fontSize: 25,
-            lineHeight: "27px",
-            color: HEADLINE_TEXT,
-            maxWidth: "100%",
+            fontSize: 17,
+            color: TOOL_TEXT,
+            lineHeight: "1.25",
             whiteSpace: "nowrap",
             overflow: "hidden",
             textOverflow: "ellipsis",
@@ -359,121 +345,63 @@ function SavedToolCard({ tool, onOpen, onDelete }: { tool: NewToolData; onOpen: 
         >
           {tool.name || "Unnamed Tool"}
         </span>
-        <span
-          style={{
-            fontFamily: FONT_SANS,
-            fontSize: 13,
-            lineHeight: "18px",
-            color: MUTED_TEXT,
-            display: "-webkit-box",
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: "vertical" as const,
-            overflow: "hidden",
-          }}
-        >
-          {tool.description || "No description yet."}
-        </span>
-      </button>
-    </article>
+        {tool.description && (
+          <span
+            style={{
+              fontFamily: FONT_SANS,
+              fontSize: 12,
+              color: MUTED_TEXT,
+              lineHeight: "1.45",
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical" as const,
+              overflow: "hidden",
+            }}
+          >
+            {tool.description}
+          </span>
+        )}
+      </div>
+    </div>
   );
 }
 
-function ToolShelf({
-  title,
-  kicker,
-  tools,
-  emptyMessage,
-  onOpen,
-  onDelete,
-}: {
+function ToolSection({ title, tools, onOpen, onDelete, emptyMessage }: {
   title: string;
-  kicker: string;
   tools: NewToolData[];
-  emptyMessage: string;
   onOpen: (id: string) => void;
   onDelete?: (id: string) => void;
+  emptyMessage: string;
 }) {
   return (
-    <section style={{ padding: "70px 44px 86px", borderTop: `1px dashed ${BORDER}` }}>
+    <section style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div
         style={{
-          display: "grid",
-          gridTemplateColumns: "minmax(260px, 360px) 1fr",
-          gap: 34,
-          alignItems: "start",
-          maxWidth: 1500,
-          margin: "0 auto",
+          display: "flex",
+          alignItems: "baseline",
+          gap: 12,
+          borderBottom: `1px dashed ${BORDER}`,
+          paddingBottom: 12,
         }}
       >
-        <div style={{ position: "sticky", top: 94, display: "flex", flexDirection: "column", gap: 18 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <span
-              style={{
-                height: 31,
-                minWidth: 31,
-                border: `1px dashed ${BORDER}`,
-                borderRadius: 4,
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontFamily: FONT_SANS,
-                fontSize: 13,
-                color: MUTED_TEXT,
-              }}
-            >
-              {tools.length}
-            </span>
-            <span style={{ fontFamily: FONT_SANS, fontSize: 13, color: MUTED_TEXT }}>{kicker}</span>
-          </div>
-          <h2
-            style={{
-              margin: 0,
-              fontFamily: FONT_SERIF,
-              fontSize: 54,
-              lineHeight: "56px",
-              fontWeight: 400,
-              color: HEADLINE_TEXT,
-              letterSpacing: 0,
-            }}
-          >
-            {title}
-          </h2>
-        </div>
-
-        {tools.length === 0 ? (
-          <div
-            style={{
-              minHeight: 260,
-              border: `1px dashed ${BORDER}`,
-              borderRadius: 4,
-              background: TOOL_BG,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: 28,
-              boxSizing: "border-box",
-            }}
-          >
-            <span style={{ fontFamily: FONT_SANS, fontSize: 15, color: MUTED_TEXT, textAlign: "center" }}>{emptyMessage}</span>
-          </div>
-        ) : (
-          <div
-            style={{
-              display: "flex",
-              gap: 18,
-              overflowX: "auto",
-              padding: "2px 2px 18px",
-              scrollSnapType: "x proximity",
-            }}
-          >
-            {tools.map((tool) => (
-              <div key={tool.id} style={{ scrollSnapAlign: "start" }}>
-                <SavedToolCard tool={tool} onOpen={() => onOpen(tool.id)} onDelete={onDelete ? () => onDelete(tool.id) : undefined} />
-              </div>
-            ))}
-          </div>
-        )}
+        <span style={{ fontFamily: FONT_SERIF, fontSize: 28, color: TOOL_TEXT }}>{title}</span>
+        <span style={{ fontFamily: FONT_SANS, fontSize: 13, color: MUTED_TEXT }}>{tools.length}</span>
       </div>
+      {tools.length === 0 ? (
+        <p style={{ fontFamily: FONT_SANS, fontSize: 14, color: MUTED_TEXT, margin: 0 }}>{emptyMessage}</p>
+      ) : (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+            gap: 16,
+          }}
+        >
+          {tools.map((tool) => (
+            <ToolCard key={tool.id} tool={tool} onClick={() => onOpen(tool.id)} onDelete={onDelete ? () => onDelete(tool.id) : undefined} />
+          ))}
+        </div>
+      )}
     </section>
   );
 }
@@ -501,7 +429,7 @@ export default function PlaygroundNew() {
     if (!existing || tool.savedAt > existing.savedAt) myToolsMap.set(key, tool);
   }
   const myTools = Array.from(myToolsMap.values()).sort((a, b) => b.savedAt.localeCompare(a.savedAt));
-  const allTools = [...tools].sort((a, b) => b.savedAt.localeCompare(a.savedAt));
+  const allTools = tools.filter((tool) => tool.params.sessionId !== sessionId);
 
   function openTool(id: string) {
     navigate(`/new?tool=${id}`);
@@ -578,17 +506,7 @@ export default function PlaygroundNew() {
       </div>
 
       <section aria-label="Writing tools playground" style={{ position: "relative", minHeight: "100vh", overflow: "hidden" }}>
-        <div
-          style={{
-            position: "absolute",
-            left: "50%",
-            top: "50%",
-            width: 1680,
-            height: 858,
-            transform: "translate(-50%, -50%)",
-            transformOrigin: "center",
-          }}
-        >
+        <div style={{ position: "absolute", left: "50%", top: "50%", width: 1680, height: 858, transform: "translate(-50%, -50%)", transformOrigin: "center" }}>
           <ToolShape label="...without stopping" href="/Diplom-Projekt/dont-stop-writing" video="without-stopping" style={{ left: 40, top: 197, width: 236, height: 233, transform: "rotate(5.1deg)", borderRadius: 200 }} textStyle={{ transform: "rotate(-5.1deg)" }} />
           <ToolShape label="...uninvited thoughts" href="/Diplom-Projekt/uninvited-thoughts" video="uninvited-thoughts" style={{ left: 420, top: 57, width: 317, height: 155, transform: "rotate(-9.25deg)", borderRadius: 4 }} textStyle={{ transform: "rotate(9.25deg)" }} />
           <ToolShape label="...off the grid" href="/Diplom-Projekt/off-the-grid" video="off-the-grid" style={{ left: 1220, top: 112, width: 251, height: 163, transform: "rotate(4.18deg)", borderRadius: 4, justifyContent: "flex-start", alignItems: "flex-end", padding: 12 }} textStyle={{ transform: "rotate(-4.18deg)", marginBottom: 0 }} />
@@ -597,19 +515,7 @@ export default function PlaygroundNew() {
           <ToolShape label="...in a spiral" href="/Diplom-Projekt/in-a-spiral" video="in-a-spiral" style={{ left: 1321, top: 414, width: 211, height: 309, transform: "rotate(12.11deg)", borderRadius: 200 }} textStyle={{ transform: "rotate(-12.11deg)" }} />
 
           <div style={{ position: "absolute", left: 456, top: 300, width: 768 }}>
-            <h1
-              style={{
-                margin: 0,
-                fontFamily: FONT_SERIF,
-                fontSize: 36,
-                lineHeight: "45px",
-                fontWeight: 400,
-                letterSpacing: 0,
-                color: HEADLINE_TEXT,
-                textAlign: "center",
-                whiteSpace: "nowrap",
-              }}
-            >
+            <h1 style={{ margin: 0, fontFamily: FONT_SERIF, fontSize: 36, lineHeight: "45px", fontWeight: 400, letterSpacing: 0, color: HEADLINE_TEXT, textAlign: "center", whiteSpace: "nowrap" }}>
               Writing Tools shape how we think & write.<br />
               Explore Writing Tools that break their rules.
             </h1>
@@ -617,43 +523,29 @@ export default function PlaygroundNew() {
         </div>
       </section>
 
-      {loading ? (
-        <section style={{ padding: "70px 44px 86px", borderTop: `1px dashed ${BORDER}` }}>
-          <div
-            style={{
-              maxWidth: 1500,
-              margin: "0 auto",
-              minHeight: 260,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              border: `1px dashed ${BORDER}`,
-              borderRadius: 4,
-              background: TOOL_BG,
-            }}
-          >
-            <span style={{ fontFamily: FONT_SANS, fontSize: 15, color: MUTED_TEXT }}>{isDe ? "Lädt..." : "Loading..."}</span>
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "96px 24px 64px" }}>
+        {loading ? (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 200 }}>
+            <span style={{ fontFamily: FONT_SANS, fontSize: 14, color: MUTED_TEXT }}>{isDe ? "Ladt..." : "Loading..."}</span>
           </div>
-        </section>
-      ) : (
-        <>
-          <ToolShelf
-            title={isDe ? "Meine Tools" : "My Tools"}
-            kicker={isDe ? "deine gespeicherten Experimente" : "your saved experiments"}
-            tools={myTools}
-            onOpen={openTool}
-            onDelete={handleDelete}
-            emptyMessage={isDe ? "Noch keine Tools gespeichert. Erstelle eines unter /new." : "No tools saved yet. Create one at /new."}
-          />
-          <ToolShelf
-            title={isDe ? "Alle Tools" : "All Tools"}
-            kicker={isDe ? "alles aus dem Playground" : "everything in the playground"}
-            tools={allTools}
-            onOpen={openTool}
-            emptyMessage={isDe ? "Noch keine Tools vorhanden." : "No tools yet."}
-          />
-        </>
-      )}
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 56 }}>
+            <ToolSection
+              title={isDe ? "Meine Tools" : "My Tools"}
+              tools={myTools}
+              onOpen={openTool}
+              onDelete={handleDelete}
+              emptyMessage={isDe ? "Noch keine Tools gespeichert. Erstelle eines unter /new." : "No tools saved yet. Create one at /new."}
+            />
+            <ToolSection
+              title={isDe ? "Alle Tools" : "All Tools"}
+              tools={allTools}
+              onOpen={openTool}
+              emptyMessage={isDe ? "Noch keine Tools vorhanden." : "No tools yet."}
+            />
+          </div>
+        )}
+      </div>
     </main>
   );
 }

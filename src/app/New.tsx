@@ -997,8 +997,9 @@ export default function New() {
 
   return (
     <div
+      className="dark-transition"
       style={{
-        minHeight: "100vh", background: bg, position: "relative", transition: "background 1s linear",
+        minHeight: "100vh", background: bg, position: "relative",
         ...(bgMotion ? {
           backgroundImage: dark
             ? `linear-gradient(135deg, ${bg} 0%, oklch(28% 0.032 ${(bgHue ?? 60) + 30}) 50%, ${bg} 100%)`
@@ -1015,6 +1016,9 @@ export default function New() {
       <style>{`
         @keyframes cursorBlink { 0%,100%{opacity:1} 50%{opacity:0} }
         @keyframes bgDrift { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+        .dark-transition, .dark-transition * {
+          transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, opacity 0.2s ease !important;
+        }
       `}</style>
 
       {/* ── Tool name header (center top, when loaded from URL) ──────────── */}

@@ -467,16 +467,20 @@ function btnStyle(dark: boolean, extra?: React.CSSProperties, surfaceLight = "#f
   };
 }
 
-function navItemStyle(dark: boolean, active: boolean, surfaceLight = "#fcf6ef"): React.CSSProperties {
+function navItemStyle(dark: boolean, active: boolean, surfaceLight = "#fcf6ef", bgHue: number | null = null): React.CSSProperties {
+  const activeDarkBg = bgHue === null ? "#1e1d1b" : `oklch(18% 0.025 ${bgHue})`;
+  const activeLightText = bgHue === null ? "#f5f0ea" : `oklch(93% 0.012 ${bgHue})`;
   return {
     background: active
-      ? (dark ? "rgba(240,232,220,0.12)" : "rgba(85,85,85,0.1)")
+      ? (dark ? "rgba(240,232,220,0.85)" : activeDarkBg)
       : (dark ? "rgba(240,232,220,0.06)" : surfaceLight),
-    border: `1px dashed ${active ? (dark ? DARK_TEXT : LIGHT_TEXT) : BORDER_COL}`,
+    border: active
+      ? (dark ? "1px solid rgba(240,232,220,0.85)" : `1px solid ${activeDarkBg}`)
+      : `1px dashed ${BORDER_COL}`,
     borderRadius: "4px", cursor: "pointer", outline: "none",
     display: "flex", alignItems: "center", justifyContent: "flex-start",
-    color: dark ? DARK_TEXT : LIGHT_TEXT,
-    fontFamily: FONT_SANS, fontSize: "14px", fontWeight: 400, lineHeight: "normal",
+    color: active ? (dark ? "#1e1d1b" : activeLightText) : (dark ? DARK_TEXT : LIGHT_TEXT),
+    fontFamily: FONT_SANS, fontSize: "14px", fontWeight: active ? 500 : 400, lineHeight: "normal",
     height: "31px", padding: "0 12px", whiteSpace: "nowrap",
   };
 }
@@ -1797,7 +1801,7 @@ export default function New() {
                       <motion.button
                         key={key}
                         variants={NAV_ITEM}
-                        style={navItemStyle(dark, i === 0, surfaceLight)}
+                        style={navItemStyle(dark, i === 0, surfaceLight, bgHue)}
                         onClick={(e) => {
                           e.stopPropagation();
                           setMenuOpen(false);

@@ -89,27 +89,51 @@ function ToolShape({
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPreviewing, setIsPreviewing] = useState(false);
 
+  function prepareVideo(target: HTMLVideoElement) {
+    target.muted = true;
+    target.defaultMuted = true;
+    target.playsInline = true;
+    if (target.readyState === 0) target.load();
+  }
+
   function playPreview() {
     setIsPreviewing(true);
-    if (!videoRef.current) return;
+    const target = videoRef.current;
+    if (!target) return;
 
-    videoRef.current.currentTime = 0;
-    videoRef.current.play().catch(() => undefined);
+    prepareVideo(target);
+    try {
+      if (target.readyState > 0) target.currentTime = 0;
+    } catch {
+      // Some browsers disallow seeking before metadata is ready.
+    }
+
+    const play = () => target.play().catch(() => undefined);
+    play();
+
+    if (target.readyState < 2) {
+      target.addEventListener("canplay", play, { once: true });
+    }
   }
 
   function stopPreview() {
     setIsPreviewing(false);
-    if (!videoRef.current) return;
+    const target = videoRef.current;
+    if (!target) return;
 
-    videoRef.current.pause();
-    videoRef.current.currentTime = 0;
+    target.pause();
+    try {
+      if (target.readyState > 0) target.currentTime = 0;
+    } catch {
+      // Keep hover-out quiet if the browser is still loading metadata.
+    }
   }
 
   return (
     <a
       href={href}
-      onMouseEnter={playPreview}
-      onMouseLeave={stopPreview}
+      onPointerEnter={playPreview}
+      onPointerLeave={stopPreview}
       onFocus={playPreview}
       onBlur={stopPreview}
       style={{
@@ -135,10 +159,12 @@ function ToolShape({
     >
       <video
         ref={videoRef}
+        autoPlay
         muted
         loop
         playsInline
         preload="auto"
+        onLoadedMetadata={(event) => prepareVideo(event.currentTarget)}
         style={{
           position: "absolute",
           inset: 0,

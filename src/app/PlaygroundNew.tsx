@@ -121,7 +121,7 @@ function ToolShape({
         muted
         loop
         playsInline
-        preload="metadata"
+        preload="auto"
         style={{
           position: "absolute",
           inset: 0,
@@ -129,22 +129,23 @@ function ToolShape({
           height: "100%",
           objectFit: "cover",
           opacity: isPreviewing ? 1 : 0,
-          transition: "opacity 180ms ease",
+          transition: "opacity 120ms ease",
           pointerEvents: "none",
+          transform: "translateZ(0)",
           zIndex: 0,
         }}
       >
-        <source src={`/Diplom-Projekt/videos/${video}.webm`} type="video/webm" />
         <source src={`/Diplom-Projekt/videos/${video}.mp4`} type="video/mp4" />
+        <source src={`/Diplom-Projekt/videos/${video}.webm`} type="video/webm" />
       </video>
       <span
         aria-hidden
         style={{
           position: "absolute",
           inset: 0,
-          background: "rgba(252,246,239,0.18)",
+          background: "rgba(252,246,239,0.06)",
           opacity: isPreviewing ? 1 : 0,
-          transition: "opacity 180ms ease",
+          transition: "opacity 120ms ease",
           pointerEvents: "none",
           zIndex: 1,
         }}

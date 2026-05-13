@@ -1,27 +1,34 @@
 import { useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 
-const FONT_SERIF = "'freight-text-pro', 'EB Garamond', Georgia, serif";
-const FONT_SANS = "'general-sans', 'Space Grotesk', sans-serif";
+const FONT_SERIF = "'FreightTextCmp Pro', 'freight-text-compressed-pro', 'freight-text-pro', 'EB Garamond', Georgia, serif";
+const FONT_SANS = "'General Sans', 'general-sans', 'Space Grotesk', sans-serif";
+const PAGE_BG = "#fcf6ef";
+const TOOL_BG = "#f9f1e8";
+const BORDER = "#a4a4a4";
+const TOOL_TEXT = "#555555";
+const HEADLINE_TEXT = "#302e2c";
 
 function TopButton({ children, style }: { children: ReactNode; style?: CSSProperties }) {
   return (
     <button
       style={{
         height: 31,
-        border: "1px dashed #a4a4a4",
+        border: `1px dashed ${BORDER}`,
         borderRadius: 4,
-        background: "transparent",
-        color: "#555555",
+        background: "rgba(241,235,228,0.2)",
+        color: TOOL_TEXT,
         fontFamily: FONT_SANS,
         fontSize: 15,
-        lineHeight: 1,
-        padding: "0 13px",
+        fontWeight: 400,
+        lineHeight: "normal",
+        padding: "0 12px",
         display: "inline-flex",
         alignItems: "center",
         justifyContent: "center",
         cursor: "pointer",
         outline: "none",
+        boxSizing: "border-box",
         ...style,
       }}
     >
@@ -35,12 +42,12 @@ function HalfCircleIcon() {
     <span
       aria-hidden
       style={{
-        width: 15,
-        height: 15,
-        border: "1.4px solid #555555",
+        width: 15.48,
+        height: 15.98,
+        border: `1.4px solid ${TOOL_TEXT}`,
         borderRadius: "50%",
         display: "inline-block",
-        background: "linear-gradient(90deg, #555555 0 50%, transparent 50% 100%)",
+        background: `linear-gradient(90deg, ${TOOL_TEXT} 0 50%, transparent 50% 100%)`,
       }}
     />
   );
@@ -48,20 +55,20 @@ function HalfCircleIcon() {
 
 function HiddenEyeIcon() {
   return (
-    <svg width="18" height="14" viewBox="0 0 24 18" fill="none" aria-hidden>
+    <svg width="18" height="13" viewBox="0 0 24 18" fill="none" aria-hidden>
       <path
         d="M2.4 9C4.8 5.7 8 4.05 12 4.05C16 4.05 19.2 5.7 21.6 9C20.78 10.13 19.87 11.08 18.87 11.84M15.85 13.28C14.67 13.73 13.39 13.95 12 13.95C8 13.95 4.8 12.3 2.4 9Z"
-        stroke="#555555"
+        stroke={TOOL_TEXT}
         strokeWidth="1.7"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <path
         d="M9.35 9.04C9.35 7.58 10.54 6.39 12 6.39C13.46 6.39 14.65 7.58 14.65 9.04C14.65 10.5 13.46 11.69 12 11.69C10.54 11.69 9.35 10.5 9.35 9.04Z"
-        stroke="#555555"
+        stroke={TOOL_TEXT}
         strokeWidth="1.7"
       />
-      <path d="M4.1 2.1L19.9 15.9" stroke="#555555" strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M4.1 2.1L19.9 15.9" stroke={TOOL_TEXT} strokeWidth="1.7" strokeLinecap="round" />
     </svg>
   );
 }
@@ -107,8 +114,8 @@ function ToolShape({
       onBlur={stopPreview}
       style={{
         position: "absolute",
-        border: "1px dashed rgba(85,85,85,0.38)",
-        color: "#555555",
+        border: `1px dashed ${BORDER}`,
+        color: TOOL_TEXT,
         textDecoration: "none",
         boxSizing: "border-box",
         display: "flex",
@@ -116,11 +123,13 @@ function ToolShape({
         justifyContent: "center",
         fontFamily: FONT_SANS,
         fontSize: 17,
-        fontStyle: "italic",
+        fontStyle: "normal",
         fontWeight: 400,
         letterSpacing: 0,
-        background: "rgba(252,246,239,0.1)",
+        lineHeight: "normal",
+        background: TOOL_BG,
         overflow: "hidden",
+        transformOrigin: "center",
         ...style,
       }}
     >
@@ -151,7 +160,7 @@ function ToolShape({
         style={{
           position: "absolute",
           inset: 0,
-          background: "rgba(252,246,239,0.06)",
+          background: "rgba(249,241,232,0.08)",
           opacity: isPreviewing ? 1 : 0,
           transition: "opacity 120ms ease",
           pointerEvents: "none",
@@ -171,22 +180,22 @@ export default function PlaygroundNew() {
         width: "100vw",
         overflow: "hidden",
         position: "relative",
-        backgroundColor: "#fcf6ef",
-        backgroundImage: "radial-gradient(circle, rgba(85,85,85,0.34) 1px, transparent 1.2px)",
+        backgroundColor: PAGE_BG,
+        backgroundImage: "radial-gradient(circle, rgba(164,164,164,0.7) 1px, transparent 1.2px)",
         backgroundSize: "42px 42px",
-        color: "#3f3f3f",
+        color: HEADLINE_TEXT,
       }}
     >
       <div style={{ position: "fixed", top: 44, left: 44, display: "flex", gap: 10, zIndex: 5 }}>
-        <TopButton style={{ width: 31, padding: 0 }}>
+        <TopButton style={{ width: 31, padding: 6 }}>
           <HalfCircleIcon />
         </TopButton>
-        <TopButton>Rules</TopButton>
+        <TopButton style={{ width: 60 }}>Rules</TopButton>
       </div>
 
       <div style={{ position: "fixed", top: 44, right: 44, display: "flex", gap: 10, zIndex: 5 }}>
-        <TopButton>Menu</TopButton>
-        <TopButton style={{ width: 42, padding: 0 }}>
+        <TopButton style={{ width: 60 }}>Menu</TopButton>
+        <TopButton style={{ width: 48, padding: "6px 12px" }}>
           <HiddenEyeIcon />
         </TopButton>
       </div>
@@ -207,60 +216,61 @@ export default function PlaygroundNew() {
           label="...without stopping"
           href="/Diplom-Projekt/dont-stop-writing"
           video="without-stopping"
-          style={{ left: 50, top: 210, width: 240, height: 240, borderRadius: "50%" }}
+          style={{ left: 40, top: 197, width: 236, height: 233, transform: "rotate(5.1deg)", borderRadius: 200 }}
+          textStyle={{ transform: "rotate(-5.1deg)" }}
         />
         <ToolShape
           label="...uninvited thoughts"
           href="/Diplom-Projekt/uninvited-thoughts"
           video="uninvited-thoughts"
-          style={{ left: 425, top: 72, width: 322, height: 160, transform: "rotate(-9deg)", borderRadius: 4 }}
-          textStyle={{ transform: "rotate(9deg)" }}
+          style={{ left: 420, top: 57, width: 317, height: 155, transform: "rotate(-9.25deg)", borderRadius: 4 }}
+          textStyle={{ transform: "rotate(9.25deg)" }}
         />
         <ToolShape
           label="...off the grid"
           href="/Diplom-Projekt/off-the-grid"
           video="off-the-grid"
-          style={{ left: 1232, top: 112, width: 256, height: 170, transform: "rotate(4deg)", borderRadius: 4 }}
-          textStyle={{ transform: "rotate(-4deg)", alignSelf: "flex-end", marginBottom: 31, marginRight: 84 }}
+          style={{ left: 1220, top: 112, width: 251, height: 163, transform: "rotate(4.18deg)", borderRadius: 4, justifyContent: "flex-start", alignItems: "flex-end", padding: 12 }}
+          textStyle={{ transform: "rotate(-4.18deg)", marginBottom: 0 }}
         />
         <ToolShape
           label="...blind & then witness"
           href="/Diplom-Projekt/anonymously-in-public"
           video="blind-then-witness"
-          style={{ left: 213, top: 578, width: 330, height: 155, transform: "rotate(8deg)", borderRadius: "46% 54% 45% 55% / 48% 48% 52% 52%" }}
-          textStyle={{ transform: "rotate(-8deg)" }}
+          style={{ left: 213, top: 579, width: 324, height: 163, transform: "rotate(6.45deg)", borderRadius: 100 }}
+          textStyle={{ transform: "rotate(-6.45deg)" }}
         />
         <ToolShape
           label="...with visible corrections"
           href="/Diplom-Projekt/loschen-korrigieren"
           video="visible-corrections"
-          style={{ left: 780, top: 530, width: 366, height: 176, borderRadius: "30px 0 30px 0" }}
+          style={{ left: 774, top: 526, width: 363, height: 174, borderRadius: "40px 4px 40px 4px" }}
         />
         <ToolShape
           label="...in a spiral"
           href="/Diplom-Projekt/in-a-spiral"
           video="in-a-spiral"
-          style={{ left: 1320, top: 424, width: 220, height: 310, transform: "rotate(11deg)", borderRadius: "50%" }}
-          textStyle={{ transform: "rotate(-1deg)", marginTop: -16 }}
+          style={{ left: 1321, top: 414, width: 211, height: 309, transform: "rotate(12.11deg)", borderRadius: 200 }}
+          textStyle={{ transform: "rotate(-12.11deg)" }}
         />
 
         <div
           style={{
             position: "absolute",
-            left: 460,
+            left: 456,
             top: 300,
-            width: 760,
+            width: 768,
           }}
         >
           <h1
             style={{
               margin: 0,
               fontFamily: FONT_SERIF,
-              fontSize: 35,
-              lineHeight: 1.18,
+              fontSize: 36,
+              lineHeight: "45px",
               fontWeight: 400,
               letterSpacing: 0,
-              color: "#3f3f3f",
+              color: HEADLINE_TEXT,
               textAlign: "center",
               whiteSpace: "nowrap",
             }}

@@ -1625,39 +1625,42 @@ export default function New() {
 
                 {/* ── Korrigieren / Correction ──────────────────────────── */}
                 {activeCategory === "Correction" && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                    <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "10px" }}>
-                      <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.deleteHeading}</span>
-                      <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                        {DELETE_OPTS_KEYS.map(key => (
-                          <div key={key} onClick={() => setDeleteMode(key)} style={{
-                            display: "flex", alignItems: "center", justifyContent: "space-between",
-                            border: deleteMode === key
-                              ? `2px solid ${dark ? "rgba(240,232,220,0.85)" : LIGHT_TEXT}`
-                              : `1px dashed ${innerBorder}`,
-                            borderRadius: "4px",
-                            padding: "9px 12px", cursor: "pointer",
-                            background: deleteMode === key ? (dark ? "rgba(240,232,220,0.22)" : "rgba(85,85,85,0.13)") : "transparent",
-                            transition: "background 0.12s, border 0.12s",
-                          }}>
-                            <span style={{ fontFamily: FONT_SANS, fontSize: "15px", fontWeight: deleteMode === key ? 600 : 400, color: dark ? DARK_TEXT : LIGHT_TEXT }}>{deleteOptLabels[key]}</span>
-                            <RadioCircle selected={deleteMode === key} dark={dark} />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "10px" }}>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    {/* "Löschen" standalone label */}
+                    <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT, padding: "4px 0 2px" }}>{t.deleteHeading}</span>
+                    {/* 4 individual delete option rows */}
+                    {DELETE_OPTS_KEYS.map(key => (
+                      <button key={key} onClick={() => setDeleteMode(key)} style={{
+                        width: "100%", height: "44px",
+                        background: deleteMode === key ? (dark ? "rgba(240,232,220,0.22)" : "rgba(85,85,85,0.13)") : settingsCardBg,
+                        border: deleteMode === key
+                          ? `2px solid ${dark ? "rgba(240,232,220,0.85)" : LIGHT_TEXT}`
+                          : `1px dashed ${innerBorder}`,
+                        borderRadius: "8px", padding: "0 16px",
+                        display: "flex", alignItems: "center", justifyContent: "space-between",
+                        cursor: "pointer", outline: "none",
+                        fontFamily: FONT_SANS, fontSize: "15px",
+                        color: dark ? DARK_TEXT : LIGHT_TEXT,
+                        fontWeight: deleteMode === key ? 600 : 400,
+                        boxSizing: "border-box", transition: "background 0.12s, border 0.12s",
+                      }}>
+                        {deleteOptLabels[key]}
+                        <RadioCircle selected={deleteMode === key} dark={dark} />
+                      </button>
+                    ))}
+                    {/* Korrigieren sichtbar */}
+                    <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px", display: "flex", flexDirection: "column", gap: "10px", marginTop: "4px" }}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
                         <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.correctionVisible}</span>
                         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                           <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: descColor }}>{correctionVisible ? t.on : t.off}</span>
                           <ToggleBtn on={correctionVisible} onToggle={() => setCorrectionVisible(v => !v)} dark={dark} />
                         </div>
                       </div>
-                      <span style={{ fontFamily: FONT_SANS, fontSize: "14px", lineHeight: "1.5", color: descColor }}>
+                      <p style={{ fontFamily: FONT_SANS, fontSize: "13px", lineHeight: "1.45", color: descColor, margin: 0 }}>
                         <span style={{ color: dark ? "#8faee0" : "#6b82b0" }}>{t.correctionDescHighlight}</span>
                         {t.correctionDescRest}
-                      </span>
+                      </p>
                     </div>
                   </div>
                 )}

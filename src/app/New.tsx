@@ -1535,8 +1535,8 @@ export default function New() {
                 {activeCategory === "Time" && (
                   <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
 
-                    {/* Timer toggle */}
-                    <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px" }}>
+                    {/* Timer toggle + expanded in one card */}
+                    <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px", display: "flex", flexDirection: "column", gap: "0" }}>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
                         <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.timerLabel}</span>
                         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
@@ -1544,17 +1544,16 @@ export default function New() {
                           <ToggleBtn on={timerEnabled} onToggle={() => setTimerEnabled(v => !v)} dark={dark} />
                         </div>
                       </div>
-                    </div>
-
-                    {/* Expanded: stepper + user reset */}
-                    <AnimatePresence>
-                      {timerEnabled && (
-                        <motion.div
-                          key="timer-opts"
-                          initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
-                          transition={{ duration: 0.15 }}
-                        >
-                          <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px", display: "flex", flexDirection: "column", gap: "0" }}>
+                      <AnimatePresence>
+                        {timerEnabled && (
+                          <motion.div
+                            key="timer-opts"
+                            initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.15 }}
+                            style={{ overflow: "hidden" }}
+                          >
+                            {/* Divider */}
+                            <div style={{ height: "1px", background: innerBorder, margin: "4px 0" }} />
                             {/* Stepper row */}
                             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
                               <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.timerLabel}</span>
@@ -1580,10 +1579,10 @@ export default function New() {
                               <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.userReset}</span>
                               <RadioCircle selected={timerUserReset} dark={dark} />
                             </div>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
 
                     {/* Visueller Timer */}
                     <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px", display: "flex", flexDirection: "column", gap: "10px" }}>
@@ -1622,7 +1621,7 @@ export default function New() {
                     <div style={{ display: "flex", gap: "8px" }}>
                       {(["visible", "invisible"] as const).map(val => (
                         <button key={val} onClick={() => setVisibility(val)} style={{
-                          flex: 1, height: "44px",
+                          flex: 1, height: "36px",
                           background: visibility === val ? (dark ? "rgba(240,232,220,0.22)" : "rgba(85,85,85,0.13)") : settingsCardBg,
                           border: visibility === val
                             ? `2px solid ${dark ? "rgba(240,232,220,0.85)" : LIGHT_TEXT}`
@@ -1643,7 +1642,7 @@ export default function New() {
                     {/* Sentence / Word / Char */}
                     {(["sentence", "word", "char"] as const).map(val => (
                       <button key={val} onClick={() => setVisibility(val)} style={{
-                        width: "100%", height: "44px",
+                        width: "100%", height: "36px",
                         background: visibility === val ? (dark ? "rgba(240,232,220,0.22)" : "rgba(85,85,85,0.13)") : settingsCardBg,
                         border: visibility === val
                           ? `2px solid ${dark ? "rgba(240,232,220,0.85)" : LIGHT_TEXT}`
@@ -1671,7 +1670,7 @@ export default function New() {
                     {/* 4 individual delete option rows */}
                     {DELETE_OPTS_KEYS.map(key => (
                       <button key={key} onClick={() => setDeleteMode(key)} style={{
-                        width: "100%", height: "44px",
+                        width: "100%", height: "36px",
                         background: deleteMode === key ? (dark ? "rgba(240,232,220,0.22)" : "rgba(85,85,85,0.13)") : settingsCardBg,
                         border: deleteMode === key
                           ? `2px solid ${dark ? "rgba(240,232,220,0.85)" : LIGHT_TEXT}`
@@ -1727,7 +1726,12 @@ export default function New() {
                               border: `1px dashed ${fliegtUnit === u ? (dark ? DARK_TEXT : LIGHT_TEXT) : innerBorder}`,
                               borderRadius: "4px", cursor: "pointer", outline: "none",
                               fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT,
-                            }}>{u === "Sätze" ? t.driftSentences : t.driftWords}</button>
+                              display: "flex", alignItems: "center", justifyContent: "space-between",
+                              padding: "0 12px", boxSizing: "border-box",
+                            }}>
+                              {u === "Sätze" ? t.driftSentences : t.driftWords}
+                              <RadioCircle selected={fliegtUnit === u} dark={dark} />
+                            </button>
                           ))}
                         </div>
                         <button onClick={() => setFliegtUnit("Buchstabe")} style={{
@@ -1736,8 +1740,12 @@ export default function New() {
                           border: `1px dashed ${fliegtUnit === "Buchstabe" ? (dark ? DARK_TEXT : LIGHT_TEXT) : innerBorder}`,
                           borderRadius: "4px", cursor: "pointer", outline: "none",
                           fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT,
-                          textAlign: "left", padding: "0 12px", boxSizing: "border-box",
-                        }}>{t.driftLetters}</button>
+                          display: "flex", alignItems: "center", justifyContent: "space-between",
+                          padding: "0 12px", boxSizing: "border-box",
+                        }}>
+                          {t.driftLetters}
+                          <RadioCircle selected={fliegtUnit === "Buchstabe"} dark={dark} />
+                        </button>
                       </div>
                       <div style={{ borderTop: `1px dashed ${innerBorder}` }} />
                       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
@@ -1804,7 +1812,7 @@ export default function New() {
                             ? `2px solid ${dark ? "rgba(240,232,220,0.85)" : LIGHT_TEXT}`
                             : `1px dashed ${innerBorder}`,
                           borderRadius: positionMode === "random" && opt.value === "random" ? "4px 4px 0 0" : "4px",
-                          padding: "12px 16px", cursor: opt.disabled ? "not-allowed" : "pointer",
+                          height: "36px", padding: "0 16px", cursor: opt.disabled ? "not-allowed" : "pointer",
                           background: opt.value && positionMode === opt.value ? (dark ? "rgba(240,232,220,0.22)" : "rgba(85,85,85,0.13)") : settingsCardBg,
                           opacity: opt.disabled ? 0.45 : 1,
                           transition: "background 0.12s, border 0.12s",

@@ -1023,6 +1023,7 @@ export default function New() {
         .dark-transition, .dark-transition * {
           transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, opacity 0.2s ease !important;
         }
+        .vis-btn:hover { border-color: ${dark ? "rgba(240,232,220,0.55)" : "#989898"} !important; }
       `}</style>
 
       {/* ── Tool name header (center top, when loaded from URL) ──────────── */}
@@ -1728,19 +1729,18 @@ export default function New() {
                     {/* Sichtbar / Unsichtbar side-by-side */}
                     <div style={{ display: "flex", gap: "8px" }}>
                       {(["visible", "invisible"] as const).map(val => (
-                        <button key={val} onClick={() => setVisibility(val)} style={{
+                        <button key={val} className="vis-btn" onClick={() => setVisibility(val)} style={{
                           flex: 1, height: "36px",
-                          background: visibility === val ? (dark ? "rgba(240,232,220,0.22)" : "rgba(85,85,85,0.13)") : settingsCardBg,
+                          background: settingsCardBg,
                           border: visibility === val
-                            ? `2px solid ${dark ? "rgba(240,232,220,0.85)" : LIGHT_TEXT}`
+                            ? `1px dashed ${dark ? "rgba(240,232,220,0.85)" : LIGHT_TEXT}`
                             : `1px dashed ${innerBorder}`,
-                          borderRadius: "8px", padding: "0 12px",
+                          borderRadius: "4px", padding: "0 12px",
                           display: "flex", alignItems: "center", justifyContent: "space-between",
                           cursor: "pointer", outline: "none",
                           fontFamily: FONT_SANS, fontSize: "15px",
                           color: dark ? DARK_TEXT : LIGHT_TEXT,
-                          fontWeight: visibility === val ? 600 : 400,
-                          boxSizing: "border-box", transition: "background 0.12s, border 0.12s",
+                          boxSizing: "border-box",
                         }}>
                           {val === "visible" ? t.visVisible : t.visInvisible}
                           <RadioCircle selected={visibility === val} dark={dark} />
@@ -1749,19 +1749,18 @@ export default function New() {
                     </div>
                     {/* Sentence / Word / Char */}
                     {(["sentence", "word", "char"] as const).map(val => (
-                      <button key={val} onClick={() => setVisibility(val)} style={{
+                      <button key={val} className="vis-btn" onClick={() => setVisibility(val)} style={{
                         width: "100%", height: "36px",
-                        background: visibility === val ? (dark ? "rgba(240,232,220,0.22)" : "rgba(85,85,85,0.13)") : settingsCardBg,
+                        background: settingsCardBg,
                         border: visibility === val
-                          ? `2px solid ${dark ? "rgba(240,232,220,0.85)" : LIGHT_TEXT}`
+                          ? `1px dashed ${dark ? "rgba(240,232,220,0.85)" : LIGHT_TEXT}`
                           : `1px dashed ${innerBorder}`,
-                        borderRadius: "8px", padding: "0 16px",
+                        borderRadius: "4px", padding: "0 16px",
                         display: "flex", alignItems: "center", justifyContent: "space-between",
                         cursor: "pointer", outline: "none",
                         fontFamily: FONT_SANS, fontSize: "15px",
                         color: dark ? DARK_TEXT : LIGHT_TEXT,
-                        fontWeight: visibility === val ? 600 : 400,
-                        boxSizing: "border-box", transition: "background 0.12s, border 0.12s",
+                        boxSizing: "border-box",
                       }}>
                         {val === "sentence" ? t.visSentence : val === "word" ? t.visWord : t.visChar}
                         <RadioCircle selected={visibility === val} dark={dark} />

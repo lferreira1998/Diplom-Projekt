@@ -521,6 +521,7 @@ interface SpiralCanvasProps {
   positions: Position[];
   cursor: number;
   textColor: string;
+  coverBgColor?: string;
   visibility: "visible" | "hidden" | "sentence" | "word" | "char";
   split: number;
   verblasst: boolean;
@@ -543,6 +544,7 @@ function SpiralCanvas({
   verblassenSpeed,
   driftTick,
   fontFamily = "'IBM Plex Mono', 'Courier New', monospace",
+  coverBgColor = "#f2f3f6",
 }: SpiralCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef   = useRef<HTMLDivElement>(null);
@@ -588,9 +590,12 @@ function SpiralCanvas({
 
     // build char list with visibility info
     const isAllHidden = visibility === "hidden";
-    const charInfos: { char: string; posIdx: number; shouldHide: boolean }[] = [];
+    const charInfos: { char: string; posIdx: number; shouldHide: boolean; isCover: boolean }[] = [];
     for (let i = 0; i < positions.length; i++) {
-      const ch = getVisibleChar(positions[i]);
+      const visChar = getVisibleChar(positions[i]);
+      const topChar = getTopChar(positions[i]);
+      const isCover = visChar === null && topChar !== null;
+      const ch = visChar ?? topChar;
       if (ch === null) continue;
       const beforeCursor = i < cursor;
       const shouldHide =
@@ -600,6 +605,7 @@ function SpiralCanvas({
         char: ch === "\n" ? " " : ch,
         posIdx: i,
         shouldHide,
+        isCover,
       });
     }
 
@@ -650,7 +656,7 @@ function SpiralCanvas({
 
     interface CP {
       x: number; y: number; char: string;
-      fs: number; opacity: number; rot: number; shouldHide: boolean;
+      fs: number; opacity: number; rot: number; shouldHide: boolean; isCover: boolean;
     }
     const cps: CP[] = [];
 
@@ -683,6 +689,7 @@ function SpiralCanvas({
       cps.unshift({
         x, y, char: chars[i], fs, opacity, rot,
         shouldHide: charInfos[i]?.shouldHide ?? false,
+        isCover: charInfos[i]?.isCover ?? false,
       });
     }
 
@@ -692,11 +699,17 @@ function SpiralCanvas({
       ctx.save();
       ctx.translate(cp.x, cp.y);
       ctx.rotate(cp.rot);
-      ctx.font = `${cp.fs}px 'IBM Plex Mono', monospace`;
-      ctx.fillStyle = `rgba(${r},${g},${b},${Math.min(1, cp.opacity)})`;
-      ctx.textAlign    = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(cp.char, 0, 0);
+      ctx.font = `${cp.fs}px ${fontFamily}`;
+      if (cp.isCover) {
+        const cw = ctx.measureText(cp.char).width;
+        ctx.fillStyle = coverBgColor;
+        ctx.fillRect(-cw * 0.6, -cp.fs * 0.6, cw * 1.2, cp.fs * 1.2);
+      } else {
+        ctx.fillStyle = `rgba(${r},${g},${b},${Math.min(1, cp.opacity)})`;
+        ctx.textAlign    = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(cp.char, 0, 0);
+      }
       ctx.restore();
     }
 
@@ -708,8 +721,8 @@ function SpiralCanvas({
       ctx.fillRect(-1.5, -maxFs * 0.55, 3, maxFs * 1.1);
       ctx.restore();
     }
-  }, [positions, cursor, textColor, visibility, split, verblasst, posTimesRef,
-      verblassenDelay, verblassenSpeed, cursorOn, size, driftTick]);
+  }, [positions, cursor, textColor, coverBgColor, visibility, split, verblasst, posTimesRef,
+      verblassenDelay, verblassenSpeed, cursorOn, size, driftTick, fontFamily]);
 
   return (
     <div ref={wrapRef} style={{ position: "absolute", inset: 0 }}>
@@ -1305,6 +1318,7 @@ export function WritingZone({
             positions={positions}
             cursor={cursor}
             textColor={textColor}
+            coverBgColor={coverBgColor}
             visibility={visibility}
             split={split}
             verblasst={verblasst}

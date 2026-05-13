@@ -125,6 +125,7 @@ const TRANSLATIONS = {
     posStandard: "Standard",
     posSpiral: "Spiralförmiger Text",
     posRandom: "Text erscheint zufällig",
+    posRunning: "Fortlaufende Linie",
     posCustom: "Zeichne deine eigene Linie",
     // Look & Feel
     lfGrain: "Körnung & Textur",
@@ -215,6 +216,7 @@ const TRANSLATIONS = {
     posStandard: "Standard",
     posSpiral: "Spiraling Text",
     posRandom: "Text appears random",
+    posRunning: "Running Line",
     posCustom: "Draw your own path",
     // Look & Feel
     lfGrain: "Grain & Texture",
@@ -660,7 +662,7 @@ export default function New() {
   const [verblassSchnelligkeit, setVerblassSchnelligkeit] = useState(3);
 
   // Position params
-  const [positionMode, setPositionMode] = useState<"standard" | "spiral" | "random">("standard");
+  const [positionMode, setPositionMode] = useState<"standard" | "spiral" | "random" | "running">("standard");
 
   // Look & Feel params
   const [grainLevel, setGrainLevel]       = useState(0);
@@ -1107,6 +1109,7 @@ export default function New() {
             verblassenDelay={wzVerblDelay}
             verblassenSpeed={wzVerblSpeed}
             spiralModus={positionMode === "spiral"}
+            runningLineModus={positionMode === "running"}
             textAppearsRandom={positionMode === "random"}
             randomMode="words"
             writingPrompt={prompts[0] || t.writingPrompt}
@@ -1530,7 +1533,7 @@ export default function New() {
                       )}
                     </AnimatePresence>
 
-                    <div style={{ opacity: positionMode === "spiral" ? 0.4 : 1, transition: "opacity 0.2s", pointerEvents: positionMode === "spiral" ? "none" : "auto" }}>
+                    <div style={{ opacity: (positionMode === "spiral" || positionMode === "running") ? 0.4 : 1, transition: "opacity 0.2s", pointerEvents: (positionMode === "spiral" || positionMode === "running") ? "none" : "auto" }}>
                     <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px", display: "flex", flexDirection: "column", gap: "10px" }}>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
                         <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.cursorRunning}</span>
@@ -1540,7 +1543,7 @@ export default function New() {
                         </div>
                       </div>
                       <p style={{ fontFamily: FONT_SANS, fontSize: "13px", color: descColor, lineHeight: "1.45", margin: 0 }}>
-                        {positionMode === "spiral" ? (DE ? "Nicht verfügbar im Spiral-Modus" : "Not available in spiral mode") : t.cursorRunningDesc}
+                        {(positionMode === "spiral" || positionMode === "running") ? (DE ? "Nicht verfügbar in diesem Modus" : "Not available in this mode") : t.cursorRunningDesc}
                       </p>
                     </div>
                     </div>
@@ -1702,6 +1705,7 @@ export default function New() {
                       { value: "standard" as const, label: t.posStandard },
                       { value: "spiral" as const, label: t.posSpiral },
                       { value: "random" as const, label: t.posRandom },
+                      { value: "running" as const, label: t.posRunning },
                     ]).map(opt => (
                       <div key={opt.value} onClick={() => setPositionMode(opt.value)} style={{
                         display: "flex", alignItems: "center", justifyContent: "space-between",

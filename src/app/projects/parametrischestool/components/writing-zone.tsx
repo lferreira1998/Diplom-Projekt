@@ -36,6 +36,7 @@ interface WritingZoneProps {
   verblassenDelay?: number;
   verblassenSpeed?: number; // 10–500, default 100
   spiralModus?: boolean;
+  runningLineModus?: boolean;
   textAppearsRandom?: boolean;
   randomMode?: "words" | "sentences";
   writingPrompt?: string;
@@ -734,6 +735,151 @@ function SpiralCanvas({
   );
 }
 
+// ── RunningLineCanvas ─────────────────────────────────────────────────────────
+
+interface RunningLineCanvasProps {
+  positions: Position[];
+  cursor: number;
+  textColor: string;
+  coverBgColor?: string;
+  visibility: "visible" | "hidden" | "sentence" | "word" | "char";
+  split: number;
+  verblasst: boolean;
+  posTimesRef: React.MutableRefObject<number[]>;
+  verblassenDelay: number;
+  verblassenSpeed: number;
+  driftTick: number;
+  fontFamily?: string;
+  fontSize?: number;
+}
+
+function RunningLineCanvas({
+  positions,
+  cursor,
+  textColor,
+  coverBgColor = "#f2f3f6",
+  visibility,
+  split,
+  verblasst,
+  posTimesRef,
+  verblassenDelay,
+  verblassenSpeed,
+  driftTick,
+  fontFamily = "'IBM Plex Mono', 'Courier New', monospace",
+  fontSize = 20,
+}: RunningLineCanvasProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const wrapRef   = useRef<HTMLDivElement>(null);
+  const [cursorOn, setCursorOn] = useState(true);
+  const [size, setSize]         = useState({ w: 0, h: 0 });
+
+  useEffect(() => {
+    const id = setInterval(() => setCursorOn(v => !v), 530);
+    return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(entries => {
+      const { width, height } = entries[0].contentRect;
+      setSize({ w: width, h: height });
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    const W = size.w || canvas.parentElement?.getBoundingClientRect().width || 800;
+    const H = size.h || canvas.parentElement?.getBoundingClientRect().height || 600;
+    if (!W || !H) return;
+
+    canvas.width  = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.width  = `${W}px`;
+    canvas.style.height = `${H}px`;
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, W, H);
+
+    const fs = fontSize;
+    ctx.font = `${fs}px ${fontFamily}`;
+    const [r, g, b] = parseRgb(textColor);
+    const cy       = H / 2;
+    const cx       = W / 2;
+    const baseline = cy + fs * 0.35;
+    const isAllHidden = visibility === "hidden";
+    const nowMs = Date.now();
+
+    // Build char list (same pattern as SpiralCanvas)
+    const charInfos: { char: string; posIdx: number; shouldHide: boolean; isCover: boolean }[] = [];
+    for (let i = 0; i < positions.length; i++) {
+      const visChar = getVisibleChar(positions[i]);
+      const topChar = getTopChar(positions[i]);
+      const isCover = visChar === null && topChar !== null;
+      const ch = visChar ?? topChar;
+      if (ch === null) continue;
+      const beforeCursor = i < cursor;
+      const shouldHide = isAllHidden || (visibility !== "visible" && beforeCursor && i < split);
+      charInfos.push({ char: ch === "\n" ? " " : ch, posIdx: i, shouldHide, isCover });
+    }
+
+    // Measure char widths
+    const charWidths = charInfos.map(c => ctx.measureText(c.char).width);
+
+    // Sum widths of all chars before cursor
+    let preWidth = 0;
+    for (let i = 0; i < charInfos.length; i++) {
+      if (charInfos[i].posIdx < cursor) preWidth += charWidths[i];
+      else break;
+    }
+
+    // Start x so cursor lands at cx
+    let x = cx - preWidth;
+
+    for (let i = 0; i < charInfos.length; i++) {
+      const ci = charInfos[i];
+      const w  = charWidths[i];
+      const charX = x;
+      x += w;
+
+      if (charX + w < -200 || charX > W + 200) continue;
+
+      if (ci.isCover) {
+        ctx.fillStyle = coverBgColor;
+        ctx.fillRect(charX, cy - fs * 0.75, w, fs * 1.1);
+      } else if (!ci.shouldHide) {
+        let alpha = 1;
+        if (verblasst && ci.posIdx < cursor) {
+          const age = (nowMs - (posTimesRef.current[ci.posIdx] ?? nowMs)) / 1000;
+          const delay = verblassenDelay / 10;
+          alpha = Math.max(0, 1 - Math.max(0, age - delay) * (verblassenSpeed / 100) * 0.5);
+        }
+        ctx.fillStyle = `rgba(${r},${g},${b},${alpha})`;
+        ctx.fillText(ci.char, charX, baseline);
+      }
+    }
+
+    // Cursor bar at cx
+    if (cursorOn) {
+      ctx.fillStyle = `rgba(${r},${g},${b},0.8)`;
+      ctx.fillRect(cx, cy - fs * 0.55, 2, fs * 1.1);
+    }
+  }, [positions, cursor, textColor, coverBgColor, visibility, split, verblasst, posTimesRef,
+      verblassenDelay, verblassenSpeed, driftTick, fontFamily, fontSize, size, cursorOn]);
+
+  return (
+    <div ref={wrapRef} style={{ position: "absolute", inset: 0 }}>
+      <canvas ref={canvasRef} style={{ display: "block" }} />
+    </div>
+  );
+}
+
 // ── WritingZone ───────────────────────────────────────────────────────────────
 
 export function WritingZone({
@@ -759,6 +905,7 @@ export function WritingZone({
   verblassenDelay    = 120,
   verblassenSpeed    = 100,
   spiralModus        = false,
+  runningLineModus   = false,
   textAppearsRandom  = false,
   randomMode         = "words" as const,
   writingPrompt      = "",
@@ -801,12 +948,12 @@ export function WritingZone({
 
   const [driftTick, setDriftTick] = useState(0);
 
-  // Auto-focus when switching to spiral or random mode
+  // Auto-focus when switching to spiral, random, or running line mode
   useEffect(() => {
-    if (spiralModus || textAppearsRandom) {
+    if (spiralModus || textAppearsRandom || runningLineModus) {
       setTimeout(() => containerRef.current?.focus(), 0);
     }
-  }, [spiralModus, textAppearsRandom]);
+  }, [spiralModus, textAppearsRandom, runningLineModus]);
 
   // Sync arrays with positions length
   useEffect(() => {
@@ -1301,6 +1448,41 @@ export function WritingZone({
             fontFamily={fontFamily}
             positions={positions}
             cursor={cursor}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (runningLineModus) {
+    return (
+      <div
+        className="flex-1 relative transition-all duration-300"
+        style={{ paddingRight: panelOpen ? "343px" : "0px" }}
+      >
+        <div
+          ref={containerRef}
+          tabIndex={0}
+          onKeyDown={handleKeyDown}
+          onBlur={() => { selectAllRef.current = false; setSelectAll(false); }}
+          onClick={() => containerRef.current?.focus()}
+          className="absolute inset-0 outline-none cursor-text"
+          style={{ caretColor: "transparent" }}
+        >
+          <RunningLineCanvas
+            positions={positions}
+            cursor={cursor}
+            textColor={textColor}
+            coverBgColor={coverBgColor}
+            visibility={visibility}
+            split={split}
+            verblasst={verblasst}
+            posTimesRef={posTimesRef}
+            verblassenDelay={verblassenDelay}
+            verblassenSpeed={verblassenSpeed}
+            driftTick={driftTick}
+            fontFamily={fontFamily}
+            fontSize={fontSize}
           />
         </div>
       </div>

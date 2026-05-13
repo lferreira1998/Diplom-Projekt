@@ -900,9 +900,10 @@ export default function New() {
       )}
 
       {/* ── Info modal ────────────────────────────────────────────────────── */}
-      <AnimatePresence>
-        {infoModalOpen && createPortal(
+      {infoModalOpen && createPortal(
+        <AnimatePresence>
           <motion.div
+            key="info-backdrop"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             style={{
@@ -914,6 +915,7 @@ export default function New() {
             onClick={() => setInfoModalOpen(false)}
           >
             <motion.div
+              key="info-card"
               initial={{ opacity: 0, y: 12, scale: 0.97 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 12, scale: 0.97 }}
@@ -969,10 +971,10 @@ export default function New() {
                 }}
               >{lang === "de" ? "Schließen" : "Close"}</button>
             </motion.div>
-          </motion.div>,
-          document.body
-        )}
-      </AnimatePresence>
+          </motion.div>
+        </AnimatePresence>,
+        document.body
+      )}
 
       {/* ── Noise overlay ─────────────────────────────────────────────────── */}
       {grainLevel > 0 && (

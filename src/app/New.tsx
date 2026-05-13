@@ -342,16 +342,14 @@ function IconHalfCircle({ color, dark }: { color: string; dark: boolean }) {
 function RadioCircle({ selected, dark }: { selected: boolean; dark: boolean }) {
   return (
     <div style={{
-      width: "18px", height: "18px",
-      border: `1.5px solid ${dark ? DARK_MUTED : BORDER_COL}`,
+      width: "14px", height: "14px",
       borderRadius: "50%",
-      display: "flex", alignItems: "center", justifyContent: "center",
       flexShrink: 0,
-    }}>
-      {selected && (
-        <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: dark ? DARK_TEXT : LIGHT_TEXT }} />
-      )}
-    </div>
+      background: selected ? (dark ? "rgba(240,232,220,0.85)" : LIGHT_TEXT) : "transparent",
+      border: `1px dashed ${selected
+        ? (dark ? "rgba(240,232,220,0.85)" : LIGHT_TEXT)
+        : (dark ? "rgba(240,232,220,0.35)" : BORDER_COL)}`,
+    }} />
   );
 }
 

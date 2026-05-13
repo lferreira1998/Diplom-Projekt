@@ -137,6 +137,8 @@ function ToolShape({
       onPointerLeave={stopPreview}
       onMouseEnter={playPreview}
       onMouseLeave={stopPreview}
+      onMouseOver={playPreview}
+      onMouseOut={stopPreview}
       onFocus={playPreview}
       onBlur={stopPreview}
       style={{

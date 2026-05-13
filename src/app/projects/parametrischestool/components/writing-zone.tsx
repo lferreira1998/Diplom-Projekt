@@ -1235,7 +1235,8 @@ export function WritingZone({
       if (e.key === "Backspace" || e.key === "Delete") {
         if (selectAllRef.current) {
           selectAllRef.current = false; setSelectAll(false);
-          onUpdate([], 0); return;
+          if (deleteMode !== "no-delete") onUpdate([], 0);
+          return;
         }
         if (e.key === "Backspace") { applyBackspace(); lkpt.current = now; }
         return;

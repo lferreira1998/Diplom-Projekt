@@ -301,7 +301,22 @@ function IconEyeClosed({ color }: { color: string }) {
   );
 }
 
-function IconHalfCircle({ color }: { color: string }) {
+function IconHalfCircle({ color, dark }: { color: string; dark: boolean }) {
+  if (!dark) {
+    return (
+      <svg width="17" height="16" viewBox="0 0 101.94 97.7" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M53.89,80.3v17.4h-5.84v-17.4h5.84Z" fill={color}/>
+        <path d="M76.69,48.89c0,13.66-10.83,23.55-25.81,23.55s-25.62-9.89-25.62-23.55,10.74-23.65,25.62-23.65,25.81,9.89,25.81,23.65ZM70.94,48.89c0-9.7-7.73-16.96-20.07-16.96s-19.88,7.25-19.88,16.96,7.73,16.86,19.88,16.86,20.07-7.25,20.07-16.86Z" fill={color}/>
+        <path d="M53.89,0v17.4h-5.84V0h5.84Z" fill={color}/>
+        <path d="M101.94,51.77h-17.4v-5.84h17.4v5.84Z" fill={color}/>
+        <path d="M17.4,51.77H0v-5.84h17.4v5.84Z" fill={color}/>
+        <path d="M25.25,28.53l-12.3-12.3,4.13-4.13,12.3,12.3-4.13,4.13Z" fill={color}/>
+        <path d="M83.18,86.46l-12.3-12.3,4.13-4.13,12.3,12.3-4.13,4.13Z" fill={color}/>
+        <path d="M88.24,16.22l-12.3,12.3-4.13-4.13,12.3-12.3,4.13,4.13Z" fill={color}/>
+        <path d="M28.38,74.15l-12.3,12.3-4.13-4.13,12.3-12.3,4.13,4.13Z" fill={color}/>
+      </svg>
+    );
+  }
   return (
     <svg width="17" height="15" viewBox="0 0 107.41 95.89" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M67.06,21.2c3.64,8.43,6.24,19.55-.1,30.56-6.38,10.84-17.47,13.9-26.57,14.75l-6.99-4.12c10.47-1.32,20.24-5.16,26.06-15.05,5.92-10.06,4.81-20.45.62-30.26l6.99,4.12Z" fill={color}/>
@@ -1148,7 +1163,7 @@ export default function New() {
             }}
             onClick={(e) => { e.stopPropagation(); setDark(d => !d); }}
           >
-            <IconHalfCircle color={iconColor} />
+            <IconHalfCircle color={iconColor} dark={dark} />
           </motion.button>
         )}
       </AnimatePresence>

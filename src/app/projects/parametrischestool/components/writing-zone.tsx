@@ -1537,7 +1537,7 @@ export function WritingZone({
             fontFamily: fontFamily,
             fontSize: "clamp(20px, 2.8vw, 56px)",
             lineHeight: "1.5",
-            color: "rgba(155,155,155,0.8)",
+            color: "#AAAAAA",
             textAlign: "center",
             width: "100%",
             padding: "0 48px",
@@ -1576,7 +1576,7 @@ export function WritingZone({
           {positions.length === 0 && !centeredPrompt && (
             <span
               className="select-none absolute top-0 left-0 pointer-events-none"
-              style={{ color: "#C0C2CA" }}
+              style={{ color: "#AAAAAA" }}
             >
               {writingPrompt || "Fang einfach an zu schreiben…"}
             </span>

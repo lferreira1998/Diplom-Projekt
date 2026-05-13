@@ -355,6 +355,18 @@ function RadioCircle({ selected, dark }: { selected: boolean; dark: boolean }) {
   );
 }
 
+function IconShowHidden({ color }: { color: string }) {
+  return (
+    <svg width="19" height="13" viewBox="0 0 36 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M23.318 2.9355V4.46104C21.7844 2.56568 19.7599 1.61799 17.7232 1.61799C15.6988 1.61799 13.6744 2.56568 12.1407 4.46104V2.9355C13.6744 1.04014 15.6988 8.84903e-08 17.7232 0C19.7599 -8.90266e-08 21.7844 1.04014 23.318 2.9355Z" fill={color}/>
+      <path d="M11.7952 21.6912V20.1656C13.3289 22.061 15.3533 23.0087 17.39 23.0087C19.4144 23.0087 21.4389 22.061 22.9725 20.1656V21.6912C21.4389 23.5865 19.4144 24.6267 17.39 24.6267C15.3533 24.6267 13.3289 23.5865 11.7952 21.6912Z" fill={color}/>
+      <path d="M35.113 11.2229L26.682 2.65537V5.03092L33.8989 12.3133L26.682 19.5957V21.9713L35.113 13.4037V11.2229Z" fill={color}/>
+      <path d="M0 13.4037L8.43094 21.9713V19.5957L1.21406 12.3133L8.43094 5.03092V2.65537L0 11.2229V13.4037Z" fill={color}/>
+      <path d="M21.9794 12.3497C21.9794 14.9757 20.0828 16.9453 17.3839 16.9453C14.7579 16.9453 12.7883 14.9757 12.7883 12.3497C12.7883 9.57782 14.7579 7.68125 17.3839 7.68125C20.0828 7.68125 21.9794 9.57782 21.9794 12.3497Z" fill={color}/>
+    </svg>
+  );
+}
+
 // ── Toggle button ─────────────────────────────────────────────────────────────
 function ToggleBtn({ on, onToggle, dark = false }: { on: boolean; onToggle: () => void; dark?: boolean }) {
   return (
@@ -2021,7 +2033,7 @@ export default function New() {
             }}
             onClick={(e) => { e.stopPropagation(); setVisible(true); }}
           >
-            <IconEyeOpen color={iconColor} />
+            <IconShowHidden color={iconColor} />
           </motion.button>
         )}
       </AnimatePresence>

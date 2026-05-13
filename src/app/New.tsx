@@ -1578,7 +1578,30 @@ export default function New() {
                 {/* ── Sichtbarkeit / Visibility ─────────────────────────── */}
                 {activeCategory === "Visibility" && (
                   <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                    {(["visible", "invisible", "sentence", "word", "char"] as const).map((val) => (
+                    {/* Sichtbar / Unsichtbar side-by-side */}
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      {(["visible", "invisible"] as const).map(val => (
+                        <button key={val} onClick={() => setVisibility(val)} style={{
+                          flex: 1, height: "44px",
+                          background: visibility === val ? (dark ? "rgba(240,232,220,0.22)" : "rgba(85,85,85,0.13)") : settingsCardBg,
+                          border: visibility === val
+                            ? `2px solid ${dark ? "rgba(240,232,220,0.85)" : LIGHT_TEXT}`
+                            : `1px dashed ${innerBorder}`,
+                          borderRadius: "8px", padding: "0 12px",
+                          display: "flex", alignItems: "center", justifyContent: "space-between",
+                          cursor: "pointer", outline: "none",
+                          fontFamily: FONT_SANS, fontSize: "15px",
+                          color: dark ? DARK_TEXT : LIGHT_TEXT,
+                          fontWeight: visibility === val ? 600 : 400,
+                          boxSizing: "border-box", transition: "background 0.12s, border 0.12s",
+                        }}>
+                          {val === "visible" ? t.visVisible : t.visInvisible}
+                          <RadioCircle selected={visibility === val} dark={dark} />
+                        </button>
+                      ))}
+                    </div>
+                    {/* Sentence / Word / Char */}
+                    {(["sentence", "word", "char"] as const).map(val => (
                       <button key={val} onClick={() => setVisibility(val)} style={{
                         width: "100%", height: "44px",
                         background: visibility === val ? (dark ? "rgba(240,232,220,0.22)" : "rgba(85,85,85,0.13)") : settingsCardBg,
@@ -1593,11 +1616,7 @@ export default function New() {
                         fontWeight: visibility === val ? 600 : 400,
                         boxSizing: "border-box", transition: "background 0.12s, border 0.12s",
                       }}>
-                        {val === "visible" ? t.visVisible
-                          : val === "invisible" ? t.visInvisible
-                          : val === "sentence" ? t.visSentence
-                          : val === "word" ? t.visWord
-                          : t.visChar}
+                        {val === "sentence" ? t.visSentence : val === "word" ? t.visWord : t.visChar}
                         <RadioCircle selected={visibility === val} dark={dark} />
                       </button>
                     ))}

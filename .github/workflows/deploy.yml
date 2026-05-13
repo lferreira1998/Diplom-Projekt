@@ -3,12 +3,7 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches:
-      - claude/access-figma-code-fK8az
-      - claude/clarify-session-scope-5R22z
-      - claude/add-correction-page-RZqTR
-      - claude/add-time-page-deploy-u33h3
-      - claude/add-visibility-page-Ajf8Y
-      - claude/fix-closing-animation-Pv4TW
+      - claude/fix-design-font-default-HJrv9
 
 permissions:
   contents: write

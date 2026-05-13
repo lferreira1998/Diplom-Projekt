@@ -1461,6 +1461,7 @@ export default function New() {
                       )}
                     </AnimatePresence>
 
+                    <div style={{ opacity: positionMode === "spiral" ? 0.4 : 1, transition: "opacity 0.2s", pointerEvents: positionMode === "spiral" ? "none" : "auto" }}>
                     <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px", display: "flex", flexDirection: "column", gap: "10px" }}>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
                         <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.cursorRunning}</span>
@@ -1470,8 +1471,9 @@ export default function New() {
                         </div>
                       </div>
                       <p style={{ fontFamily: FONT_SANS, fontSize: "13px", color: descColor, lineHeight: "1.45", margin: 0 }}>
-                        {t.cursorRunningDesc}
+                        {positionMode === "spiral" ? (DE ? "Nicht verfügbar im Spiral-Modus" : "Not available in spiral mode") : t.cursorRunningDesc}
                       </p>
+                    </div>
                     </div>
                   </div>
                 )}
@@ -1547,7 +1549,8 @@ export default function New() {
                 {/* ── Stabilität / Stability ────────────────────────────── */}
                 {activeCategory === "Stability" && (
                   <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                    <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "14px" }}>
+                    <div style={{ position: "relative" }}>
+                    <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "14px", opacity: positionMode !== "standard" ? 0.4 : 1, transition: "opacity 0.2s", pointerEvents: positionMode !== "standard" ? "none" : "auto" }}>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                         <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.driftLabel}</span>
                         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
@@ -1589,6 +1592,14 @@ export default function New() {
                         <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.driftSpeed}</span>
                         <DoubleSlider value={fliegtSchnelligkeit} min={1} max={10} onChange={setFliegtSchnelligkeit} dark={dark} />
                       </div>
+                    </div>
+                    {positionMode !== "standard" && (
+                      <div style={{ position: "absolute", bottom: "10px", left: 0, right: 0, textAlign: "center", pointerEvents: "none" }}>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "11px", color: descColor }}>
+                          {DE ? "Nicht verfügbar in diesem Modus" : "Not available in this mode"}
+                        </span>
+                      </div>
+                    )}
                     </div>
 
                     <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "14px" }}>

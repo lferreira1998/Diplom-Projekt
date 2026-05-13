@@ -1776,19 +1776,18 @@ export default function New() {
                     <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT, padding: "4px 0 2px" }}>{t.deleteHeading}</span>
                     {/* 4 individual delete option rows */}
                     {DELETE_OPTS_KEYS.map(key => (
-                      <button key={key} onClick={() => setDeleteMode(key)} style={{
+                      <button key={key} className="vis-btn" onClick={() => setDeleteMode(key)} style={{
                         width: "100%", height: "36px",
-                        background: deleteMode === key ? (dark ? "rgba(240,232,220,0.22)" : "rgba(85,85,85,0.13)") : settingsCardBg,
+                        background: settingsCardBg,
                         border: deleteMode === key
-                          ? `2px solid ${dark ? "rgba(240,232,220,0.85)" : LIGHT_TEXT}`
+                          ? `1px dashed ${dark ? "rgba(240,232,220,0.85)" : LIGHT_TEXT}`
                           : `1px dashed ${innerBorder}`,
-                        borderRadius: "8px", padding: "0 16px",
+                        borderRadius: "4px", padding: "0 16px",
                         display: "flex", alignItems: "center", justifyContent: "space-between",
                         cursor: "pointer", outline: "none",
                         fontFamily: FONT_SANS, fontSize: "15px",
                         color: dark ? DARK_TEXT : LIGHT_TEXT,
-                        fontWeight: deleteMode === key ? 600 : 400,
-                        boxSizing: "border-box", transition: "background 0.12s, border 0.12s",
+                        boxSizing: "border-box",
                       }}>
                         {deleteOptLabels[key]}
                         <RadioCircle selected={deleteMode === key} dark={dark} />
@@ -1807,6 +1806,19 @@ export default function New() {
                         <span style={{ color: dark ? "#8faee0" : "#6b82b0" }}>{t.correctionDescHighlight}</span>
                         {t.correctionDescRest}
                       </p>
+                      {/* Tipp-Ex visual */}
+                      <div style={{ position: "relative", userSelect: "none", lineHeight: 1 }}>
+                        <span style={{ fontFamily: FONT_SERIF, fontSize: "13px", color: dark ? DARK_TEXT : LIGHT_TEXT, opacity: 0.55, whiteSpace: "nowrap" }}>
+                          {DE ? "Schreiben ist Denken und Sprechen" : "Writing is thinking and speaking"}
+                        </span>
+                        <div style={{
+                          position: "absolute",
+                          left: "62px", right: "48px",
+                          top: "-3px", bottom: "-3px",
+                          background: dark ? "rgba(252,246,239,0.82)" : "#fdfaf4",
+                          borderRadius: "2px",
+                        }} />
+                      </div>
                     </div>
                   </div>
                 )}

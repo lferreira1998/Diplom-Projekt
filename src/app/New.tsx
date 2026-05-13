@@ -739,7 +739,8 @@ export default function New() {
   const [copied, setCopied]             = useState(false);
 
   const t: Tr = TRANSLATIONS[lang];
-  const DE_new = lang === "de";
+  const DE = lang === "de";
+  const DE_new = DE;
 
   // ── Mobile blocker (< 1000px) ─────────────────────────────────────────────
   if (windowWidth < 1000) {

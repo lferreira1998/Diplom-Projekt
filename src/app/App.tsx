@@ -16,6 +16,7 @@ import InASpiral from "./projects/inaspiral/App";
 import RandomlySpatially from "./projects/randomlyspatially/App";
 import New from "./New";
 import Playground from "./Playground";
+import PlaygroundNew from "./PlaygroundNew";
 
 export default function App() {
   return (
@@ -36,6 +37,7 @@ export default function App() {
       <Route path="/about-the-project" element={<AboutTheProject />} />
       <Route path="/all-tools" element={<AllTools />} />
       <Route path="/playground" element={<Playground />} />
+      <Route path="/playgroundnew" element={<PlaygroundNew />} />
       <Route path="/new" element={<New />} />
     </Routes>
   );

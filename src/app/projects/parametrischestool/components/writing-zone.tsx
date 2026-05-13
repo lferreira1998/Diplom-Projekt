@@ -18,6 +18,7 @@ interface WritingZoneProps {
   onUpdate: (positions: Position[], cursor: number) => void;
   lastKeyPressTimestamp: React.MutableRefObject<number>;
   panelOpen: boolean;
+  focusRef?: React.MutableRefObject<(() => void) | null>;
   textColor?: string;
   coverBgColor?: string;
   visibility?: Visibility;
@@ -530,6 +531,7 @@ interface SpiralCanvasProps {
   verblassenSpeed: number;
   driftTick: number;
   fontFamily?: string;
+  fontSize?: number;
 }
 
 function SpiralCanvas({
@@ -545,6 +547,7 @@ function SpiralCanvas({
   driftTick,
   fontFamily = "'IBM Plex Mono', 'Courier New', monospace",
   coverBgColor = "#f2f3f6",
+  fontSize = 20,
 }: SpiralCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef   = useRef<HTMLDivElement>(null);
@@ -617,8 +620,8 @@ function SpiralCanvas({
     const cy = H / 2;
     const minR  = 24;
     const maxR  = Math.min(W, H) * 0.38;
-    const minFs = 7;
-    const maxFs = 28;
+    const minFs = Math.max(6, fontSize * 0.28);
+    const maxFs = fontSize;
     // writing position: bottom (6 o'clock)
     const cursorAngle = Math.PI * 0.5;
     const curX = cx + maxR * Math.cos(cursorAngle);
@@ -722,7 +725,7 @@ function SpiralCanvas({
       ctx.restore();
     }
   }, [positions, cursor, textColor, coverBgColor, visibility, split, verblasst, posTimesRef,
-      verblassenDelay, verblassenSpeed, cursorOn, size, driftTick, fontFamily]);
+      verblassenDelay, verblassenSpeed, cursorOn, size, driftTick, fontFamily, fontSize]);
 
   return (
     <div ref={wrapRef} style={{ position: "absolute", inset: 0 }}>
@@ -739,6 +742,7 @@ export function WritingZone({
   onUpdate,
   lastKeyPressTimestamp,
   panelOpen,
+  focusRef,
   textColor          = "#313642",
   coverBgColor       = "#F2F3F6",
   visibility         = "visible",
@@ -765,6 +769,10 @@ export function WritingZone({
 }: WritingZoneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const cursorDomRef = useRef<HTMLSpanElement>(null);
+
+  useLayoutEffect(() => {
+    if (focusRef) focusRef.current = () => containerRef.current?.focus();
+  });
 
   const posRef = useRef(positions);
   const curRef = useRef(cursor);
@@ -1327,6 +1335,7 @@ export function WritingZone({
             verblassenSpeed={verblassenSpeed}
             driftTick={driftTick}
             fontFamily={fontFamily}
+            fontSize={fontSize}
           />
         </div>
       </div>

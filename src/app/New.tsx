@@ -3,7 +3,6 @@ import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { useNavigate, useSearchParams } from "react-router";
 import AsciiImagePanel from "./components/AsciiImagePanel";
-import { CustomPathWriter } from "./components/CustomPathWriter";
 import {
   WritingZone,
   type Position,
@@ -621,6 +620,7 @@ export default function New() {
   const [rulesOpen, setRulesOpen]     = useState(false);
   const [activeCategory, setActiveCategory] = useState("Time");
   const [identityOpen, setIdentityOpen]     = useState(false);
+  const writingFocusRef = useRef<(() => void) | null>(null);
 
   // Time params
   const [timerEnabled, setTimerEnabled]     = useState(false);
@@ -647,7 +647,7 @@ export default function New() {
   const [verblassSchnelligkeit, setVerblassSchnelligkeit] = useState(3);
 
   // Position params
-  const [positionMode, setPositionMode] = useState<"standard" | "spiral" | "random" | "custom">("standard");
+  const [positionMode, setPositionMode] = useState<"standard" | "spiral" | "random">("standard");
 
   // Look & Feel params
   const [grainLevel, setGrainLevel]       = useState(0);
@@ -844,6 +844,14 @@ export default function New() {
   const darkBtnBg  = rulesOpen ? (dark ? "rgba(240,232,220,0.1)" : surfaceDark) : (dark ? "rgba(240,232,220,0.06)" : surfaceLight);
   const rulesBtnBg = rulesOpen ? (dark ? "rgba(240,232,220,0.1)" : surfaceDark) : (dark ? "rgba(240,232,220,0.06)" : surfaceLight);
 
+  // Re-focus writing area after panel close or category switch
+  useEffect(() => {
+    if (!rulesOpen) setTimeout(() => writingFocusRef.current?.(), 50);
+  }, [rulesOpen]);
+  useEffect(() => {
+    setTimeout(() => writingFocusRef.current?.(), 50);
+  }, [activeCategory, positionMode]);
+
   const wzVisibility = visibility === "invisible" ? "hidden" : visibility as "visible"|"hidden"|"sentence"|"word"|"char";
   const wzDeleteMode = deleteMode === "all" ? "deletable" : deleteMode === "none" ? "no-delete" : deleteMode as "sentence"|"word";
   const wzCorrection = correctionVisible ? "tippex" as const : "hidden" as const;
@@ -1002,27 +1010,18 @@ export default function New() {
         style={{
           position: "fixed", inset: 0,
           display: "flex", flexDirection: "column",
-          paddingTop: positionMode === "custom" ? "0px" : "24px",
+          paddingTop: "24px",
           paddingRight: "240px",
           zIndex: 1,
         }}
       >
-        {positionMode === "custom" ? (
-          <CustomPathWriter
-            textColor={textColor}
-            bgColor={bg}
-            fontSize={computedFontSize}
-            fontFamily={FONT_SERIF}
-            dark={dark}
-            writingPrompt={prompts[0] || t.writingPrompt}
-          />
-        ) : (
-          <WritingZone
+        <WritingZone
             positions={positions}
             cursor={cursor}
             onUpdate={handleUpdate}
             lastKeyPressTimestamp={lastKeyPressTimestamp}
             panelOpen={true}
+            focusRef={writingFocusRef}
             textColor={textColor}
             coverBgColor={bg}
             visibility={wzVisibility}
@@ -1047,7 +1046,6 @@ export default function New() {
             centeredPrompt={false}
             containerWidth="764px"
           />
-        )}
       </motion.div>
 
       {/* ── Floating ◑ button ─────────────────────────────────────────────── */}
@@ -1624,7 +1622,6 @@ export default function New() {
                       { value: "standard" as const, label: t.posStandard },
                       { value: "spiral" as const, label: t.posSpiral },
                       { value: "random" as const, label: t.posRandom },
-                      { value: "custom" as const, label: t.posCustom },
                     ]).map(opt => (
                       <div key={opt.value} onClick={() => setPositionMode(opt.value)} style={{
                         display: "flex", alignItems: "center", justifyContent: "space-between",

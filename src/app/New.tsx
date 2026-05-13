@@ -94,9 +94,10 @@ const TRANSLATIONS = {
     timerFixed: "Feste Zeit", timerFree: "Freie Wahl",
     minutes: "Minuten",
     visualTimer: "Visueller Timer",
-    userReset: "User setzt Timer neu",
+    visualTimerDesc: "Der Hintergrund rennt langsam die Schriftfläche ab. Wenn nichts mehr bleibt ist die Zeit um.",
+    userReset: "User setzt Timer jedes mal neu",
     cursorRunning: "Cursor läuft weiter",
-    cursorRunningDesc: "Der Cursor läuft automatisch weiter, egal ob man schreibt oder nicht.",
+    cursorRunningDesc: "Der Cursor läuft automatisch weiter, egal ob man schreibt oder nicht. Damit werden Pausen sichtbar.",
     // Visibility
     visVisible: "Sichtbar", visInvisible: "Unsichtbar",
     visSentence: "Nur aktueller Satz sichtbar",
@@ -185,9 +186,10 @@ const TRANSLATIONS = {
     timerFixed: "Fixed Time", timerFree: "Free Choice",
     minutes: "Minutes",
     visualTimer: "Visual Timer",
-    userReset: "User resets timer",
+    visualTimerDesc: "The background slowly runs down the writing area. When nothing is left, time is up.",
+    userReset: "User resets timer each time",
     cursorRunning: "Cursor keeps running",
-    cursorRunningDesc: "The cursor moves automatically whether you type or not.",
+    cursorRunningDesc: "The cursor moves automatically whether you type or not. This makes pauses visible.",
     // Visibility
     visVisible: "Visible", visInvisible: "Invisible",
     visSentence: "Current sentence only",
@@ -1492,69 +1494,70 @@ export default function New() {
                 {/* ── Zeit / Time ───────────────────────────────────────── */}
                 {activeCategory === "Time" && (
                   <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+
+                    {/* Timer toggle */}
                     <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px" }}>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
                         <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.timerLabel}</span>
                         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                          <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: descColor }}>
-                            {timerEnabled ? t.on : t.off}
-                          </span>
+                          <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: descColor }}>{timerEnabled ? t.on : t.off}</span>
                           <ToggleBtn on={timerEnabled} onToggle={() => setTimerEnabled(v => !v)} dark={dark} />
                         </div>
                       </div>
                     </div>
 
+                    {/* Expanded: stepper + user reset */}
                     <AnimatePresence>
                       {timerEnabled && (
                         <motion.div
                           key="timer-opts"
-                          initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
-                          transition={{ duration: 0.18 }}
-                          style={{ display: "flex", flexDirection: "column", gap: "8px" }}
+                          initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
+                          transition={{ duration: 0.15 }}
                         >
-                          <div style={{ display: "flex", gap: "8px" }}>
-                            {(["fixed", "free"] as const).map(m => (
-                              <button key={m} onClick={() => setTimerMode(m)} style={{
-                                flex: 1, height: "36px",
-                                background: timerMode === m ? (dark ? "rgba(240,232,220,0.15)" : "rgba(85,85,85,0.08)") : settingsCardBg,
-                                border: `1px dashed ${timerMode === m ? (dark ? DARK_TEXT : LIGHT_TEXT) : innerBorder}`,
-                                borderRadius: "8px", cursor: "pointer", outline: "none",
-                                fontFamily: FONT_SANS, fontSize: "14px", color: dark ? DARK_TEXT : LIGHT_TEXT,
-                              }}>{m === "fixed" ? t.timerFixed : t.timerFree}</button>
-                            ))}
-                          </div>
-                          <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px" }}>
+                          <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px", display: "flex", flexDirection: "column", gap: "0" }}>
+                            {/* Stepper row */}
                             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
-                              <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.minutes}</span>
-                              <input
-                                type="text"
-                                value={timerMinutes === 0 ? "" : timerMinutes}
-                                onChange={e => { const v = e.target.value; if (v === "") { setTimerMinutes(0); return; } if (/^\d+$/.test(v)) setTimerMinutes(Number(v)); }}
-                                onClick={e => e.stopPropagation()}
-                                style={{ width: "48px", height: "28px", background: "transparent", border: `1px dashed ${innerBorder}`, borderRadius: "4px", textAlign: "center", fontFamily: FONT_SANS, fontSize: "14px", color: dark ? DARK_TEXT : LIGHT_TEXT, outline: "none" }}
-                              />
-                            </div>
-                          </div>
-                          <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px" }}>
-                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
-                              <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.visualTimer}</span>
-                              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                                <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: descColor }}>{visualTimer ? t.on : t.off}</span>
-                                <ToggleBtn on={visualTimer} onToggle={() => setVisualTimer(v => !v)} dark={dark} />
+                              <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.timerLabel}</span>
+                              <div style={{ display: "flex", alignItems: "center", border: `1px dashed ${innerBorder}`, borderRadius: "4px", overflow: "hidden" }}>
+                                <button
+                                  onClick={e => { e.stopPropagation(); setTimerMinutes(m => Math.max(1, m - 1)); }}
+                                  style={{ width: "26px", height: "26px", background: "transparent", border: "none", cursor: "pointer", outline: "none", fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center" }}
+                                >−</button>
+                                <span style={{ width: "28px", textAlign: "center", fontFamily: FONT_SANS, fontSize: "14px", color: dark ? DARK_TEXT : LIGHT_TEXT, userSelect: "none" }}>{timerMinutes}</span>
+                                <button
+                                  onClick={e => { e.stopPropagation(); setTimerMinutes(m => m + 1); }}
+                                  style={{ width: "26px", height: "26px", background: "transparent", border: "none", cursor: "pointer", outline: "none", fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center" }}
+                                >+</button>
                               </div>
                             </div>
-                          </div>
-                          <div
-                            style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer" }}
-                            onClick={e => { e.stopPropagation(); setTimerUserReset(v => !v); }}
-                          >
-                            <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.userReset}</span>
-                            <RadioCircle selected={timerUserReset} dark={dark} />
+                            {/* Divider */}
+                            <div style={{ height: "1px", background: innerBorder, margin: "4px 0" }} />
+                            {/* User reset row */}
+                            <div
+                              style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px", cursor: "pointer" }}
+                              onClick={e => { e.stopPropagation(); setTimerUserReset(v => !v); }}
+                            >
+                              <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.userReset}</span>
+                              <RadioCircle selected={timerUserReset} dark={dark} />
+                            </div>
                           </div>
                         </motion.div>
                       )}
                     </AnimatePresence>
 
+                    {/* Visueller Timer */}
+                    <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px", display: "flex", flexDirection: "column", gap: "10px" }}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.visualTimer}</span>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                          <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: descColor }}>{visualTimer ? t.on : t.off}</span>
+                          <ToggleBtn on={visualTimer} onToggle={() => setVisualTimer(v => !v)} dark={dark} />
+                        </div>
+                      </div>
+                      <p style={{ fontFamily: FONT_SANS, fontSize: "13px", color: descColor, lineHeight: "1.45", margin: 0 }}>{t.visualTimerDesc}</p>
+                    </div>
+
+                    {/* Cursor läuft weiter */}
                     <div style={{ opacity: (positionMode === "spiral" || positionMode === "running") ? 0.4 : 1, transition: "opacity 0.2s", pointerEvents: (positionMode === "spiral" || positionMode === "running") ? "none" : "auto" }}>
                     <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px", display: "flex", flexDirection: "column", gap: "10px" }}>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>

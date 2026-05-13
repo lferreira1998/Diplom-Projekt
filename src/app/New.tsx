@@ -82,11 +82,11 @@ const TRANSLATIONS = {
     nameHeading: "Name",
     nameHint: 'Beende mit dem Namen den Satz „Write and think…“',
     namePlaceholder: "Name eingeben",
-    promptHeading: "Schreibanstoß",
+    promptHeading: "Schreibanstoß oder Aufgabe",
     promptHint: "Das hilft Menschen beim Schreiben. Du kannst mehrere anlegen.",
     promptPlaceholder: "Beispiel: Schreibe etwas über dich…",
     promptAdd: "+ Weiteren hinzufügen",
-    descHeading: "Beschreibung",
+    descHeading: "Beschreibung oder Regel",
     descPlaceholder: "Beispiel: Dieses Tool hilft anonym zu schreiben",
     // Time
     timerLabel: "Timer",
@@ -114,11 +114,13 @@ const TRANSLATIONS = {
     correctionDescRest: " über alten Text. Das Korrigieren hinterlässt Spuren.",
     // Stability
     driftLabel: "Text fliegt davon",
+    driftDesc: "Text verliert seine stabile Form und fliegt davon.",
     driftSentences: "Sätze", driftWords: "Wörter", driftLetters: "Buchstabe",
     driftTiming: "Zeitpunkt des Fliegens",
     driftAfter: (n: number) => `Nach ${n} min`,
     driftSpeed: "Schnelligkeit des Fliegens",
     fadeLabel: "Text verblasst",
+    fadeDesc: "Der Text verblasst und verschwindet langsam.",
     fadeTiming: "Zeitpunkt des Verblassens",
     fadeAfter: (n: number) => `Nach ${n} min`,
     fadeSpeed: "Schnelligkeit des Verblassens",
@@ -128,9 +130,12 @@ const TRANSLATIONS = {
     posRandom: "Text erscheint zufällig",
     posRunning: "Fortlaufende Linie",
     posCustom: "Zeichne deine eigene Linie",
+    posRandomSentences: "Ganze Sätze",
+    posRandomWords: "Einzelne Wörter",
     // Look & Feel
     lfGrain: "Körnung & Textur",
     lfTextSize: "Textgröße",
+    lfBgMotion: "Bewegung des Hintergrunds",
     lfBgColor: "Hintergrundfarbe anpassen",
     lfBgColorReset: "Farbe zurücksetzen",
     lfNoColor: "Keine Farbe",
@@ -174,11 +179,11 @@ const TRANSLATIONS = {
     nameHeading: "Name",
     nameHint: 'Complete the sentence “Write and think…” with the name',
     namePlaceholder: "Enter name",
-    promptHeading: "Writing Prompt",
+    promptHeading: "Writing Prompt or Task",
     promptHint: "This helps people start writing. You can add multiple.",
     promptPlaceholder: "Example: Write something about yourself…",
     promptAdd: "+ Add another",
-    descHeading: "Description",
+    descHeading: "Description or Rule",
     descPlaceholder: "Example: This tool helps writing anonymously",
     // Time
     timerLabel: "Timer",
@@ -206,11 +211,13 @@ const TRANSLATIONS = {
     correctionDescRest: " over old text. Corrections leave traces.",
     // Stability
     driftLabel: "Text drifts away",
+    driftDesc: "Text loses its stable form and drifts away.",
     driftSentences: "Sentences", driftWords: "Words", driftLetters: "Letters",
     driftTiming: "Drift timing",
     driftAfter: (n: number) => `After ${n} min`,
     driftSpeed: "Drift speed",
     fadeLabel: "Text fades",
+    fadeDesc: "Text slowly fades and disappears.",
     fadeTiming: "Fade timing",
     fadeAfter: (n: number) => `After ${n} min`,
     fadeSpeed: "Fade speed",
@@ -220,9 +227,12 @@ const TRANSLATIONS = {
     posRandom: "Text appears random",
     posRunning: "Running Line",
     posCustom: "Draw your own path",
+    posRandomSentences: "Full sentences",
+    posRandomWords: "Individual words",
     // Look & Feel
     lfGrain: "Grain & Texture",
     lfTextSize: "Text Size",
+    lfBgMotion: "Background Motion",
     lfBgColor: "Adjust background color",
     lfBgColorReset: "Reset color",
     lfNoColor: "No color",
@@ -692,6 +702,10 @@ export default function New() {
   const [grainLevel, setGrainLevel]       = useState(0);
   const [textSizeLevel, setTextSizeLevel] = useState(46);
   const [bgHue, setBgHue]                 = useState<number | null>(null);
+  const [bgMotion, setBgMotion]           = useState(false);
+
+  // Position sub-options
+  const [randomMode, setRandomMode] = useState<"sentences" | "words">("words");
 
   // Identity panel state
   const [toolName, setToolName]               = useState("");
@@ -829,9 +843,11 @@ export default function New() {
       setVerblassZeitpunkt(typeof p.verblassZeitpunkt === "number" ? p.verblassZeitpunkt : 2);
       setVerblassSchnelligkeit(typeof p.verblassSchnelligkeit === "number" ? p.verblassSchnelligkeit : 3);
       setPositionMode((p.positionMode as typeof positionMode) ?? "standard");
+      setRandomMode((p.randomMode as "sentences" | "words") ?? "words");
       setGrainLevel(typeof p.grainLevel === "number" ? p.grainLevel : 0);
       setTextSizeLevel(typeof p.textSizeLevel === "number" ? p.textSizeLevel : 20);
       setBgHue(typeof p.bgHue === "number" ? p.bgHue : null);
+      setBgMotion(p.bgMotion === true);
       if (p.asciiImage) setLoadedAsciiImage(p.asciiImage);
     }).catch((err) => {
       console.error("[New] Failed to load tool:", err);
@@ -880,7 +896,7 @@ export default function New() {
         visibility, deleteMode, correctionVisible,
         textFliegtEnabled, fliegtUnit, fliegtZeitpunkt, fliegtSchnelligkeit,
         textVerblassEnabled, verblassZeitpunkt, verblassSchnelligkeit,
-        positionMode, grainLevel, textSizeLevel, bgHue,
+        positionMode, randomMode, grainLevel, textSizeLevel, bgHue, bgMotion,
       };
       // Fix 3: update existing tool if loaded via URL, otherwise create new
       const id = currentToolId
@@ -899,7 +915,7 @@ export default function New() {
     visibility, deleteMode, correctionVisible,
     textFliegtEnabled, fliegtUnit, fliegtZeitpunkt, fliegtSchnelligkeit,
     textVerblassEnabled, verblassZeitpunkt, verblassSchnelligkeit,
-    positionMode, grainLevel, textSizeLevel, bgHue,
+    positionMode, randomMode, grainLevel, textSizeLevel, bgHue, bgMotion,
   ]);
 
   // ── Computed values ──────────────────────────────────────────────────────
@@ -969,13 +985,25 @@ export default function New() {
 
   return (
     <div
-      style={{ minHeight: "100vh", background: bg, position: "relative", transition: "background 1s linear" }}
+      style={{
+        minHeight: "100vh", background: bg, position: "relative", transition: "background 1s linear",
+        ...(bgMotion ? {
+          backgroundImage: dark
+            ? `linear-gradient(135deg, ${bg} 0%, oklch(28% 0.032 ${(bgHue ?? 60) + 30}) 50%, ${bg} 100%)`
+            : `linear-gradient(135deg, ${bg} 0%, oklch(96% 0.025 ${(bgHue ?? 60) + 30}) 50%, ${bg} 100%)`,
+          backgroundSize: "400% 400%",
+          animation: "bgDrift 12s ease infinite",
+        } : {}),
+      }}
     >
       <link
         href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap"
         rel="stylesheet"
       />
-      <style>{`@keyframes cursorBlink { 0%,100%{opacity:1} 50%{opacity:0} }`}</style>
+      <style>{`
+        @keyframes cursorBlink { 0%,100%{opacity:1} 50%{opacity:0} }
+        @keyframes bgDrift { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+      `}</style>
 
       {/* ── Tool name header (center top, when loaded from URL) ──────────── */}
       {currentToolId && visible && (
@@ -1135,7 +1163,7 @@ export default function New() {
             spiralModus={positionMode === "spiral"}
             runningLineModus={positionMode === "running"}
             textAppearsRandom={positionMode === "random"}
-            randomMode="words"
+            randomMode={randomMode === "sentences" ? "sentences" : "words"}
             writingPrompt={prompts[0] || t.writingPrompt}
             fontSize={computedFontSize}
             fontFamily={FONT_SERIF}
@@ -1677,6 +1705,7 @@ export default function New() {
                           <ToggleBtn on={textFliegtEnabled} onToggle={() => setTextFliegtEnabled(e => !e)} dark={dark} />
                         </div>
                       </div>
+                      <p style={{ fontFamily: FONT_SANS, fontSize: "13px", color: descColor, lineHeight: "1.45", margin: 0 }}>{t.driftDesc}</p>
                       <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                         <div style={{ display: "flex", gap: "6px" }}>
                           {(["Sätze", "Wörter"] as const).map(u => (
@@ -1729,6 +1758,7 @@ export default function New() {
                           <ToggleBtn on={textVerblassEnabled} onToggle={() => setTextVerblassEnabled(e => !e)} dark={dark} />
                         </div>
                       </div>
+                      <p style={{ fontFamily: FONT_SANS, fontSize: "13px", color: descColor, lineHeight: "1.45", margin: 0 }}>{t.fadeDesc}</p>
                       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                         <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.fadeTiming}</span>
                         <DoubleSlider value={verblassZeitpunkt} min={1} max={15} onChange={setVerblassZeitpunkt} dark={dark} />
@@ -1749,23 +1779,49 @@ export default function New() {
                 {activeCategory === "Position" && (
                   <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                     {([
-                      { value: "standard" as const, label: t.posStandard },
-                      { value: "spiral" as const, label: t.posSpiral },
-                      { value: "random" as const, label: t.posRandom },
-                      { value: "running" as const, label: t.posRunning },
-                    ]).map(opt => (
-                      <div key={opt.value} onClick={() => setPositionMode(opt.value)} style={{
-                        display: "flex", alignItems: "center", justifyContent: "space-between",
-                        border: positionMode === opt.value
-                          ? `2px solid ${dark ? "rgba(240,232,220,0.85)" : LIGHT_TEXT}`
-                          : `1px dashed ${innerBorder}`,
-                        borderRadius: "4px",
-                        padding: "12px 16px", cursor: "pointer",
-                        background: positionMode === opt.value ? (dark ? "rgba(240,232,220,0.22)" : "rgba(85,85,85,0.13)") : settingsCardBg,
-                        transition: "background 0.12s, border 0.12s",
-                      }}>
-                        <span style={{ fontFamily: FONT_SANS, fontSize: "15px", fontWeight: positionMode === opt.value ? 600 : 400, color: dark ? DARK_TEXT : LIGHT_TEXT, lineHeight: "1.4" }}>{opt.label}</span>
-                        <RadioCircle selected={positionMode === opt.value} dark={dark} />
+                      { value: "standard" as const, label: t.posStandard, disabled: false },
+                      { value: "spiral" as const, label: t.posSpiral, disabled: false },
+                      { value: "random" as const, label: t.posRandom, disabled: false },
+                      { value: "running" as const, label: t.posRunning, disabled: false },
+                      { value: null, label: t.posCustom, disabled: true },
+                    ]).map((opt) => (
+                      <div key={opt.value ?? "custom"}>
+                        <div onClick={() => { if (opt.value) setPositionMode(opt.value); }} style={{
+                          display: "flex", alignItems: "center", justifyContent: "space-between",
+                          border: opt.value && positionMode === opt.value
+                            ? `2px solid ${dark ? "rgba(240,232,220,0.85)" : LIGHT_TEXT}`
+                            : `1px dashed ${innerBorder}`,
+                          borderRadius: positionMode === "random" && opt.value === "random" ? "4px 4px 0 0" : "4px",
+                          padding: "12px 16px", cursor: opt.disabled ? "not-allowed" : "pointer",
+                          background: opt.value && positionMode === opt.value ? (dark ? "rgba(240,232,220,0.22)" : "rgba(85,85,85,0.13)") : settingsCardBg,
+                          opacity: opt.disabled ? 0.45 : 1,
+                          transition: "background 0.12s, border 0.12s",
+                        }}>
+                          <span style={{ fontFamily: FONT_SANS, fontSize: "15px", fontWeight: opt.value && positionMode === opt.value ? 600 : 400, color: dark ? DARK_TEXT : LIGHT_TEXT, lineHeight: "1.4" }}>{opt.label}</span>
+                          <RadioCircle selected={!!(opt.value && positionMode === opt.value)} dark={dark} />
+                        </div>
+                        {opt.value === "random" && positionMode === "random" && (
+                          <div style={{
+                            border: `2px solid ${dark ? "rgba(240,232,220,0.85)" : LIGHT_TEXT}`,
+                            borderTop: "none", borderRadius: "0 0 4px 4px",
+                            background: dark ? "rgba(240,232,220,0.08)" : "rgba(85,85,85,0.06)",
+                            padding: "10px 16px", display: "flex", gap: "8px",
+                          }}>
+                            {(["sentences", "words"] as const).map(mode => (
+                              <button key={mode} onClick={() => setRandomMode(mode)} style={{
+                                flex: 1, height: "32px",
+                                background: randomMode === mode ? (dark ? "rgba(240,232,220,0.2)" : "rgba(85,85,85,0.12)") : "transparent",
+                                border: `1px dashed ${randomMode === mode ? (dark ? "rgba(240,232,220,0.7)" : LIGHT_TEXT) : innerBorder}`,
+                                borderRadius: "4px", cursor: "pointer", outline: "none",
+                                fontFamily: FONT_SANS, fontSize: "13px",
+                                color: dark ? DARK_TEXT : LIGHT_TEXT,
+                                fontWeight: randomMode === mode ? 600 : 400,
+                              }}>
+                                {mode === "sentences" ? t.posRandomSentences : t.posRandomWords}
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -1818,6 +1874,16 @@ export default function New() {
                         <span style={{ fontFamily: FONT_SERIF, fontSize: "12px", color: dark ? DARK_TEXT : LIGHT_TEXT, flexShrink: 0 }}>A</span>
                         <input type="range" min={0} max={100} value={textSizeLevel} onChange={e => setTextSizeLevel(Number(e.target.value))} className="lf-slider" style={{ flex: 1 }} />
                         <span style={{ fontFamily: FONT_SERIF, fontSize: "28px", color: dark ? DARK_TEXT : LIGHT_TEXT, flexShrink: 0, lineHeight: 1 }}>A</span>
+                      </div>
+                    </div>
+
+                    <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px" }}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.lfBgMotion}</span>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                          <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: descColor }}>{bgMotion ? t.on : t.off}</span>
+                          <ToggleBtn on={bgMotion} onToggle={() => setBgMotion(v => !v)} dark={dark} />
+                        </div>
                       </div>
                     </div>
 

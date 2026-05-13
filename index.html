@@ -27,5 +27,41 @@
 
     <body>
       <div id="root"></div>
+      <script>
+        (function() {
+          var iconUrl = "/Diplom-Projekt/Hide%20%3A%20Show%20Icons/Show_Icon.svg";
+
+          function isDarkBackground() {
+            var bg = getComputedStyle(document.body).backgroundColor || "";
+            var match = bg.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+            if (!match) return false;
+            return (Number(match[1]) + Number(match[2]) + Number(match[3])) / 3 < 120;
+          }
+
+          function patchShowButton() {
+            var buttons = Array.prototype.slice.call(document.querySelectorAll("button"));
+            buttons.forEach(function(button) {
+              var style = button.getAttribute("style") || "";
+              var isHiddenControlsButton = style.indexOf("position: fixed") !== -1 && style.indexOf("top: 12px") !== -1 && style.indexOf("right: 12px") !== -1;
+              if (!isHiddenControlsButton || button.querySelector("[data-show-icon-fix]")) return;
+
+              button.innerHTML = "";
+              var icon = document.createElement("span");
+              icon.setAttribute("data-show-icon-fix", "true");
+              icon.style.width = "18px";
+              icon.style.height = "13px";
+              icon.style.display = "block";
+              icon.style.backgroundColor = isDarkBackground() ? "#f0e8dc" : "#555555";
+              icon.style.webkitMask = "url('" + iconUrl + "') center / contain no-repeat";
+              icon.style.mask = "url('" + iconUrl + "') center / contain no-repeat";
+              button.appendChild(icon);
+            });
+          }
+
+          new MutationObserver(patchShowButton).observe(document.body, { childList: true, subtree: true });
+          window.addEventListener("load", patchShowButton);
+          patchShowButton();
+        }());
+      </script>
     </body>
   </html>

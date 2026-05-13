@@ -874,8 +874,7 @@ export default function New() {
       {currentToolId && visible && (
         <div style={{
           position: "fixed", top: "24px", left: "50%", transform: "translateX(-50%)",
-          display: "flex", alignItems: "center", gap: "8px", zIndex: 20,
-          pointerEvents: "none",
+          display: "flex", alignItems: "center", gap: "8px", zIndex: 21,
         }}>
           <span style={{
             fontFamily: FONT_SERIF, fontSize: "15px",
@@ -894,7 +893,7 @@ export default function New() {
               display: "flex", alignItems: "center", justifyContent: "center",
               fontFamily: FONT_SANS, fontSize: "12px",
               color: dark ? DARK_MUTED : "#9a9daa",
-              flexShrink: 0, pointerEvents: "all",
+              flexShrink: 0,
             }}
           >ⓘ</button>
         </div>
@@ -924,10 +923,20 @@ export default function New() {
                 background: dark ? darkColors.darkCardBg : surfaceLight,
                 border: `1px dashed ${dark ? DARK_BORDER : BORDER_COL}`,
                 borderRadius: "16px", padding: "36px 40px",
-                maxWidth: "380px", width: "90vw", boxSizing: "border-box",
+                maxWidth: "420px", width: "90vw", boxSizing: "border-box",
                 display: "flex", flexDirection: "column", gap: "20px",
               }}
             >
+              {loadedAsciiImage && (
+                <img
+                  src={loadedAsciiImage}
+                  alt={toolName || "Tool"}
+                  style={{
+                    width: "100%", borderRadius: "8px",
+                    aspectRatio: "3/2", objectFit: "cover", display: "block",
+                  }}
+                />
+              )}
               <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                 <span style={{ fontFamily: FONT_SERIF, fontSize: "24px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>
                   {toolName || "Untitled"}

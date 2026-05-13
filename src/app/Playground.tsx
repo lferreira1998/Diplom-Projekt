@@ -217,8 +217,16 @@ export default function Playground() {
   const openTool = (id: string) => navigate(`/new?tool=${id}`);
 
   const handleDelete = (id: string) => {
-    deleteNewTool(id)
-      .then(() => setTools(prev => prev.filter(t => t.id !== id)))
+    const target = tools.find(t => t.id === id);
+    const toDelete = target
+      ? tools.filter(t =>
+          t.params.sessionId === target.params.sessionId &&
+          (t.params.displayName || t.name) === (target.params.displayName || target.name)
+        )
+      : tools.filter(t => t.id === id);
+    const ids = toDelete.map(t => t.id);
+    Promise.all(ids.map(deleteNewTool))
+      .then(() => setTools(prev => prev.filter(t => !ids.includes(t.id))))
       .catch(console.error);
   };
 

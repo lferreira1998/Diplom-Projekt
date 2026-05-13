@@ -278,9 +278,10 @@ function rDepthOpacity(z: number) { return 0.25 + ((z - R_MIN_Z) / (R_MAX_Z - R_
 interface RandomTextZoneProps {
   textColor: string;
   randomMode: "words" | "sentences";
+  fontFamily?: string;
 }
 
-function RandomTextZone({ textColor, randomMode }: RandomTextZoneProps) {
+function RandomTextZone({ textColor, randomMode, fontFamily = "'IBM Plex Mono', 'Courier New', monospace" }: RandomTextZoneProps) {
   const wrapRef    = useRef<HTMLDivElement>(null);
   const chunksRef  = useRef<FloatingChunk[]>([]);
   const curChunkRef = useRef<FloatingChunk | null>(null);
@@ -808,6 +809,13 @@ export function WritingZone({
 
   const [driftTick, setDriftTick] = useState(0);
 
+  // Auto-focus when switching to spiral or random mode
+  useEffect(() => {
+    if (spiralModus || textAppearsRandom) {
+      setTimeout(() => containerRef.current?.focus(), 0);
+    }
+  }, [spiralModus, textAppearsRandom]);
+
   // Sync arrays with positions length
   useEffect(() => {
     const now = Date.now();
@@ -1298,6 +1306,7 @@ export function WritingZone({
           <RandomTextZone
             textColor={textColor}
             randomMode={randomMode}
+            fontFamily={fontFamily}
           />
         </div>
       </div>

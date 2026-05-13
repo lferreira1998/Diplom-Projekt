@@ -708,7 +708,11 @@ export default function New() {
   const [verblassSchnelligkeit, setVerblassSchnelligkeit] = useState(3);
 
   // Position params
-  const [positionMode, setPositionMode] = useState<"standard" | "spiral" | "random" | "running">("standard");
+  const [positionMode, setPositionMode] = useState<"standard" | "spiral" | "random" | "running" | "custom">("standard");
+  const [drawnPath, setDrawnPath]       = useState<{ x: number; y: number }[]>([]);
+  const [isDrawing, setIsDrawing]       = useState(false);
+  const liveDrawPxRef                   = useRef<{ x: number; y: number }[]>([]);
+  const [livePolyline, setLivePolyline] = useState("");
 
   // Look & Feel params
   const [grainLevel, setGrainLevel]       = useState(0);
@@ -1140,6 +1144,100 @@ export default function New() {
         />
       )}
 
+      {/* ── Custom path drawing overlay ──────────────────────────────────── */}
+      {positionMode === "custom" && drawnPath.length === 0 && (
+        <div
+          style={{ position: "fixed", inset: 0, zIndex: 2, cursor: "crosshair", touchAction: "none" }}
+          onMouseDown={e => {
+            const rect = e.currentTarget.getBoundingClientRect();
+            liveDrawPxRef.current = [{ x: e.clientX - rect.left, y: e.clientY - rect.top }];
+            setIsDrawing(true);
+            setLivePolyline(`${e.clientX - rect.left},${e.clientY - rect.top}`);
+          }}
+          onMouseMove={e => {
+            if (!isDrawing) return;
+            const rect = e.currentTarget.getBoundingClientRect();
+            const px = e.clientX - rect.left, py = e.clientY - rect.top;
+            const last = liveDrawPxRef.current[liveDrawPxRef.current.length - 1];
+            const dx = px - last.x, dy = py - last.y;
+            if (dx * dx + dy * dy > 16) {
+              liveDrawPxRef.current.push({ x: px, y: py });
+              setLivePolyline(liveDrawPxRef.current.map(p => `${p.x},${p.y}`).join(" "));
+            }
+          }}
+          onMouseUp={e => {
+            setIsDrawing(false);
+            const rect = e.currentTarget.getBoundingClientRect();
+            const W = rect.width, H = rect.height;
+            const raw = liveDrawPxRef.current;
+            if (raw.length > 3) {
+              // Downsample to ~80 points
+              const step = Math.max(1, Math.floor(raw.length / 80));
+              const pts = raw.filter((_, i) => i % step === 0 || i === raw.length - 1);
+              setDrawnPath(pts.map(p => ({ x: p.x / W, y: p.y / H })));
+            }
+            liveDrawPxRef.current = [];
+            setLivePolyline("");
+          }}
+          onTouchStart={e => {
+            const rect = e.currentTarget.getBoundingClientRect();
+            const t = e.touches[0];
+            liveDrawPxRef.current = [{ x: t.clientX - rect.left, y: t.clientY - rect.top }];
+            setIsDrawing(true);
+          }}
+          onTouchMove={e => {
+            e.preventDefault();
+            const rect = e.currentTarget.getBoundingClientRect();
+            const t = e.touches[0];
+            const px = t.clientX - rect.left, py = t.clientY - rect.top;
+            const last = liveDrawPxRef.current[liveDrawPxRef.current.length - 1];
+            const dx = px - last.x, dy = py - last.y;
+            if (dx * dx + dy * dy > 16) {
+              liveDrawPxRef.current.push({ x: px, y: py });
+              setLivePolyline(liveDrawPxRef.current.map(p => `${p.x},${p.y}`).join(" "));
+            }
+          }}
+          onTouchEnd={e => {
+            setIsDrawing(false);
+            const rect = e.currentTarget.getBoundingClientRect();
+            const W = rect.width, H = rect.height;
+            const raw = liveDrawPxRef.current;
+            if (raw.length > 3) {
+              const step = Math.max(1, Math.floor(raw.length / 80));
+              const pts = raw.filter((_, i) => i % step === 0 || i === raw.length - 1);
+              setDrawnPath(pts.map(p => ({ x: p.x / W, y: p.y / H })));
+            }
+            liveDrawPxRef.current = [];
+            setLivePolyline("");
+          }}
+        >
+          <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }}>
+            {livePolyline && (
+              <polyline
+                points={livePolyline}
+                fill="none"
+                stroke={dark ? "rgba(240,232,220,0.45)" : "rgba(85,85,85,0.35)"}
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            )}
+          </svg>
+          {!isDrawing && (
+            <div style={{
+              position: "absolute", inset: 0,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              pointerEvents: "none",
+              fontFamily: FONT_SANS, fontSize: "15px",
+              color: dark ? "rgba(240,232,220,0.28)" : "rgba(85,85,85,0.22)",
+              letterSpacing: "0.02em",
+            }}>
+              {DE ? "Zeichne deinen Pfad" : "Draw your path"}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ── Writing zone ─────────────────────────────────────────────────── */}
       <motion.div
         animate={{
@@ -1179,6 +1277,8 @@ export default function New() {
             spiralModus={positionMode === "spiral"}
             runningLineModus={positionMode === "running"}
             textAppearsRandom={positionMode === "random"}
+            customPathModus={positionMode === "custom"}
+            customPath={drawnPath}
             randomMode={randomMode === "sentences" ? "sentences" : "words"}
             writingPrompt={prompts[0] || t.writingPrompt}
             fontSize={computedFontSize}
@@ -1811,22 +1911,24 @@ export default function New() {
                       { value: "spiral" as const, label: t.posSpiral, disabled: false },
                       { value: "random" as const, label: t.posRandom, disabled: false },
                       { value: "running" as const, label: t.posRunning, disabled: false },
-                      { value: null, label: t.posCustom, disabled: true },
+                      { value: "custom" as const, label: t.posCustom, disabled: false },
                     ]).map((opt) => (
-                      <div key={opt.value ?? "custom"}>
-                        <div onClick={() => { if (opt.value) setPositionMode(opt.value); }} style={{
+                      <div key={opt.value}>
+                        <div onClick={() => {
+                          setPositionMode(opt.value);
+                          if (opt.value === "custom") setDrawnPath([]);
+                        }} style={{
                           display: "flex", alignItems: "center", justifyContent: "space-between",
-                          border: opt.value && positionMode === opt.value
+                          border: positionMode === opt.value
                             ? `2px solid ${dark ? "rgba(240,232,220,0.85)" : LIGHT_TEXT}`
                             : `1px dashed ${innerBorder}`,
-                          borderRadius: positionMode === "random" && opt.value === "random" ? "4px 4px 0 0" : "4px",
-                          height: "36px", padding: "0 16px", cursor: opt.disabled ? "not-allowed" : "pointer",
-                          background: opt.value && positionMode === opt.value ? (dark ? "rgba(240,232,220,0.22)" : "rgba(85,85,85,0.13)") : settingsCardBg,
-                          opacity: opt.disabled ? 0.45 : 1,
+                          borderRadius: (positionMode === "random" && opt.value === "random") || (positionMode === "custom" && opt.value === "custom" && drawnPath.length > 0) ? "4px 4px 0 0" : "4px",
+                          height: "36px", padding: "0 16px", cursor: "pointer",
+                          background: positionMode === opt.value ? (dark ? "rgba(240,232,220,0.22)" : "rgba(85,85,85,0.13)") : settingsCardBg,
                           transition: "background 0.12s, border 0.12s",
                         }}>
-                          <span style={{ fontFamily: FONT_SANS, fontSize: "15px", fontWeight: opt.value && positionMode === opt.value ? 600 : 400, color: dark ? DARK_TEXT : LIGHT_TEXT, lineHeight: "1.4" }}>{opt.label}</span>
-                          <RadioCircle selected={!!(opt.value && positionMode === opt.value)} dark={dark} />
+                          <span style={{ fontFamily: FONT_SANS, fontSize: "15px", fontWeight: positionMode === opt.value ? 600 : 400, color: dark ? DARK_TEXT : LIGHT_TEXT, lineHeight: "1.4" }}>{opt.label}</span>
+                          <RadioCircle selected={positionMode === opt.value} dark={dark} />
                         </div>
                         {opt.value === "random" && positionMode === "random" && (
                           <div style={{
@@ -1848,6 +1950,25 @@ export default function New() {
                                 {mode === "sentences" ? t.posRandomSentences : t.posRandomWords}
                               </button>
                             ))}
+                          </div>
+                        )}
+                        {opt.value === "custom" && positionMode === "custom" && drawnPath.length > 0 && (
+                          <div style={{
+                            border: `2px solid ${dark ? "rgba(240,232,220,0.85)" : LIGHT_TEXT}`,
+                            borderTop: "none", borderRadius: "0 0 4px 4px",
+                            background: dark ? "rgba(240,232,220,0.08)" : "rgba(85,85,85,0.06)",
+                            padding: "10px 16px",
+                          }}>
+                            <button onClick={() => setDrawnPath([])} style={{
+                              width: "100%", height: "32px",
+                              background: "transparent",
+                              border: `1px dashed ${innerBorder}`,
+                              borderRadius: "4px", cursor: "pointer", outline: "none",
+                              fontFamily: FONT_SANS, fontSize: "13px",
+                              color: dark ? DARK_TEXT : LIGHT_TEXT,
+                            }}>
+                              {DE ? "Pfad neu zeichnen" : "Redraw path"}
+                            </button>
                           </div>
                         )}
                       </div>

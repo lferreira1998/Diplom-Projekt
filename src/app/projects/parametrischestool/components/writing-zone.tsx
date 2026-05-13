@@ -39,6 +39,8 @@ interface WritingZoneProps {
   runningLineModus?: boolean;
   textAppearsRandom?: boolean;
   randomMode?: "words" | "sentences";
+  customPathModus?: boolean;
+  customPath?: { x: number; y: number }[];
   writingPrompt?: string;
   fontFamily?: string;
   centeredPrompt?: boolean;
@@ -880,6 +882,154 @@ function RunningLineCanvas({
   );
 }
 
+// ── CustomPathCanvas ──────────────────────────────────────────────────────────
+
+interface CustomPathCanvasProps {
+  positions: Position[];
+  cursor: number;
+  textColor: string;
+  fontFamily?: string;
+  fontSize?: number;
+  customPath: { x: number; y: number }[];
+}
+
+function CustomPathCanvas({
+  positions,
+  cursor,
+  textColor,
+  fontFamily = "'IBM Plex Mono', 'Courier New', monospace",
+  fontSize = 20,
+  customPath,
+}: CustomPathCanvasProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const wrapRef   = useRef<HTMLDivElement>(null);
+  const [cursorOn, setCursorOn] = useState(true);
+  const [size, setSize]         = useState({ w: 0, h: 0 });
+
+  useEffect(() => {
+    const id = setInterval(() => setCursorOn(v => !v), 530);
+    return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(entries => {
+      const { width, height } = entries[0].contentRect;
+      setSize({ w: width, h: height });
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    const W = size.w || canvas.parentElement?.getBoundingClientRect().width || 800;
+    const H = size.h || canvas.parentElement?.getBoundingClientRect().height || 600;
+    if (!W || !H) return;
+
+    canvas.width  = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.width  = `${W}px`;
+    canvas.style.height = `${H}px`;
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, W, H);
+
+    const [r, g, b] = parseRgb(textColor);
+    const fs = fontSize;
+    ctx.font = `${fs}px ${fontFamily}`;
+
+    if (customPath.length < 2) return;
+
+    const pathPx = customPath.map(p => ({ x: p.x * W, y: p.y * H }));
+
+    // Draw subtle guide line
+    ctx.beginPath();
+    ctx.strokeStyle = `rgba(${r},${g},${b},0.07)`;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([3, 7]);
+    ctx.moveTo(pathPx[0].x, pathPx[0].y);
+    for (let i = 1; i < pathPx.length; i++) ctx.lineTo(pathPx[i].x, pathPx[i].y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Cumulative distances
+    const cuml = [0];
+    for (let i = 1; i < pathPx.length; i++) {
+      const dx = pathPx[i].x - pathPx[i - 1].x;
+      const dy = pathPx[i].y - pathPx[i - 1].y;
+      cuml.push(cuml[i - 1] + Math.sqrt(dx * dx + dy * dy));
+    }
+    const totalLen = cuml[cuml.length - 1];
+
+    function getAtDist(d: number) {
+      d = Math.max(0, Math.min(d, totalLen));
+      for (let i = 1; i < cuml.length; i++) {
+        if (cuml[i] >= d) {
+          const t = (d - cuml[i - 1]) / (cuml[i] - cuml[i - 1]);
+          const x = pathPx[i - 1].x + t * (pathPx[i].x - pathPx[i - 1].x);
+          const y = pathPx[i - 1].y + t * (pathPx[i].y - pathPx[i - 1].y);
+          const angle = Math.atan2(pathPx[i].y - pathPx[i - 1].y, pathPx[i].x - pathPx[i - 1].x);
+          return { x, y, angle };
+        }
+      }
+      const last = pathPx[pathPx.length - 1];
+      return { x: last.x, y: last.y, angle: 0 };
+    }
+
+    // Build char list
+    const charInfos: { char: string; posIdx: number }[] = [];
+    for (let i = 0; i < positions.length; i++) {
+      const visChar = getVisibleChar(positions[i]);
+      const topChar = getTopChar(positions[i]);
+      const ch = visChar ?? topChar;
+      if (ch === null) continue;
+      charInfos.push({ char: ch === "\n" ? " " : ch, posIdx: i });
+    }
+
+    // Place chars along path, track cursor distance
+    let d = 0;
+    let cursorD = -1;
+    for (let i = 0; i < charInfos.length; i++) {
+      const ci = charInfos[i];
+      const w = ctx.measureText(ci.char).width;
+      if (ci.posIdx === cursor) cursorD = d;
+      if (d <= totalLen + fs) {
+        const pt = getAtDist(d + w / 2);
+        ctx.save();
+        ctx.translate(pt.x, pt.y);
+        ctx.rotate(pt.angle);
+        ctx.fillStyle = `rgba(${r},${g},${b},1)`;
+        ctx.fillText(ci.char, -w / 2, fs * 0.35);
+        ctx.restore();
+      }
+      d += w;
+    }
+    if (cursorD < 0) cursorD = d;
+
+    if (cursorOn) {
+      const pt = getAtDist(cursorD);
+      ctx.save();
+      ctx.translate(pt.x, pt.y);
+      ctx.rotate(pt.angle);
+      ctx.fillStyle = `rgba(${r},${g},${b},0.8)`;
+      ctx.fillRect(0, -fs * 0.55, 2, fs * 1.1);
+      ctx.restore();
+    }
+  }, [positions, cursor, textColor, fontFamily, fontSize, customPath, size, cursorOn]);
+
+  return (
+    <div ref={wrapRef} style={{ position: "absolute", inset: 0 }}>
+      <canvas ref={canvasRef} style={{ display: "block" }} />
+    </div>
+  );
+}
+
 // ── WritingZone ───────────────────────────────────────────────────────────────
 
 export function WritingZone({
@@ -908,6 +1058,8 @@ export function WritingZone({
   runningLineModus   = false,
   textAppearsRandom  = false,
   randomMode         = "words" as const,
+  customPathModus    = false,
+  customPath         = [] as { x: number; y: number }[],
   writingPrompt      = "",
   fontSize           = 20,
   fontFamily         = "'IBM Plex Mono', 'Courier New', monospace",
@@ -1484,6 +1636,34 @@ export function WritingZone({
             driftTick={driftTick}
             fontFamily={fontFamily}
             fontSize={fontSize}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (customPathModus && customPath.length >= 2) {
+    return (
+      <div
+        className="flex-1 relative transition-all duration-300"
+        style={{ paddingRight: panelOpen ? "343px" : "0px" }}
+      >
+        <div
+          ref={containerRef}
+          tabIndex={0}
+          onKeyDown={handleKeyDown}
+          onBlur={() => { selectAllRef.current = false; setSelectAll(false); }}
+          onClick={() => containerRef.current?.focus()}
+          className="absolute inset-0 outline-none cursor-text"
+          style={{ caretColor: "transparent" }}
+        >
+          <CustomPathCanvas
+            positions={positions}
+            cursor={cursor}
+            textColor={textColor}
+            fontFamily={fontFamily}
+            fontSize={fontSize}
+            customPath={customPath}
           />
         </div>
       </div>

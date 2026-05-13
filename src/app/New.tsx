@@ -250,8 +250,8 @@ type Tr = typeof TRANSLATIONS["de"];
 const DELETE_OPTS_KEYS = ["all", "none", "sentence", "word"] as const;
 type DeleteMode = typeof DELETE_OPTS_KEYS[number];
 
-const BTN_CLOSED = { dark: 24, rules: 65 };
-const BTN_OPEN   = { dark: 371, rules: 412 };
+const BTN_CLOSED = { dark: 24, rules: 67 };
+const BTN_OPEN   = { dark: 371, rules: 414 };
 const SPRING = { type: "spring" as const, stiffness: 300, damping: 30 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -275,7 +275,7 @@ function formatTime(s: number): string {
 // ── Icons ─────────────────────────────────────────────────────────────────────
 function IconEyeOpen({ color }: { color: string }) {
   return (
-    <svg width="18" height="13" viewBox="0 0 36 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg width="19" height="14" viewBox="0 0 36 25" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M23.318 2.9355V4.46104C21.7844 2.56568 19.7599 1.61799 17.7232 1.61799C15.6988 1.61799 13.6744 2.56568 12.1407 4.46104V2.9355C13.6744 1.04014 15.6988 8.84903e-08 17.7232 0C19.7599 -8.90266e-08 21.7844 1.04014 23.318 2.9355Z" fill={color}/>
       <path d="M11.7952 21.6912V20.1656C13.3289 22.061 15.3533 23.0087 17.39 23.0087C19.4144 23.0087 21.4389 22.061 22.9725 20.1656V21.6912C21.4389 23.5865 19.4144 24.6267 17.39 24.6267C15.3533 24.6267 13.3289 23.5865 11.7952 21.6912Z" fill={color}/>
       <path d="M35.113 11.2229L26.682 2.65537V5.03092L33.8989 12.3133L26.682 19.5957V21.9713L35.113 13.4037V11.2229Z" fill={color}/>
@@ -287,7 +287,7 @@ function IconEyeOpen({ color }: { color: string }) {
 
 function IconEyeClosed({ color }: { color: string }) {
   return (
-    <svg width="18" height="15" viewBox="0 0 36 29" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg width="19" height="16" viewBox="0 0 36 29" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M8.63126 25.0596L8.45938 24.8857L0.028717 16.3184L0.000396729 16.2891V14.0264L0.028717 13.9971L8.45938 5.42969L8.63126 5.25488V7.91602L8.60196 7.94531L1.4545 15.1572L8.60196 22.3691L8.63126 22.3984V25.0596ZM35.3129 16.2891L35.2846 16.3184L26.8529 24.8857L26.682 25.0596V22.3984L26.7113 22.3691L33.8578 15.1572L26.7113 7.94531L26.682 7.91602V5.25488L26.8529 5.42969L35.2846 13.9971L35.3129 14.0264V16.2891ZM23.518 7.58789L23.3402 7.36816C21.8241 5.49447 19.8276 4.56262 17.8236 4.5625C16.1965 4.5625 14.5658 5.18423 13.1967 6.43359L16.3686 10.5439C16.7237 10.4662 17.0968 10.4258 17.4838 10.4258C18.8573 10.4258 20.0326 10.9086 20.8647 11.75C21.6967 12.5914 22.1791 13.785 22.1791 15.1943C22.179 16.7736 21.5044 18.1207 20.3871 18.9619L27.7934 28.5586L27.9174 28.7197H25.9809L25.9516 28.6807L22.9633 24.8174C21.4378 26.592 19.4687 27.5713 17.4897 27.5713C15.418 27.5712 13.3669 26.5129 11.8178 24.5986L11.7953 24.5703V22.7275L11.9731 22.9473C13.4892 24.8208 15.4857 25.7528 17.4897 25.7529C19.1453 25.7529 20.8022 25.1062 22.1859 23.8125L18.9828 19.6719C18.519 19.8129 18.0168 19.8896 17.4838 19.8896C14.8028 19.8896 12.7887 17.8753 12.7885 15.1943C12.7885 13.3946 13.6051 11.954 14.89 11.1445L6.47208 0.261719L6.34708 0.100586H8.30801L8.33829 0.138672L12.4145 5.41992C13.9306 3.69358 15.8731 2.74414 17.8236 2.74414C19.8954 2.74428 21.9464 3.80239 23.4955 5.7168L23.518 5.74414V7.58789Z" fill={color} stroke={color} strokeWidth="0.2"/>
     </svg>
   );
@@ -295,7 +295,7 @@ function IconEyeClosed({ color }: { color: string }) {
 
 function IconHalfCircle({ color }: { color: string }) {
   return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+    <svg width="17" height="17" viewBox="0 0 16 16" fill="none">
       <circle cx="8" cy="8" r="6.5" stroke={color} strokeWidth="1.1" />
       <path d="M8 1.5 A6.5 6.5 0 0 0 8 14.5 Z" fill={color} />
     </svg>
@@ -461,8 +461,8 @@ function btnStyle(dark: boolean, extra?: React.CSSProperties, surfaceLight = "#f
     display: "flex", alignItems: "center", justifyContent: "center",
     flexShrink: 0,
     color: dark ? DARK_TEXT : LIGHT_TEXT,
-    fontFamily: FONT_SANS, fontSize: "14px", fontWeight: 400, lineHeight: "normal",
-    height: "31px", padding: "0 12px",
+    fontFamily: FONT_SANS, fontSize: "15px", fontWeight: 400, lineHeight: "normal",
+    height: "33px", padding: "0 12px",
     ...extra,
   };
 }
@@ -480,8 +480,8 @@ function navItemStyle(dark: boolean, active: boolean, surfaceLight = "#fcf6ef", 
     borderRadius: "4px", cursor: "pointer", outline: "none",
     display: "flex", alignItems: "center", justifyContent: "flex-start",
     color: active ? (dark ? "#1e1d1b" : activeLightText) : (dark ? DARK_TEXT : LIGHT_TEXT),
-    fontFamily: FONT_SANS, fontSize: "14px", fontWeight: active ? 500 : 400, lineHeight: "normal",
-    height: "31px", padding: "0 12px", whiteSpace: "nowrap",
+    fontFamily: FONT_SANS, fontSize: "15px", fontWeight: active ? 500 : 400, lineHeight: "normal",
+    height: "33px", padding: "0 12px", whiteSpace: "nowrap",
   };
 }
 
@@ -1128,7 +1128,7 @@ export default function New() {
             transition={SPRING}
             style={{
               position: "fixed", top: "24px", left: BTN_CLOSED.dark,
-              width: "31px", height: "31px",
+              width: "33px", height: "33px",
               background: darkBtnBg,
               border: `1px dashed ${BORDER_COL}`,
               borderRadius: "4px",
@@ -1154,7 +1154,7 @@ export default function New() {
             transition={SPRING}
             style={{
               position: "fixed", top: "24px", left: BTN_CLOSED.rules,
-              height: "31px", width: rulesOpen ? "31px" : "60px",
+              height: "33px", width: rulesOpen ? "33px" : "62px",
               background: rulesBtnBg,
               border: `1px dashed ${BORDER_COL}`,
               borderRadius: "4px",
@@ -1170,7 +1170,7 @@ export default function New() {
               {rulesOpen ? (
                 <motion.span key="x" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.1 }} style={{ fontSize: "18px", lineHeight: "1" }}>×</motion.span>
               ) : (
-                <motion.span key="r" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.1 }} style={{ fontSize: "14px" }}>{t.rulesBtn}</motion.span>
+                <motion.span key="r" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.1 }} style={{ fontSize: "15px" }}>{t.rulesBtn}</motion.span>
               )}
             </AnimatePresence>
           </motion.button>

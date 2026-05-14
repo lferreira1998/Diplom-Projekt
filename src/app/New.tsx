@@ -639,6 +639,94 @@ function SavedModal({ dark, savedId, lang, onClose, onPlayground, surfaceLight }
   );
 }
 
+// ── Organic grain canvas ──────────────────────────────────────────────────────
+const OG_W = 256, OG_H = 256;
+
+function makeValueNoise(seed: number, cellPx: number): Float32Array {
+  const gW = Math.ceil(OG_W / cellPx) + 2;
+  const gH = Math.ceil(OG_H / cellPx) + 2;
+  let s = (seed | 0) >>> 0;
+  const lcg = () => { s = (Math.imul(s, 1664525) + 1013904223) >>> 0; return s / 4294967296; };
+  const grid = new Float32Array(gW * gH);
+  for (let i = 0; i < grid.length; i++) grid[i] = lcg();
+  const sm = (f: number) => f * f * (3 - 2 * f);
+  const lr = (a: number, b: number, t: number) => a + (b - a) * t;
+  const buf = new Float32Array(OG_W * OG_H);
+  for (let y = 0; y < OG_H; y++) {
+    for (let x = 0; x < OG_W; x++) {
+      const cx = x / cellPx, cy = y / cellPx;
+      const ix = Math.floor(cx), iy = Math.floor(cy);
+      const fx = sm(cx - ix), fy = sm(cy - iy);
+      const a = grid[iy * gW + ix], b = grid[iy * gW + ix + 1];
+      const c = grid[(iy + 1) * gW + ix], d = grid[(iy + 1) * gW + ix + 1];
+      buf[y * OG_W + x] = lr(lr(a, b, fx), lr(c, d, fx), fy);
+    }
+  }
+  return buf;
+}
+
+function makeOrganicBuf(seed: number): Float32Array {
+  const a = makeValueNoise(seed,          18); // coarse shapes
+  const b = makeValueNoise(seed * 7 + 3,   6); // medium
+  const c = makeValueNoise(seed * 13 + 7,  2); // fine grain
+  const buf = new Float32Array(OG_W * OG_H);
+  for (let i = 0; i < buf.length; i++) buf[i] = a[i] * 0.5 + b[i] * 0.35 + c[i] * 0.15;
+  return buf;
+}
+
+function OrganicGrainCanvas({ grainLevel }: { grainLevel: number }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const rafRef    = useRef(0);
+  const stateRef  = useRef({
+    bufA: makeOrganicBuf(42), bufB: makeOrganicBuf(137),
+    phase: 0, lastTs: 0, seed: 300,
+  });
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    canvas.width = OG_W; canvas.height = OG_H;
+    const ctx = canvas.getContext("2d")!;
+    const st = stateRef.current;
+
+    const render = (ts: number) => {
+      const dt = st.lastTs ? Math.min((ts - st.lastTs) / 1000, 0.05) : 0;
+      st.lastTs = ts;
+      st.phase += dt / 7; // 7-second morph cycle — calm and organic
+      if (st.phase >= 1) {
+        st.phase -= 1;
+        st.bufA = st.bufB;
+        st.bufB = makeOrganicBuf(st.seed++);
+      }
+      const t = st.phase * st.phase * (3 - 2 * st.phase); // smooth-step
+      const img = ctx.createImageData(OG_W, OG_H);
+      const d = img.data;
+      for (let i = 0; i < OG_W * OG_H; i++) {
+        const v = ((st.bufA[i] + t * (st.bufB[i] - st.bufA[i])) * 255 + 0.5) | 0;
+        const j = i * 4;
+        d[j] = d[j + 1] = d[j + 2] = v; d[j + 3] = 255;
+      }
+      ctx.putImageData(img, 0, 0);
+      rafRef.current = requestAnimationFrame(render);
+    };
+    rafRef.current = requestAnimationFrame(render);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      aria-hidden
+      style={{
+        position: "fixed", inset: 0, zIndex: 3, pointerEvents: "none",
+        width: "100%", height: "100%",
+        opacity: (grainLevel / 100) * 0.65,
+        mixBlendMode: "multiply",
+      }}
+    />
+  );
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 function useWindowWidth() {
   const [width, setWidth] = useState(() => window.innerWidth);
@@ -1033,7 +1121,6 @@ export default function New() {
       <style>{`
         @keyframes cursorBlink { 0%,100%{opacity:1} 50%{opacity:0} }
         @keyframes bgDrift { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
-        @keyframes noiseMove { 0%{background-position:0 0} 33%{background-position:120px 80px} 66%{background-position:60px 160px} 100%{background-position:0 0} }
         .dark-transition, .dark-transition * {
           transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, opacity 0.2s ease !important;
         }
@@ -1147,18 +1234,18 @@ export default function New() {
       )}
 
       {/* ── Noise overlay ─────────────────────────────────────────────────── */}
-      {grainLevel > 0 && (
+      {grainLevel > 0 && !bgMotion && (
         <div
           aria-hidden
           style={{
             position: "fixed", inset: 0, zIndex: 3, pointerEvents: "none",
-            opacity: (grainLevel / 100) * 0.72,
+            opacity: (grainLevel / 100) * 0.55,
             backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E")`,
             backgroundRepeat: "repeat", backgroundSize: "200px 200px",
-            animation: bgMotion ? "noiseMove 3s linear infinite" : "none",
           }}
         />
       )}
+      {grainLevel > 0 && bgMotion && <OrganicGrainCanvas grainLevel={grainLevel} />}
 
       {/* ── Custom path drawing overlay ──────────────────────────────────── */}
       {positionMode === "custom" && drawnPath.length === 0 && (

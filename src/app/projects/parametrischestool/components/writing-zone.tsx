@@ -1651,6 +1651,7 @@ export function WritingZone({
       }
 
       if (firstChar === "\n" && topIsCov) {
+        const inSel1 = selAnchorRef.current !== null && i >= Math.min(selAnchorRef.current, cursor) && i < Math.max(selAnchorRef.current, cursor);
         els.push(
           <span
             key={`p${i}`}
@@ -1658,6 +1659,8 @@ export function WritingZone({
             className="relative inline-block"
             style={{
               width: "0.6em", height: "1.15em", verticalAlign: "text-bottom",
+              backgroundColor: inSel1 ? "rgba(100,130,200,0.28)" : undefined,
+              borderRadius: inSel1 ? "2px" : undefined,
               ...visStyle,
               ...driftStyle,
               opacity: (visStyle.opacity ?? 1) as number * fadeOpacity,
@@ -1669,6 +1672,7 @@ export function WritingZone({
         continue;
       }
 
+      const inSel = selAnchorRef.current !== null && i >= Math.min(selAnchorRef.current, cursor) && i < Math.max(selAnchorRef.current, cursor);
       els.push(
         <span
           key={`p${i}`}
@@ -1676,6 +1680,8 @@ export function WritingZone({
           className="relative inline-block"
           style={{
             verticalAlign: "text-bottom",
+            backgroundColor: inSel ? "rgba(100,130,200,0.28)" : undefined,
+            borderRadius: inSel ? "2px" : undefined,
             ...visStyle,
             ...driftStyle,
             opacity: (typeof visStyle.opacity === "number" ? visStyle.opacity : 1) * fadeOpacity,
@@ -1879,7 +1885,8 @@ export function WritingZone({
           ref={containerRef}
           tabIndex={0}
           onKeyDown={handleKeyDown}
-          onBlur={() => { selectAllRef.current = false; setSelectAll(false); }}
+          onClick={handleClick}
+          onBlur={() => { selectAllRef.current = false; setSelectAll(false); selAnchorRef.current = null; setSelAnchor(null); }}
           className="outline-none cursor-text min-h-[60vh] relative"
           style={{
             width:        containerWidth,

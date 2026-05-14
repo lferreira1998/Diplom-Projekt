@@ -395,8 +395,8 @@ function ToggleBtn({ on, onToggle, dark = false }: { on: boolean; onToggle: () =
 }
 
 // ── Double slider ─────────────────────────────────────────────────────────────
-function DoubleSlider({ value, min, max, onChange, dark }: {
-  value: number; min: number; max: number;
+function DoubleSlider({ value, min, max, step = 1, onChange, dark }: {
+  value: number; min: number; max: number; step?: number;
   onChange: (v: number) => void; dark: boolean;
 }) {
   const pct      = ((value - min) / (max - min)) * 100;
@@ -410,7 +410,7 @@ function DoubleSlider({ value, min, max, onChange, dark }: {
         <div style={{ position: "absolute", left: `${pct}%`, right: 0, height: "1px", background: unfilled, top: "6px" }} />
       </div>
       <input
-        type="range" min={min} max={max} value={value}
+        type="range" min={min} max={max} step={step} value={value}
         onChange={(e) => onChange(Number(e.target.value))}
         style={{ position: "absolute", width: "100%", opacity: 0, cursor: "pointer", height: "100%", margin: 0, padding: 0 }}
       />
@@ -700,7 +700,8 @@ export default function New() {
   const [textFliegtEnabled, setTextFliegtEnabled]         = useState(false);
   const [fliegtUnit, setFliegtUnit]                       = useState<"Sätze" | "Wörter" | "Buchstabe">("Sätze");
   const [fliegtZeitpunkt, setFliegtZeitpunkt]             = useState(2);
-  const [fliegtSchnelligkeit, setFliegtSchnelligkeit]     = useState(3);
+  const [fliegtSchnelligkeit, setFliegtSchnelligkeit]     = useState(2.0);
+  const [textEditingEnabled, setTextEditingEnabled]        = useState(true);
   const [textVerblassEnabled, setTextVerblassEnabled]     = useState(false);
   const [verblassZeitpunkt, setVerblassZeitpunkt]         = useState(2);
   const [verblassSchnelligkeit, setVerblassSchnelligkeit] = useState(3);
@@ -981,7 +982,7 @@ export default function New() {
   const wzVisibility = visibility === "invisible" ? "hidden" : visibility as "visible"|"hidden"|"sentence"|"word"|"char";
   const wzDeleteMode = deleteMode === "all" ? "deletable" : deleteMode === "none" ? "no-delete" : deleteMode as "sentence"|"word";
   const wzCorrection = correctionVisible ? "tippex" as const : "hidden" as const;
-  const wzDriftSpeed = fliegtSchnelligkeit * 50;
+  const wzDriftSpeed = fliegtSchnelligkeit;
   const wzVerblSpeed = verblassSchnelligkeit * 50;
   const wzDriftDelay = fliegtZeitpunkt * 60;
   const wzVerblDelay = verblassZeitpunkt * 60;
@@ -1266,6 +1267,7 @@ export default function New() {
             visibility={wzVisibility}
             deleteMode={wzDeleteMode}
             correctionMode={wzCorrection}
+            textEditingEnabled={textEditingEnabled}
             cursorLaeuftWeiter={cursorRunning}
             driftet={textFliegtEnabled}
             driftSaetze={fliegtUnit === "Sätze"}
@@ -1721,6 +1723,17 @@ export default function New() {
                       </p>
                     </div>
                     </div>
+
+                    {/* Freies Editieren card */}
+                    <div
+                      style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px", display: "flex", flexDirection: "column", gap: "10px", cursor: "pointer" }}
+                      onClick={() => setTextEditingEnabled(v => !v)}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{DE ? "Freies Editieren" : "Free editing"}</span>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: descColor }}>{textEditingEnabled ? t.on : t.off}</span>
+                      </div>
+                    </div>
                   </div>
                 )}
 
@@ -1915,7 +1928,7 @@ export default function New() {
                               <div style={{ borderTop: `1px dashed ${innerBorder}`, margin: "6px 0" }} />
                               {/* Speed */}
                               <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.driftSpeed}</span>
-                              <DoubleSlider value={fliegtSchnelligkeit} min={1} max={10} onChange={setFliegtSchnelligkeit} dark={dark} />
+                              <DoubleSlider value={fliegtSchnelligkeit} min={0.1} max={10} step={0.1} onChange={setFliegtSchnelligkeit} dark={dark} />
                             </motion.div>
                           )}
                         </AnimatePresence>

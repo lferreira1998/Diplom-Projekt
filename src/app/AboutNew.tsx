@@ -15,8 +15,15 @@ const SERIF = "'freight-text-pro', 'EB Garamond', Georgia, serif";
 const SANS = "'general-sans', 'Space Grotesk', sans-serif";
 const MONO = "'Courier Prime', 'Courier New', monospace";
 
-const CANVAS_W = 1700;
-const CANVAS_H = 1000;
+const CANVAS_W = 1120;
+const CANVAS_H = 2050;
+
+function mapPoint(x: number, y: number) {
+  return {
+    x: CANVAS_W / 2 + (y - 500) * 0.74,
+    y: 150 + x * 1.16,
+  };
+}
 
 function DottedButton({ children, onClick }: { children: React.ReactNode; onClick: () => void }) {
   return (
@@ -67,7 +74,9 @@ export default function AboutNew() {
       node.connections?.forEach((connection) => {
         const target = allNodes.find((candidate) => candidate.id === connection.to);
         if (!target || !visibleIds.has(target.id)) return;
-        result.push({ fx: node.x, fy: node.y, tx: target.x, ty: target.y });
+        const from = mapPoint(node.x, node.y);
+        const to = mapPoint(target.x, target.y);
+        result.push({ fx: from.x, fy: from.y, tx: to.x, ty: to.y });
       });
     });
     return result;
@@ -97,9 +106,10 @@ export default function AboutNew() {
       <style>{`
         html, body, #root { height: 100%; overflow: hidden; background: ${BG}; }
         .aboutnew-node:hover p { color: ${INK} !important; text-decoration: underline; text-decoration-style: dashed; text-underline-offset: 5px; }
-        .aboutnew-node:hover { transform: translate(-50%, -54%) !important; }
-        .aboutnew-line { animation: aboutnewDash 22s linear infinite; }
-        @keyframes aboutnewDash { to { stroke-dashoffset: -220; } }
+        .aboutnew-node:hover { border-color: ${INK} !important; background: rgba(243,235,224,0.82) !important; }
+        .aboutnew-scroll::-webkit-scrollbar { width: 10px; }
+        .aboutnew-scroll::-webkit-scrollbar-track { background: transparent; }
+        .aboutnew-scroll::-webkit-scrollbar-thumb { background: rgba(164,164,164,0.34); border-radius: 999px; }
       `}</style>
 
       <header
@@ -138,13 +148,16 @@ export default function AboutNew() {
       </header>
 
       <div
+        className="aboutnew-scroll"
         style={{
           position: "absolute",
           top: 78,
           left: 0,
           right: 0,
           bottom: 0,
-          overflow: "auto",
+          overflowX: "hidden",
+          overflowY: "auto",
+          paddingBottom: 140,
         }}
       >
         <div
@@ -152,8 +165,8 @@ export default function AboutNew() {
             position: "relative",
             width: CANVAS_W,
             height: CANVAS_H,
-            minWidth: "100%",
             minHeight: "calc(100vh - 78px)",
+            margin: "0 auto",
           }}
         >
           <svg
@@ -175,11 +188,10 @@ export default function AboutNew() {
               {lines.map((line) => (
                 <motion.line
                   key={`${line.fx}-${line.fy}-${line.tx}-${line.ty}`}
-                  className="aboutnew-line"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  transition={{ duration: 0.42 }}
+                  transition={{ duration: 0.32 }}
                   x1={line.fx}
                   y1={line.fy}
                   x2={line.tx}
@@ -197,19 +209,20 @@ export default function AboutNew() {
             {visibleNodes.map((node) => {
               const isMain = node.nodeType === "main";
               const isActive = active === node.id;
+              const point = mapPoint(node.x, node.y);
               return (
                 <motion.button
                   key={node.id}
                   className="aboutnew-node"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ duration: 0.26, ease: "easeOut" }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
                   onClick={(event) => handleOpen(node.id, event)}
                   style={{
                     position: "absolute",
-                    left: node.x,
-                    top: node.y,
+                    left: point.x,
+                    top: point.y,
                     transform: "translate(-50%, -50%)",
                     padding: isMain ? "15px 18px" : "12px 14px",
                     minWidth: isMain ? 170 : 132,
@@ -218,8 +231,8 @@ export default function AboutNew() {
                     border: `1px dashed ${isActive ? INK : DASH}`,
                     borderRadius: isMain ? 999 : 8,
                     cursor: "pointer",
-                    boxShadow: isActive ? "0 18px 58px rgba(48,46,44,0.08)" : "none",
-                    transition: "background 160ms ease, border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease",
+                    boxShadow: isActive ? "0 12px 38px rgba(48,46,44,0.07)" : "none",
+                    transition: "background 140ms ease, border-color 140ms ease, box-shadow 140ms ease",
                   }}
                 >
                   <p
@@ -249,10 +262,10 @@ export default function AboutNew() {
         {activeNode && (
           <motion.aside
             key={activeNode.id}
-            initial={{ opacity: 0, x: 18 }}
+            initial={{ opacity: 0, x: 12 }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 18 }}
-            transition={{ duration: 0.18, ease: "easeOut" }}
+            exit={{ opacity: 0, x: 12 }}
+            transition={{ duration: 0.16, ease: "easeOut" }}
             onClick={(event) => event.stopPropagation()}
             style={{
               position: "fixed",
@@ -262,7 +275,7 @@ export default function AboutNew() {
               bottom: 28,
               width: 320,
               boxSizing: "border-box",
-              background: "rgba(249,241,232,0.92)",
+              background: "rgba(249,241,232,0.94)",
               border: `1px dashed ${DASH}`,
               borderRadius: 10,
               padding: "20px 22px",
@@ -270,7 +283,7 @@ export default function AboutNew() {
               flexDirection: "column",
               gap: 16,
               overflowY: "auto",
-              boxShadow: "0 24px 90px rgba(48,46,44,0.1)",
+              boxShadow: "0 18px 70px rgba(48,46,44,0.09)",
               backdropFilter: "blur(8px)",
             }}
           >

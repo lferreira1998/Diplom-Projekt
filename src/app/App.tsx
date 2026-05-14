@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router";
 import Overview from "./Overview";
 import OneWordReplay from "./OneWordReplay";
 import AboutTheProject from "./projects/abouttheproject/App";
+import AboutNew from "./AboutNew";
 import AllTools from "./AllTools";
 import DontStopWriting from "./projects/dontstop/App";
 import UninvitedThoughts from "./projects/uninvitedthoughts/App";
@@ -35,6 +36,7 @@ export default function App() {
       <Route path="/in-a-spiral" element={<InASpiral />} />
       <Route path="/randomly-spatially" element={<RandomlySpatially />} />
       <Route path="/about-the-project" element={<AboutTheProject />} />
+      <Route path="/aboutnew" element={<AboutNew />} />
       <Route path="/all-tools" element={<AllTools />} />
       <Route path="/playground" element={<Playground />} />
       <Route path="/playgroundnew" element={<PlaygroundNew />} />

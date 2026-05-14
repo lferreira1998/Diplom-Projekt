@@ -24,6 +24,7 @@ interface WritingZoneProps {
   visibility?: Visibility;
   deleteMode?: DeleteMode;
   correctionMode?: CorrectionMode;
+  textEditingEnabled?: boolean;
   cursorLaeuftWeiter?: boolean;
   driftet?: boolean;
   driftSaetze?: boolean;
@@ -114,6 +115,42 @@ function computeBoundary(
   }
 
   return 0;
+}
+
+// ── Range deletion helper ──────────────────────────────────────────────────────
+
+function deleteRange(
+  positions: Position[],
+  start: number,
+  end: number,
+  correctionMode: CorrectionMode
+): Position[] {
+  if (start >= end) return positions;
+  if (correctionMode === "tippex") {
+    const next = positions.map(p => ({ layers: [...p.layers] }));
+    for (let i = start; i < end; i++) {
+      if (getTopChar(positions[i]) !== " ") {
+        next[i] = { layers: [...next[i].layers, { type: "cover" as const }] };
+      }
+    }
+    return next;
+  }
+  return [...positions.slice(0, start), ...positions.slice(end)];
+}
+
+function wordLeft(positions: Position[], cursor: number): number {
+  if (cursor === 0) return 0;
+  let i = cursor - 1;
+  while (i > 0 && (getVisibleChar(positions[i]) === " " || getVisibleChar(positions[i]) === "\n")) i--;
+  while (i > 0 && getVisibleChar(positions[i - 1]) !== " " && getVisibleChar(positions[i - 1]) !== "\n") i--;
+  return i;
+}
+
+function wordRight(positions: Position[], cursor: number): number {
+  let i = cursor;
+  while (i < positions.length && getVisibleChar(positions[i]) !== " " && getVisibleChar(positions[i]) !== "\n") i++;
+  while (i < positions.length && (getVisibleChar(positions[i]) === " " || getVisibleChar(positions[i]) === "\n")) i++;
+  return i;
 }
 
 // ── Visibility split ──────────────────────────────────────────────────────────
@@ -1044,6 +1081,7 @@ export function WritingZone({
   visibility         = "visible",
   deleteMode         = "deletable",
   correctionMode     = "hidden",
+  textEditingEnabled = true,
   cursorLaeuftWeiter = false,
   driftet            = false,
   driftSaetze        = false,
@@ -1076,8 +1114,10 @@ export function WritingZone({
   const posRef = useRef(positions);
   const curRef = useRef(cursor);
   const lkpt   = lastKeyPressTimestamp;
-  const selectAllRef = useRef(false);
-  const [selectAll, setSelectAll] = useState(false);
+  const selectAllRef  = useRef(false);
+  const [selectAll, setSelectAll]   = useState(false);
+  const selAnchorRef  = useRef<number | null>(null);
+  const [selAnchor, setSelAnchor]   = useState<number | null>(null);
 
   // useLayoutEffect fires synchronously after commit, before the next rAF —
   // ensures the cursor rAF loop always reads up-to-date positions/cursor.
@@ -1311,21 +1351,15 @@ export function WritingZone({
 
       visualPosRef.current += dt * CHARS_PER_SEC;
 
-      // frac is the fractional position within the current character.
-      // It grows from 0 → 1 → (slightly past 1) per cycle, then resets when
-      // a space is committed. Because we set the transform BEFORE incrementing
-      // spacesInserted, the value momentarily exceeds charW by at most one frame's
-      // step (~0.03 chars), then recovers smoothly — no backward snap ever.
-      const frac  = visualPosRef.current - spacesInsertedRef.current;
+      // frac: fractional offset within the current character cell (0..1).
+      // We commit a space FIRST, then recalculate frac, so the transform is
+      // always in [0, 1) — no backward snap on the commit frame.
+      let frac = visualPosRef.current - spacesInsertedRef.current;
       const charW = charWidthRef.current;
 
-      if (cursorDomRef.current) {
-        cursorDomRef.current.style.transform = `translateX(${frac * charW}px)`;
-      }
-
-      // Commit a space when the visual position crosses the next char boundary
       if (frac >= 1) {
         spacesInsertedRef.current++;
+        frac = visualPosRef.current - spacesInsertedRef.current; // recalculate after commit
         const pos = posRef.current;   // always current thanks to useLayoutEffect
         const cur = curRef.current;
         let next: Position[];
@@ -1337,6 +1371,10 @@ export function WritingZone({
           next = [...pos, { layers: [{ type: "char", char: " " }] }];
         }
         onUpdateRef.current(next, cur + 1);
+      }
+
+      if (cursorDomRef.current) {
+        cursorDomRef.current.style.transform = `translateX(${frac * charW}px)`;
       }
 
       animId = requestAnimationFrame(loop);
@@ -1380,6 +1418,31 @@ export function WritingZone({
         return;
       }
 
+      // Arrow key navigation (only when textEditingEnabled)
+      if (
+        textEditingEnabled &&
+        (e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "Home" || e.key === "End")
+      ) {
+        e.preventDefault();
+        let newCursor = cursor;
+        if (e.key === "ArrowLeft") {
+          newCursor = (e.ctrlKey || e.metaKey) ? wordLeft(positions, cursor) : Math.max(0, cursor - 1);
+        } else if (e.key === "ArrowRight") {
+          newCursor = (e.ctrlKey || e.metaKey) ? wordRight(positions, cursor) : Math.min(positions.length, cursor + 1);
+        } else if (e.key === "Home") {
+          newCursor = 0;
+        } else if (e.key === "End") {
+          newCursor = positions.length;
+        }
+        if (e.shiftKey) {
+          if (selAnchorRef.current === null) { selAnchorRef.current = cursor; setSelAnchor(cursor); }
+        } else {
+          selAnchorRef.current = null; setSelAnchor(null);
+        }
+        onUpdate(positions, newCursor);
+        return;
+      }
+
       if (e.ctrlKey || e.metaKey || e.altKey) return;
       e.preventDefault();
       const now = performance.now();
@@ -1387,34 +1450,116 @@ export function WritingZone({
       if (e.key === "Backspace" || e.key === "Delete") {
         if (selectAllRef.current) {
           selectAllRef.current = false; setSelectAll(false);
+          selAnchorRef.current = null; setSelAnchor(null);
           if (deleteMode !== "no-delete") onUpdate([], 0);
           return;
         }
+        // Delete selection range
+        const anch = selAnchorRef.current;
+        if (textEditingEnabled && anch !== null && anch !== cursor) {
+          const start = Math.min(anch, cursor);
+          const end   = Math.max(anch, cursor);
+          selAnchorRef.current = null; setSelAnchor(null);
+          if (deleteMode !== "no-delete") {
+            const newPos = deleteRange(positions, start, end, correctionMode);
+            onUpdate(newPos, start);
+            lkpt.current = now;
+          }
+          return;
+        }
+        selAnchorRef.current = null; setSelAnchor(null);
         if (e.key === "Backspace") { applyBackspace(); lkpt.current = now; }
+        if (e.key === "Delete" && textEditingEnabled && cursor < positions.length && deleteMode !== "no-delete") {
+          if (correctionMode === "tippex" && getTopChar(positions[cursor]) !== " ") {
+            const next = positions.map(p => ({ layers: [...p.layers] }));
+            next[cursor] = { layers: [...next[cursor].layers, { type: "cover" as const }] };
+            onUpdate(next, cursor);
+          } else if (correctionMode !== "tippex") {
+            onUpdate([...positions.slice(0, cursor), ...positions.slice(cursor + 1)], cursor);
+          }
+          lkpt.current = now;
+        }
         return;
       }
 
       const ch = e.key === "Enter" ? "\n" : e.key.length === 1 ? e.key : null;
-      if (!ch) { selectAllRef.current = false; setSelectAll(false); return; }
+      if (!ch) { selectAllRef.current = false; setSelectAll(false); selAnchorRef.current = null; setSelAnchor(null); return; }
 
       if (selectAllRef.current) {
         selectAllRef.current = false; setSelectAll(false);
+        selAnchorRef.current = null; setSelAnchor(null);
+        // Reset cursorLaeuftWeiter frac
+        visualPosRef.current = spacesInsertedRef.current;
+        lastFrameRef.current = 0;
         onUpdate([{ layers: [{ type: "char", char: ch }] }], 1);
         return;
       }
 
+      // Delete selection before inserting
+      const anch = selAnchorRef.current;
+      selAnchorRef.current = null; setSelAnchor(null);
+      let basePos = positions;
+      let baseCur = cursor;
+      if (textEditingEnabled && anch !== null && anch !== cursor) {
+        const start = Math.min(anch, cursor);
+        const end   = Math.max(anch, cursor);
+        basePos = deleteRange(positions, start, end, correctionMode);
+        baseCur = start;
+      }
+
+      // Reset cursorLaeuftWeiter frac so cursor jumps back to typed position
+      visualPosRef.current = spacesInsertedRef.current;
+      lastFrameRef.current = 0;
+
       let newPos: Position[];
-      if (cursor < positions.length) {
-        const next   = positions.map(p => ({ layers: [...p.layers] }));
-        next[cursor] = { layers: [...next[cursor].layers, { type: "char", char: ch }] };
+      if (baseCur < basePos.length) {
+        const next    = basePos.map(p => ({ layers: [...p.layers] }));
+        next[baseCur] = { layers: [...next[baseCur].layers, { type: "char", char: ch }] };
         newPos = next;
       } else {
-        newPos = [...positions, { layers: [{ type: "char", char: ch }] }];
+        newPos = [...basePos, { layers: [{ type: "char", char: ch }] }];
       }
       lkpt.current = now;
-      onUpdate(newPos, cursor + 1);
+      onUpdate(newPos, baseCur + 1);
     },
-    [positions, cursor, applyBackspace, onUpdate, lkpt]
+    [positions, cursor, applyBackspace, onUpdate, lkpt, textEditingEnabled, deleteMode, correctionMode]
+  );
+
+  // ── Click-to-cursor ───────────────────────────────────────────────────────
+
+  const handleClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (!textEditingEnabled) return;
+      containerRef.current?.focus();
+      const x = e.clientX;
+      const y = e.clientY;
+      let newCursor = positions.length;
+      let minDist = Infinity;
+
+      for (let i = 0; i < charElsRef.current.length; i++) {
+        const el = charElsRef.current[i];
+        if (!el) continue;
+        const rect = el.getBoundingClientRect();
+        const midY = rect.top + rect.height / 2;
+        const midX = rect.left + rect.width / 2;
+        const dy = Math.abs(y - midY);
+        if (dy > rect.height * 1.5) continue;
+        const dx = x < rect.left ? rect.left - x : x > rect.right ? x - rect.right : 0;
+        const dist = dx + dy * 2;
+        if (dist < minDist) {
+          minDist = dist;
+          newCursor = x >= midX ? i + 1 : i;
+        }
+      }
+
+      if (e.shiftKey) {
+        if (selAnchorRef.current === null) { selAnchorRef.current = cursor; setSelAnchor(cursor); }
+      } else {
+        selAnchorRef.current = null; setSelAnchor(null);
+      }
+      onUpdate(positions, newCursor);
+    },
+    [positions, cursor, onUpdate, textEditingEnabled]
   );
 
   // ── Render ────────────────────────────────────────────────────────────────

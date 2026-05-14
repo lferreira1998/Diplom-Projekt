@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import type { CSSProperties } from "react";
+import type { ReactNode } from "react";
 import { useNavigate } from "react-router";
 
 const BG = "#fcf6ef";
@@ -9,7 +9,7 @@ const INK = "#302e2c";
 const TEXT = "#555555";
 const MUTED = "#8f8f89";
 const DASH = "#a4a4a4";
-const SOFT = "rgba(164,164,164,0.35)";
+const SOFT = "rgba(164,164,164,0.42)";
 const DOT_GRID = "radial-gradient(circle, rgba(164,164,164,0.64) 1px, transparent 1.2px)";
 const SERIF = "'freight-text-pro', 'EB Garamond', Georgia, serif";
 const SANS = "'general-sans', 'Space Grotesk', sans-serif";
@@ -22,7 +22,6 @@ const chapters = [
     title: "Der Anfang: Gedanken benehmen sich nicht linear",
     label: "Meditation",
     date: "Tagebuchnotiz: irgendwo zwischen Stille und Browser-Tab 47",
-    video: "uninvited-thoughts",
     short: "Ich wollte nicht noch ein Schreibtool bauen. Ich wollte wissen, warum Schreiben sich manchmal so ordentlich anfühlt, obwohl Denken es nie ist.",
     detail: [
       "Beim Meditieren tauchen Gedanken nicht als fertige Sätze auf. Sie kommen als Fetzen, Bilder, Störungen, Wiederholungen.",
@@ -36,7 +35,6 @@ const chapters = [
     title: "Die Suche: alte Schreibmaschinen, Poesie, Interfaces",
     label: "Recherche",
     date: "Fundstück-Sammlung: Xerox, konkrete Poesie, automatisches Schreiben",
-    video: "visible-corrections",
     short: "Die Regeln waren nicht natürlich. Sie wurden irgendwann erfunden. Und sobald man das merkt, wird jedes Textfeld verdächtig spannend.",
     detail: [
       "Lineare Zeilen, sofortiges Feedback, perfekte Löschbarkeit, volle Kontrolle: Das sind Designentscheidungen.",
@@ -50,7 +48,6 @@ const chapters = [
     title: "Die Experimente: Schreibregeln kaputtspielen",
     label: "Prototypen",
     date: "Laborbuch: viel kaputt, einiges schön kaputt",
-    video: "without-stopping",
     short: "Jedes Experiment nimmt eine Standardregel und dreht daran: Zeit, Sichtbarkeit, Korrektur, Stabilität, Position, Look & Feel.",
     detail: [
       "Was passiert, wenn Pausen sichtbar werden? Wenn Löschen Spuren hinterlässt? Wenn Wörter nicht auf Linien bleiben?",
@@ -64,7 +61,6 @@ const chapters = [
     title: "Das Tool: eigene Schreibmaschinen für Gedanken bauen",
     label: "Parameter",
     date: "Bauplan: aus Experiments wird Playground",
-    video: "off-the-grid",
     short: "Das Projekt wird zur Einladung: Bau dir dein eigenes Schreibinterface, gib ihm einen Namen, speichere es, teile es.",
     detail: [
       "Der wichtigste Sprung: Nicht ich entscheide, welche Regel spannend ist. Nutzerinnen und Nutzer können selbst Regeln mischen.",
@@ -78,7 +74,6 @@ const chapters = [
     title: "Heute: eine Landkarte für das, was Schreiben auslöst",
     label: "Shaping Thought",
     date: "Aktueller Stand: noch lebendig, noch wackelig, genau deshalb gut",
-    video: "in-a-spiral",
     short: "Shaping Thought ist kein Produktivitäts-Tool. Es ist eine Sammlung von seltsamen Schreibsituationen, die Denken anders hörbar machen.",
     detail: [
       "Manche Tools erzeugen Druck. Manche machen Spuren sichtbar. Manche geben Kontrolle ab. Manche fühlen sich wie eine kleine mentale Wetterlage an.",
@@ -90,114 +85,44 @@ const chapters = [
 
 type Chapter = (typeof chapters)[number];
 
+const nodePositions: Record<Chapter["id"], { x: number; y: number }> = {
+  spark: { x: 132, y: 335 },
+  research: { x: 330, y: 225 },
+  experiments: { x: 570, y: 345 },
+  tool: { x: 820, y: 250 },
+  now: { x: 1058, y: 365 },
+};
+
 const rules = [
-  { title: "Zeit", text: "Pausen werden sichtbar. Schreiben bekommt Tempo.", angle: "-7deg" },
-  { title: "Sichtbarkeit", text: "Text kann verschwinden, warten oder erst später auftauchen.", angle: "5deg" },
-  { title: "Korrektur", text: "Löschen ist nicht neutral. Jede Entscheidung kann Spuren hinterlassen.", angle: "-2deg" },
-  { title: "Stabilität", text: "Wörter dürfen driften, verblassen oder sich neu sortieren.", angle: "6deg" },
-  { title: "Position", text: "Gedanken müssen nicht in einer Zeile wohnen.", angle: "-5deg" },
-  { title: "Look & Feel", text: "Stimmung verändert, wie mutig, ruhig oder vorsichtig man schreibt.", angle: "3deg" },
+  { title: "Zeit", text: "Pausen werden sichtbar. Schreiben bekommt Tempo." },
+  { title: "Sichtbarkeit", text: "Text kann verschwinden, warten oder erst später auftauchen." },
+  { title: "Korrektur", text: "Löschen ist nicht neutral. Jede Entscheidung kann Spuren hinterlassen." },
+  { title: "Stabilität", text: "Wörter dürfen driften, verblassen oder sich neu sortieren." },
+  { title: "Position", text: "Gedanken müssen nicht in einer Zeile wohnen." },
+  { title: "Look & Feel", text: "Stimmung verändert, wie mutig, ruhig oder vorsichtig man schreibt." },
 ];
 
-const previews = [
-  { label: "...without stopping", video: "without-stopping", note: "Zeit läuft weiter" },
-  { label: "...with visible corrections", video: "visible-corrections", note: "Fehler bleiben als Material" },
-  { label: "...off the grid", video: "off-the-grid", note: "Linien werden verhandelbar" },
-  { label: "...in a spiral", video: "in-a-spiral", note: "Vergangenheit wickelt sich ein" },
-  { label: "...uninvited thoughts", video: "uninvited-thoughts", note: "Ablenkung wird Karte" },
-  { label: "...blind & then witness", video: "blind-then-witness", note: "Schreiben wird Playback" },
-];
+const quickCards = [
+  ["Was?", "Ein Set experimenteller Schreibinterfaces und ein Tool, mit dem man eigene Schreibregeln kombinieren kann."],
+  ["Warum?", "Weil normale Textfelder so selbstverständlich wirken, dass man ihre Regeln kaum noch bemerkt."],
+  ["Wie?", "Durch kleine Störungen: Text verschwindet, Pausen werden sichtbar, Korrekturen bleiben, Linien brechen aus."],
+] as const;
 
-function videoPath(video: string) {
-  return `/Diplom-Projekt/videos/${video}.mp4`;
-}
-
-function VideoFrame({ video, title, note, style, shape = "rect", auto = false }: {
-  video: string;
-  title: string;
-  note?: string;
-  style?: CSSProperties;
-  shape?: "rect" | "circle" | "ticket" | "oval" | "tilt";
-  auto?: boolean;
-}) {
-  const clipPath = {
-    rect: "inset(0 round 7px)",
-    circle: "circle(49% at 50% 50%)",
-    ticket: "polygon(0 0, 100% 5%, 96% 100%, 6% 94%)",
-    oval: "ellipse(49% 45% at 50% 50%)",
-    tilt: "polygon(4% 8%, 94% 0, 100% 88%, 8% 100%)",
-  }[shape];
-
-  return (
-    <div
-      className="about-video-frame"
-      style={{
-        position: "relative",
-        overflow: "hidden",
-        border: `1px dashed ${DASH}`,
-        background: PAPER,
-        clipPath,
-        boxShadow: "0 24px 80px rgba(48,46,44,0.07)",
-        ...style,
-      }}
-    >
-      <video
-        muted
-        loop
-        playsInline
-        autoPlay={auto}
-        preload="auto"
-        onMouseEnter={(event) => event.currentTarget.play().catch(() => undefined)}
-        onMouseLeave={(event) => {
-          if (!auto) {
-            event.currentTarget.pause();
-            try { event.currentTarget.currentTime = 0; } catch { /* metadata may not be ready */ }
-          }
-        }}
-        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", opacity: 0.92 }}
-      >
-        <source src={videoPath(video)} type="video/mp4" />
-      </video>
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: "linear-gradient(180deg, rgba(252,246,239,0.08), rgba(48,46,44,0.2))",
-          pointerEvents: "none",
-        }}
-      />
-      <div
-        className="about-video-caption"
-        style={{
-          position: "absolute",
-          left: 16,
-          right: 16,
-          bottom: 14,
-          color: "#fffaf4",
-          textShadow: "0 1px 14px rgba(0,0,0,0.28)",
-        }}
-      >
-        <div style={{ fontFamily: SANS, fontSize: 14, lineHeight: 1.1 }}>{title}</div>
-        {note && <div style={{ fontFamily: MONO, fontSize: 10, opacity: 0.82, marginTop: 5 }}>{note}</div>}
-      </div>
-    </div>
-  );
-}
-
-function DottedButton({ children, onClick }: { children: React.ReactNode; onClick: () => void }) {
+function DottedButton({ children, onClick }: { children: ReactNode; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
       style={{
-        minHeight: 36,
-        padding: "0 16px",
+        minHeight: 34,
+        padding: "0 14px",
         border: `1px dashed ${DASH}`,
         borderRadius: 4,
-        background: "rgba(249,241,232,0.62)",
+        background: "rgba(249,241,232,0.68)",
         color: TEXT,
         fontFamily: SANS,
         fontSize: 14,
         cursor: "pointer",
+        outline: "none",
       }}
     >
       {children}
@@ -205,53 +130,51 @@ function DottedButton({ children, onClick }: { children: React.ReactNode; onClic
   );
 }
 
-function ChapterButton({ chapter, active, onClick }: { chapter: Chapter; active: boolean; onClick: () => void }) {
+function ChapterNode({ chapter, active, onClick }: { chapter: Chapter; active: boolean; onClick: () => void }) {
+  const pos = nodePositions[chapter.id];
+
   return (
     <button
       onClick={onClick}
-      className="about-chapter-button"
+      className="about-node"
       style={{
-        position: "relative",
+        position: "absolute",
+        left: pos.x,
+        top: pos.y,
+        width: chapter.id === "experiments" ? 188 : 164,
+        minHeight: 82,
+        transform: "translate(-50%, -50%)",
         border: `1px dashed ${active ? INK : DASH}`,
-        borderRadius: 8,
-        background: active ? PAPER_DARK : "rgba(249,241,232,0.7)",
-        padding: 16,
-        textAlign: "left",
+        borderRadius: chapter.id === "spark" || chapter.id === "now" ? 999 : 8,
+        background: active ? PAPER_DARK : "rgba(249,241,232,0.74)",
         color: active ? INK : TEXT,
+        padding: "13px 15px",
+        textAlign: "center",
         cursor: "pointer",
-        display: "grid",
-        gridTemplateColumns: "42px 1fr",
-        gap: 12,
-        minHeight: 96,
-        transform: active ? "translateY(-2px)" : "none",
-        transition: "border-color 140ms ease, transform 140ms ease, background 140ms ease",
+        boxShadow: active ? "0 18px 55px rgba(48,46,44,0.08)" : "none",
+        transition: "border-color 160ms ease, background 160ms ease, transform 160ms ease, box-shadow 160ms ease",
       }}
     >
-      <span style={{ fontFamily: MONO, fontSize: 11, color: MUTED }}>{chapter.number}</span>
-      <span>
-        <span style={{ display: "block", fontFamily: SANS, fontSize: 13, marginBottom: 6 }}>{chapter.label}</span>
-        <span style={{ display: "block", fontFamily: SERIF, fontSize: 21, lineHeight: "24px" }}>{chapter.title}</span>
-      </span>
+      <span style={{ display: "block", fontFamily: MONO, fontSize: 10, color: MUTED }}>{chapter.number}</span>
+      <span style={{ display: "block", marginTop: 6, fontFamily: SERIF, fontSize: 20, lineHeight: "22px" }}>{chapter.label}</span>
     </button>
   );
 }
 
-function RuleCard({ title, text, angle }: { title: string; text: string; angle: string }) {
+function RuleNode({ title, text }: { title: string; text: string }) {
   return (
     <div
-      className="about-rule-card"
+      className="about-rule-node"
       style={{
-        minHeight: 148,
         border: `1px dashed ${DASH}`,
         borderRadius: 8,
-        padding: 18,
-        background: "rgba(249,241,232,0.72)",
-        transform: `rotate(${angle})`,
-        boxShadow: "0 18px 50px rgba(48,46,44,0.05)",
+        background: "rgba(249,241,232,0.68)",
+        padding: "12px 14px",
+        minHeight: 86,
       }}
     >
-      <p style={{ margin: 0, fontFamily: SERIF, color: INK, fontSize: 27, lineHeight: "30px" }}>{title}</p>
-      <p style={{ margin: "12px 0 0", fontFamily: SANS, color: TEXT, fontSize: 14, lineHeight: "21px" }}>{text}</p>
+      <p style={{ margin: 0, fontFamily: SERIF, fontSize: 22, lineHeight: "24px", color: INK }}>{title}</p>
+      <p style={{ margin: "8px 0 0", fontFamily: SANS, fontSize: 12, lineHeight: "17px", color: TEXT }}>{text}</p>
     </div>
   );
 }
@@ -264,35 +187,32 @@ export default function AboutNew() {
   return (
     <main
       style={{
-        minHeight: "100vh",
+        width: "100vw",
+        height: "100vh",
+        overflow: "hidden",
         backgroundColor: BG,
         backgroundImage: DOT_GRID,
         backgroundSize: "42px 42px",
         color: TEXT,
         fontFamily: SANS,
-        overflowX: "hidden",
       }}
     >
       <style>{`
-        html, body, #root { min-height: 100%; background: ${BG}; }
-        .about-video-frame { transition: transform 180ms ease, box-shadow 180ms ease; }
-        .about-video-frame:hover { transform: translateY(-6px) rotate(-1deg); box-shadow: 0 30px 90px rgba(48,46,44,0.12); }
-        .about-chapter-button:hover { transform: translateY(-2px); border-color: ${INK}; }
-        .about-rule-card:hover { transform: translateY(-4px) rotate(0deg) !important; }
-        .about-float-a { animation: aboutFloatA 7s ease-in-out infinite; }
-        .about-float-b { animation: aboutFloatB 8s ease-in-out infinite; }
-        .about-float-c { animation: aboutFloatC 9s ease-in-out infinite; }
-        @keyframes aboutFloatA { 0%, 100% { translate: 0 0; } 50% { translate: 0 -14px; } }
-        @keyframes aboutFloatB { 0%, 100% { translate: 0 0; } 50% { translate: 12px 10px; } }
-        @keyframes aboutFloatC { 0%, 100% { translate: 0 0; } 50% { translate: -10px 12px; } }
+        html, body, #root { height: 100%; overflow: hidden; background: ${BG}; }
+        .about-node:hover { transform: translate(-50%, -54%) !important; border-color: ${INK} !important; }
+        .about-rule-node { transition: transform 160ms ease, background 160ms ease; }
+        .about-rule-node:hover { transform: translateY(-3px); background: rgba(243,235,224,0.76) !important; }
+        .about-line { animation: aboutDash 18s linear infinite; }
+        .about-small-dot { animation: aboutPulse 3.8s ease-in-out infinite; }
+        @keyframes aboutDash { to { stroke-dashoffset: -180; } }
+        @keyframes aboutPulse { 0%, 100% { opacity: 0.28; transform: scale(0.92); } 50% { opacity: 0.9; transform: scale(1.08); } }
         @media (max-width: 1000px) {
-          .about-nav { padding: 18px 20px !important; }
-          .about-hero { padding: 120px 22px 70px !important; }
-          .about-map-stage { min-height: 780px !important; }
-          .about-map-inner { transform: scale(0.72); transform-origin: top left; width: 1320px !important; }
-          .about-grid-two, .about-diary-grid, .about-preview-grid, .about-rules-grid { grid-template-columns: 1fr !important; }
-          .about-section { padding-left: 22px !important; padding-right: 22px !important; }
-          .about-video-caption { left: 12px !important; right: 12px !important; }
+          main { overflow: auto !important; height: auto !important; min-height: 100vh !important; }
+          .about-shell { height: auto !important; min-height: 100vh !important; padding: 88px 22px 28px !important; grid-template-columns: 1fr !important; }
+          .about-map { height: 660px !important; order: 2; }
+          .about-map-canvas { transform: scale(0.76); transform-origin: top left; width: 1160px !important; }
+          .about-side, .about-detail { min-height: auto !important; }
+          .about-nav { padding: 20px !important; }
         }
       `}</style>
 
@@ -321,182 +241,134 @@ export default function AboutNew() {
       </nav>
 
       <section
-        className="about-hero"
+        className="about-shell"
         style={{
-          position: "relative",
-          minHeight: "100vh",
-          padding: "128px 56px 88px",
+          height: "100%",
           boxSizing: "border-box",
+          padding: "94px 44px 34px",
+          display: "grid",
+          gridTemplateColumns: "300px minmax(520px, 1fr) 340px",
+          gap: 22,
         }}
       >
-        <div className="about-map-stage" style={{ position: "relative", maxWidth: 1320, minHeight: 720, margin: "0 auto" }}>
-          <div className="about-map-inner" style={{ position: "relative", width: 1320, height: 720 }}>
+        <aside
+          className="about-side"
+          style={{
+            minHeight: 0,
+            border: `1px dashed ${DASH}`,
+            borderRadius: 10,
+            background: "rgba(249,241,232,0.72)",
+            padding: 22,
+            display: "flex",
+            flexDirection: "column",
+            gap: 18,
+          }}
+        >
+          <div>
+            <p style={{ margin: 0, fontFamily: MONO, fontSize: 11, color: MUTED, letterSpacing: "0.08em" }}>ABOUT THE PROJECT</p>
+            <h1 style={{ margin: "14px 0 0", fontFamily: SERIF, color: INK, fontSize: 42, lineHeight: "44px", fontWeight: 400 }}>
+              Eine Reise durch Schreibregeln, Gedankenwetter und kleine Interface-Unfälle.
+            </h1>
+            <p style={{ margin: "18px 0 0", fontFamily: SANS, color: TEXT, fontSize: 14, lineHeight: "22px" }}>
+              Shaping Thought untersucht, wie digitale Schreibtools unser Denken mitformen. Nicht als trockene Theorie, sondern als begehbares Labor: anfassen, schreiben, scheitern, neu mischen.
+            </p>
+          </div>
+
+          <div style={{ borderTop: `1px dashed ${DASH}`, paddingTop: 16 }}>
+            <p style={{ margin: 0, fontFamily: MONO, fontSize: 11, color: MUTED, letterSpacing: "0.08em" }}>IN EINEM SATZ</p>
+            <p style={{ margin: "10px 0 0", fontFamily: SERIF, color: INK, fontSize: 25, lineHeight: "29px" }}>
+              Es geht nicht darum, schneller zu schreiben. Es geht darum, zu spüren, welche Form das Schreiben dem Denken gibt.
+            </p>
+          </div>
+
+          <div style={{ display: "grid", gap: 10, marginTop: "auto" }}>
+            {quickCards.map(([title, text]) => (
+              <div key={title} style={{ border: `1px dashed ${DASH}`, borderRadius: 8, padding: "12px 13px", background: "rgba(252,246,239,0.56)" }}>
+                <p style={{ margin: 0, fontFamily: SERIF, color: INK, fontSize: 22 }}>{title}</p>
+                <p style={{ margin: "6px 0 0", fontFamily: SANS, color: TEXT, fontSize: 12, lineHeight: "17px" }}>{text}</p>
+              </div>
+            ))}
+          </div>
+        </aside>
+
+        <div
+          className="about-map"
+          style={{
+            position: "relative",
+            minHeight: 0,
+            border: `1px dashed ${DASH}`,
+            borderRadius: 10,
+            background: "rgba(252,246,239,0.34)",
+            overflow: "hidden",
+          }}
+        >
+          <div className="about-map-canvas" style={{ position: "relative", width: 1160, height: "100%", minHeight: 670, margin: "0 auto" }}>
             <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }}>
-              <path d="M652 320 C460 130 290 165 190 310" stroke={DASH} strokeWidth="1" strokeDasharray="5 7" fill="none" />
-              <path d="M682 330 C760 116 976 80 1100 190" stroke={DASH} strokeWidth="1" strokeDasharray="5 7" fill="none" />
-              <path d="M686 402 C530 545 438 632 286 610" stroke={DASH} strokeWidth="1" strokeDasharray="5 7" fill="none" />
-              <path d="M744 402 C873 552 1010 598 1164 552" stroke={DASH} strokeWidth="1" strokeDasharray="5 7" fill="none" />
-              <path d="M756 360 C916 340 1054 330 1212 384" stroke={DASH} strokeWidth="1" strokeDasharray="5 7" fill="none" />
+              <path className="about-line" d="M132 335 C205 245 255 222 330 225 S476 349 570 345 S730 252 820 250 S985 350 1058 365" stroke={DASH} strokeWidth="1" strokeDasharray="6 8" fill="none" />
+              <path className="about-line" d="M330 225 C330 420 448 530 620 545 C780 558 908 468 1058 365" stroke={SOFT} strokeWidth="1" strokeDasharray="4 10" fill="none" />
+              <path d="M570 345 C555 438 506 500 430 570" stroke={SOFT} strokeWidth="1" strokeDasharray="4 8" fill="none" />
+              <path d="M570 345 C665 470 748 515 865 575" stroke={SOFT} strokeWidth="1" strokeDasharray="4 8" fill="none" />
             </svg>
 
-            <VideoFrame auto shape="circle" video="uninvited-thoughts" title="uninvited thoughts" note="Gedanken als kleine Störungen" style={{ position: "absolute", left: 52, top: 212, width: 250, height: 250 }} />
-            <VideoFrame auto shape="tilt" video="visible-corrections" title="visible corrections" note="Fehler werden Landschaft" style={{ position: "absolute", left: 390, top: 36, width: 310, height: 190, transform: "rotate(-7deg)" }} />
-            <VideoFrame auto shape="ticket" video="off-the-grid" title="off the grid" note="die Linie gehört dir" style={{ position: "absolute", left: 1010, top: 88, width: 270, height: 180, transform: "rotate(5deg)" }} />
-            <VideoFrame auto shape="oval" video="in-a-spiral" title="in a spiral" note="Text rollt sich ein" style={{ position: "absolute", left: 1032, top: 400, width: 220, height: 285, transform: "rotate(11deg)" }} />
-            <VideoFrame auto shape="oval" video="without-stopping" title="without stopping" note="Pausen bekommen Raum" style={{ position: "absolute", left: 160, top: 520, width: 330, height: 150, transform: "rotate(4deg)" }} />
-
-            <div
-              className="about-float-a"
-              style={{
-                position: "absolute",
-                left: 446,
-                top: 250,
-                width: 470,
-                border: `1px dashed ${DASH}`,
-                background: "rgba(249,241,232,0.86)",
-                borderRadius: 10,
-                padding: "34px 42px 38px",
-                boxShadow: "0 32px 100px rgba(48,46,44,0.08)",
-              }}
-            >
-              <p style={{ margin: 0, fontFamily: MONO, fontSize: 11, color: MUTED, letterSpacing: "0.08em" }}>ABOUT THE PROJECT</p>
-              <h1 style={{ margin: "18px 0 0", fontFamily: SERIF, color: INK, fontSize: 55, lineHeight: "57px", fontWeight: 400 }}>
-                Eine Reise durch Schreibregeln, Gedankenwetter und kleine Interface-Unfälle.
-              </h1>
-              <p style={{ margin: "24px 0 0", fontFamily: SANS, color: TEXT, fontSize: 17, lineHeight: "27px" }}>
-                Shaping Thought untersucht, wie digitale Schreibtools unser Denken mitformen. Nicht als trockene Theorie, sondern als begehbares Labor: anfassen, schreiben, scheitern, neu mischen.
+            <div style={{ position: "absolute", left: 42, top: 38 }}>
+              <p style={{ margin: 0, fontFamily: MONO, color: MUTED, fontSize: 11, letterSpacing: "0.08em" }}>DIE REISE</p>
+              <h2 style={{ margin: "8px 0 0", fontFamily: SERIF, color: INK, fontSize: 42, lineHeight: "44px", fontWeight: 400 }}>Tagebuch als Mindmap</h2>
+              <p style={{ margin: "10px 0 0", maxWidth: 310, fontFamily: SANS, color: TEXT, fontSize: 13, lineHeight: "20px" }}>
+                Klick dich durch die Stationen. Links steht der schnelle Weg, rechts die Notiz aus dem Maschinenraum.
               </p>
             </div>
 
-            <div className="about-float-b" style={{ position: "absolute", left: 780, top: 166, width: 186, padding: 14, border: `1px dashed ${DASH}`, borderRadius: 8, background: PAPER }}>
-              <p style={{ margin: 0, fontFamily: MONO, fontSize: 11, color: MUTED }}>Kurzfassung</p>
-              <p style={{ margin: "8px 0 0", fontFamily: SANS, fontSize: 14, lineHeight: "20px", color: TEXT }}>Das Medium ist nie neutral. Sobald die Regeln kippen, kippt auch das Schreiben.</p>
-            </div>
-
-            <div className="about-float-c" style={{ position: "absolute", left: 520, top: 565, width: 260, padding: "16px 18px", border: `1px dashed ${DASH}`, borderRadius: 999, background: PAPER_DARK, textAlign: "center" }}>
-              <p style={{ margin: 0, fontFamily: SERIF, color: INK, fontSize: 24 }}>read it like a diary, use it like a map</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="about-section" style={{ padding: "40px 100px 90px" }}>
-        <div className="about-grid-two" style={{ display: "grid", gridTemplateColumns: "1.05fr 0.95fr", gap: 24, maxWidth: 1240, margin: "0 auto" }}>
-          <div style={{ border: `1px dashed ${DASH}`, borderRadius: 10, padding: 34, background: "rgba(249,241,232,0.72)" }}>
-            <p style={{ margin: 0, fontFamily: MONO, fontSize: 11, color: MUTED, letterSpacing: "0.08em" }}>IN EINEM SATZ</p>
-            <h2 style={{ margin: "18px 0 0", fontFamily: SERIF, color: INK, fontWeight: 400, fontSize: 46, lineHeight: "50px" }}>
-              Es geht nicht darum, schneller zu schreiben. Es geht darum, zu spüren, welche Form das Schreiben dem Denken gibt.
-            </h2>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 14 }}>
-            {[
-              ["Was?", "Ein Set experimenteller Schreibinterfaces und ein Tool, mit dem man eigene Schreibregeln kombinieren kann."],
-              ["Warum?", "Weil normale Textfelder so selbstverständlich wirken, dass man ihre Regeln kaum noch bemerkt."],
-              ["Wie?", "Durch kleine Störungen: Text verschwindet, Pausen werden sichtbar, Korrekturen bleiben, Linien brechen aus."],
-            ].map(([title, text]) => (
-              <div key={title} style={{ border: `1px dashed ${DASH}`, borderRadius: 8, padding: "20px 22px", background: "rgba(252,246,239,0.72)" }}>
-                <p style={{ margin: 0, fontFamily: SERIF, color: INK, fontSize: 30 }}>{title}</p>
-                <p style={{ margin: "8px 0 0", fontFamily: SANS, color: TEXT, fontSize: 15, lineHeight: "23px" }}>{text}</p>
-              </div>
+            {chapters.map((chapter) => (
+              <ChapterNode key={chapter.id} chapter={chapter} active={active.id === chapter.id} onClick={() => setActiveId(chapter.id)} />
             ))}
-          </div>
-        </div>
-      </section>
 
-      <section className="about-section" style={{ padding: "80px 100px" }}>
-        <div style={{ maxWidth: 1240, margin: "0 auto" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", gap: 24, alignItems: "end", marginBottom: 24 }}>
-            <div>
-              <p style={{ margin: 0, fontFamily: MONO, color: MUTED, fontSize: 11, letterSpacing: "0.08em" }}>DIE REISE</p>
-              <h2 style={{ margin: "10px 0 0", fontFamily: SERIF, color: INK, fontSize: 50, lineHeight: "52px", fontWeight: 400 }}>Tagebuch als Mindmap</h2>
-            </div>
-            <p style={{ margin: 0, maxWidth: 360, fontFamily: SANS, color: TEXT, fontSize: 15, lineHeight: "23px" }}>
-              Klick dich durch die Stationen. Links steht der schnelle Weg, rechts die Notiz aus dem Maschinenraum.
-            </p>
-          </div>
+            <div className="about-small-dot" style={{ position: "absolute", left: 256, top: 468, width: 8, height: 8, borderRadius: 999, background: DASH }} />
+            <div className="about-small-dot" style={{ position: "absolute", left: 690, top: 178, width: 6, height: 6, borderRadius: 999, background: DASH, animationDelay: "0.8s" }} />
+            <div className="about-small-dot" style={{ position: "absolute", left: 960, top: 505, width: 7, height: 7, borderRadius: 999, background: DASH, animationDelay: "1.5s" }} />
 
-          <div className="about-diary-grid" style={{ display: "grid", gridTemplateColumns: "420px 1fr", gap: 22 }}>
-            <div style={{ display: "grid", gap: 12 }}>
-              {chapters.map((chapter) => (
-                <ChapterButton key={chapter.id} chapter={chapter} active={active.id === chapter.id} onClick={() => setActiveId(chapter.id)} />
-              ))}
-            </div>
-
-            <article style={{ position: "relative", border: `1px dashed ${DASH}`, borderRadius: 12, background: "rgba(249,241,232,0.76)", padding: 26, minHeight: 540, overflow: "hidden" }}>
-              <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none", opacity: 0.72 }}>
-                <path d="M40 120 C220 20 310 190 500 90" stroke={SOFT} strokeWidth="1" strokeDasharray="4 8" fill="none" />
-                <path d="M120 430 C290 310 520 390 760 240" stroke={SOFT} strokeWidth="1" strokeDasharray="4 8" fill="none" />
-              </svg>
-              <div style={{ position: "relative", zIndex: 1, display: "grid", gridTemplateColumns: "minmax(260px, 0.9fr) 1fr", gap: 26 }} className="about-grid-two">
-                <VideoFrame auto video={active.video} title={active.label} note={active.date} shape="ticket" style={{ height: 360 }} />
+            <div style={{ position: "absolute", left: 62, right: 62, bottom: 36 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 20, marginBottom: 14 }}>
                 <div>
-                  <p style={{ margin: 0, fontFamily: MONO, color: MUTED, fontSize: 12 }}>{active.number} / {active.label}</p>
-                  <h3 style={{ margin: "14px 0 0", fontFamily: SERIF, color: INK, fontWeight: 400, fontSize: 44, lineHeight: "47px" }}>{active.title}</h3>
-                  <p style={{ margin: "18px 0 0", fontFamily: SANS, color: TEXT, fontSize: 17, lineHeight: "27px" }}>{active.short}</p>
-                  <div style={{ marginTop: 24, borderTop: `1px dashed ${DASH}`, paddingTop: 18, display: "grid", gap: 12 }}>
-                    {active.detail.map((paragraph) => (
-                      <p key={paragraph} style={{ margin: 0, fontFamily: MONO, color: TEXT, fontSize: 13, lineHeight: "22px" }}>{paragraph}</p>
-                    ))}
-                  </div>
+                  <p style={{ margin: 0, fontFamily: MONO, color: MUTED, fontSize: 11, letterSpacing: "0.08em" }}>DIE REGELN</p>
+                  <h3 style={{ margin: "6px 0 0", fontFamily: SERIF, color: INK, fontSize: 32, lineHeight: "34px", fontWeight: 400 }}>Sechs Regler, viele Denkstimmungen</h3>
                 </div>
               </div>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <section className="about-section" style={{ padding: "80px 100px" }}>
-        <div style={{ maxWidth: 1240, margin: "0 auto" }}>
-          <p style={{ margin: 0, fontFamily: MONO, color: MUTED, fontSize: 11, letterSpacing: "0.08em" }}>DIE REGELN</p>
-          <h2 style={{ margin: "10px 0 28px", fontFamily: SERIF, color: INK, fontSize: 50, lineHeight: "52px", fontWeight: 400 }}>Sechs Regler, viele Denkstimmungen</h2>
-          <div className="about-rules-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 18 }}>
-            {rules.map((rule) => <RuleCard key={rule.title} {...rule} />)}
-          </div>
-        </div>
-      </section>
-
-      <section className="about-section" style={{ padding: "80px 100px 120px" }}>
-        <div style={{ maxWidth: 1240, margin: "0 auto" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", gap: 24, alignItems: "end", marginBottom: 24 }}>
-            <div>
-              <p style={{ margin: 0, fontFamily: MONO, color: MUTED, fontSize: 11, letterSpacing: "0.08em" }}>FELDNOTIZEN ALS BILDER</p>
-              <h2 style={{ margin: "10px 0 0", fontFamily: SERIF, color: INK, fontSize: 50, lineHeight: "52px", fontWeight: 400 }}>Ein kleines Album der Experimente</h2>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(6, minmax(0, 1fr))", gap: 10 }}>
+                {rules.map((rule) => <RuleNode key={rule.title} {...rule} />)}
+              </div>
             </div>
-            <p style={{ margin: 0, maxWidth: 380, fontFamily: SANS, color: TEXT, fontSize: 15, lineHeight: "23px" }}>
-              Die Bilder sind nicht nur Deko. Sie zeigen, welche Regel jeweils verrutscht: Zeit, Fehler, Raum, Sichtbarkeit, Erinnerung.
-            </p>
           </div>
-          <div className="about-preview-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 20 }}>
-            {previews.map((preview, index) => (
-              <VideoFrame
-                key={preview.video}
-                video={preview.video}
-                title={preview.label}
-                note={preview.note}
-                shape={index % 3 === 0 ? "circle" : index % 3 === 1 ? "ticket" : "tilt"}
-                style={{ height: index === 0 || index === 3 ? 310 : 240, transform: `rotate(${[-3, 2, -1, 3, -2, 1][index]}deg)` }}
-              />
+        </div>
+
+        <aside
+          className="about-detail"
+          style={{
+            minHeight: 0,
+            border: `1px dashed ${DASH}`,
+            borderRadius: 10,
+            background: "rgba(249,241,232,0.76)",
+            padding: 22,
+            display: "flex",
+            flexDirection: "column",
+            overflowY: "auto",
+          }}
+        >
+          <p style={{ margin: 0, fontFamily: MONO, color: MUTED, fontSize: 11 }}>{active.number} / {active.label}</p>
+          <h2 style={{ margin: "14px 0 0", fontFamily: SERIF, color: INK, fontWeight: 400, fontSize: 38, lineHeight: "40px" }}>{active.title}</h2>
+          <p style={{ margin: "12px 0 0", fontFamily: MONO, color: MUTED, fontSize: 11, lineHeight: "17px" }}>{active.date}</p>
+          <p style={{ margin: "22px 0 0", fontFamily: SANS, color: TEXT, fontSize: 15, lineHeight: "24px" }}>{active.short}</p>
+
+          <div style={{ marginTop: 22, borderTop: `1px dashed ${DASH}`, paddingTop: 18, display: "grid", gap: 13 }}>
+            {active.detail.map((paragraph) => (
+              <p key={paragraph} style={{ margin: 0, fontFamily: MONO, color: TEXT, fontSize: 12, lineHeight: "20px" }}>{paragraph}</p>
             ))}
           </div>
-        </div>
-      </section>
 
-      <section className="about-section" style={{ padding: "0 100px 130px" }}>
-        <div style={{ maxWidth: 1240, margin: "0 auto", border: `1px dashed ${DASH}`, borderRadius: 14, background: "rgba(249,241,232,0.82)", padding: "42px 46px", display: "grid", gridTemplateColumns: "1fr auto", gap: 28, alignItems: "center" }} className="about-grid-two">
-          <div>
-            <p style={{ margin: 0, fontFamily: MONO, color: MUTED, fontSize: 11, letterSpacing: "0.08em" }}>LETZTE NOTIZ</p>
-            <h2 style={{ margin: "14px 0 0", fontFamily: SERIF, color: INK, fontSize: 48, lineHeight: "51px", fontWeight: 400 }}>
-              Diese Erkenntnis lässt sich nicht nur lesen. Man muss kurz darin schreiben.
-            </h2>
-            <p style={{ margin: "18px 0 0", maxWidth: 720, fontFamily: SANS, color: TEXT, fontSize: 16, lineHeight: "25px" }}>
-              Darum endet die Reise nicht mit einer Erklärung, sondern mit einem offenen Werkzeug: Wähle Regeln, baue eine Schreibsituation, beobachte was passiert.
-            </p>
-          </div>
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "flex-end" }}>
+          <div style={{ marginTop: "auto", paddingTop: 22, display: "flex", flexWrap: "wrap", gap: 10 }}>
             <DottedButton onClick={() => navigate("/playgroundnew1")}>Tools ansehen</DottedButton>
             <DottedButton onClick={() => navigate("/new")}>Eigenes Tool bauen</DottedButton>
           </div>
-        </div>
+        </aside>
       </section>
     </main>
   );

@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { useNavigate } from "react-router";
 import { deleteNewTool, getAllNewTools, type NewToolData } from "./utils/storage";
-import New from "./New";
 
 const LIGHT_BG = "#fcf6ef";
 const PANEL_BG = "#f3ebe0";
@@ -48,7 +47,9 @@ function ToolShape({ label, style, textStyle, href, video }: {
     prepareVideo(target);
     try {
       if (target.readyState > 0) target.currentTime = 0;
-    } catch { /* ignore */ }
+    } catch {
+      // Browser may block seeking before metadata is ready.
+    }
     const play = () => target.play().catch(() => undefined);
     play();
     if (target.readyState < 2) target.addEventListener("canplay", play, { once: true });
@@ -61,7 +62,9 @@ function ToolShape({ label, style, textStyle, href, video }: {
     target.pause();
     try {
       if (target.readyState > 0) target.currentTime = 0;
-    } catch { /* ignore */ }
+    } catch {
+      // Browser may block seeking before metadata is ready.
+    }
   }
 
   return (
@@ -70,10 +73,6 @@ function ToolShape({ label, style, textStyle, href, video }: {
       href={href}
       onPointerEnter={playPreview}
       onPointerLeave={stopPreview}
-      onMouseEnter={playPreview}
-      onMouseLeave={stopPreview}
-      onMouseOver={playPreview}
-      onMouseOut={stopPreview}
       onFocus={playPreview}
       onBlur={stopPreview}
       style={{
@@ -97,12 +96,11 @@ function ToolShape({ label, style, textStyle, href, video }: {
     >
       <video
         ref={videoRef}
-        autoPlay
         muted
         loop
         playsInline
         preload="auto"
-        onLoadedMetadata={(e) => prepareVideo(e.currentTarget)}
+        onLoadedMetadata={(event) => prepareVideo(event.currentTarget)}
         style={{
           position: "absolute",
           inset: 0,
@@ -120,18 +118,14 @@ function ToolShape({ label, style, textStyle, href, video }: {
         <source src={`/Diplom-Projekt/videos/${video}.webm`} type="video/webm" />
       </video>
       <span
-        aria-hidden
+        className="playground-tool-label"
         style={{
-          position: "absolute",
-          inset: 0,
-          background: "rgba(249,241,232,0.08)",
-          opacity: isPreviewing ? 1 : 0,
-          transition: "opacity 120ms ease",
-          pointerEvents: "none",
+          position: "relative",
           zIndex: 1,
+          transition: "opacity 120ms ease",
+          ...textStyle,
         }}
-      />
-      <span className="playground-tool-label" style={{ position: "relative", zIndex: 2, transition: "opacity 120ms ease", ...textStyle }}>
+      >
         {label}
       </span>
     </a>
@@ -311,21 +305,6 @@ export default function PlaygroundNew() {
         .playground-tool-shape:focus-visible .playground-tool-label { opacity: 0 !important; }
       `}</style>
 
-      {/* Writing zone — New.tsx embedded via transform containment */}
-      <div
-        style={{
-          height: "100vh",
-          width: "100%",
-          flexShrink: 0,
-          overflow: "hidden",
-          position: "relative",
-          transform: "translate(0, 0)",
-        }}
-      >
-        <New />
-      </div>
-
-      {/* Hero: tool shapes + headline */}
       <section
         aria-label="Writing tools playground"
         style={{
@@ -337,10 +316,9 @@ export default function PlaygroundNew() {
           backgroundSize: "42px 42px",
         }}
       >
-        {/* Language toggle */}
         <div style={{ position: "absolute", top: 44, right: 44, zIndex: 5 }}>
           <button
-            onClick={() => setLang(l => { const next = l === "de" ? "en" : "de"; localStorage.setItem("appLang", next); return next; })}
+            onClick={() => setLang((current) => { const next = current === "de" ? "en" : "de"; localStorage.setItem("appLang", next); return next; })}
             style={{ height: 31, border: `1px dashed ${BORDER_COL}`, borderRadius: 4, background: "rgba(241,235,228,0.2)", color: LIGHT_TEXT, fontFamily: FONT_SANS, fontSize: 15, padding: "0 12px", cursor: "pointer", outline: "none" }}
           >
             {lang === "de" ? "DE" : "ENG"}
@@ -364,8 +342,7 @@ export default function PlaygroundNew() {
         </div>
       </section>
 
-      {/* My Tools + Public Tools */}
-      <div style={{ paddingTop: "96px", paddingBottom: "64px", maxWidth: "1100px", margin: "0 auto", padding: "96px 24px 64px" }}>
+      <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "96px 24px 64px" }}>
         {loading ? (
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "200px" }}>
             <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: MUTED }}>{DE ? "Lädt..." : "Loading..."}</span>

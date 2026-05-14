@@ -3,15 +3,13 @@ import { useNavigate } from "react-router";
 import { deleteNewTool, getAllNewTools, type NewToolData } from "./utils/storage";
 import New from "./New";
 
-const FONT_SERIF = "'FreightTextCmp Pro', 'freight-text-compressed-pro', 'freight-text-pro', 'EB Garamond', Georgia, serif";
-const FONT_SANS = "'General Sans', 'general-sans', 'Space Grotesk', sans-serif";
-const PAGE_BG = "#fcf6ef";
+const LIGHT_BG = "#fcf6ef";
 const PANEL_BG = "#f3ebe0";
-const TOOL_BG = "#f9f1e8";
-const BORDER = "#a4a4a4";
-const TOOL_TEXT = "#555555";
-const MUTED_TEXT = "#9a9daa";
-const HEADLINE_TEXT = "#302e2c";
+const BORDER_COL = "#a4a4a4";
+const LIGHT_TEXT = "#555555";
+const MUTED = "#9a9daa";
+const FONT_SERIF = "'freight-text-pro', 'EB Garamond', Georgia, serif";
+const FONT_SANS = "'general-sans', 'Space Grotesk', sans-serif";
 
 function getSessionId(): string {
   const key = "diplom_session_id";
@@ -23,23 +21,24 @@ function getSessionId(): string {
   return id;
 }
 
-
 function ToolCard({ tool, onClick, onDelete }: { tool: NewToolData; onClick: () => void; onDelete?: () => void }) {
   const [hovered, setHovered] = useState(false);
   const [confirming, setConfirming] = useState(false);
 
+  const handleMouseLeave = () => {
+    setHovered(false);
+    setConfirming(false);
+  };
+
   return (
     <div
       onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => {
-        setHovered(false);
-        setConfirming(false);
-      }}
+      onMouseLeave={handleMouseLeave}
       style={{
-        border: `1px dashed ${hovered ? TOOL_TEXT : BORDER}`,
-        borderRadius: 8,
+        border: `1px dashed ${hovered ? LIGHT_TEXT : BORDER_COL}`,
+        borderRadius: "8px",
         overflow: "hidden",
-        background: PAGE_BG,
+        background: LIGHT_BG,
         display: "flex",
         flexDirection: "column",
         transition: "border-color 0.15s, transform 0.15s",
@@ -52,11 +51,11 @@ function ToolCard({ tool, onClick, onDelete }: { tool: NewToolData; onClick: () 
         <div
           style={{
             position: "absolute",
-            top: 8,
-            right: 8,
+            top: "8px",
+            right: "8px",
             display: "flex",
             alignItems: "center",
-            gap: 4,
+            gap: "4px",
             opacity: hovered ? 1 : 0,
             transition: "opacity 0.15s",
             zIndex: 2,
@@ -64,22 +63,22 @@ function ToolCard({ tool, onClick, onDelete }: { tool: NewToolData; onClick: () 
         >
           {confirming ? (
             <>
-              <span style={{ fontFamily: FONT_SANS, fontSize: 11, color: MUTED_TEXT, whiteSpace: "nowrap" }}>Loschen?</span>
+              <span style={{ fontFamily: FONT_SANS, fontSize: "11px", color: MUTED, whiteSpace: "nowrap" }}>Loschen?</span>
               <button
                 onClick={(event) => {
                   event.stopPropagation();
                   onDelete();
                 }}
                 style={{
-                  height: 22,
+                  height: "22px",
                   padding: "0 8px",
                   background: "rgba(180,60,60,0.12)",
                   border: "1px dashed rgba(180,60,60,0.4)",
-                  borderRadius: 4,
+                  borderRadius: "4px",
                   cursor: "pointer",
                   outline: "none",
                   fontFamily: FONT_SANS,
-                  fontSize: 11,
+                  fontSize: "11px",
                   color: "#b43c3c",
                 }}
               >
@@ -91,16 +90,16 @@ function ToolCard({ tool, onClick, onDelete }: { tool: NewToolData; onClick: () 
                   setConfirming(false);
                 }}
                 style={{
-                  height: 22,
+                  height: "22px",
                   padding: "0 8px",
                   background: "rgba(252,246,239,0.85)",
-                  border: `1px dashed ${BORDER}`,
-                  borderRadius: 4,
+                  border: `1px dashed ${BORDER_COL}`,
+                  borderRadius: "4px",
                   cursor: "pointer",
                   outline: "none",
                   fontFamily: FONT_SANS,
-                  fontSize: 11,
-                  color: MUTED_TEXT,
+                  fontSize: "11px",
+                  color: MUTED,
                 }}
               >
                 Nein
@@ -114,10 +113,10 @@ function ToolCard({ tool, onClick, onDelete }: { tool: NewToolData; onClick: () 
               }}
               title="Aus meinen Tools entfernen"
               style={{
-                width: 24,
-                height: 24,
+                width: "24px",
+                height: "24px",
                 background: "rgba(252,246,239,0.85)",
-                border: `1px dashed ${BORDER}`,
+                border: `1px dashed ${BORDER_COL}`,
                 borderRadius: "50%",
                 cursor: "pointer",
                 outline: "none",
@@ -125,8 +124,8 @@ function ToolCard({ tool, onClick, onDelete }: { tool: NewToolData; onClick: () 
                 alignItems: "center",
                 justifyContent: "center",
                 fontFamily: FONT_SANS,
-                fontSize: 13,
-                color: MUTED_TEXT,
+                fontSize: "13px",
+                color: MUTED,
                 lineHeight: 1,
               }}
             >
@@ -153,16 +152,16 @@ function ToolCard({ tool, onClick, onDelete }: { tool: NewToolData; onClick: () 
         {tool.params.asciiImage ? (
           <img src={tool.params.asciiImage} alt={tool.name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
         ) : (
-          <span style={{ fontFamily: FONT_SERIF, fontSize: 36, color: BORDER, userSelect: "none" }}>+</span>
+          <span style={{ fontFamily: FONT_SERIF, fontSize: "36px", color: BORDER_COL, userSelect: "none" }}>+</span>
         )}
       </div>
 
-      <div onClick={onClick} style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 4, cursor: "pointer" }}>
+      <div onClick={onClick} style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: "4px", cursor: "pointer" }}>
         <span
           style={{
             fontFamily: FONT_SERIF,
-            fontSize: 17,
-            color: TOOL_TEXT,
+            fontSize: "17px",
+            color: LIGHT_TEXT,
             lineHeight: "1.25",
             whiteSpace: "nowrap",
             overflow: "hidden",
@@ -175,8 +174,8 @@ function ToolCard({ tool, onClick, onDelete }: { tool: NewToolData; onClick: () 
           <span
             style={{
               fontFamily: FONT_SANS,
-              fontSize: 12,
-              color: MUTED_TEXT,
+              fontSize: "12px",
+              color: MUTED,
               lineHeight: "1.45",
               display: "-webkit-box",
               WebkitLineClamp: 2,
@@ -192,35 +191,35 @@ function ToolCard({ tool, onClick, onDelete }: { tool: NewToolData; onClick: () 
   );
 }
 
-function ToolSection({ title, tools, onOpen, onDelete, emptyMessage }: {
+function Section({ title, tools, onOpen, onDelete, emptyMsg }: {
   title: string;
   tools: NewToolData[];
   onOpen: (id: string) => void;
   onDelete?: (id: string) => void;
-  emptyMessage: string;
+  emptyMsg: string;
 }) {
   return (
-    <section style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+    <section style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
       <div
         style={{
           display: "flex",
           alignItems: "baseline",
-          gap: 12,
-          borderBottom: `1px dashed ${BORDER}`,
-          paddingBottom: 12,
+          gap: "12px",
+          borderBottom: `1px dashed ${BORDER_COL}`,
+          paddingBottom: "12px",
         }}
       >
-        <span style={{ fontFamily: FONT_SERIF, fontSize: 28, color: TOOL_TEXT }}>{title}</span>
-        <span style={{ fontFamily: FONT_SANS, fontSize: 13, color: MUTED_TEXT }}>{tools.length}</span>
+        <span style={{ fontFamily: FONT_SERIF, fontSize: "28px", color: LIGHT_TEXT }}>{title}</span>
+        <span style={{ fontFamily: FONT_SANS, fontSize: "13px", color: MUTED }}>{tools.length}</span>
       </div>
       {tools.length === 0 ? (
-        <p style={{ fontFamily: FONT_SANS, fontSize: 14, color: MUTED_TEXT, margin: 0 }}>{emptyMessage}</p>
+        <p style={{ fontFamily: FONT_SANS, fontSize: "14px", color: MUTED, margin: 0 }}>{emptyMsg}</p>
       ) : (
         <div
           style={{
             display: "grid",
             gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
-            gap: 16,
+            gap: "16px",
           }}
         >
           {tools.map((tool) => (
@@ -237,7 +236,9 @@ export default function PlaygroundNew() {
   const sessionId = useMemo(() => getSessionId(), []);
   const [tools, setTools] = useState<NewToolData[]>([]);
   const [loading, setLoading] = useState(true);
-  const isDe = (localStorage.getItem("appLang") ?? "de") === "de";
+  const [lang, setLang] = useState<"de" | "en">(() => (localStorage.getItem("appLang") as "de" | "en") ?? "de");
+
+  const DE = lang === "de";
 
   useEffect(() => {
     getAllNewTools()
@@ -254,13 +255,11 @@ export default function PlaygroundNew() {
     if (!existing || tool.savedAt > existing.savedAt) myToolsMap.set(key, tool);
   }
   const myTools = Array.from(myToolsMap.values()).sort((a, b) => b.savedAt.localeCompare(a.savedAt));
-  const allTools = tools.filter((tool) => tool.params.sessionId !== sessionId);
+  const publicTools = tools.filter((tool) => tool.params.sessionId !== sessionId);
 
-  function openTool(id: string) {
-    navigate(`/new?tool=${id}`);
-  }
+  const openTool = (id: string) => navigate(`/new?tool=${id}`);
 
-  function handleDelete(id: string) {
+  const handleDelete = (id: string) => {
     const target = tools.find((tool) => tool.id === id);
     const toDelete = target
       ? tools.filter(
@@ -273,7 +272,7 @@ export default function PlaygroundNew() {
     Promise.all(ids.map(deleteNewTool))
       .then(() => setTools((current) => current.filter((tool) => !ids.includes(tool.id))))
       .catch(console.error);
-  }
+  };
 
   return (
     <main
@@ -283,7 +282,9 @@ export default function PlaygroundNew() {
         overflowX: "hidden",
         overflowY: "auto",
         position: "relative",
-        color: HEADLINE_TEXT,
+        background: LIGHT_BG,
+        color: LIGHT_TEXT,
+        fontFamily: FONT_SANS,
         WebkitOverflowScrolling: "touch",
       }}
     >
@@ -291,7 +292,6 @@ export default function PlaygroundNew() {
         html, body, #root { height: 100%; overflow: hidden; }
       `}</style>
 
-      {/* Writing zone — New.tsx embedded via transform containment */}
       <div
         style={{
           height: "100vh",
@@ -299,50 +299,35 @@ export default function PlaygroundNew() {
           flexShrink: 0,
           overflow: "hidden",
           position: "relative",
-          /* transform creates a new containing block for position:fixed children */
           transform: "translate(0, 0)",
         }}
       >
         <New />
       </div>
 
-      {loading ? (
-        <section style={{ padding: "70px 44px 86px", borderTop: `1px dashed ${BORDER}` }}>
-          <div
-            style={{
-              maxWidth: 1500,
-              margin: "0 auto",
-              minHeight: 260,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              border: `1px dashed ${BORDER}`,
-              borderRadius: 4,
-              background: TOOL_BG,
-            }}
-          >
-            <span style={{ fontFamily: FONT_SANS, fontSize: 15, color: MUTED_TEXT }}>{isDe ? "Lädt..." : "Loading..."}</span>
+      <div style={{ paddingTop: "96px", paddingBottom: "64px", maxWidth: "1100px", margin: "0 auto", padding: "96px 24px 64px" }}>
+        {loading ? (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "200px" }}>
+            <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: MUTED }}>{DE ? "Lädt..." : "Loading..."}</span>
           </div>
-        </section>
-      ) : (
-        <section style={{ padding: "70px 44px 86px", borderTop: `1px dashed ${BORDER}` }}>
-          <div style={{ maxWidth: 1500, margin: "0 auto", display: "flex", flexDirection: "column", gap: 56 }}>
-            <ToolSection
-              title={isDe ? "Meine Tools" : "My Tools"}
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "56px" }}>
+            <Section
+              title={DE ? "Meine Tools" : "My Tools"}
               tools={myTools}
               onOpen={openTool}
               onDelete={handleDelete}
-              emptyMessage={isDe ? "Noch keine Tools gespeichert. Erstelle eines unter /new." : "No tools saved yet. Create one at /new."}
+              emptyMsg={DE ? "Noch keine Tools gespeichert. Erstelle eines unter /new." : "No tools saved yet. Create one at /new."}
             />
-            <ToolSection
-              title={isDe ? "Alle Tools" : "All Tools"}
-              tools={allTools}
+            <Section
+              title={DE ? "Öffentliche Tools" : "Public Tools"}
+              tools={publicTools}
               onOpen={openTool}
-              emptyMessage={isDe ? "Noch keine Tools vorhanden." : "No tools yet."}
+              emptyMsg={DE ? "Noch keine öffentlichen Tools vorhanden." : "No public tools yet."}
             />
           </div>
-        </section>
-      )}
+        )}
+      </div>
     </main>
   );
 }

@@ -1,4 +1,4 @@
-import { useRef, useEffect, useLayoutEffect, useCallback, useState } from "react";
+import { useRef, useEffect, useLayoutEffect, useCallback, useState, useMemo } from "react";
 import { createPortal } from "react-dom";
 
 // ── Model ─────────────────────────────────────────────────────────────────────

@@ -12,6 +12,7 @@ const MUTED = "#9a9daa";
 const HEADLINE_TEXT = "#302e2c";
 const FONT_SERIF = "'freight-text-pro', 'EB Garamond', Georgia, serif";
 const FONT_SANS = "'general-sans', 'Space Grotesk', sans-serif";
+const DOT_GRID = "radial-gradient(circle, rgba(164,164,164,0.7) 1px, transparent 1.2px)";
 
 function getSessionId(): string {
   const key = "diplom_session_id";
@@ -175,27 +176,11 @@ function ToolCard({ tool, onClick, onDelete }: { tool: NewToolData; onClick: () 
           {confirming ? (
             <>
               <span style={{ fontFamily: FONT_SANS, fontSize: "11px", color: MUTED, whiteSpace: "nowrap" }}>Löschen?</span>
-              <button
-                onClick={(event) => { event.stopPropagation(); onDelete(); }}
-                style={{ height: "22px", padding: "0 8px", background: "rgba(180,60,60,0.12)", border: "1px dashed rgba(180,60,60,0.4)", borderRadius: "4px", cursor: "pointer", outline: "none", fontFamily: FONT_SANS, fontSize: "11px", color: "#b43c3c" }}
-              >
-                Ja
-              </button>
-              <button
-                onClick={(event) => { event.stopPropagation(); setConfirming(false); }}
-                style={{ height: "22px", padding: "0 8px", background: "rgba(252,246,239,0.85)", border: `1px dashed ${BORDER_COL}`, borderRadius: "4px", cursor: "pointer", outline: "none", fontFamily: FONT_SANS, fontSize: "11px", color: MUTED }}
-              >
-                Nein
-              </button>
+              <button onClick={(event) => { event.stopPropagation(); onDelete(); }} style={{ height: "22px", padding: "0 8px", background: "rgba(180,60,60,0.12)", border: "1px dashed rgba(180,60,60,0.4)", borderRadius: "4px", cursor: "pointer", outline: "none", fontFamily: FONT_SANS, fontSize: "11px", color: "#b43c3c" }}>Ja</button>
+              <button onClick={(event) => { event.stopPropagation(); setConfirming(false); }} style={{ height: "22px", padding: "0 8px", background: "rgba(252,246,239,0.85)", border: `1px dashed ${BORDER_COL}`, borderRadius: "4px", cursor: "pointer", outline: "none", fontFamily: FONT_SANS, fontSize: "11px", color: MUTED }}>Nein</button>
             </>
           ) : (
-            <button
-              onClick={(event) => { event.stopPropagation(); setConfirming(true); }}
-              title="Aus meinen Tools entfernen"
-              style={{ width: "24px", height: "24px", background: "rgba(252,246,239,0.85)", border: `1px dashed ${BORDER_COL}`, borderRadius: "50%", cursor: "pointer", outline: "none", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FONT_SANS, fontSize: "13px", color: MUTED, lineHeight: 1 }}
-            >
-              x
-            </button>
+            <button onClick={(event) => { event.stopPropagation(); setConfirming(true); }} title="Aus meinen Tools entfernen" style={{ width: "24px", height: "24px", background: "rgba(252,246,239,0.85)", border: `1px dashed ${BORDER_COL}`, borderRadius: "50%", cursor: "pointer", outline: "none", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FONT_SANS, fontSize: "13px", color: MUTED, lineHeight: 1 }}>x</button>
           )}
         </div>
       )}
@@ -206,12 +191,12 @@ function ToolCard({ tool, onClick, onDelete }: { tool: NewToolData; onClick: () 
           <span style={{ fontFamily: FONT_SERIF, fontSize: "36px", color: BORDER_COL, userSelect: "none" }}>+</span>
         )}
       </div>
-      <div onClick={onClick} style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: "4px", cursor: "pointer" }}>
-        <span style={{ fontFamily: FONT_SERIF, fontSize: "17px", color: LIGHT_TEXT, lineHeight: "1.25", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+      <div onClick={onClick} style={{ padding: "16px 18px", display: "flex", flexDirection: "column", gap: "5px", cursor: "pointer" }}>
+        <span style={{ fontFamily: FONT_SERIF, fontSize: "19px", color: LIGHT_TEXT, lineHeight: "1.25", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
           {tool.name || "Unnamed Tool"}
         </span>
         {tool.description && (
-          <span style={{ fontFamily: FONT_SANS, fontSize: "12px", color: MUTED, lineHeight: "1.45", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as const, overflow: "hidden" }}>
+          <span style={{ fontFamily: FONT_SANS, fontSize: "13px", color: MUTED, lineHeight: "1.45", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as const, overflow: "hidden" }}>
             {tool.description}
           </span>
         )}
@@ -236,7 +221,7 @@ function Section({ title, tools, onOpen, onDelete, emptyMsg }: {
       {tools.length === 0 ? (
         <p style={{ fontFamily: FONT_SANS, fontSize: "14px", color: MUTED, margin: 0 }}>{emptyMsg}</p>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "16px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "20px" }}>
           {tools.map((tool) => (
             <ToolCard key={tool.id} tool={tool} onClick={() => onOpen(tool.id)} onDelete={onDelete ? () => onDelete(tool.id) : undefined} />
           ))}
@@ -288,12 +273,15 @@ export default function PlaygroundNew() {
   return (
     <main
       style={{
+        minHeight: "100vh",
         height: "100vh",
         width: "100vw",
         overflowX: "hidden",
         overflowY: "auto",
         position: "relative",
-        background: LIGHT_BG,
+        backgroundColor: LIGHT_BG,
+        backgroundImage: DOT_GRID,
+        backgroundSize: "42px 42px",
         color: LIGHT_TEXT,
         fontFamily: FONT_SANS,
         WebkitOverflowScrolling: "touch",
@@ -311,9 +299,7 @@ export default function PlaygroundNew() {
           position: "relative",
           minHeight: "100vh",
           overflow: "hidden",
-          backgroundColor: LIGHT_BG,
-          backgroundImage: "radial-gradient(circle, rgba(164,164,164,0.7) 1px, transparent 1.2px)",
-          backgroundSize: "42px 42px",
+          background: "transparent",
         }}
       >
         <div style={{ position: "absolute", top: 44, right: 44, zIndex: 5 }}>
@@ -342,7 +328,7 @@ export default function PlaygroundNew() {
         </div>
       </section>
 
-      <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "96px 24px 64px" }}>
+      <div style={{ width: "100%", boxSizing: "border-box", padding: "96px 100px 64px" }}>
         {loading ? (
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "200px" }}>
             <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: MUTED }}>{DE ? "Lädt..." : "Loading..."}</span>

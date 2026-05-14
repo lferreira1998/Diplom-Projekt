@@ -241,8 +241,12 @@ export default function PlaygroundNew() {
   const DE = lang === "de";
 
   useEffect(() => {
+    let deletedIds: string[] = [];
+    try {
+      deletedIds = JSON.parse(localStorage.getItem("deletedToolIds") ?? "[]") as string[];
+    } catch { /* ignore */ }
     getAllNewTools()
-      .then(setTools)
+      .then((all) => setTools(all.filter((t) => !deletedIds.includes(t.id))))
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
@@ -259,15 +263,26 @@ export default function PlaygroundNew() {
 
   const openTool = (id: string) => navigate(`/new?tool=${id}`);
 
+  const addToDeletedBlacklist = (ids: string[]) => {
+    try {
+      const existing = JSON.parse(localStorage.getItem("deletedToolIds") ?? "[]") as string[];
+      const merged = Array.from(new Set([...existing, ...ids]));
+      localStorage.setItem("deletedToolIds", JSON.stringify(merged));
+    } catch { /* ignore */ }
+  };
+
   const handleDelete = (id: string) => {
     const target = tools.find((tool) => tool.id === id);
     const toDelete = target
       ? tools.filter((tool) => tool.params.sessionId === target.params.sessionId && (tool.params.displayName || tool.name) === (target.params.displayName || target.name))
       : tools.filter((tool) => tool.id === id);
     const ids = toDelete.map((tool) => tool.id);
-    Promise.all(ids.map(deleteNewTool))
-      .then(() => setTools((current) => current.filter((tool) => !ids.includes(tool.id))))
-      .catch(console.error);
+    // Immediately add to local blacklist so tool never reappears even if Supabase call fails
+    addToDeletedBlacklist(ids);
+    // Optimistically remove from UI
+    setTools((current) => current.filter((tool) => !ids.includes(tool.id)));
+    // Then delete from Supabase (best-effort, blacklist is the safety net)
+    Promise.all(ids.map(deleteNewTool)).catch(console.error);
   };
 
   return (

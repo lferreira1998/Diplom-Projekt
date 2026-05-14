@@ -833,6 +833,11 @@ export default function New() {
   useEffect(() => {
     const toolId = searchParams.get("tool");
     if (!toolId) return;
+    // If this ID was deleted locally, don't reload it
+    try {
+      const deleted = JSON.parse(localStorage.getItem("deletedToolIds") ?? "[]") as string[];
+      if (deleted.includes(toolId)) return;
+    } catch { /* ignore */ }
     getNewToolById(toolId).then(tool => {
       if (!tool) return;
       setCurrentToolId(toolId);
@@ -860,6 +865,10 @@ export default function New() {
       setVerblassSchnelligkeit(typeof p.verblassSchnelligkeit === "number" ? p.verblassSchnelligkeit : 3);
       setPositionMode((p.positionMode as typeof positionMode) ?? "standard");
       setRandomMode((p.randomMode as "sentences" | "words") ?? "words");
+      if (p.positionMode === "custom" && Array.isArray(p.drawnPath) && p.drawnPath.length >= 2) {
+        setDrawnPath(p.drawnPath);
+      }
+      setTextEditingEnabled(p.textEditingEnabled !== false); // default true
       setGrainLevel(typeof p.grainLevel === "number" ? p.grainLevel : 0);
       setTextSizeLevel(typeof p.textSizeLevel === "number" ? p.textSizeLevel : 20);
       setBgHue(typeof p.bgHue === "number" ? p.bgHue : null);
@@ -911,8 +920,11 @@ export default function New() {
         timerEnabled, timerMode, timerMinutes, visualTimer, timerUserReset, cursorRunning,
         visibility, deleteMode, correctionVisible,
         textFliegtEnabled, fliegtUnit, fliegtZeitpunkt, fliegtSchnelligkeit,
+        textEditingEnabled,
         textVerblassEnabled, verblassZeitpunkt, verblassSchnelligkeit,
-        positionMode, randomMode, grainLevel, textSizeLevel, bgHue, bgMotion,
+        positionMode, randomMode,
+        drawnPath: positionMode === "custom" ? drawnPath : [],
+        grainLevel, textSizeLevel, bgHue, bgMotion,
       };
       // Fix 3: update existing tool if loaded via URL, otherwise create new
       const id = currentToolId
@@ -930,8 +942,9 @@ export default function New() {
     timerEnabled, timerMode, timerMinutes, visualTimer, timerUserReset, cursorRunning,
     visibility, deleteMode, correctionVisible,
     textFliegtEnabled, fliegtUnit, fliegtZeitpunkt, fliegtSchnelligkeit,
+    textEditingEnabled,
     textVerblassEnabled, verblassZeitpunkt, verblassSchnelligkeit,
-    positionMode, randomMode, grainLevel, textSizeLevel, bgHue, bgMotion,
+    positionMode, randomMode, drawnPath, grainLevel, textSizeLevel, bgHue, bgMotion,
   ]);
 
   // ── Computed values ──────────────────────────────────────────────────────

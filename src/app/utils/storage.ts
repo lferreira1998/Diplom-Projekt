@@ -25,9 +25,13 @@ export interface NewToolParams {
   verblassZeitpunkt: number;
   verblassSchnelligkeit: number;
   positionMode: string;
+  randomMode?: string;
+  drawnPath?: { x: number; y: number }[];
   grainLevel: number;
   textSizeLevel: number;
   bgHue: number | null;
+  bgMotion?: boolean;
+  textEditingEnabled?: boolean;
 }
 
 export interface NewToolData {

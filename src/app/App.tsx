@@ -18,6 +18,14 @@ import RandomlySpatially from "./projects/randomlyspatially/App";
 import New from "./New";
 import Playground from "./Playground";
 import PlaygroundNewScrollDots from "./PlaygroundNewScrollDots";
+import {
+  StyledBlindThenWitness,
+  StyledInASpiral,
+  StyledOffTheGrid,
+  StyledUninvitedThoughts,
+  StyledVisibleCorrections,
+  StyledWithoutStopping,
+} from "./StyledExperiments";
 
 export default function App() {
   return (
@@ -35,6 +43,12 @@ export default function App() {
       <Route path="/off-the-grid" element={<OffTheGrid />} />
       <Route path="/in-a-spiral" element={<InASpiral />} />
       <Route path="/randomly-spatially" element={<RandomlySpatially />} />
+      <Route path="/new-experiments/uninvited-thoughts" element={<StyledUninvitedThoughts />} />
+      <Route path="/new-experiments/without-stopping" element={<StyledWithoutStopping />} />
+      <Route path="/new-experiments/blind-then-witness" element={<StyledBlindThenWitness />} />
+      <Route path="/new-experiments/visible-corrections" element={<StyledVisibleCorrections />} />
+      <Route path="/new-experiments/off-the-grid" element={<StyledOffTheGrid />} />
+      <Route path="/new-experiments/in-a-spiral" element={<StyledInASpiral />} />
       <Route path="/about-the-project" element={<AboutTheProject />} />
       <Route path="/aboutnew" element={<AboutNew />} />
       <Route path="/all-tools" element={<AllTools />} />

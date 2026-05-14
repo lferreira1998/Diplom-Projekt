@@ -1019,6 +1019,7 @@ export default function New() {
       <style>{`
         @keyframes cursorBlink { 0%,100%{opacity:1} 50%{opacity:0} }
         @keyframes bgDrift { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+        @keyframes noiseMove { 0%{background-position:0 0} 33%{background-position:120px 80px} 66%{background-position:60px 160px} 100%{background-position:0 0} }
         .dark-transition, .dark-transition * {
           transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, opacity 0.2s ease !important;
         }
@@ -1140,6 +1141,7 @@ export default function New() {
             opacity: (grainLevel / 100) * 0.72,
             backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E")`,
             backgroundRepeat: "repeat", backgroundSize: "200px 200px",
+            animation: bgMotion ? "noiseMove 3s linear infinite" : "none",
           }}
         />
       )}
@@ -1770,146 +1772,192 @@ export default function New() {
 
                 {/* ── Korrigieren / Correction ──────────────────────────── */}
                 {activeCategory === "Correction" && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                    {/* "Löschen" standalone label */}
-                    <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT, padding: "4px 0 2px" }}>{t.deleteHeading}</span>
-                    {/* 4 individual delete option rows */}
-                    {DELETE_OPTS_KEYS.map(key => (
-                      <button key={key} className="vis-btn" onClick={() => setDeleteMode(key)} style={{
-                        width: "100%", height: "36px",
-                        background: settingsCardBg,
-                        border: deleteMode === key
-                          ? `1px dashed ${dark ? "rgba(240,232,220,0.85)" : LIGHT_TEXT}`
-                          : `1px dashed ${innerBorder}`,
-                        borderRadius: "4px", padding: "0 16px",
-                        display: "flex", alignItems: "center", justifyContent: "space-between",
-                        cursor: "pointer", outline: "none",
-                        fontFamily: FONT_SANS, fontSize: "15px",
-                        color: dark ? DARK_TEXT : LIGHT_TEXT,
-                        boxSizing: "border-box",
-                      }}>
-                        {deleteOptLabels[key]}
-                        <RadioCircle selected={deleteMode === key} dark={dark} />
-                      </button>
-                    ))}
-                    {/* Korrigieren sichtbar */}
-                    <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px", display: "flex", flexDirection: "column", gap: "10px", marginTop: "4px" }}>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+
+                    {/* Löschen card */}
+                    <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
+                      {/* Heading row */}
+                      <div style={{ height: "36px", display: "flex", alignItems: "center" }}>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.deleteHeading}</span>
+                      </div>
+                      {/* Option rows with separator between 2nd and 3rd */}
+                      {DELETE_OPTS_KEYS.map((key, i) => (
+                        <div key={key}>
+                          {i === 2 && (
+                            <div style={{ borderTop: `1px dashed ${innerBorder}`, marginBottom: "16px" }} />
+                          )}
+                          <button className="vis-btn" onClick={() => setDeleteMode(key)} style={{
+                            width: "100%", height: "36px",
+                            background: dark ? "rgba(240,232,220,0.04)" : "#fcf6ef",
+                            border: deleteMode === key
+                              ? `1px dashed ${dark ? "rgba(240,232,220,0.85)" : LIGHT_TEXT}`
+                              : `1px dashed ${innerBorder}`,
+                            borderRadius: "4px", padding: "0 12px",
+                            display: "flex", alignItems: "center", justifyContent: "space-between",
+                            cursor: "pointer", outline: "none",
+                            fontFamily: FONT_SANS, fontSize: "15px",
+                            color: dark ? DARK_TEXT : LIGHT_TEXT,
+                            boxSizing: "border-box",
+                          }}>
+                            {deleteOptLabels[key]}
+                            <RadioCircle selected={deleteMode === key} dark={dark} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Korrigieren sichtbar card */}
+                    <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
+                      <div style={{ height: "36px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                         <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.correctionVisible}</span>
                         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                           <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: descColor }}>{correctionVisible ? t.on : t.off}</span>
                           <ToggleBtn on={correctionVisible} onToggle={() => setCorrectionVisible(v => !v)} dark={dark} />
                         </div>
                       </div>
-                      <p style={{ fontFamily: FONT_SANS, fontSize: "13px", lineHeight: "1.45", color: descColor, margin: 0 }}>
-                        <span style={{ color: dark ? "#8faee0" : "#6b82b0" }}>{t.correctionDescHighlight}</span>
-                        {t.correctionDescRest}
-                      </p>
-                      {/* Tipp-Ex visual */}
-                      <div style={{ position: "relative", userSelect: "none", lineHeight: 1 }}>
-                        <span style={{ fontFamily: FONT_SERIF, fontSize: "13px", color: dark ? DARK_TEXT : LIGHT_TEXT, opacity: 0.55, whiteSpace: "nowrap" }}>
-                          {DE ? "Schreiben ist Denken und Sprechen" : "Writing is thinking and speaking"}
-                        </span>
-                        <div style={{
-                          position: "absolute",
-                          left: "62px", right: "48px",
-                          top: "-3px", bottom: "-3px",
-                          background: dark ? "rgba(252,246,239,0.82)" : "#fdfaf4",
-                          borderRadius: "2px",
-                        }} />
-                      </div>
+                      <AnimatePresence>
+                        {correctionVisible && (
+                          <motion.div key="corr-desc" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} style={{ overflow: "hidden" }}>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                              <p style={{ fontFamily: FONT_SANS, fontSize: "13px", lineHeight: "1.45", color: descColor, margin: 0 }}>
+                                <span style={{ color: dark ? "#8faee0" : "#6b82b0" }}>{t.correctionDescHighlight}</span>
+                                {t.correctionDescRest}
+                              </p>
+                              {/* Tipp-Ex visual */}
+                              <div style={{ position: "relative", userSelect: "none", lineHeight: 1 }}>
+                                <span style={{ fontFamily: FONT_SERIF, fontSize: "13px", color: dark ? DARK_TEXT : LIGHT_TEXT, opacity: 0.55, whiteSpace: "nowrap" }}>
+                                  {DE ? "Schreiben ist Denken und Sprechen" : "Writing is thinking and speaking"}
+                                </span>
+                                <div style={{
+                                  position: "absolute",
+                                  left: "62px", right: "48px",
+                                  top: "-3px", bottom: "-3px",
+                                  background: dark ? "rgba(252,246,239,0.82)" : "#fdfaf4",
+                                  borderRadius: "2px",
+                                }} />
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                        {!correctionVisible && (
+                          <motion.p key="corr-off-desc" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} style={{ fontFamily: FONT_SANS, fontSize: "13px", lineHeight: "1.45", color: descColor, margin: 0 }}>
+                            {DE ? "Mit Tipp-Ex-Schicht über alten Text. Das Korrigieren hinterlässt Spuren." : "With a Tipp-Ex layer over old text. Corrections leave traces."}
+                          </motion.p>
+                        )}
+                      </AnimatePresence>
                     </div>
+
                   </div>
                 )}
 
                 {/* ── Stabilität / Stability ────────────────────────────── */}
                 {activeCategory === "Stability" && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+
+                    {/* Text fliegt davon card */}
                     <div style={{ position: "relative" }}>
-                    <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "14px", opacity: positionMode !== "standard" ? 0.4 : 1, transition: "opacity 0.2s", pointerEvents: positionMode !== "standard" ? "none" : "auto" }}>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.driftLabel}</span>
-                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                          <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: descColor }}>{textFliegtEnabled ? t.on : t.off}</span>
-                          <ToggleBtn on={textFliegtEnabled} onToggle={() => setTextFliegtEnabled(e => !e)} dark={dark} />
+                      <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px 24px", display: "flex", flexDirection: "column", gap: "16px", opacity: positionMode !== "standard" ? 0.4 : 1, transition: "opacity 0.2s", pointerEvents: positionMode !== "standard" ? "none" : "auto" }}>
+                        {/* Header row */}
+                        <div style={{ height: "36px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                          <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.driftLabel}</span>
+                          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                            <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: descColor }}>{textFliegtEnabled ? t.on : t.off}</span>
+                            <ToggleBtn on={textFliegtEnabled} onToggle={() => setTextFliegtEnabled(e => !e)} dark={dark} />
+                          </div>
                         </div>
+                        <AnimatePresence initial={false} mode="wait">
+                          {!textFliegtEnabled ? (
+                            /* OFF: show description only */
+                            <motion.p key="drift-off" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} style={{ fontFamily: FONT_SANS, fontSize: "13px", color: descColor, lineHeight: "1.45", margin: 0 }}>
+                              {t.driftDesc}
+                            </motion.p>
+                          ) : (
+                            /* ON: show unit options + timing + speed */
+                            <motion.div key="drift-on" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                              {/* Unit options */}
+                              <div style={{ display: "flex", gap: "10px" }}>
+                                {(["Sätze", "Wörter"] as const).map(u => (
+                                  <button key={u} onClick={() => setFliegtUnit(u)} style={{
+                                    flex: 1, height: "36px",
+                                    background: dark ? "rgba(240,232,220,0.04)" : "#fcf6ef",
+                                    border: `1px dashed ${fliegtUnit === u ? (dark ? DARK_TEXT : LIGHT_TEXT) : innerBorder}`,
+                                    borderRadius: "4px", cursor: "pointer", outline: "none",
+                                    fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT,
+                                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                                    padding: "0 12px", boxSizing: "border-box",
+                                  }}>
+                                    {u === "Sätze" ? t.driftSentences : t.driftWords}
+                                    <RadioCircle selected={fliegtUnit === u} dark={dark} />
+                                  </button>
+                                ))}
+                              </div>
+                              <button onClick={() => setFliegtUnit("Buchstabe")} style={{
+                                width: "100%", height: "36px",
+                                background: dark ? "rgba(240,232,220,0.04)" : "#fcf6ef",
+                                border: `1px dashed ${fliegtUnit === "Buchstabe" ? (dark ? DARK_TEXT : LIGHT_TEXT) : innerBorder}`,
+                                borderRadius: "4px", cursor: "pointer", outline: "none",
+                                fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT,
+                                display: "flex", alignItems: "center", justifyContent: "space-between",
+                                padding: "0 12px", boxSizing: "border-box",
+                              }}>
+                                {t.driftLetters}
+                                <RadioCircle selected={fliegtUnit === "Buchstabe"} dark={dark} />
+                              </button>
+                              {/* Separator */}
+                              <div style={{ borderTop: `1px dashed ${innerBorder}`, margin: "6px 0" }} />
+                              {/* Timing */}
+                              <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.driftTiming}</span>
+                              <DoubleSlider value={fliegtZeitpunkt} min={1} max={15} onChange={setFliegtZeitpunkt} dark={dark} />
+                              <div style={{ border: `1px dashed ${innerBorder}`, borderRadius: "4px", padding: "10px 12px", textAlign: "center", fontFamily: FONT_SANS, fontSize: "15px", color: descColor, background: dark ? "rgba(240,232,220,0.04)" : "#fcf6ef" }}>
+                                {t.driftAfter(fliegtZeitpunkt)}
+                              </div>
+                              {/* Separator */}
+                              <div style={{ borderTop: `1px dashed ${innerBorder}`, margin: "6px 0" }} />
+                              {/* Speed */}
+                              <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.driftSpeed}</span>
+                              <DoubleSlider value={fliegtSchnelligkeit} min={1} max={10} onChange={setFliegtSchnelligkeit} dark={dark} />
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
-                      <p style={{ fontFamily: FONT_SANS, fontSize: "13px", color: descColor, lineHeight: "1.45", margin: 0 }}>{t.driftDesc}</p>
-                      <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                        <div style={{ display: "flex", gap: "6px" }}>
-                          {(["Sätze", "Wörter"] as const).map(u => (
-                            <button key={u} onClick={() => setFliegtUnit(u)} style={{
-                              flex: 1, height: "36px",
-                              background: fliegtUnit === u ? (dark ? "rgba(240,232,220,0.12)" : "rgba(85,85,85,0.08)") : "transparent",
-                              border: `1px dashed ${fliegtUnit === u ? (dark ? DARK_TEXT : LIGHT_TEXT) : innerBorder}`,
-                              borderRadius: "4px", cursor: "pointer", outline: "none",
-                              fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT,
-                              display: "flex", alignItems: "center", justifyContent: "space-between",
-                              padding: "0 12px", boxSizing: "border-box",
-                            }}>
-                              {u === "Sätze" ? t.driftSentences : t.driftWords}
-                              <RadioCircle selected={fliegtUnit === u} dark={dark} />
-                            </button>
-                          ))}
+                      {positionMode !== "standard" && (
+                        <div style={{ position: "absolute", bottom: "10px", left: 0, right: 0, textAlign: "center", pointerEvents: "none" }}>
+                          <span style={{ fontFamily: FONT_SANS, fontSize: "11px", color: descColor }}>
+                            {DE ? "Nicht verfügbar in diesem Modus" : "Not available in this mode"}
+                          </span>
                         </div>
-                        <button onClick={() => setFliegtUnit("Buchstabe")} style={{
-                          width: "100%", height: "36px",
-                          background: fliegtUnit === "Buchstabe" ? (dark ? "rgba(240,232,220,0.12)" : "rgba(85,85,85,0.08)") : "transparent",
-                          border: `1px dashed ${fliegtUnit === "Buchstabe" ? (dark ? DARK_TEXT : LIGHT_TEXT) : innerBorder}`,
-                          borderRadius: "4px", cursor: "pointer", outline: "none",
-                          fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT,
-                          display: "flex", alignItems: "center", justifyContent: "space-between",
-                          padding: "0 12px", boxSizing: "border-box",
-                        }}>
-                          {t.driftLetters}
-                          <RadioCircle selected={fliegtUnit === "Buchstabe"} dark={dark} />
-                        </button>
-                      </div>
-                      <div style={{ borderTop: `1px dashed ${innerBorder}` }} />
-                      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                        <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.driftTiming}</span>
-                        <DoubleSlider value={fliegtZeitpunkt} min={1} max={15} onChange={setFliegtZeitpunkt} dark={dark} />
-                        <div style={{ border: `1px dashed ${innerBorder}`, borderRadius: "4px", padding: "8px", textAlign: "center", fontFamily: FONT_SANS, fontSize: "15px", color: descColor }}>
-                          {t.driftAfter(fliegtZeitpunkt)}
-                        </div>
-                      </div>
-                      <div style={{ borderTop: `1px dashed ${innerBorder}` }} />
-                      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                        <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.driftSpeed}</span>
-                        <DoubleSlider value={fliegtSchnelligkeit} min={1} max={10} onChange={setFliegtSchnelligkeit} dark={dark} />
-                      </div>
-                    </div>
-                    {positionMode !== "standard" && (
-                      <div style={{ position: "absolute", bottom: "10px", left: 0, right: 0, textAlign: "center", pointerEvents: "none" }}>
-                        <span style={{ fontFamily: FONT_SANS, fontSize: "11px", color: descColor }}>
-                          {DE ? "Nicht verfügbar in diesem Modus" : "Not available in this mode"}
-                        </span>
-                      </div>
-                    )}
+                      )}
                     </div>
 
-                    <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "14px" }}>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    {/* Text verblasst card */}
+                    <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
+                      <div style={{ height: "36px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                         <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.fadeLabel}</span>
                         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                           <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: descColor }}>{textVerblassEnabled ? t.on : t.off}</span>
                           <ToggleBtn on={textVerblassEnabled} onToggle={() => setTextVerblassEnabled(e => !e)} dark={dark} />
                         </div>
                       </div>
-                      <p style={{ fontFamily: FONT_SANS, fontSize: "13px", color: descColor, lineHeight: "1.45", margin: 0 }}>{t.fadeDesc}</p>
-                      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                        <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.fadeTiming}</span>
-                        <DoubleSlider value={verblassZeitpunkt} min={1} max={15} onChange={setVerblassZeitpunkt} dark={dark} />
-                        <div style={{ border: `1px dashed ${innerBorder}`, borderRadius: "4px", padding: "8px", textAlign: "center", fontFamily: FONT_SANS, fontSize: "15px", color: descColor }}>
-                          {t.fadeAfter(verblassZeitpunkt)}
-                        </div>
-                      </div>
-                      <div style={{ borderTop: `1px dashed ${innerBorder}` }} />
-                      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                        <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.fadeSpeed}</span>
-                        <DoubleSlider value={verblassSchnelligkeit} min={1} max={10} onChange={setVerblassSchnelligkeit} dark={dark} />
-                      </div>
+                      <AnimatePresence initial={false} mode="wait">
+                        {!textVerblassEnabled ? (
+                          <motion.p key="fade-off" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} style={{ fontFamily: FONT_SANS, fontSize: "13px", color: descColor, lineHeight: "1.45", margin: 0 }}>
+                            {t.fadeDesc}
+                          </motion.p>
+                        ) : (
+                          <motion.div key="fade-on" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                            <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.fadeTiming}</span>
+                            <DoubleSlider value={verblassZeitpunkt} min={1} max={15} onChange={setVerblassZeitpunkt} dark={dark} />
+                            <div style={{ border: `1px dashed ${innerBorder}`, borderRadius: "4px", padding: "10px 12px", textAlign: "center", fontFamily: FONT_SANS, fontSize: "15px", color: descColor, background: dark ? "rgba(240,232,220,0.04)" : "#fcf6ef" }}>
+                              {t.fadeAfter(verblassZeitpunkt)}
+                            </div>
+                            <div style={{ borderTop: `1px dashed ${innerBorder}`, margin: "6px 0" }} />
+                            <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.fadeSpeed}</span>
+                            <DoubleSlider value={verblassSchnelligkeit} min={1} max={10} onChange={setVerblassSchnelligkeit} dark={dark} />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
+
                   </div>
                 )}
 
@@ -2039,14 +2087,19 @@ export default function New() {
                       </div>
                     </div>
 
-                    <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px" }}>
+                    <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px", opacity: grainLevel === 0 ? 0.4 : 1, transition: "opacity 0.2s" }}>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
                         <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.lfBgMotion}</span>
                         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                          <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: descColor }}>{bgMotion ? t.on : t.off}</span>
-                          <ToggleBtn on={bgMotion} onToggle={() => setBgMotion(v => !v)} dark={dark} />
+                          <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: descColor }}>{bgMotion && grainLevel > 0 ? t.on : t.off}</span>
+                          <ToggleBtn on={bgMotion && grainLevel > 0} onToggle={() => { if (grainLevel > 0) setBgMotion(v => !v); }} dark={dark} />
                         </div>
                       </div>
+                      {grainLevel === 0 && (
+                        <p style={{ fontFamily: FONT_SANS, fontSize: "12px", color: descColor, margin: "0 0 4px", lineHeight: "1.4" }}>
+                          {DE ? "Körnung aktivieren um Bewegung hinzuzufügen" : "Enable grain to add motion"}
+                        </p>
+                      )}
                     </div>
 
                     <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>

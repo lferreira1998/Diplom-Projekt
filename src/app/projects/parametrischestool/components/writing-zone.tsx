@@ -41,7 +41,10 @@ interface WritingZoneProps {
   textAppearsRandom?: boolean;
   randomMode?: "words" | "sentences";
   customPathModus?: boolean;
-  customPath?: { x: number; y: number }[];
+  customPath?: { x: number; y: number }[][];
+  onCustomPathChange?: (updater: (prev: { x: number; y: number }[][]) => { x: number; y: number }[][]) => void;
+  customPathDark?: boolean;
+  customPathDe?: boolean;
   writingPrompt?: string;
   fontFamily?: string;
   centeredPrompt?: boolean;
@@ -919,29 +922,117 @@ function RunningLineCanvas({
   );
 }
 
-// ── CustomPathCanvas ──────────────────────────────────────────────────────────
+// ── CustomPathSvg ─────────────────────────────────────────────────────────────
 
-interface CustomPathCanvasProps {
+type CpPt = { x: number; y: number };
+
+function cpSegLength(pts: CpPt[]): number {
+  let l = 0;
+  for (let i = 1; i < pts.length; i++) {
+    const dx = pts[i].x - pts[i - 1].x;
+    const dy = pts[i].y - pts[i - 1].y;
+    l += Math.sqrt(dx * dx + dy * dy);
+  }
+  return l;
+}
+
+function cpPtAtDist(pts: CpPt[], d: number): { x: number; y: number; angle: number } | null {
+  if (pts.length < 2) return null;
+  let gone = 0;
+  for (let i = 1; i < pts.length; i++) {
+    const dx = pts[i].x - pts[i - 1].x;
+    const dy = pts[i].y - pts[i - 1].y;
+    const len = Math.sqrt(dx * dx + dy * dy);
+    if (len < 1e-4) continue;
+    if (gone + len >= d) {
+      const t = (d - gone) / len;
+      return {
+        x: pts[i - 1].x + dx * t,
+        y: pts[i - 1].y + dy * t,
+        angle: Math.atan2(dy, dx),
+      };
+    }
+    gone += len;
+  }
+  const n = pts.length;
+  const dx = pts[n - 1].x - pts[n - 2].x;
+  const dy = pts[n - 1].y - pts[n - 2].y;
+  return { x: pts[n - 1].x, y: pts[n - 1].y, angle: Math.atan2(dy, dx) };
+}
+
+function cpSvgPathD(pts: CpPt[]): string {
+  if (pts.length < 2) return "";
+  let d = `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`;
+  for (let i = 1; i < pts.length - 1; i++) {
+    const mx = ((pts[i].x + pts[i + 1].x) / 2).toFixed(1);
+    const my = ((pts[i].y + pts[i + 1].y) / 2).toFixed(1);
+    d += ` Q ${pts[i].x.toFixed(1)} ${pts[i].y.toFixed(1)} ${mx} ${my}`;
+  }
+  const last = pts[pts.length - 1];
+  d += ` L ${last.x.toFixed(1)} ${last.y.toFixed(1)}`;
+  return d;
+}
+
+function cpSplitAt(pts: CpPt[], localOff: number, total: number): { used: CpPt[]; remaining: CpPt[] } {
+  if (localOff <= 0) return { used: [], remaining: pts };
+  if (localOff >= total) return { used: pts, remaining: [] };
+  let gone = 0;
+  for (let i = 1; i < pts.length; i++) {
+    const dx = pts[i].x - pts[i - 1].x;
+    const dy = pts[i].y - pts[i - 1].y;
+    const len = Math.sqrt(dx * dx + dy * dy);
+    if (gone + len >= localOff) {
+      const t = (localOff - gone) / len;
+      const sp = { x: pts[i - 1].x + dx * t, y: pts[i - 1].y + dy * t };
+      return { used: [...pts.slice(0, i), sp], remaining: [sp, ...pts.slice(i)] };
+    }
+    gone += len;
+  }
+  return { used: pts, remaining: [] };
+}
+
+const cpMeasCanvas: HTMLCanvasElement | null = typeof document !== "undefined" ? document.createElement("canvas") : null;
+const cpMeasCtx = cpMeasCanvas?.getContext("2d") ?? null;
+
+interface CustomPathSvgProps {
   positions: Position[];
   cursor: number;
   textColor: string;
   fontFamily?: string;
   fontSize?: number;
-  customPath: { x: number; y: number }[];
+  customPath: CpPt[][];
+  onCustomPathChange?: (updater: (prev: CpPt[][]) => CpPt[][]) => void;
+  containerRef: React.RefObject<HTMLDivElement>;
+  dark?: boolean;
+  isDe?: boolean;
 }
 
-function CustomPathCanvas({
+function CustomPathSvg({
   positions,
   cursor,
   textColor,
   fontFamily = "'IBM Plex Mono', 'Courier New', monospace",
   fontSize = 20,
   customPath,
-}: CustomPathCanvasProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const wrapRef   = useRef<HTMLDivElement>(null);
+  onCustomPathChange,
+  containerRef,
+  dark = false,
+  isDe = true,
+}: CustomPathSvgProps) {
+  const svgRef = useRef<SVGSVGElement>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const [dims, setDims] = useState({ w: 0, h: 0 });
+  const [livePoints, setLivePoints] = useState<CpPt[]>([]);
+  const [isDrawing, setIsDrawing] = useState(false);
   const [cursorOn, setCursorOn] = useState(true);
-  const [size, setSize]         = useState({ w: 0, h: 0 });
+  const [fullWarn, setFullWarn] = useState(false);
+
+  const livePointsRef = useRef<CpPt[]>([]);
+  const isDrawingRef = useRef(false);
+  const dimsRef = useRef(dims);
+  const onChangeRef = useRef(onCustomPathChange);
+  useEffect(() => { dimsRef.current = dims; }, [dims]);
+  useEffect(() => { onChangeRef.current = onCustomPathChange; }, [onCustomPathChange]);
 
   useEffect(() => {
     const id = setInterval(() => setCursorOn(v => !v), 530);
@@ -951,118 +1042,281 @@ function CustomPathCanvas({
   useEffect(() => {
     const el = wrapRef.current;
     if (!el) return;
-    const ro = new ResizeObserver(entries => {
-      const { width, height } = entries[0].contentRect;
-      setSize({ w: width, h: height });
-    });
+    const update = () => {
+      const r = el.getBoundingClientRect();
+      setDims({ w: r.width, h: r.height });
+    };
+    update();
+    const ro = new ResizeObserver(update);
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+  const charW = useCallback((ch: string): number => {
+    if (!cpMeasCtx) return fontSize * 0.6;
+    cpMeasCtx.font = `${fontSize}px ${fontFamily}`;
+    return cpMeasCtx.measureText(ch).width;
+  }, [fontFamily, fontSize]);
 
-    const dpr = window.devicePixelRatio || 1;
-    const W = size.w || canvas.parentElement?.getBoundingClientRect().width || 800;
-    const H = size.h || canvas.parentElement?.getBoundingClientRect().height || 600;
-    if (!W || !H) return;
+  const { segsPx, totalLen } = useMemo(() => {
+    const segs = customPath
+      .filter(s => s.length >= 2)
+      .map(s => s.map(p => ({ x: p.x * dims.w, y: p.y * dims.h })));
+    let acc = 0;
+    const out = segs.map(pts => {
+      const len = cpSegLength(pts);
+      const r = { pts, length: len, startOffset: acc };
+      acc += len;
+      return r;
+    });
+    return { segsPx: out, totalLen: acc };
+  }, [customPath, dims.w, dims.h]);
 
-    canvas.width  = W * dpr;
-    canvas.height = H * dpr;
-    canvas.style.width  = `${W}px`;
-    canvas.style.height = `${H}px`;
-    ctx.scale(dpr, dpr);
-    ctx.clearRect(0, 0, W, H);
-
-    const [r, g, b] = parseRgb(textColor);
-    const fs = fontSize;
-    ctx.font = `${fs}px ${fontFamily}`;
-
-    if (customPath.length < 2) return;
-
-    const pathPx = customPath.map(p => ({ x: p.x * W, y: p.y * H }));
-
-    // Draw subtle guide line
-    ctx.beginPath();
-    ctx.strokeStyle = `rgba(${r},${g},${b},0.07)`;
-    ctx.lineWidth = 1.5;
-    ctx.setLineDash([3, 7]);
-    ctx.moveTo(pathPx[0].x, pathPx[0].y);
-    for (let i = 1; i < pathPx.length; i++) ctx.lineTo(pathPx[i].x, pathPx[i].y);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    // Cumulative distances
-    const cuml = [0];
-    for (let i = 1; i < pathPx.length; i++) {
-      const dx = pathPx[i].x - pathPx[i - 1].x;
-      const dy = pathPx[i].y - pathPx[i - 1].y;
-      cuml.push(cuml[i - 1] + Math.sqrt(dx * dx + dy * dy));
-    }
-    const totalLen = cuml[cuml.length - 1];
-
-    function getAtDist(d: number) {
-      d = Math.max(0, Math.min(d, totalLen));
-      for (let i = 1; i < cuml.length; i++) {
-        if (cuml[i] >= d) {
-          const t = (d - cuml[i - 1]) / (cuml[i] - cuml[i - 1]);
-          const x = pathPx[i - 1].x + t * (pathPx[i].x - pathPx[i - 1].x);
-          const y = pathPx[i - 1].y + t * (pathPx[i].y - pathPx[i - 1].y);
-          const angle = Math.atan2(pathPx[i].y - pathPx[i - 1].y, pathPx[i].x - pathPx[i - 1].x);
-          return { x, y, angle };
-        }
+  const ptAtGlobal = useCallback((offset: number): { x: number; y: number; angle: number } | null => {
+    if (totalLen === 0) return null;
+    const o = Math.max(0, Math.min(offset, totalLen));
+    for (const s of segsPx) {
+      if (o >= s.startOffset && o <= s.startOffset + s.length + 0.1) {
+        return cpPtAtDist(s.pts, Math.min(o - s.startOffset, s.length));
       }
-      const last = pathPx[pathPx.length - 1];
-      return { x: last.x, y: last.y, angle: 0 };
     }
+    const last = segsPx[segsPx.length - 1];
+    return cpPtAtDist(last.pts, last.length);
+  }, [segsPx, totalLen]);
 
-    // Build char list
-    const charInfos: { char: string; posIdx: number }[] = [];
+  const charsPlaced = useMemo(() => {
+    type Placed = { char: string; x: number; y: number; angle: number; posIdx: number };
+    const placed: Placed[] = [];
+    let off = 0;
+    let cursorOff = -1;
     for (let i = 0; i < positions.length; i++) {
-      const visChar = getVisibleChar(positions[i]);
-      const topChar = getTopChar(positions[i]);
-      const ch = visChar ?? topChar;
+      if (i === cursor) cursorOff = off;
+      const visCh = getVisibleChar(positions[i]);
+      const topCh = getTopChar(positions[i]);
+      const ch = visCh ?? topCh;
       if (ch === null) continue;
-      charInfos.push({ char: ch === "\n" ? " " : ch, posIdx: i });
-    }
-
-    // Place chars along path, track cursor distance
-    let d = 0;
-    let cursorD = -1;
-    for (let i = 0; i < charInfos.length; i++) {
-      const ci = charInfos[i];
-      const w = ctx.measureText(ci.char).width;
-      if (ci.posIdx === cursor) cursorD = d;
-      if (d <= totalLen + fs) {
-        const pt = getAtDist(d + w / 2);
-        ctx.save();
-        ctx.translate(pt.x, pt.y);
-        ctx.rotate(pt.angle);
-        ctx.fillStyle = `rgba(${r},${g},${b},1)`;
-        ctx.fillText(ci.char, -w / 2, fs * 0.35);
-        ctx.restore();
+      const display = ch === "\n" ? " " : ch;
+      const w = charW(display);
+      if (totalLen > 0 && off + w <= totalLen + fontSize && display !== " ") {
+        const pt = ptAtGlobal(off + w / 2);
+        if (pt) placed.push({ char: display, x: pt.x, y: pt.y, angle: pt.angle, posIdx: i });
       }
-      d += w;
+      off += w;
     }
-    if (cursorD < 0) cursorD = d;
+    if (cursorOff < 0) cursorOff = off;
+    return { placed, cursorOffset: cursorOff, totalCharLen: off };
+  }, [positions, cursor, totalLen, charW, fontSize, ptAtGlobal]);
 
-    if (cursorOn) {
-      const pt = getAtDist(cursorD);
-      ctx.save();
-      ctx.translate(pt.x, pt.y);
-      ctx.rotate(pt.angle);
-      ctx.fillStyle = `rgba(${r},${g},${b},0.8)`;
-      ctx.fillRect(0, -fs * 0.55, 2, fs * 1.1);
-      ctx.restore();
+  // Full-warn flash
+  const prevLenRef = useRef(positions.length);
+  useEffect(() => {
+    if (positions.length > prevLenRef.current && totalLen > 0 && charsPlaced.totalCharLen > totalLen) {
+      setFullWarn(true);
+      const id = window.setTimeout(() => setFullWarn(false), 650);
+      prevLenRef.current = positions.length;
+      return () => clearTimeout(id);
     }
-  }, [positions, cursor, textColor, fontFamily, fontSize, customPath, size, cursorOn]);
+    prevLenRef.current = positions.length;
+  }, [positions.length, totalLen, charsPlaced.totalCharLen]);
+
+  const endDraw = useCallback(() => {
+    if (!isDrawingRef.current) return;
+    isDrawingRef.current = false;
+    setIsDrawing(false);
+    const pts = livePointsRef.current;
+    livePointsRef.current = [];
+    setLivePoints([]);
+    const { w, h } = dimsRef.current;
+    if (pts.length >= 2 && cpSegLength(pts) > 5 && w > 0 && h > 0 && onChangeRef.current) {
+      let smoothed: CpPt[] = pts;
+      if (pts.length > 80) {
+        const step = pts.length / 80;
+        smoothed = [];
+        for (let i = 0; i < pts.length; i += step) smoothed.push(pts[Math.floor(i)]);
+        const last = pts[pts.length - 1];
+        if (smoothed[smoothed.length - 1] !== last) smoothed.push(last);
+      }
+      const norm = smoothed.map(p => ({ x: p.x / w, y: p.y / h }));
+      onChangeRef.current(prev => [...prev, norm]);
+    }
+    containerRef.current?.focus();
+  }, [containerRef]);
+
+  useEffect(() => {
+    const handler = () => endDraw();
+    window.addEventListener("mouseup", handler);
+    window.addEventListener("touchend", handler);
+    window.addEventListener("touchcancel", handler);
+    return () => {
+      window.removeEventListener("mouseup", handler);
+      window.removeEventListener("touchend", handler);
+      window.removeEventListener("touchcancel", handler);
+    };
+  }, [endDraw]);
+
+  const startDraw = (pt: CpPt) => {
+    containerRef.current?.focus();
+    isDrawingRef.current = true;
+    setIsDrawing(true);
+    livePointsRef.current = [pt];
+    setLivePoints([pt]);
+  };
+
+  const continueDraw = (pt: CpPt) => {
+    if (!isDrawingRef.current) return;
+    const lp = livePointsRef.current;
+    const last = lp[lp.length - 1];
+    const dx = pt.x - last.x, dy = pt.y - last.y;
+    if (dx * dx + dy * dy >= 9) {
+      const next = [...lp, pt];
+      livePointsRef.current = next;
+      setLivePoints(next);
+    }
+  };
+
+  const mouseXY = (e: React.MouseEvent<SVGSVGElement>): CpPt => {
+    const r = svgRef.current!.getBoundingClientRect();
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
+  };
+  const touchXY = (e: React.TouchEvent<SVGSVGElement>): CpPt => {
+    const r = svgRef.current!.getBoundingClientRect();
+    const t = e.touches[0];
+    return { x: t.clientX - r.left, y: t.clientY - r.top };
+  };
+
+  const usedColor   = dark ? "rgba(240,232,220,0.20)" : "rgba(85,85,85,0.20)";
+  const availColor  = dark ? "rgba(240,232,220,0.42)" : "rgba(85,85,85,0.40)";
+  const liveColor   = dark ? "rgba(240,232,220,0.60)" : "rgba(85,85,85,0.55)";
+  const hintColor   = dark ? "rgba(240,232,220,0.32)" : "rgba(85,85,85,0.30)";
+  const endColor    = dark ? "rgba(240,232,220,0.55)" : "rgba(120,110,100,0.65)";
+  const warnColor   = "#c84a3a";
+
+  const usedTotal = Math.min(charsPlaced.totalCharLen, totalLen);
+  const isFull = totalLen > 0 && charsPlaced.totalCharLen >= totalLen - fontSize * 0.4;
+  const hasContent = customPath.length > 0 || livePoints.length > 0;
+  const showHint = !hasContent && !isDrawing;
+
+  const endPt = useMemo(() => {
+    if (segsPx.length === 0) return null;
+    const last = segsPx[segsPx.length - 1].pts;
+    return last[last.length - 1] ?? null;
+  }, [segsPx]);
+
+  const cursorPt = (!isFull && totalLen > 0)
+    ? ptAtGlobal(charsPlaced.cursorOffset)
+    : null;
 
   return (
-    <div ref={wrapRef} style={{ position: "absolute", inset: 0 }}>
-      <canvas ref={canvasRef} style={{ display: "block" }} />
+    <div ref={wrapRef} style={{ position: "absolute", inset: 0, cursor: "crosshair", touchAction: "none" }}>
+      <svg
+        ref={svgRef}
+        width={dims.w}
+        height={dims.h}
+        onMouseDown={e => { if (e.button === 0) { e.preventDefault(); startDraw(mouseXY(e)); } }}
+        onMouseMove={e => { if (isDrawingRef.current) continueDraw(mouseXY(e)); }}
+        onTouchStart={e => { e.preventDefault(); startDraw(touchXY(e)); }}
+        onTouchMove={e => { e.preventDefault(); continueDraw(touchXY(e)); }}
+        style={{ display: "block", userSelect: "none" }}
+      >
+        {segsPx.map((seg, idx) => {
+          const segStart = seg.startOffset;
+          const segEnd = seg.startOffset + seg.length;
+          const segUsed = usedTotal >= segEnd ? seg.length
+                        : usedTotal <= segStart ? 0
+                        : usedTotal - segStart;
+          const { used, remaining } = cpSplitAt(seg.pts, segUsed, seg.length);
+          return (
+            <g key={idx}>
+              {used.length >= 2 && (
+                <path d={cpSvgPathD(used)} fill="none" stroke={usedColor} strokeWidth={1} strokeLinecap="round" />
+              )}
+              {remaining.length >= 2 && (
+                <path d={cpSvgPathD(remaining)} fill="none" stroke={availColor} strokeWidth={1} strokeDasharray="3 7" strokeLinecap="round" opacity={0.85} />
+              )}
+            </g>
+          );
+        })}
+
+        {livePoints.length >= 2 && (
+          <path d={cpSvgPathD(livePoints)} fill="none" stroke={liveColor} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+        )}
+
+        {charsPlaced.placed.map((c, idx) => (
+          <text
+            key={`${c.posIdx}-${idx}`}
+            transform={`translate(${c.x.toFixed(2)},${c.y.toFixed(2)}) rotate(${((c.angle * 180) / Math.PI).toFixed(2)})`}
+            fontSize={fontSize}
+            fontFamily={fontFamily}
+            fill={textColor}
+            dominantBaseline="alphabetic"
+            textAnchor="middle"
+            style={{ userSelect: "none", pointerEvents: "none" }}
+          >
+            {c.char}
+          </text>
+        ))}
+
+        {cursorPt && !isFull && cursorOn && (
+          <circle cx={cursorPt.x} cy={cursorPt.y} r={1.8} fill={textColor} opacity={0.85} />
+        )}
+
+        {endPt && isFull && (
+          <g>
+            {!fullWarn && (
+              <circle cx={endPt.x} cy={endPt.y} r={6} fill="none" stroke={endColor} strokeWidth={1} opacity={0.4}>
+                <animate attributeName="r" values="4;9;4" dur="2.2s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values="0.4;0;0.4" dur="2.2s" repeatCount="indefinite" />
+              </circle>
+            )}
+            <circle
+              cx={endPt.x} cy={endPt.y}
+              r={fullWarn ? 4 : 2.5}
+              fill={fullWarn ? warnColor : endColor}
+              opacity={fullWarn ? 0.9 : 0.65}
+              style={{ transition: "r 0.15s ease, fill 0.2s ease, opacity 0.2s ease" }}
+            />
+          </g>
+        )}
+      </svg>
+
+      {showHint && (
+        <div style={{
+          position: "absolute", inset: 0, display: "flex",
+          alignItems: "center", justifyContent: "center",
+          pointerEvents: "none", flexDirection: "column", gap: 12,
+        }}>
+          <svg width={200} height={40} viewBox="0 0 200 40" opacity={0.45}>
+            <path d="M 10 28 Q 40 10 70 24 Q 100 38 130 18 Q 160 6 190 22"
+              fill="none" stroke={hintColor} strokeWidth={1.5} strokeDasharray="3 6" strokeLinecap="round" />
+            <circle cx={190} cy={22} r={2.5} fill={hintColor}>
+              <animate attributeName="opacity" values="0.8;0;0.8" dur="1.1s" repeatCount="indefinite" />
+            </circle>
+          </svg>
+          <span style={{
+            fontFamily, fontSize: 11,
+            letterSpacing: "0.3em", textTransform: "uppercase",
+            color: hintColor,
+          }}>
+            {isDe ? "Linie zeichnen · dann tippen" : "draw a line · then type"}
+          </span>
+        </div>
+      )}
+
+      {isFull && !showHint && (
+        <div style={{
+          position: "absolute", bottom: 32, left: 0, right: 0,
+          display: "flex", justifyContent: "center", pointerEvents: "none",
+        }}>
+          <span style={{
+            fontFamily, fontSize: 11,
+            letterSpacing: "0.28em", textTransform: "uppercase",
+            color: fullWarn ? warnColor : hintColor,
+            transition: "color 0.25s ease",
+          }}>
+            {isDe ? "Zeichne weiter um fortzufahren" : "draw more to continue"}
+          </span>
+        </div>
+      )}
     </div>
   );
 }
@@ -1097,7 +1351,10 @@ export function WritingZone({
   textAppearsRandom  = false,
   randomMode         = "words" as const,
   customPathModus    = false,
-  customPath         = [] as { x: number; y: number }[],
+  customPath         = [] as { x: number; y: number }[][],
+  onCustomPathChange,
+  customPathDark     = false,
+  customPathDe       = true,
   writingPrompt      = "",
   fontSize           = 20,
   fontFamily         = "'IBM Plex Mono', 'Courier New', monospace",
@@ -1793,7 +2050,7 @@ export function WritingZone({
     );
   }
 
-  if (customPathModus && customPath.length >= 2) {
+  if (customPathModus) {
     return (
       <div
         className="flex-1 relative transition-all duration-300"
@@ -1804,17 +2061,20 @@ export function WritingZone({
           tabIndex={0}
           onKeyDown={handleKeyDown}
           onBlur={() => { selectAllRef.current = false; setSelectAll(false); }}
-          onClick={() => containerRef.current?.focus()}
-          className="absolute inset-0 outline-none cursor-text"
+          className="absolute inset-0 outline-none"
           style={{ caretColor: "transparent" }}
         >
-          <CustomPathCanvas
+          <CustomPathSvg
             positions={positions}
             cursor={cursor}
             textColor={textColor}
             fontFamily={fontFamily}
             fontSize={fontSize}
             customPath={customPath}
+            onCustomPathChange={onCustomPathChange}
+            containerRef={containerRef}
+            dark={customPathDark}
+            isDe={customPathDe}
           />
         </div>
       </div>

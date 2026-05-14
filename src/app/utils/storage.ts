@@ -26,7 +26,7 @@ export interface NewToolParams {
   verblassSchnelligkeit: number;
   positionMode: string;
   randomMode?: string;
-  drawnPath?: { x: number; y: number }[];
+  drawnPath?: { x: number; y: number }[] | { x: number; y: number }[][];
   grainLevel: number;
   textSizeLevel: number;
   bgHue: number | null;

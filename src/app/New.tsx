@@ -796,10 +796,7 @@ export default function New() {
 
   // Position params
   const [positionMode, setPositionMode] = useState<"standard" | "spiral" | "random" | "running" | "custom">("standard");
-  const [drawnPath, setDrawnPath]       = useState<{ x: number; y: number }[]>([]);
-  const [isDrawing, setIsDrawing]       = useState(false);
-  const liveDrawPxRef                   = useRef<{ x: number; y: number }[]>([]);
-  const [livePolyline, setLivePolyline] = useState("");
+  const [drawnPath, setDrawnPath]       = useState<{ x: number; y: number }[][]>([]);
 
   // Look & Feel params
   const [grainLevel, setGrainLevel]       = useState(0);
@@ -953,8 +950,14 @@ export default function New() {
       setVerblassSchnelligkeit(typeof p.verblassSchnelligkeit === "number" ? p.verblassSchnelligkeit : 3);
       setPositionMode((p.positionMode as typeof positionMode) ?? "standard");
       setRandomMode((p.randomMode as "sentences" | "words") ?? "words");
-      if (p.positionMode === "custom" && Array.isArray(p.drawnPath) && p.drawnPath.length >= 2) {
-        setDrawnPath(p.drawnPath);
+      if (p.positionMode === "custom" && Array.isArray(p.drawnPath) && p.drawnPath.length > 0) {
+        const raw = p.drawnPath as unknown as Array<{ x: number; y: number }> | Array<Array<{ x: number; y: number }>>;
+        const first = raw[0];
+        if (Array.isArray(first)) {
+          setDrawnPath(raw as { x: number; y: number }[][]);
+        } else if (first && typeof (first as { x: number }).x === "number") {
+          setDrawnPath([raw as { x: number; y: number }[]]);
+        }
       }
       setTextEditingEnabled(p.textEditingEnabled !== false); // default true
       setGrainLevel(typeof p.grainLevel === "number" ? p.grainLevel : 0);
@@ -1247,100 +1250,6 @@ export default function New() {
       )}
       {grainLevel > 0 && bgMotion && <OrganicGrainCanvas grainLevel={grainLevel} />}
 
-      {/* ── Custom path drawing overlay ──────────────────────────────────── */}
-      {positionMode === "custom" && drawnPath.length === 0 && (
-        <div
-          style={{ position: "fixed", inset: 0, zIndex: 2, cursor: "crosshair", touchAction: "none" }}
-          onMouseDown={e => {
-            const rect = e.currentTarget.getBoundingClientRect();
-            liveDrawPxRef.current = [{ x: e.clientX - rect.left, y: e.clientY - rect.top }];
-            setIsDrawing(true);
-            setLivePolyline(`${e.clientX - rect.left},${e.clientY - rect.top}`);
-          }}
-          onMouseMove={e => {
-            if (!isDrawing) return;
-            const rect = e.currentTarget.getBoundingClientRect();
-            const px = e.clientX - rect.left, py = e.clientY - rect.top;
-            const last = liveDrawPxRef.current[liveDrawPxRef.current.length - 1];
-            const dx = px - last.x, dy = py - last.y;
-            if (dx * dx + dy * dy > 16) {
-              liveDrawPxRef.current.push({ x: px, y: py });
-              setLivePolyline(liveDrawPxRef.current.map(p => `${p.x},${p.y}`).join(" "));
-            }
-          }}
-          onMouseUp={e => {
-            setIsDrawing(false);
-            const rect = e.currentTarget.getBoundingClientRect();
-            const W = rect.width, H = rect.height;
-            const raw = liveDrawPxRef.current;
-            if (raw.length > 3) {
-              // Downsample to ~80 points
-              const step = Math.max(1, Math.floor(raw.length / 80));
-              const pts = raw.filter((_, i) => i % step === 0 || i === raw.length - 1);
-              setDrawnPath(pts.map(p => ({ x: p.x / W, y: p.y / H })));
-            }
-            liveDrawPxRef.current = [];
-            setLivePolyline("");
-          }}
-          onTouchStart={e => {
-            const rect = e.currentTarget.getBoundingClientRect();
-            const t = e.touches[0];
-            liveDrawPxRef.current = [{ x: t.clientX - rect.left, y: t.clientY - rect.top }];
-            setIsDrawing(true);
-          }}
-          onTouchMove={e => {
-            e.preventDefault();
-            const rect = e.currentTarget.getBoundingClientRect();
-            const t = e.touches[0];
-            const px = t.clientX - rect.left, py = t.clientY - rect.top;
-            const last = liveDrawPxRef.current[liveDrawPxRef.current.length - 1];
-            const dx = px - last.x, dy = py - last.y;
-            if (dx * dx + dy * dy > 16) {
-              liveDrawPxRef.current.push({ x: px, y: py });
-              setLivePolyline(liveDrawPxRef.current.map(p => `${p.x},${p.y}`).join(" "));
-            }
-          }}
-          onTouchEnd={e => {
-            setIsDrawing(false);
-            const rect = e.currentTarget.getBoundingClientRect();
-            const W = rect.width, H = rect.height;
-            const raw = liveDrawPxRef.current;
-            if (raw.length > 3) {
-              const step = Math.max(1, Math.floor(raw.length / 80));
-              const pts = raw.filter((_, i) => i % step === 0 || i === raw.length - 1);
-              setDrawnPath(pts.map(p => ({ x: p.x / W, y: p.y / H })));
-            }
-            liveDrawPxRef.current = [];
-            setLivePolyline("");
-          }}
-        >
-          <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }}>
-            {livePolyline && (
-              <polyline
-                points={livePolyline}
-                fill="none"
-                stroke={dark ? "rgba(240,232,220,0.45)" : "rgba(85,85,85,0.35)"}
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            )}
-          </svg>
-          {!isDrawing && (
-            <div style={{
-              position: "absolute", inset: 0,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              pointerEvents: "none",
-              fontFamily: FONT_SANS, fontSize: "15px",
-              color: dark ? "rgba(240,232,220,0.28)" : "rgba(85,85,85,0.22)",
-              letterSpacing: "0.02em",
-            }}>
-              {DE ? "Zeichne deinen Pfad" : "Draw your path"}
-            </div>
-          )}
-        </div>
-      )}
-
       {/* ── Writing zone ─────────────────────────────────────────────────── */}
       <motion.div
         animate={{
@@ -1383,6 +1292,9 @@ export default function New() {
             textAppearsRandom={positionMode === "random"}
             customPathModus={positionMode === "custom"}
             customPath={drawnPath}
+            onCustomPathChange={setDrawnPath}
+            customPathDark={dark}
+            customPathDe={DE}
             randomMode={randomMode === "sentences" ? "sentences" : "words"}
             writingPrompt={prompts[0] || t.writingPrompt}
             fontSize={computedFontSize}

@@ -38,6 +38,7 @@ export default function App() {
       <Route path="/all-tools" element={<AllTools />} />
       <Route path="/playground" element={<Playground />} />
       <Route path="/playgroundnew" element={<PlaygroundNew />} />
+      <Route path="/playgroundnew1" element={<PlaygroundNew />} />
       <Route path="/new" element={<New />} />
     </Routes>
   );

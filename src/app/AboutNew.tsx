@@ -4,7 +4,6 @@ import { AnimatePresence, motion } from "motion/react";
 import { nodes as allNodes } from "./projects/abouttheproject/components/mindmap-data";
 
 const BG = "#fcf6ef";
-const PANEL = "#f9f1e8";
 const PANEL_DARK = "#f3ebe0";
 const INK = "#302e2c";
 const TEXT = "#555555";
@@ -16,13 +15,49 @@ const SANS = "'general-sans', 'Space Grotesk', sans-serif";
 const MONO = "'Courier Prime', 'Courier New', monospace";
 
 const CANVAS_W = 1120;
-const CANVAS_H = 2050;
+const CANVAS_H = 2140;
 
-function mapPoint(x: number, y: number) {
+const NODE_POINTS: Record<string, { x: number; y: number }> = {
+  start: { x: 560, y: 170 },
+  erste_frage: { x: 560, y: 430 },
+  erkenntnis: { x: 560, y: 710 },
+  these: { x: 560, y: 1010 },
+  experimente: { x: 560, y: 1360 },
+  projekt: { x: 560, y: 1780 },
+
+  konkrete: { x: 230, y: 315 },
+  surrealismus: { x: 890, y: 350 },
+  stream: { x: 230, y: 555 },
+
+  kognition: { x: 220, y: 650 },
+  medientheorie: { x: 235, y: 830 },
+  danger: { x: 890, y: 790 },
+
+  geschichte: { x: 230, y: 955 },
+  regeln: { x: 890, y: 1000 },
+  methode: { x: 230, y: 1140 },
+
+  tippex: { x: 235, y: 1250 },
+  version: { x: 225, y: 1390 },
+  raum3d: { x: 235, y: 1535 },
+  uninvited: { x: 890, y: 1225 },
+  unsichtbar: { x: 900, y: 1360 },
+  cursor: { x: 890, y: 1500 },
+  spirale: { x: 560, y: 1595 },
+
+  tool: { x: 330, y: 1930 },
+  behauptung: { x: 790, y: 1930 },
+};
+
+function fallbackPoint(x: number, y: number) {
   return {
     x: CANVAS_W / 2 + (y - 500) * 0.74,
     y: 150 + x * 1.16,
   };
+}
+
+function getPoint(node: { id: string; x: number; y: number }) {
+  return NODE_POINTS[node.id] ?? fallbackPoint(node.x, node.y);
 }
 
 function DottedButton({ children, onClick }: { children: React.ReactNode; onClick: () => void }) {
@@ -74,8 +109,8 @@ export default function AboutNew() {
       node.connections?.forEach((connection) => {
         const target = allNodes.find((candidate) => candidate.id === connection.to);
         if (!target || !visibleIds.has(target.id)) return;
-        const from = mapPoint(node.x, node.y);
-        const to = mapPoint(target.x, target.y);
+        const from = getPoint(node);
+        const to = getPoint(target);
         result.push({ fx: from.x, fy: from.y, tx: to.x, ty: to.y });
       });
     });
@@ -209,7 +244,7 @@ export default function AboutNew() {
             {visibleNodes.map((node) => {
               const isMain = node.nodeType === "main";
               const isActive = active === node.id;
-              const point = mapPoint(node.x, node.y);
+              const point = getPoint(node);
               return (
                 <motion.button
                   key={node.id}

@@ -44,7 +44,8 @@ function renderAscii(
   tctx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, cols, rows);
   const pixels = tctx.getImageData(0, 0, cols, rows).data;
 
-  ctx.fillStyle = "#000000";
+  // Lighter base than pure black so the resulting image reads brighter
+  ctx.fillStyle = "#2a2a2a";
   ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
   ctx.font = fontStr;
   ctx.textBaseline = "top";
@@ -60,10 +61,18 @@ function renderAscii(
     ctx.fillText(line, 0, row * charHeight);
   }
 
+  // Color overlay
   ctx.save();
   ctx.globalCompositeOperation = "screen";
-  ctx.globalAlpha = 0.2;
-  ctx.fillStyle = `hsl(${colorHue}, 75%, 55%)`;
+  ctx.globalAlpha = 0.22;
+  ctx.fillStyle = `hsl(${colorHue}, 70%, 64%)`;
+  ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+  ctx.restore();
+
+  // Final lift so the whole image is lighter
+  ctx.save();
+  ctx.globalCompositeOperation = "screen";
+  ctx.fillStyle = "rgba(255,255,255,0.26)";
   ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
   ctx.restore();
 }
@@ -89,37 +98,42 @@ export default function AsciiImagePanel({ dark, background, textColor, fontSans,
   const [hasRendered, setHasRendered] = useState(false);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [maxOffset, setMaxOffset] = useState({ x: 0, y: 0 });
-  const [brightness, setBrightness] = useState(110);
+  const [brightness, setBrightness] = useState(135);
   const [colorHue, setColorHue] = useState(() => Math.random() * 360);
   const [isPanning, setIsPanning] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [drawMode, setDrawMode] = useState(false);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const drawCanvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const colorBarRef = useRef<HTMLDivElement>(null);
   const renderTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const panRef = useRef({ sx: 0, sy: 0, ox: 0, oy: 0 });
+  const drawingRef = useRef(false);
+  const lastPtRef = useRef<{ x: number; y: number } | null>(null);
+
+  const loadImageEl = useCallback((img: HTMLImageElement) => {
+    const scale = Math.max(CANVAS_W / img.naturalWidth, CANVAS_H / img.naturalHeight);
+    const maxX = Math.max(0, img.naturalWidth * scale - CANVAS_W);
+    const maxY = Math.max(0, img.naturalHeight * scale - CANVAS_H);
+    setMaxOffset({ x: maxX, y: maxY });
+    setOffset({ x: maxX / 2, y: maxY / 2 });
+    setColorHue(Math.random() * 360);
+    setImage(img);
+    setHasRendered(false);
+  }, []);
 
   const loadImage = useCallback((file: File) => {
     if (!file.type.startsWith("image/")) return;
-
     const reader = new FileReader();
     reader.onload = (event) => {
       const img = new window.Image();
-      img.onload = () => {
-        const scale = Math.max(CANVAS_W / img.naturalWidth, CANVAS_H / img.naturalHeight);
-        const maxX = Math.max(0, img.naturalWidth * scale - CANVAS_W);
-        const maxY = Math.max(0, img.naturalHeight * scale - CANVAS_H);
-
-        setMaxOffset({ x: maxX, y: maxY });
-        setOffset({ x: maxX / 2, y: maxY / 2 });
-        setColorHue(Math.random() * 360);
-        setImage(img);
-        setHasRendered(false);
-      };
+      img.onload = () => loadImageEl(img);
       img.src = event.target?.result as string;
     };
     reader.readAsDataURL(file);
-  }, []);
+  }, [loadImageEl]);
 
   useEffect(() => {
     if (!initialImage) return;
@@ -153,6 +167,19 @@ export default function AsciiImagePanel({ dark, background, textColor, fontSans,
     };
   }, [image, offset, brightness, colorHue]);
 
+  // Prepare a blank white drawing canvas when entering draw mode
+  useEffect(() => {
+    if (!drawMode) return;
+    const c = drawCanvasRef.current;
+    if (!c) return;
+    c.width = CANVAS_W;
+    c.height = CANVAS_H;
+    const ctx = c.getContext("2d");
+    if (!ctx) return;
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+  }, [drawMode]);
+
   const canPan = maxOffset.x > 0 || maxOffset.y > 0;
 
   const handleDrop = useCallback(
@@ -169,6 +196,7 @@ export default function AsciiImagePanel({ dark, background, textColor, fontSans,
     const file = event.target.files?.[0];
     if (file) loadImage(file);
     event.target.value = "";
+    setPickerOpen(false);
   };
 
   const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -194,6 +222,68 @@ export default function AsciiImagePanel({ dark, background, textColor, fontSans,
 
   const handlePointerUp = () => setIsPanning(false);
 
+  // ── Drawing ──────────────────────────────────────────────────────────────
+  const drawPtFromEvent = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    const c = drawCanvasRef.current!;
+    const rect = c.getBoundingClientRect();
+    return {
+      x: ((event.clientX - rect.left) / rect.width) * CANVAS_W,
+      y: ((event.clientY - rect.top) / rect.height) * CANVAS_H,
+    };
+  };
+
+  const drawStrokeTo = (pt: { x: number; y: number }) => {
+    const ctx = drawCanvasRef.current?.getContext("2d");
+    if (!ctx) return;
+    const last = lastPtRef.current ?? pt;
+    ctx.strokeStyle = "#1a1a1a";
+    ctx.lineWidth = 16;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.beginPath();
+    ctx.moveTo(last.x, last.y);
+    ctx.lineTo(pt.x, pt.y);
+    ctx.stroke();
+    lastPtRef.current = pt;
+  };
+
+  const handleDrawDown = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    event.currentTarget.setPointerCapture(event.pointerId);
+    drawingRef.current = true;
+    const pt = drawPtFromEvent(event);
+    lastPtRef.current = pt;
+    drawStrokeTo(pt);
+  };
+
+  const handleDrawMove = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    if (!drawingRef.current) return;
+    drawStrokeTo(drawPtFromEvent(event));
+  };
+
+  const handleDrawUp = () => {
+    drawingRef.current = false;
+    lastPtRef.current = null;
+  };
+
+  const clearDrawing = () => {
+    const ctx = drawCanvasRef.current?.getContext("2d");
+    if (!ctx) return;
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+  };
+
+  const finishDrawing = () => {
+    const c = drawCanvasRef.current;
+    if (!c) return;
+    const img = new window.Image();
+    img.onload = () => {
+      loadImageEl(img);
+      setDrawMode(false);
+      setPickerOpen(false);
+    };
+    img.src = c.toDataURL("image/png");
+  };
+
   const updateHueFromEvent = (clientX: number) => {
     const bar = colorBarRef.current;
     if (!bar) return;
@@ -218,6 +308,17 @@ export default function AsciiImagePanel({ dark, background, textColor, fontSans,
   const sliderChars = buildSliderChars(brightness, 40, 220);
   const sliderParts = sliderChars.split("⬤");
 
+  const optionBtnStyle: React.CSSProperties = {
+    background: dark ? "rgba(240,232,220,0.06)" : "#fcf6ef",
+    border: `1px dashed ${BORDER_COL}`,
+    borderRadius: "4px",
+    color: textColor,
+    cursor: "pointer",
+    fontFamily: fontSans,
+    fontSize: "14px",
+    padding: "10px 18px",
+  };
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "14px", fontFamily: fontSans }}>
       <div
@@ -229,11 +330,12 @@ export default function AsciiImagePanel({ dark, background, textColor, fontSans,
           border: `1px dashed ${draggingFile ? textColor : BORDER_COL}`,
           borderRadius: "4px",
           overflow: "hidden",
-          cursor: image ? (isPanning ? "grabbing" : canPan ? "grab" : "default") : "pointer",
+          cursor: image ? (isPanning ? "grabbing" : canPan ? "grab" : "default") : "default",
           touchAction: "none",
         }}
-        onDrop={handleDrop}
+        onDrop={drawMode ? undefined : handleDrop}
         onDragOver={(event) => {
+          if (drawMode) return;
           event.preventDefault();
           setDraggingFile(true);
         }}
@@ -242,39 +344,70 @@ export default function AsciiImagePanel({ dark, background, textColor, fontSans,
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerUp}
-        onClick={!image ? () => fileInputRef.current?.click() : undefined}
       >
         <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFile} style={{ display: "none" }} />
 
         {image ? (
           <canvas ref={canvasRef} style={{ display: "block", width: "100%", height: "100%" }} />
-        ) : (
+        ) : drawMode ? (
+          <canvas
+            ref={drawCanvasRef}
+            onPointerDown={handleDrawDown}
+            onPointerMove={handleDrawMove}
+            onPointerUp={handleDrawUp}
+            onPointerLeave={handleDrawUp}
+            style={{ display: "block", width: "100%", height: "100%", cursor: "crosshair", touchAction: "none" }}
+          />
+        ) : pickerOpen ? (
           <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "12px",
+            }}
+          >
+            <button style={optionBtnStyle} onClick={() => fileInputRef.current?.click()}>
+              Foto hochladen
+            </button>
+            <button style={optionBtnStyle} onClick={() => setDrawMode(true)}>
+              Bild zeichnen
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setPickerOpen(true)}
             style={{
               position: "absolute",
               inset: 0,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
+              background: "transparent",
+              border: "none",
               color: textColor,
+              fontFamily: fontSans,
               fontSize: "15px",
               lineHeight: "20px",
               textAlign: "center",
-              userSelect: "none",
-              pointerEvents: "none",
+              cursor: "pointer",
             }}
           >
-            Foto hinzufügen
+            Bild hinzufügen
             <br />
             oder Drag and Drop
-          </div>
+          </button>
         )}
 
         {image && (
           <button
             onClick={(event) => {
               event.stopPropagation();
-              fileInputRef.current?.click();
+              setImage(null);
+              setPickerOpen(true);
             }}
             style={{
               position: "absolute",
@@ -294,6 +427,36 @@ export default function AsciiImagePanel({ dark, background, textColor, fontSans,
           </button>
         )}
       </div>
+
+      {drawMode && (
+        <div style={{ display: "flex", gap: "8px" }}>
+          <button style={{ ...optionBtnStyle, flex: 1, fontSize: "12px", padding: "7px 10px" }} onClick={clearDrawing}>
+            Löschen
+          </button>
+          <button
+            style={{ ...optionBtnStyle, flex: 1, fontSize: "12px", padding: "7px 10px" }}
+            onClick={() => {
+              setDrawMode(false);
+              setPickerOpen(true);
+            }}
+          >
+            Abbrechen
+          </button>
+          <button
+            style={{
+              ...optionBtnStyle,
+              flex: 1,
+              fontSize: "12px",
+              padding: "7px 10px",
+              borderStyle: "solid",
+              background: dark ? "rgba(240,232,220,0.12)" : "rgba(85,85,85,0.08)",
+            }}
+            onClick={finishDrawing}
+          >
+            Fertig
+          </button>
+        </div>
+      )}
 
       {image && (
         <>

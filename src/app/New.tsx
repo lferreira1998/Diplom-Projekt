@@ -147,6 +147,10 @@ const TRANSLATIONS = {
     copyText: "Text kopieren",
     copied: "Kopiert ✓",
     exportText: "Exportieren",
+    exportSVG: "Als SVG exportieren",
+    exportPDF: "Als PDF exportieren",
+    exportTxt: "Als .txt herunterladen",
+    exportCopy: "Text kopieren",
     // Category labels (what shows on sidebar buttons)
     catLabel: (cat: { en: string; de: string }) => cat.de,
     // Category heading in detail panel
@@ -245,6 +249,10 @@ const TRANSLATIONS = {
     copyText: "Copy text",
     copied: "Copied ✓",
     exportText: "Export",
+    exportSVG: "Export as SVG",
+    exportPDF: "Export as PDF",
+    exportTxt: "Download as .txt",
+    exportCopy: "Copy text",
     // Category labels
     catLabel: (cat: { en: string; de: string }) => cat.en,
     catHeading: (cat: { en: string; de: string }) => cat.en,
@@ -825,6 +833,7 @@ export default function New() {
   const [timerDone, setTimerDone]       = useState(false);
   const [textRevealed, setTextRevealed] = useState(false);
   const [copied, setCopied]             = useState(false);
+  const [exportOpen, setExportOpen]     = useState(false);
 
   const t: Tr = TRANSLATIONS[lang];
   const DE = lang === "de";

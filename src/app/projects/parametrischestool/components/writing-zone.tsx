@@ -1375,6 +1375,8 @@ export function WritingZone({
   const [selectAll, setSelectAll]   = useState(false);
   const selAnchorRef  = useRef<number | null>(null);
   const [selAnchor, setSelAnchor]   = useState<number | null>(null);
+  const mouseStartRef  = useRef<number | null>(null);
+  const isDraggingRef  = useRef(false);
 
   // useLayoutEffect fires synchronously after commit, before the next rAF —
   // ensures the cursor rAF loop always reads up-to-date positions/cursor.
@@ -1708,7 +1710,7 @@ export function WritingZone({
         if (selectAllRef.current) {
           selectAllRef.current = false; setSelectAll(false);
           selAnchorRef.current = null; setSelAnchor(null);
-          if (deleteMode !== "no-delete") onUpdate([], 0);
+          if (textEditingEnabled || deleteMode !== "no-delete") onUpdate([], 0);
           return;
         }
         // Delete selection range — always allowed when free editing is on
@@ -1780,42 +1782,61 @@ export function WritingZone({
     [positions, cursor, applyBackspace, onUpdate, lkpt, textEditingEnabled, deleteMode, correctionMode]
   );
 
-  // ── Click-to-cursor ───────────────────────────────────────────────────────
+  // ── Click-to-cursor / drag-select ────────────────────────────────────────
 
-  const handleClick = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      if (!textEditingEnabled) return;
-      containerRef.current?.focus();
-      const x = e.clientX;
-      const y = e.clientY;
-      let newCursor = positions.length;
-      let minDist = Infinity;
+  const posFromMouse = useCallback((x: number, y: number): number => {
+    let best = charElsRef.current.length;
+    let minDist = Infinity;
+    for (let i = 0; i < charElsRef.current.length; i++) {
+      const el = charElsRef.current[i];
+      if (!el) continue;
+      const rect = el.getBoundingClientRect();
+      const midY = rect.top + rect.height / 2;
+      const midX = rect.left + rect.width / 2;
+      const dy = Math.abs(y - midY);
+      if (dy > rect.height * 1.5) continue;
+      const dx = x < rect.left ? rect.left - x : x > rect.right ? x - rect.right : 0;
+      const dist = dx + dy * 2;
+      if (dist < minDist) { minDist = dist; best = x >= midX ? i + 1 : i; }
+    }
+    return best;
+  }, []);
 
-      for (let i = 0; i < charElsRef.current.length; i++) {
-        const el = charElsRef.current[i];
-        if (!el) continue;
-        const rect = el.getBoundingClientRect();
-        const midY = rect.top + rect.height / 2;
-        const midX = rect.left + rect.width / 2;
-        const dy = Math.abs(y - midY);
-        if (dy > rect.height * 1.5) continue;
-        const dx = x < rect.left ? rect.left - x : x > rect.right ? x - rect.right : 0;
-        const dist = dx + dy * 2;
-        if (dist < minDist) {
-          minDist = dist;
-          newCursor = x >= midX ? i + 1 : i;
-        }
-      }
+  const handleMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.button !== 0) return;
+    containerRef.current?.focus();
+    if (!textEditingEnabled) return;
+    const pos = posFromMouse(e.clientX, e.clientY);
+    mouseStartRef.current = pos;
+    isDraggingRef.current = true;
+    if (e.shiftKey) {
+      if (selAnchorRef.current === null) { selAnchorRef.current = cursor; setSelAnchor(cursor); }
+    } else {
+      selAnchorRef.current = pos;
+      setSelAnchor(pos);
+    }
+    onUpdate(positions, pos);
+  }, [positions, cursor, posFromMouse, onUpdate, textEditingEnabled]);
 
-      if (e.shiftKey) {
-        if (selAnchorRef.current === null) { selAnchorRef.current = cursor; setSelAnchor(cursor); }
-      } else {
-        selAnchorRef.current = null; setSelAnchor(null);
-      }
-      onUpdate(positions, newCursor);
-    },
-    [positions, cursor, onUpdate, textEditingEnabled]
-  );
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDraggingRef.current || !(e.buttons & 1)) { isDraggingRef.current = false; return; }
+    if (!textEditingEnabled) return;
+    const pos = posFromMouse(e.clientX, e.clientY);
+    onUpdate(positions, pos);
+  }, [positions, posFromMouse, onUpdate, textEditingEnabled]);
+
+  const handleMouseUp = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDraggingRef.current) return;
+    isDraggingRef.current = false;
+    if (!textEditingEnabled) return;
+    const pos = posFromMouse(e.clientX, e.clientY);
+    if (!e.shiftKey && pos === mouseStartRef.current) {
+      selAnchorRef.current = null;
+      setSelAnchor(null);
+    }
+    mouseStartRef.current = null;
+    onUpdate(positions, pos);
+  }, [positions, posFromMouse, onUpdate, textEditingEnabled]);
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -1999,6 +2020,7 @@ export function WritingZone({
           onKeyDown={handleKeyDown}
           onBlur={() => { selectAllRef.current = false; setSelectAll(false); }}
           onClick={() => containerRef.current?.focus()}
+          data-writing-zone="true"
           className="absolute inset-0 outline-none cursor-text"
           style={{ caretColor: "transparent" }}
         >
@@ -2025,6 +2047,7 @@ export function WritingZone({
           onKeyDown={handleKeyDown}
           onBlur={() => { selectAllRef.current = false; setSelectAll(false); }}
           onClick={() => containerRef.current?.focus()}
+          data-writing-zone="true"
           className="absolute inset-0 outline-none cursor-text"
           style={{ caretColor: "transparent" }}
         >
@@ -2059,6 +2082,7 @@ export function WritingZone({
           tabIndex={0}
           onKeyDown={handleKeyDown}
           onBlur={() => { selectAllRef.current = false; setSelectAll(false); }}
+          data-writing-zone="true"
           className="absolute inset-0 outline-none"
           style={{ caretColor: "transparent" }}
         >
@@ -2091,6 +2115,7 @@ export function WritingZone({
           onKeyDown={handleKeyDown}
           onBlur={() => { selectAllRef.current = false; setSelectAll(false); }}
           onClick={() => containerRef.current?.focus()}
+          data-writing-zone="true"
           className="absolute inset-0 outline-none cursor-text"
           style={{ caretColor: "transparent", boxShadow: selectAll ? "inset 0 0 0 2px rgba(100,130,200,0.35)" : undefined }}
         >
@@ -2143,8 +2168,11 @@ export function WritingZone({
           ref={containerRef}
           tabIndex={0}
           onKeyDown={handleKeyDown}
-          onClick={handleClick}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
           onBlur={() => { selectAllRef.current = false; setSelectAll(false); selAnchorRef.current = null; setSelAnchor(null); }}
+          data-writing-zone="true"
           className="outline-none cursor-text min-h-[60vh] relative"
           style={{
             width:        containerWidth,
@@ -2161,6 +2189,7 @@ export function WritingZone({
             transition:   "color 1s linear",
             overflow:     "visible",
             boxShadow:    selectAll ? "inset 0 0 0 2px rgba(100,130,200,0.35)" : undefined,
+            userSelect:   "none" as const,
           }}
         >
           {positions.length === 0 && !centeredPrompt && (

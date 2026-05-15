@@ -1,18 +1,49 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { useNavigate } from "react-router";
 import { deleteNewTool, getAllNewTools, type NewToolData } from "./utils/storage";
+import TopNav from "./components/TopNav";
 
-const LIGHT_BG = "#fcf6ef";
-const PANEL_BG = "#f3ebe0";
-const TOOL_BG = "#f9f1e8";
-const BORDER_COL = "#a4a4a4";
-const LIGHT_TEXT = "#555555";
-const MUTED = "#9a9daa";
-const HEADLINE_TEXT = "#302e2c";
 const FONT_SERIF = "'freight-text-pro', 'EB Garamond', Georgia, serif";
 const FONT_SANS = "'general-sans', 'Space Grotesk', sans-serif";
-const DOT_GRID = "radial-gradient(circle, rgba(164,164,164,0.7) 1px, transparent 1.2px)";
+
+type Theme = {
+  bg: string;
+  panelBg: string;
+  toolBg: string;
+  border: string;
+  text: string;
+  muted: string;
+  headline: string;
+  dotGrid: string;
+};
+
+function getTheme(dark: boolean): Theme {
+  if (dark) {
+    return {
+      bg: "#1f1e1c",
+      panelBg: "#2d2b28",
+      toolBg: "#2d2b28",
+      border: "rgba(240,232,220,0.28)",
+      text: "#f0e8dc",
+      muted: "rgba(240,232,220,0.5)",
+      headline: "#f0e8dc",
+      dotGrid: "radial-gradient(circle, rgba(240,232,220,0.16) 1px, transparent 1.2px)",
+    };
+  }
+  return {
+    bg: "#fcf6ef",
+    panelBg: "#f3ebe0",
+    toolBg: "#f9f1e8",
+    border: "#a4a4a4",
+    text: "#555555",
+    muted: "#9a9daa",
+    headline: "#302e2c",
+    dotGrid: "radial-gradient(circle, rgba(164,164,164,0.7) 1px, transparent 1.2px)",
+  };
+}
+
+const ThemeContext = createContext<Theme>(getTheme(false));
 
 function getSessionId(): string {
   const key = "diplom_session_id";
@@ -31,6 +62,7 @@ function ToolShape({ label, style, textStyle, href, video }: {
   href: string;
   video: string;
 }) {
+  const theme = useContext(ThemeContext);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPreviewing, setIsPreviewing] = useState(false);
 
@@ -78,8 +110,8 @@ function ToolShape({ label, style, textStyle, href, video }: {
       onBlur={stopPreview}
       style={{
         position: "absolute",
-        border: `1px dashed ${BORDER_COL}`,
-        color: LIGHT_TEXT,
+        border: `1px dashed ${theme.border}`,
+        color: theme.text,
         textDecoration: "none",
         boxSizing: "border-box",
         display: "flex",
@@ -89,7 +121,7 @@ function ToolShape({ label, style, textStyle, href, video }: {
         fontSize: 17,
         fontWeight: 400,
         lineHeight: "normal",
-        background: TOOL_BG,
+        background: theme.toolBg,
         overflow: "hidden",
         transformOrigin: "center",
         ...style,
@@ -134,6 +166,7 @@ function ToolShape({ label, style, textStyle, href, video }: {
 }
 
 function ToolCard({ tool, onClick, onDelete }: { tool: NewToolData; onClick: () => void; onDelete?: () => void }) {
+  const theme = useContext(ThemeContext);
   const [hovered, setHovered] = useState(false);
   const [confirming, setConfirming] = useState(false);
 
@@ -147,10 +180,10 @@ function ToolCard({ tool, onClick, onDelete }: { tool: NewToolData; onClick: () 
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={handleMouseLeave}
       style={{
-        border: `1px dashed ${hovered ? LIGHT_TEXT : BORDER_COL}`,
+        border: `1px dashed ${hovered ? theme.text : theme.border}`,
         borderRadius: "8px",
         overflow: "hidden",
-        background: LIGHT_BG,
+        background: theme.bg,
         display: "flex",
         flexDirection: "column",
         transition: "border-color 0.15s, transform 0.15s",
@@ -175,28 +208,28 @@ function ToolCard({ tool, onClick, onDelete }: { tool: NewToolData; onClick: () 
         >
           {confirming ? (
             <>
-              <span style={{ fontFamily: FONT_SANS, fontSize: "11px", color: MUTED, whiteSpace: "nowrap" }}>Löschen?</span>
+              <span style={{ fontFamily: FONT_SANS, fontSize: "11px", color: theme.muted, whiteSpace: "nowrap" }}>Löschen?</span>
               <button onClick={(event) => { event.stopPropagation(); onDelete(); }} style={{ height: "22px", padding: "0 8px", background: "rgba(180,60,60,0.12)", border: "1px dashed rgba(180,60,60,0.4)", borderRadius: "4px", cursor: "pointer", outline: "none", fontFamily: FONT_SANS, fontSize: "11px", color: "#b43c3c" }}>Ja</button>
-              <button onClick={(event) => { event.stopPropagation(); setConfirming(false); }} style={{ height: "22px", padding: "0 8px", background: "rgba(252,246,239,0.85)", border: `1px dashed ${BORDER_COL}`, borderRadius: "4px", cursor: "pointer", outline: "none", fontFamily: FONT_SANS, fontSize: "11px", color: MUTED }}>Nein</button>
+              <button onClick={(event) => { event.stopPropagation(); setConfirming(false); }} style={{ height: "22px", padding: "0 8px", background: theme.toolBg, border: `1px dashed ${theme.border}`, borderRadius: "4px", cursor: "pointer", outline: "none", fontFamily: FONT_SANS, fontSize: "11px", color: theme.muted }}>Nein</button>
             </>
           ) : (
-            <button onClick={(event) => { event.stopPropagation(); setConfirming(true); }} title="Aus meinen Tools entfernen" style={{ width: "24px", height: "24px", background: "rgba(252,246,239,0.85)", border: `1px dashed ${BORDER_COL}`, borderRadius: "50%", cursor: "pointer", outline: "none", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FONT_SANS, fontSize: "13px", color: MUTED, lineHeight: 1 }}>x</button>
+            <button onClick={(event) => { event.stopPropagation(); setConfirming(true); }} title="Aus meinen Tools entfernen" style={{ width: "24px", height: "24px", background: theme.toolBg, border: `1px dashed ${theme.border}`, borderRadius: "50%", cursor: "pointer", outline: "none", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FONT_SANS, fontSize: "13px", color: theme.muted, lineHeight: 1 }}>x</button>
           )}
         </div>
       )}
-      <div onClick={onClick} style={{ width: "100%", aspectRatio: "3 / 2", background: PANEL_BG, overflow: "hidden", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+      <div onClick={onClick} style={{ width: "100%", aspectRatio: "3 / 2", background: theme.panelBg, overflow: "hidden", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
         {tool.params.asciiImage ? (
           <img src={tool.params.asciiImage} alt={tool.name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
         ) : (
-          <span style={{ fontFamily: FONT_SERIF, fontSize: "36px", color: BORDER_COL, userSelect: "none" }}>+</span>
+          <span style={{ fontFamily: FONT_SERIF, fontSize: "36px", color: theme.border, userSelect: "none" }}>+</span>
         )}
       </div>
       <div onClick={onClick} style={{ padding: "16px 18px", display: "flex", flexDirection: "column", gap: "5px", cursor: "pointer" }}>
-        <span style={{ fontFamily: FONT_SERIF, fontSize: "19px", color: LIGHT_TEXT, lineHeight: "1.25", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+        <span style={{ fontFamily: FONT_SERIF, fontSize: "19px", color: theme.text, lineHeight: "1.25", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
           {tool.name || "Unnamed Tool"}
         </span>
         {tool.description && (
-          <span style={{ fontFamily: FONT_SANS, fontSize: "13px", color: MUTED, lineHeight: "1.45", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as const, overflow: "hidden" }}>
+          <span style={{ fontFamily: FONT_SANS, fontSize: "13px", color: theme.muted, lineHeight: "1.45", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as const, overflow: "hidden" }}>
             {tool.description}
           </span>
         )}
@@ -212,14 +245,15 @@ function Section({ title, tools, onOpen, onDelete, emptyMsg }: {
   onDelete?: (id: string) => void;
   emptyMsg: string;
 }) {
+  const theme = useContext(ThemeContext);
   return (
     <section style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-      <div style={{ display: "flex", alignItems: "baseline", gap: "12px", borderBottom: `1px dashed ${BORDER_COL}`, paddingBottom: "12px" }}>
-        <span style={{ fontFamily: FONT_SERIF, fontSize: "28px", color: LIGHT_TEXT }}>{title}</span>
-        <span style={{ fontFamily: FONT_SANS, fontSize: "13px", color: MUTED }}>{tools.length}</span>
+      <div style={{ display: "flex", alignItems: "baseline", gap: "12px", borderBottom: `1px dashed ${theme.border}`, paddingBottom: "12px" }}>
+        <span style={{ fontFamily: FONT_SERIF, fontSize: "28px", color: theme.text }}>{title}</span>
+        <span style={{ fontFamily: FONT_SANS, fontSize: "13px", color: theme.muted }}>{tools.length}</span>
       </div>
       {tools.length === 0 ? (
-        <p style={{ fontFamily: FONT_SANS, fontSize: "14px", color: MUTED, margin: 0 }}>{emptyMsg}</p>
+        <p style={{ fontFamily: FONT_SANS, fontSize: "14px", color: theme.muted, margin: 0 }}>{emptyMsg}</p>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "20px" }}>
           {tools.map((tool) => (
@@ -237,8 +271,14 @@ export default function PlaygroundNew() {
   const [tools, setTools] = useState<NewToolData[]>([]);
   const [loading, setLoading] = useState(true);
   const [lang, setLang] = useState<"de" | "en">(() => (localStorage.getItem("appLang") as "de" | "en") ?? "de");
+  const [dark, setDark] = useState<boolean>(() => localStorage.getItem("appTheme") === "dark");
 
   const DE = lang === "de";
+  const theme = getTheme(dark);
+
+  useEffect(() => {
+    localStorage.setItem("appTheme", dark ? "dark" : "light");
+  }, [dark]);
 
   useEffect(() => {
     let deletedIds: string[] = [];
@@ -286,86 +326,80 @@ export default function PlaygroundNew() {
   };
 
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        height: "100vh",
-        width: "100vw",
-        overflowX: "hidden",
-        overflowY: "auto",
-        position: "relative",
-        backgroundColor: LIGHT_BG,
-        backgroundImage: DOT_GRID,
-        backgroundSize: "42px 42px",
-        color: LIGHT_TEXT,
-        fontFamily: FONT_SANS,
-        WebkitOverflowScrolling: "touch",
-      }}
-    >
-      <style>{`
-        html, body, #root { height: 100%; overflow: hidden; }
-        .playground-tool-shape:hover .playground-tool-label,
-        .playground-tool-shape:focus-visible .playground-tool-label { opacity: 0 !important; }
-      `}</style>
-
-      <section
-        aria-label="Writing tools playground"
+    <ThemeContext.Provider value={theme}>
+      <TopNav current="Playground" dark={dark} setDark={setDark} lang={lang} setLang={setLang} />
+      <main
         style={{
-          position: "relative",
           minHeight: "100vh",
-          overflow: "hidden",
-          background: "transparent",
+          height: "100vh",
+          width: "100vw",
+          overflowX: "hidden",
+          overflowY: "auto",
+          position: "relative",
+          backgroundColor: theme.bg,
+          backgroundImage: theme.dotGrid,
+          backgroundSize: "42px 42px",
+          color: theme.text,
+          fontFamily: FONT_SANS,
+          WebkitOverflowScrolling: "touch",
         }}
       >
-        <div style={{ position: "absolute", top: 44, right: 44, zIndex: 5 }}>
-          <button
-            onClick={() => setLang((current) => { const next = current === "de" ? "en" : "de"; localStorage.setItem("appLang", next); return next; })}
-            style={{ height: 31, border: `1px dashed ${BORDER_COL}`, borderRadius: 4, background: "rgba(241,235,228,0.2)", color: LIGHT_TEXT, fontFamily: FONT_SANS, fontSize: 15, padding: "0 12px", cursor: "pointer", outline: "none" }}
-          >
-            {lang === "de" ? "DE" : "ENG"}
-          </button>
+        <style>{`
+          html, body, #root { height: 100%; overflow: hidden; }
+          .playground-tool-shape:hover .playground-tool-label,
+          .playground-tool-shape:focus-visible .playground-tool-label { opacity: 0 !important; }
+        `}</style>
+
+        <section
+          aria-label="Writing tools playground"
+          style={{
+            position: "relative",
+            minHeight: "100vh",
+            overflow: "hidden",
+            background: "transparent",
+          }}
+        >
+          <div style={{ position: "absolute", left: "50%", top: "50%", width: 1680, height: 858, transform: "translate(-50%, -50%)" }}>
+            <ToolShape label="...without stopping" href="/Diplom-Projekt/dont-stop-writing" video="without-stopping" style={{ left: 40, top: 197, width: 236, height: 233, transform: "rotate(5.1deg)", borderRadius: 200 }} textStyle={{ transform: "rotate(-5.1deg)" }} />
+            <ToolShape label="...uninvited thoughts" href="/Diplom-Projekt/uninvited-thoughts" video="uninvited-thoughts" style={{ left: 420, top: 57, width: 317, height: 155, transform: "rotate(-9.25deg)", borderRadius: 4 }} textStyle={{ transform: "rotate(9.25deg)" }} />
+            <ToolShape label="...off the grid" href="/Diplom-Projekt/off-the-grid" video="off-the-grid" style={{ left: 1220, top: 112, width: 251, height: 163, transform: "rotate(4.18deg)", borderRadius: 4, justifyContent: "flex-start", alignItems: "flex-end", padding: 12 }} textStyle={{ transform: "rotate(-4.18deg)", marginBottom: 0 }} />
+            <ToolShape label="...blind & then witness" href="/Diplom-Projekt/anonymously-in-public" video="blind-then-witness" style={{ left: 213, top: 579, width: 324, height: 163, transform: "rotate(6.45deg)", borderRadius: 100 }} textStyle={{ transform: "rotate(-6.45deg)" }} />
+            <ToolShape label="...with visible corrections" href="/Diplom-Projekt/loschen-korrigieren" video="visible-corrections" style={{ left: 774, top: 526, width: 363, height: 174, borderRadius: "40px 4px 40px 4px" }} />
+            <ToolShape label="...in a spiral" href="/Diplom-Projekt/in-a-spiral" video="in-a-spiral" style={{ left: 1321, top: 414, width: 211, height: 309, transform: "rotate(12.11deg)", borderRadius: 200 }} textStyle={{ transform: "rotate(-12.11deg)" }} />
+
+            <div style={{ position: "absolute", left: 456, top: 300, width: 768 }}>
+              <h1 style={{ margin: 0, fontFamily: FONT_SERIF, fontSize: 36, lineHeight: "45px", fontWeight: 400, color: theme.headline, textAlign: "center", whiteSpace: "nowrap" }}>
+                Writing Tools shape how we think & write.<br />
+                Explore Writing Tools that break their rules.
+              </h1>
+            </div>
+          </div>
+        </section>
+
+        <div style={{ width: "100%", boxSizing: "border-box", padding: "96px 100px 64px" }}>
+          {loading ? (
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "200px" }}>
+              <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: theme.muted }}>{DE ? "Lädt..." : "Loading..."}</span>
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "56px" }}>
+              <Section
+                title={DE ? "Meine Tools" : "My Tools"}
+                tools={myTools}
+                onOpen={openTool}
+                onDelete={handleDelete}
+                emptyMsg={DE ? "Noch keine Tools gespeichert. Erstelle eines unter /new." : "No tools saved yet. Create one at /new."}
+              />
+              <Section
+                title={DE ? "Öffentliche Tools" : "Public Tools"}
+                tools={publicTools}
+                onOpen={openTool}
+                emptyMsg={DE ? "Noch keine öffentlichen Tools vorhanden." : "No public tools yet."}
+              />
+            </div>
+          )}
         </div>
-
-        <div style={{ position: "absolute", left: "50%", top: "50%", width: 1680, height: 858, transform: "translate(-50%, -50%)" }}>
-          <ToolShape label="...without stopping" href="/Diplom-Projekt/dont-stop-writing" video="without-stopping" style={{ left: 40, top: 197, width: 236, height: 233, transform: "rotate(5.1deg)", borderRadius: 200 }} textStyle={{ transform: "rotate(-5.1deg)" }} />
-          <ToolShape label="...uninvited thoughts" href="/Diplom-Projekt/uninvited-thoughts" video="uninvited-thoughts" style={{ left: 420, top: 57, width: 317, height: 155, transform: "rotate(-9.25deg)", borderRadius: 4 }} textStyle={{ transform: "rotate(9.25deg)" }} />
-          <ToolShape label="...off the grid" href="/Diplom-Projekt/off-the-grid" video="off-the-grid" style={{ left: 1220, top: 112, width: 251, height: 163, transform: "rotate(4.18deg)", borderRadius: 4, justifyContent: "flex-start", alignItems: "flex-end", padding: 12 }} textStyle={{ transform: "rotate(-4.18deg)", marginBottom: 0 }} />
-          <ToolShape label="...blind & then witness" href="/Diplom-Projekt/anonymously-in-public" video="blind-then-witness" style={{ left: 213, top: 579, width: 324, height: 163, transform: "rotate(6.45deg)", borderRadius: 100 }} textStyle={{ transform: "rotate(-6.45deg)" }} />
-          <ToolShape label="...with visible corrections" href="/Diplom-Projekt/loschen-korrigieren" video="visible-corrections" style={{ left: 774, top: 526, width: 363, height: 174, borderRadius: "40px 4px 40px 4px" }} />
-          <ToolShape label="...in a spiral" href="/Diplom-Projekt/in-a-spiral" video="in-a-spiral" style={{ left: 1321, top: 414, width: 211, height: 309, transform: "rotate(12.11deg)", borderRadius: 200 }} textStyle={{ transform: "rotate(-12.11deg)" }} />
-
-          <div style={{ position: "absolute", left: 456, top: 300, width: 768 }}>
-            <h1 style={{ margin: 0, fontFamily: FONT_SERIF, fontSize: 36, lineHeight: "45px", fontWeight: 400, color: HEADLINE_TEXT, textAlign: "center", whiteSpace: "nowrap" }}>
-              Writing Tools shape how we think & write.<br />
-              Explore Writing Tools that break their rules.
-            </h1>
-          </div>
-        </div>
-      </section>
-
-      <div style={{ width: "100%", boxSizing: "border-box", padding: "96px 100px 64px" }}>
-        {loading ? (
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "200px" }}>
-            <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: MUTED }}>{DE ? "Lädt..." : "Loading..."}</span>
-          </div>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "56px" }}>
-            <Section
-              title={DE ? "Meine Tools" : "My Tools"}
-              tools={myTools}
-              onOpen={openTool}
-              onDelete={handleDelete}
-              emptyMsg={DE ? "Noch keine Tools gespeichert. Erstelle eines unter /new." : "No tools saved yet. Create one at /new."}
-            />
-            <Section
-              title={DE ? "Öffentliche Tools" : "Public Tools"}
-              tools={publicTools}
-              onOpen={openTool}
-              emptyMsg={DE ? "Noch keine öffentlichen Tools vorhanden." : "No public tools yet."}
-            />
-          </div>
-        )}
-      </div>
-    </main>
+      </main>
+    </ThemeContext.Provider>
   );
 }

@@ -1,18 +1,43 @@
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router";
 import { AnimatePresence, motion } from "motion/react";
 import { nodes as allNodes } from "./projects/abouttheproject/components/mindmap-data";
+import TopNav from "./components/TopNav";
 
-const BG = "#fcf6ef";
-const PANEL_DARK = "#f3ebe0";
-const INK = "#302e2c";
-const TEXT = "#555555";
-const MUTED = "#8f8f89";
-const DASH = "#a4a4a4";
-const DOT_GRID = "radial-gradient(circle, rgba(164,164,164,0.64) 1px, transparent 1.2px)";
 const SERIF = "'freight-text-pro', 'EB Garamond', Georgia, serif";
 const SANS = "'general-sans', 'Space Grotesk', sans-serif";
 const MONO = "'Courier Prime', 'Courier New', monospace";
+
+type AboutTheme = {
+  bg: string; panelBg: string; ink: string; text: string; muted: string;
+  dash: string; dotGrid: string; nodeBg: string; nodeHoverBg: string;
+  asideBg: string; bodyText: string; scrollThumb: string; headerGradient: string;
+  titleBoxBg: string;
+};
+
+function getAboutTheme(dark: boolean): AboutTheme {
+  if (dark) {
+    return {
+      bg: "#1f1e1c", panelBg: "#2d2b28", ink: "#f0e8dc", text: "#cdc6ba",
+      muted: "rgba(240,232,220,0.5)", dash: "rgba(240,232,220,0.28)",
+      dotGrid: "radial-gradient(circle, rgba(240,232,220,0.14) 1px, transparent 1.2px)",
+      nodeBg: "rgba(240,232,220,0.05)", nodeHoverBg: "rgba(240,232,220,0.1)",
+      asideBg: "rgba(36,34,31,0.96)", bodyText: "#d8d1c5",
+      scrollThumb: "rgba(240,232,220,0.22)",
+      headerGradient: "linear-gradient(180deg, rgba(31,30,28,0.96), rgba(31,30,28,0.74))",
+      titleBoxBg: "rgba(240,232,220,0.05)",
+    };
+  }
+  return {
+    bg: "#fcf6ef", panelBg: "#f3ebe0", ink: "#302e2c", text: "#555555",
+    muted: "#8f8f89", dash: "#a4a4a4",
+    dotGrid: "radial-gradient(circle, rgba(164,164,164,0.64) 1px, transparent 1.2px)",
+    nodeBg: "rgba(249,241,232,0.72)", nodeHoverBg: "rgba(243,235,224,0.82)",
+    asideBg: "rgba(249,241,232,0.94)", bodyText: "#3d3a36",
+    scrollThumb: "rgba(164,164,164,0.34)",
+    headerGradient: "linear-gradient(180deg, rgba(252,246,239,0.96), rgba(252,246,239,0.74))",
+    titleBoxBg: "rgba(249,241,232,0.52)",
+  };
+}
 
 const CANVAS_W = 1120;
 const CANVAS_H = 2260;
@@ -137,30 +162,7 @@ function getPoint(node: { id: string; x: number; y: number }) {
   return NODE_POINTS[node.id] ?? fallbackPoint(node.x, node.y);
 }
 
-function DottedButton({ children, onClick }: { children: React.ReactNode; onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        height: 38,
-        minWidth: 132,
-        padding: "0 18px",
-        border: `1px dashed ${DASH}`,
-        borderRadius: 4,
-        background: "rgba(249,241,232,0.78)",
-        color: TEXT,
-        fontFamily: SANS,
-        fontSize: 14,
-        cursor: "pointer",
-        outline: "none",
-      }}
-    >
-      {children}
-    </button>
-  );
-}
-
-function NodeImage({ photo, large }: { photo?: ArchivePhoto; large: boolean }) {
+function NodeImage({ photo, large, border, panelBg }: { photo?: ArchivePhoto; large: boolean; border: string; panelBg: string }) {
   if (!photo) return null;
 
   return (
@@ -170,10 +172,10 @@ function NodeImage({ photo, large }: { photo?: ArchivePhoto; large: boolean }) {
         width: large ? 112 : 96,
         height: large ? 58 : 42,
         margin: "0 auto 9px",
-        border: `1px dashed ${DASH}`,
+        border: `1px dashed ${border}`,
         borderRadius: large ? 8 : 6,
         overflow: "hidden",
-        background: PANEL_DARK,
+        background: panelBg,
         filter: "grayscale(1) contrast(0.92) sepia(0.12)",
         opacity: 0.86,
       }}
@@ -184,11 +186,17 @@ function NodeImage({ photo, large }: { photo?: ArchivePhoto; large: boolean }) {
 }
 
 export default function AboutNew() {
-  const navigate = useNavigate();
   const [opened, setOpened] = useState<Set<string>>(
     () => new Set(allNodes.filter((node) => node.initiallyVisible).map((node) => node.id))
   );
   const [active, setActive] = useState<string | null>(null);
+  const [dark, setDark] = useState<boolean>(() => localStorage.getItem("appTheme") === "dark");
+  const [lang, setLang] = useState<"de" | "en">(() => (localStorage.getItem("appLang") as "de" | "en") ?? "de");
+  const T = getAboutTheme(dark);
+
+  const handleSetDark = (fn: (d: boolean) => boolean) => {
+    setDark((d) => { const next = fn(d); localStorage.setItem("appTheme", next ? "dark" : "light"); return next; });
+  };
 
   const visibleIds = useMemo(() => {
     const ids = new Set<string>();
@@ -232,21 +240,23 @@ export default function AboutNew() {
         height: "100vh",
         overflow: "hidden",
         position: "relative",
-        backgroundColor: BG,
-        backgroundImage: DOT_GRID,
+        backgroundColor: T.bg,
+        backgroundImage: T.dotGrid,
         backgroundSize: "42px 42px",
-        color: TEXT,
+        color: T.text,
         fontFamily: SANS,
       }}
     >
       <style>{`
-        html, body, #root { height: 100%; overflow: hidden; background: ${BG}; }
-        .aboutnew-node:hover p { color: ${INK} !important; text-decoration: underline; text-decoration-style: dashed; text-underline-offset: 5px; }
-        .aboutnew-node:hover { border-color: ${INK} !important; background: rgba(243,235,224,0.82) !important; }
+        html, body, #root { height: 100%; overflow: hidden; background: ${T.bg}; }
+        .aboutnew-node:hover p { color: ${T.ink} !important; text-decoration: underline; text-decoration-style: dashed; text-underline-offset: 5px; }
+        .aboutnew-node:hover { border-color: ${T.ink} !important; background: ${T.nodeHoverBg} !important; }
         .aboutnew-scroll::-webkit-scrollbar { width: 10px; }
         .aboutnew-scroll::-webkit-scrollbar-track { background: transparent; }
-        .aboutnew-scroll::-webkit-scrollbar-thumb { background: rgba(164,164,164,0.34); border-radius: 999px; }
+        .aboutnew-scroll::-webkit-scrollbar-thumb { background: ${T.scrollThumb}; border-radius: 999px; }
       `}</style>
+
+      <TopNav current="About" dark={dark} setDark={handleSetDark} lang={lang} setLang={setLang} />
 
       <header
         onClick={(event) => event.stopPropagation()}
@@ -255,32 +265,30 @@ export default function AboutNew() {
           top: 0,
           left: 0,
           right: 0,
-          zIndex: 20,
+          zIndex: 10,
           display: "flex",
           alignItems: "center",
-          gap: 12,
+          justifyContent: "center",
           padding: "24px 44px 16px",
-          background: "linear-gradient(180deg, rgba(252,246,239,0.96), rgba(252,246,239,0.74))",
+          background: T.headerGradient,
           backdropFilter: "blur(6px)",
+          pointerEvents: "none",
         }}
       >
-        <DottedButton onClick={() => navigate("/")}>Zurück</DottedButton>
         <div
           style={{
-            flex: 1,
             height: 38,
-            border: `1px dashed ${DASH}`,
+            padding: "0 28px",
+            border: `1px dashed ${T.dash}`,
             borderRadius: 4,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            background: "rgba(249,241,232,0.52)",
+            background: T.titleBoxBg,
           }}
         >
-          <span style={{ fontFamily: SERIF, color: INK, fontSize: 21, lineHeight: 1 }}>Shaping Thought — Research Map</span>
+          <span style={{ fontFamily: SERIF, color: T.ink, fontSize: 21, lineHeight: 1 }}>Shaping Thought — Research Map</span>
         </div>
-        <DottedButton onClick={() => navigate("/playgroundnew1")}>Playground</DottedButton>
-        <DottedButton onClick={() => navigate("/new")}>Tool bauen</DottedButton>
       </header>
 
       <div
@@ -317,7 +325,7 @@ export default function AboutNew() {
           >
             <defs>
               <marker id="aboutnewArrow" markerWidth="10" markerHeight="10" refX="7" refY="4" orient="auto">
-                <polyline points="1,1 7,4 1,7" fill="none" stroke={DASH} strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
+                <polyline points="1,1 7,4 1,7" fill="none" stroke={T.dash} strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
               </marker>
             </defs>
             <AnimatePresence>
@@ -332,7 +340,7 @@ export default function AboutNew() {
                   y1={line.fy}
                   x2={line.tx}
                   y2={line.ty}
-                  stroke={DASH}
+                  stroke={T.dash}
                   strokeWidth={1}
                   strokeDasharray="5 8"
                   markerEnd="url(#aboutnewArrow)"
@@ -364,22 +372,22 @@ export default function AboutNew() {
                     padding: isMain ? "14px 18px" : "11px 14px",
                     minWidth: isMain ? 190 : 156,
                     maxWidth: isMain ? 246 : 208,
-                    background: isActive ? PANEL_DARK : "rgba(249,241,232,0.72)",
-                    border: `1px dashed ${isActive ? INK : DASH}`,
+                    background: isActive ? T.panelBg : T.nodeBg,
+                    border: `1px dashed ${isActive ? T.ink : T.dash}`,
                     borderRadius: isMain ? 20 : 8,
                     cursor: "pointer",
                     boxShadow: isActive ? "0 12px 38px rgba(48,46,44,0.07)" : "none",
                     transition: "background 140ms ease, border-color 140ms ease, box-shadow 140ms ease",
                   }}
                 >
-                  <NodeImage photo={photo} large={isMain} />
+                  <NodeImage photo={photo} large={isMain} border={T.dash} panelBg={T.panelBg} />
                   <p
                     style={{
                       margin: 0,
                       fontFamily: isMain ? SERIF : MONO,
                       fontSize: isMain ? 22 : 12,
                       lineHeight: isMain ? "24px" : "15px",
-                      color: isMain ? INK : TEXT,
+                      color: isMain ? T.ink : T.text,
                       textAlign: "center",
                       whiteSpace: "pre-wrap",
                       textDecoration: isActive ? "underline" : "none",
@@ -413,8 +421,8 @@ export default function AboutNew() {
               bottom: 28,
               width: 340,
               boxSizing: "border-box",
-              background: "rgba(249,241,232,0.94)",
-              border: `1px dashed ${DASH}`,
+              background: T.asideBg,
+              border: `1px dashed ${T.dash}`,
               borderRadius: 10,
               padding: "20px 22px",
               display: "flex",
@@ -430,24 +438,24 @@ export default function AboutNew() {
                 <div
                   style={{
                     height: 150,
-                    border: `1px dashed ${DASH}`,
+                    border: `1px dashed ${T.dash}`,
                     borderRadius: 8,
                     overflow: "hidden",
-                    background: PANEL_DARK,
+                    background: T.panelBg,
                     filter: "grayscale(1) contrast(0.94) sepia(0.1)",
                   }}
                 >
                   <img src={activePhoto.src} alt={activePhoto.alt} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
                 </div>
-                <p style={{ margin: "7px 0 0", fontFamily: MONO, color: MUTED, fontSize: 9, lineHeight: "13px" }}>{activePhoto.credit}</p>
+                <p style={{ margin: "7px 0 0", fontFamily: MONO, color: T.muted, fontSize: 9, lineHeight: "13px" }}>{activePhoto.credit}</p>
               </a>
             )}
 
-            <p style={{ margin: 0, fontFamily: SERIF, fontSize: 30, lineHeight: "33px", color: INK }}>
+            <p style={{ margin: 0, fontFamily: SERIF, fontSize: 30, lineHeight: "33px", color: T.ink }}>
               {activeNode.title}
             </p>
 
-            <div style={{ height: 0, borderTop: `1px dashed ${DASH}` }} />
+            <div style={{ height: 0, borderTop: `1px dashed ${T.dash}` }} />
 
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {activeNode.body.map((paragraph, index) => {
@@ -462,7 +470,7 @@ export default function AboutNew() {
                       fontFamily: isHeading ? MONO : isDash ? SANS : MONO,
                       fontSize: isHeading ? 10 : 12,
                       lineHeight: isHeading ? "14px" : "20px",
-                      color: isHeading ? MUTED : isDash ? TEXT : "#3d3a36",
+                      color: isHeading ? T.muted : isDash ? T.text : T.bodyText,
                       letterSpacing: isHeading ? "0.12em" : 0,
                       paddingLeft: isDash ? 4 : 0,
                     }}
@@ -475,9 +483,9 @@ export default function AboutNew() {
 
             {activeNode.reveals && activeNode.reveals.length > 0 && (
               <>
-                <div style={{ height: 0, borderTop: `1px dashed ${DASH}` }} />
+                <div style={{ height: 0, borderTop: `1px dashed ${T.dash}` }} />
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  <p style={{ margin: 0, fontFamily: MONO, fontSize: 10, letterSpacing: "0.12em", color: MUTED }}>
+                  <p style={{ margin: 0, fontFamily: MONO, fontSize: 10, letterSpacing: "0.12em", color: T.muted }}>
                     FÜHRT WEITER ZU
                   </p>
                   {activeNode.reveals.map((revealedId) => {
@@ -491,7 +499,7 @@ export default function AboutNew() {
                           fontFamily: target.nodeType === "main" ? SERIF : MONO,
                           fontSize: target.nodeType === "main" ? 17 : 12,
                           lineHeight: target.nodeType === "main" ? "20px" : "16px",
-                          color: target.nodeType === "main" ? INK : TEXT,
+                          color: target.nodeType === "main" ? T.ink : T.text,
                           background: "none",
                           border: "none",
                           padding: 0,

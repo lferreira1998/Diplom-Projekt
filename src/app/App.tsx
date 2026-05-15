@@ -1,7 +1,6 @@
 import { Routes, Route } from "react-router";
 import Overview from "./Overview";
 import OneWordReplay from "./OneWordReplay";
-import AboutTheProject from "./projects/abouttheproject/App";
 import AboutNew from "./AboutNew";
 import AllTools from "./AllTools";
 import DontStopWriting from "./projects/dontstop/App";
@@ -48,7 +47,7 @@ export default function App() {
       <Route path="/new-experiments/visible-corrections" element={<StyledVisibleCorrections />} />
       <Route path="/new-experiments/off-the-grid" element={<StyledOffTheGrid />} />
       <Route path="/new-experiments/in-a-spiral" element={<StyledInASpiral />} />
-      <Route path="/about-the-project" element={<AboutTheProject />} />
+      <Route path="/about-the-project" element={<AboutNew />} />
       <Route path="/aboutnew" element={<AboutNew />} />
       <Route path="/all-tools" element={<AllTools />} />
       <Route path="/playground" element={<PlaygroundNewScrollDots />} />

@@ -147,6 +147,10 @@ const TRANSLATIONS = {
     copyText: "Text kopieren",
     copied: "Kopiert ✓",
     exportText: "Exportieren",
+    exportSVG: "Als SVG exportieren",
+    exportPDF: "Als PDF exportieren",
+    exportTxt: ".txt herunterladen",
+    exportCopy: "Text kopieren",
     // Category labels (what shows on sidebar buttons)
     catLabel: (cat: { en: string; de: string }) => cat.de,
     // Category heading in detail panel
@@ -245,6 +249,10 @@ const TRANSLATIONS = {
     copyText: "Copy text",
     copied: "Copied ✓",
     exportText: "Export",
+    exportSVG: "Export as SVG",
+    exportPDF: "Export as PDF",
+    exportTxt: "Download .txt",
+    exportCopy: "Copy text",
     // Category labels
     catLabel: (cat: { en: string; de: string }) => cat.en,
     catHeading: (cat: { en: string; de: string }) => cat.en,
@@ -825,6 +833,7 @@ export default function New() {
   const [timerDone, setTimerDone]       = useState(false);
   const [textRevealed, setTextRevealed] = useState(false);
   const [copied, setCopied]             = useState(false);
+  const [exportOpen, setExportOpen]     = useState(false);
 
   const t: Tr = TRANSLATIONS[lang];
   const DE = lang === "de";
@@ -993,16 +1002,51 @@ export default function New() {
 
   const handleReveal = useCallback(() => setTextRevealed(true), []);
 
-  const handleExport = useCallback(() => {
+  const handleExportSVG = useCallback(() => {
+    const text = extractText(positions);
+    const lines = text.split("\n");
+    const lineH = 22;
+    const pad = 24;
+    const w = 600;
+    const h = lines.length * lineH + pad * 2;
+    const textRows = lines.map((l, i) =>
+      `<text x="${pad}" y="${pad + i * lineH + 14}" font-family="monospace" font-size="14" fill="#333">${l.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</text>`
+    ).join("\n");
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><rect width="100%" height="100%" fill="#fff"/>${textRows}</svg>`;
+    const blob = new Blob([svg], { type: "image/svg+xml" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `${toolName.trim() || "text"}.svg`; a.click();
+    URL.revokeObjectURL(url);
+    setExportOpen(false);
+  }, [positions, toolName]);
+
+  const handleExportPDF = useCallback(() => {
+    const text = extractText(positions);
+    const win = window.open("", "_blank");
+    if (!win) return;
+    win.document.write(`<!DOCTYPE html><html><head><title>${toolName.trim() || "text"}</title><style>body{font-family:monospace;white-space:pre-wrap;padding:40px;font-size:14px;color:#333}</style></head><body>${text.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</body></html>`);
+    win.document.close();
+    win.focus();
+    win.print();
+    setExportOpen(false);
+  }, [positions, toolName]);
+
+  const handleDownloadTxt = useCallback(() => {
     const text = extractText(positions);
     const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url;
-    a.download = `${toolName.trim() || "text"}.txt`;
-    a.click();
+    a.href = url; a.download = `${toolName.trim() || "text"}.txt`; a.click();
     URL.revokeObjectURL(url);
+    setExportOpen(false);
   }, [positions, toolName]);
+
+  const handleCopyExport = useCallback(() => {
+    const text = extractText(positions);
+    navigator.clipboard.writeText(text).catch(() => {});
+    setExportOpen(false);
+  }, [positions]);
 
   const handleSave = useCallback(async () => {
     if (!toolName.trim()) {
@@ -2347,30 +2391,75 @@ export default function New() {
         )}
       </AnimatePresence>
 
-      {/* ── Export button (bottom-right, appears once text exists) ─────── */}
+      {/* ── Export button + panel (bottom-right, appears once text exists) ── */}
       <AnimatePresence>
         {positions.length > 0 && createPortal(
-          <motion.button
-            key="export-btn"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            transition={{ duration: 0.22 }}
-            onClick={handleExport}
-            style={{
-              position: "fixed", bottom: "28px", right: "28px", zIndex: 150,
-              fontFamily: FONT_SANS, fontSize: "13px", letterSpacing: "0.04em",
-              padding: "8px 20px",
-              background: dark ? "rgba(72,64,56,0.85)" : "rgba(252,246,239,0.88)",
-              border: `1px dashed ${dark ? DARK_BORDER : BORDER_COL}`,
-              borderRadius: "100px",
-              backdropFilter: "blur(10px)",
-              color: dark ? "rgba(240,232,220,0.75)" : "#555555",
-              cursor: "pointer",
-            }}
-          >
-            {t.exportText}
-          </motion.button>,
+          <div key="export-root" style={{ position: "fixed", bottom: "28px", right: "28px", zIndex: 150, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "8px" }}>
+            <AnimatePresence>
+              {exportOpen && (
+                <motion.div
+                  key="export-panel"
+                  initial={{ opacity: 0, y: 8, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 8, scale: 0.97 }}
+                  transition={{ duration: 0.18 }}
+                  style={{
+                    display: "flex", flexDirection: "column", gap: "4px",
+                    background: dark ? "rgba(60,54,48,0.95)" : "rgba(252,246,239,0.96)",
+                    border: `1px dashed ${dark ? DARK_BORDER : BORDER_COL}`,
+                    borderRadius: "12px",
+                    backdropFilter: "blur(12px)",
+                    padding: "8px",
+                  }}
+                >
+                  {([
+                    { label: t.exportSVG,  onClick: handleExportSVG },
+                    { label: t.exportPDF,  onClick: handleExportPDF },
+                    { label: t.exportTxt,  onClick: handleDownloadTxt },
+                    { label: t.exportCopy, onClick: handleCopyExport },
+                  ] as { label: string; onClick: () => void }[]).map(({ label, onClick }) => (
+                    <button
+                      key={label}
+                      onClick={onClick}
+                      style={{
+                        fontFamily: FONT_SANS, fontSize: "13px", letterSpacing: "0.04em",
+                        padding: "7px 16px", textAlign: "left",
+                        background: "transparent",
+                        border: "none", borderRadius: "8px",
+                        color: dark ? "rgba(240,232,220,0.8)" : "#555555",
+                        cursor: "pointer",
+                        whiteSpace: "nowrap",
+                      }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)"; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+            <motion.button
+              key="export-btn"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              transition={{ duration: 0.22 }}
+              onClick={() => setExportOpen(o => !o)}
+              style={{
+                fontFamily: FONT_SANS, fontSize: "13px", letterSpacing: "0.04em",
+                padding: "8px 20px",
+                background: dark ? "rgba(72,64,56,0.85)" : "rgba(252,246,239,0.88)",
+                border: `1px dashed ${dark ? DARK_BORDER : BORDER_COL}`,
+                borderRadius: "100px",
+                backdropFilter: "blur(10px)",
+                color: dark ? "rgba(240,232,220,0.75)" : "#555555",
+                cursor: "pointer",
+              }}
+            >
+              {t.exportText}
+            </motion.button>
+          </div>,
           document.body
         )}
       </AnimatePresence>

@@ -194,7 +194,7 @@ export default function TopNav({
                 }}
               />
               <button
-                style={{ ...btnStyle(dark), position: "relative", zIndex: 1 }}
+                style={{ ...btnStyle(dark), background: dark ? "#2d2b28" : "#fcf6ef", position: "relative", zIndex: 1 }}
                 onClick={(e) => { e.stopPropagation(); setMenuOpen(o => !o); setMenuHovered(false); }}
               >
                 {menuOpen ? L.menuOpen : L.menuClosed}

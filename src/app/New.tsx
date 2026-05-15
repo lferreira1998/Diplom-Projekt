@@ -2345,7 +2345,7 @@ export default function New() {
                 }}
               />
               <button
-                style={{ ...btnStyle(dark, { background: dark ? "rgba(240,232,220,0.06)" : surfaceLight }), position: "relative", zIndex: 1 }}
+                style={{ ...btnStyle(dark, { background: dark ? "#2d2b28" : "#fcf6ef" }), position: "relative", zIndex: 1 }}
                 onClick={(e) => { e.stopPropagation(); setMenuOpen(o => !o); setMenuHovered(false); }}
               >
                 {menuOpen ? t.menuOpen : t.menuClosed}

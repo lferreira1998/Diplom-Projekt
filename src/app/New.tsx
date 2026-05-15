@@ -1588,8 +1588,12 @@ export default function New() {
                     color: ${dark ? "rgba(240,232,220,0.35)" : "rgba(85,85,85,0.38)"};
                     font-family: ${FONT_SANS};
                   }
+                  .identity-scroll::-webkit-scrollbar { width: 6px; }
+                  .identity-scroll::-webkit-scrollbar-track { background: ${sidebarBg}; }
+                  .identity-scroll::-webkit-scrollbar-thumb { background: ${dark ? "rgba(240,232,220,0.2)" : "rgba(85,85,85,0.2)"}; border-radius: 3px; }
+                  .identity-scroll { scrollbar-color: ${dark ? "rgba(240,232,220,0.2)" : "rgba(85,85,85,0.2)"} ${sidebarBg}; }
                 `}</style>
-                <div style={{ flex: 1, overflowY: "auto", padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
+                <div className="identity-scroll" style={{ flex: 1, overflowY: "auto", padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
                   <span style={{ fontFamily: FONT_SERIF, fontSize: "22px", color: dark ? DARK_TEXT : LIGHT_TEXT, lineHeight: "normal" }}>{t.identityHeading}</span>
                   <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: descColor, lineHeight: "1.45" }}>
                     {t.identitySubtitle}

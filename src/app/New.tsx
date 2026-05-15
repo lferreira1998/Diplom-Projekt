@@ -146,6 +146,7 @@ const TRANSLATIONS = {
     revealText: "Text sehen",
     copyText: "Text kopieren",
     copied: "Kopiert ✓",
+    exportText: "Exportieren",
     // Category labels (what shows on sidebar buttons)
     catLabel: (cat: { en: string; de: string }) => cat.de,
     // Category heading in detail panel
@@ -243,6 +244,7 @@ const TRANSLATIONS = {
     revealText: "Reveal text",
     copyText: "Copy text",
     copied: "Copied ✓",
+    exportText: "Export",
     // Category labels
     catLabel: (cat: { en: string; de: string }) => cat.en,
     catHeading: (cat: { en: string; de: string }) => cat.en,
@@ -990,6 +992,17 @@ export default function New() {
   }, []);
 
   const handleReveal = useCallback(() => setTextRevealed(true), []);
+
+  const handleExport = useCallback(() => {
+    const text = extractText(positions);
+    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${toolName.trim() || "text"}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [positions, toolName]);
 
   const handleSave = useCallback(async () => {
     if (!toolName.trim()) {
@@ -2330,6 +2343,34 @@ export default function New() {
               >{t.deleteText}</button>
             </div>
           </motion.div>,
+          document.body
+        )}
+      </AnimatePresence>
+
+      {/* ── Export button (bottom-right, appears once text exists) ─────── */}
+      <AnimatePresence>
+        {positions.length > 0 && createPortal(
+          <motion.button
+            key="export-btn"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.22 }}
+            onClick={handleExport}
+            style={{
+              position: "fixed", bottom: "28px", right: "28px", zIndex: 150,
+              fontFamily: FONT_SANS, fontSize: "13px", letterSpacing: "0.04em",
+              padding: "8px 20px",
+              background: dark ? "rgba(72,64,56,0.85)" : "rgba(252,246,239,0.88)",
+              border: `1px dashed ${dark ? DARK_BORDER : BORDER_COL}`,
+              borderRadius: "100px",
+              backdropFilter: "blur(10px)",
+              color: dark ? "rgba(240,232,220,0.75)" : "#555555",
+              cursor: "pointer",
+            }}
+          >
+            {t.exportText}
+          </motion.button>,
           document.body
         )}
       </AnimatePresence>

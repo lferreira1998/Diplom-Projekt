@@ -2188,20 +2188,28 @@ export default function New() {
                       </div>
                     </div>
 
-                    <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px", opacity: grainLevel === 0 ? 0.4 : 1, transition: "opacity 0.2s" }}>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
-                        <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.lfBgMotion}</span>
-                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                          <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: descColor }}>{bgMotion && grainLevel > 0 ? t.on : t.off}</span>
-                          <ToggleBtn on={bgMotion && grainLevel > 0} onToggle={() => { if (grainLevel > 0) setBgMotion(v => !v); }} dark={dark} />
-                        </div>
-                      </div>
-                      {grainLevel === 0 && (
-                        <p style={{ fontFamily: FONT_SANS, fontSize: "12px", color: descColor, margin: "0 0 4px", lineHeight: "1.4" }}>
-                          {DE ? "Körnung aktivieren um Bewegung hinzuzufügen" : "Enable grain to add motion"}
-                        </p>
+                    <AnimatePresence>
+                      {grainLevel > 0 && (
+                        <motion.div
+                          key="bgmotion-card"
+                          initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                          animate={{ opacity: 1, height: "auto", marginTop: 0 }}
+                          exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                          transition={{ duration: 0.22, ease: "easeInOut" }}
+                          style={{ overflow: "hidden" }}
+                        >
+                          <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px" }}>
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
+                              <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.lfBgMotion}</span>
+                              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                                <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: descColor }}>{bgMotion ? t.on : t.off}</span>
+                                <ToggleBtn on={bgMotion} onToggle={() => setBgMotion(v => !v)} dark={dark} />
+                              </div>
+                            </div>
+                          </div>
+                        </motion.div>
                       )}
-                    </div>
+                    </AnimatePresence>
 
                     <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
                       <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.lfBgColor}</span>

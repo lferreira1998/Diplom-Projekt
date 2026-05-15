@@ -2392,68 +2392,72 @@ export default function New() {
       </AnimatePresence>
 
       {/* ── Export button + panel (bottom-right, appears once text exists) ── */}
-      <AnimatePresence>
-        {positions.length > 0 && createPortal(
-          <div key="export-root" style={{ position: "fixed", bottom: "28px", right: "28px", zIndex: 150, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "8px" }}>
-            <AnimatePresence>
-              {exportOpen && (
-                <motion.div
-                  key="export-panel"
-                  initial={{ opacity: 0, y: 8, scale: 0.97 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 8, scale: 0.97 }}
-                  transition={{ duration: 0.18 }}
-                  style={{
-                    display: "flex", flexDirection: "column", gap: "4px",
-                    background: dark ? "rgba(60,54,48,0.95)" : "rgba(252,246,239,0.96)",
-                    border: `1px dashed ${dark ? DARK_BORDER : BORDER_COL}`,
-                    borderRadius: "12px",
-                    backdropFilter: "blur(12px)",
-                    padding: "8px",
-                  }}
-                >
-                  {([
-                    { label: t.exportSVG,  onClick: handleExportSVG },
-                    { label: t.exportPDF,  onClick: handleExportPDF },
-                    { label: t.exportTxt,  onClick: handleDownloadTxt },
-                    { label: t.exportCopy, onClick: handleCopyExport },
-                  ] as { label: string; onClick: () => void }[]).map(({ label, onClick }) => (
-                    <button
-                      key={label}
-                      onClick={onClick}
-                      style={{
-                        fontFamily: FONT_SANS, fontSize: "13px", letterSpacing: "0.04em",
-                        padding: "7px 16px", textAlign: "left",
-                        background: "transparent",
-                        border: "none", borderRadius: "8px",
-                        color: dark ? "rgba(240,232,220,0.8)" : "#555555",
-                        cursor: "pointer",
-                        whiteSpace: "nowrap",
-                      }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)"; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
-            <motion.button
-              key="export-btn"
+      {createPortal(
+        <AnimatePresence>
+          {positions.length > 0 && (
+            <motion.div
+              key="export-root"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
               transition={{ duration: 0.22 }}
-              onClick={() => setExportOpen(o => !o)}
-              style={btnStyle(dark, { backdropFilter: "blur(10px)" }, surfaceLight)}
+              style={{ position: "fixed", bottom: "28px", right: "28px", zIndex: 150, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "8px" }}
             >
-              {t.exportText}
-            </motion.button>
-          </div>,
-          document.body
-        )}
-      </AnimatePresence>
+              <AnimatePresence>
+                {exportOpen && (
+                  <motion.div
+                    key="export-panel"
+                    initial={{ opacity: 0, y: 8, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.97 }}
+                    transition={{ duration: 0.18 }}
+                    style={{
+                      display: "flex", flexDirection: "column", gap: "4px",
+                      background: dark ? "rgba(60,54,48,0.95)" : "rgba(252,246,239,0.96)",
+                      border: `1px dashed ${dark ? DARK_BORDER : BORDER_COL}`,
+                      borderRadius: "12px",
+                      backdropFilter: "blur(12px)",
+                      padding: "8px",
+                    }}
+                  >
+                    {([
+                      { label: t.exportSVG,  onClick: handleExportSVG },
+                      { label: t.exportPDF,  onClick: handleExportPDF },
+                      { label: t.exportTxt,  onClick: handleDownloadTxt },
+                      { label: t.exportCopy, onClick: handleCopyExport },
+                    ] as { label: string; onClick: () => void }[]).map(({ label, onClick }) => (
+                      <button
+                        key={label}
+                        onClick={onClick}
+                        style={{
+                          fontFamily: FONT_SANS, fontSize: "13px", letterSpacing: "0.04em",
+                          padding: "7px 16px", textAlign: "left",
+                          background: "transparent",
+                          border: "none", borderRadius: "8px",
+                          color: dark ? "rgba(240,232,220,0.8)" : "#555555",
+                          cursor: "pointer",
+                          whiteSpace: "nowrap",
+                        }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)"; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              <button
+                onClick={() => setExportOpen(o => !o)}
+                style={btnStyle(dark, { backdropFilter: "blur(10px)" }, surfaceLight)}
+              >
+                {t.exportText}
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   );
 }

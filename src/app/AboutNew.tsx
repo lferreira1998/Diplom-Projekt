@@ -15,38 +15,115 @@ const SANS = "'general-sans', 'Space Grotesk', sans-serif";
 const MONO = "'Courier Prime', 'Courier New', monospace";
 
 const CANVAS_W = 1120;
-const CANVAS_H = 2140;
+const CANVAS_H = 2260;
 
 const NODE_POINTS: Record<string, { x: number; y: number }> = {
-  start: { x: 560, y: 170 },
-  erste_frage: { x: 560, y: 430 },
-  erkenntnis: { x: 560, y: 710 },
-  these: { x: 560, y: 1010 },
-  experimente: { x: 560, y: 1360 },
-  projekt: { x: 560, y: 1780 },
+  start: { x: 560, y: 180 },
+  erste_frage: { x: 560, y: 470 },
+  erkenntnis: { x: 560, y: 790 },
+  these: { x: 560, y: 1130 },
+  experimente: { x: 560, y: 1500 },
+  projekt: { x: 560, y: 1910 },
 
-  konkrete: { x: 230, y: 315 },
-  surrealismus: { x: 890, y: 350 },
-  stream: { x: 230, y: 555 },
+  konkrete: { x: 230, y: 330 },
+  surrealismus: { x: 890, y: 380 },
+  stream: { x: 230, y: 630 },
 
-  kognition: { x: 220, y: 650 },
-  medientheorie: { x: 235, y: 830 },
-  danger: { x: 890, y: 790 },
+  kognition: { x: 220, y: 720 },
+  medientheorie: { x: 235, y: 920 },
+  danger: { x: 890, y: 880 },
 
-  geschichte: { x: 230, y: 955 },
-  regeln: { x: 890, y: 1000 },
-  methode: { x: 230, y: 1140 },
+  geschichte: { x: 230, y: 1080 },
+  regeln: { x: 890, y: 1135 },
+  methode: { x: 230, y: 1260 },
 
-  tippex: { x: 235, y: 1250 },
-  version: { x: 225, y: 1390 },
-  raum3d: { x: 235, y: 1535 },
-  uninvited: { x: 890, y: 1225 },
-  unsichtbar: { x: 900, y: 1360 },
-  cursor: { x: 890, y: 1500 },
-  spirale: { x: 560, y: 1595 },
+  tippex: { x: 235, y: 1390 },
+  version: { x: 225, y: 1545 },
+  raum3d: { x: 235, y: 1700 },
+  uninvited: { x: 890, y: 1365 },
+  unsichtbar: { x: 900, y: 1520 },
+  cursor: { x: 890, y: 1675 },
+  spirale: { x: 560, y: 1780 },
 
-  tool: { x: 330, y: 1930 },
-  behauptung: { x: 790, y: 1930 },
+  tool: { x: 330, y: 2090 },
+  behauptung: { x: 790, y: 2090 },
+};
+
+type ArchivePhoto = {
+  src: string;
+  alt: string;
+  credit: string;
+  source: string;
+};
+
+function commonsFile(file: string, width = 560) {
+  return `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file)}?width=${width}`;
+}
+
+const PHOTOS = {
+  automaticWriting: {
+    src: commonsFile("Automatic Writing.jpg"),
+    alt: "Automatic writing manuscript",
+    credit: "Wikimedia Commons / Automatic Writing.jpg",
+    source: "https://commons.wikimedia.org/wiki/File:Automatic_Writing.jpg",
+  },
+  automaticDrawing: {
+    src: commonsFile("Dibujo automático.jpg"),
+    alt: "Automatic drawing",
+    credit: "Wikimedia Commons / Dibujo automático.jpg",
+    source: "https://commons.wikimedia.org/wiki/File:Dibujo_autom%C3%A1tico.jpg",
+  },
+  woolf: {
+    src: commonsFile("VirginiaWoolf.jpg"),
+    alt: "Portrait of Virginia Woolf",
+    credit: "Wikimedia Commons / George Charles Beresford",
+    source: "https://commons.wikimedia.org/wiki/File:VirginiaWoolf.jpg",
+  },
+  xerox: {
+    src: commonsFile("Xerox Alto computer.jpg"),
+    alt: "Xerox Alto computer",
+    credit: "Wikimedia Commons / Xerox Alto computer.jpg",
+    source: "https://commons.wikimedia.org/wiki/File:Xerox_Alto_computer.jpg",
+  },
+  typewriter: {
+    src: commonsFile("Old typewriter analog keyboard closeup.jpg"),
+    alt: "Old typewriter keyboard closeup",
+    credit: "Wikimedia Commons / Nenad Stojković",
+    source: "https://commons.wikimedia.org/wiki/File:Old_typewriter_analog_keyboard_closeup.jpg",
+  },
+  keyboard: {
+    src: commonsFile("Woodstock typewriter, 1940s, daylight - keyboard.jpg"),
+    alt: "Woodstock typewriter keyboard",
+    credit: "Wikimedia Commons / Cbaile19, CC0",
+    source: "https://commons.wikimedia.org/wiki/File:Woodstock_typewriter,_1940s,_daylight_-_keyboard.jpg",
+  },
+} satisfies Record<string, ArchivePhoto>;
+
+const NODE_PHOTOS: Record<string, ArchivePhoto> = {
+  start: PHOTOS.automaticWriting,
+  erste_frage: PHOTOS.automaticDrawing,
+  konkrete: PHOTOS.keyboard,
+  surrealismus: PHOTOS.automaticWriting,
+  stream: PHOTOS.woolf,
+  erkenntnis: PHOTOS.xerox,
+  kognition: PHOTOS.typewriter,
+  medientheorie: PHOTOS.xerox,
+  danger: PHOTOS.automaticWriting,
+  these: PHOTOS.typewriter,
+  geschichte: PHOTOS.xerox,
+  regeln: PHOTOS.keyboard,
+  methode: PHOTOS.automaticDrawing,
+  experimente: PHOTOS.typewriter,
+  uninvited: PHOTOS.automaticDrawing,
+  unsichtbar: PHOTOS.automaticWriting,
+  cursor: PHOTOS.keyboard,
+  tippex: PHOTOS.typewriter,
+  version: PHOTOS.automaticWriting,
+  raum3d: PHOTOS.automaticDrawing,
+  spirale: PHOTOS.automaticDrawing,
+  projekt: PHOTOS.xerox,
+  tool: PHOTOS.xerox,
+  behauptung: PHOTOS.typewriter,
 };
 
 function fallbackPoint(x: number, y: number) {
@@ -83,6 +160,29 @@ function DottedButton({ children, onClick }: { children: React.ReactNode; onClic
   );
 }
 
+function NodeImage({ photo, large }: { photo?: ArchivePhoto; large: boolean }) {
+  if (!photo) return null;
+
+  return (
+    <span
+      style={{
+        display: "block",
+        width: large ? 112 : 96,
+        height: large ? 58 : 42,
+        margin: "0 auto 9px",
+        border: `1px dashed ${DASH}`,
+        borderRadius: large ? 8 : 6,
+        overflow: "hidden",
+        background: PANEL_DARK,
+        filter: "grayscale(1) contrast(0.92) sepia(0.12)",
+        opacity: 0.86,
+      }}
+    >
+      <img src={photo.src} alt="" loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+    </span>
+  );
+}
+
 export default function AboutNew() {
   const navigate = useNavigate();
   const [opened, setOpened] = useState<Set<string>>(
@@ -102,6 +202,7 @@ export default function AboutNew() {
 
   const visibleNodes = allNodes.filter((node) => visibleIds.has(node.id));
   const activeNode = active ? allNodes.find((node) => node.id === active) ?? null : null;
+  const activePhoto = activeNode ? NODE_PHOTOS[activeNode.id] : undefined;
 
   const lines = useMemo(() => {
     const result: { fx: number; fy: number; tx: number; ty: number }[] = [];
@@ -245,6 +346,7 @@ export default function AboutNew() {
               const isMain = node.nodeType === "main";
               const isActive = active === node.id;
               const point = getPoint(node);
+              const photo = NODE_PHOTOS[node.id];
               return (
                 <motion.button
                   key={node.id}
@@ -259,17 +361,18 @@ export default function AboutNew() {
                     left: point.x,
                     top: point.y,
                     transform: "translate(-50%, -50%)",
-                    padding: isMain ? "15px 18px" : "12px 14px",
-                    minWidth: isMain ? 170 : 132,
-                    maxWidth: isMain ? 230 : 190,
-                    background: isActive ? PANEL_DARK : "rgba(249,241,232,0.68)",
+                    padding: isMain ? "14px 18px" : "11px 14px",
+                    minWidth: isMain ? 190 : 156,
+                    maxWidth: isMain ? 246 : 208,
+                    background: isActive ? PANEL_DARK : "rgba(249,241,232,0.72)",
                     border: `1px dashed ${isActive ? INK : DASH}`,
-                    borderRadius: isMain ? 999 : 8,
+                    borderRadius: isMain ? 20 : 8,
                     cursor: "pointer",
                     boxShadow: isActive ? "0 12px 38px rgba(48,46,44,0.07)" : "none",
                     transition: "background 140ms ease, border-color 140ms ease, box-shadow 140ms ease",
                   }}
                 >
+                  <NodeImage photo={photo} large={isMain} />
                   <p
                     style={{
                       margin: 0,
@@ -308,7 +411,7 @@ export default function AboutNew() {
               top: 94,
               right: 44,
               bottom: 28,
-              width: 320,
+              width: 340,
               boxSizing: "border-box",
               background: "rgba(249,241,232,0.94)",
               border: `1px dashed ${DASH}`,
@@ -322,6 +425,24 @@ export default function AboutNew() {
               backdropFilter: "blur(8px)",
             }}
           >
+            {activePhoto && (
+              <a href={activePhoto.source} target="_blank" rel="noreferrer" style={{ color: "inherit", textDecoration: "none" }}>
+                <div
+                  style={{
+                    height: 150,
+                    border: `1px dashed ${DASH}`,
+                    borderRadius: 8,
+                    overflow: "hidden",
+                    background: PANEL_DARK,
+                    filter: "grayscale(1) contrast(0.94) sepia(0.1)",
+                  }}
+                >
+                  <img src={activePhoto.src} alt={activePhoto.alt} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                </div>
+                <p style={{ margin: "7px 0 0", fontFamily: MONO, color: MUTED, fontSize: 9, lineHeight: "13px" }}>{activePhoto.credit}</p>
+              </a>
+            )}
+
             <p style={{ margin: 0, fontFamily: SERIF, fontSize: 30, lineHeight: "33px", color: INK }}>
               {activeNode.title}
             </p>

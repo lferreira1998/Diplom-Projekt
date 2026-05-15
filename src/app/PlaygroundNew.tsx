@@ -383,13 +383,15 @@ export default function PlaygroundNew() {
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: "56px" }}>
-              <Section
-                title={DE ? "Meine Tools" : "My Tools"}
-                tools={myTools}
-                onOpen={openTool}
-                onDelete={handleDelete}
-                emptyMsg={DE ? "Noch keine Tools gespeichert. Erstelle eines unter /new." : "No tools saved yet. Create one at /new."}
-              />
+              {myTools.length > 0 && (
+                <Section
+                  title={DE ? "Meine Tools" : "My Tools"}
+                  tools={myTools}
+                  onOpen={openTool}
+                  onDelete={handleDelete}
+                  emptyMsg=""
+                />
+              )}
               <Section
                 title={DE ? "Öffentliche Tools" : "Public Tools"}
                 tools={publicTools}

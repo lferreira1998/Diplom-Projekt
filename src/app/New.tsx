@@ -1424,7 +1424,7 @@ export default function New() {
           >
             <AnimatePresence mode="wait">
               {rulesOpen ? (
-                <motion.span key="x" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.1 }} style={{ fontSize: "18px", lineHeight: "1" }}>×</motion.span>
+                <motion.span key="x" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.1 }} style={{ fontFamily: FONT_SANS, fontSize: "16px", fontWeight: 400, lineHeight: "1" }}>x</motion.span>
               ) : (
                 <motion.span key="r" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.1 }} style={{ fontSize: "15px", fontWeight: 400 }}>{t.rulesBtn}</motion.span>
               )}

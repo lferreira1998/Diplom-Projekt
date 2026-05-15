@@ -1092,6 +1092,7 @@ export default function New() {
         ? await updateNewTool(currentToolId, toolName, toolDescription, params)
         : await saveNewTool(toolName, toolDescription, params);
       if (!currentToolId) setCurrentToolId(id);
+      localStorage.setItem("hasCreatedTool", "1");
       setSavedId(id);
     } catch {
       setSaveError(lang === "de" ? "Fehler beim Speichern. Bitte erneut versuchen." : "Error saving. Please try again.");
@@ -1601,7 +1602,7 @@ export default function New() {
                       {t.nameHint}
                     </span>
                     <div style={{ border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "10px 14px", background: settingsCardBg }}>
-                      <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? "rgba(240,232,220,0.38)" : "rgba(85,85,85,0.38)" }}>
+                      <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : "#313642" }}>
                         Write and think&hellip;
                       </span>
                     </div>

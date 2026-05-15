@@ -14,9 +14,15 @@ const ROUTES: Record<string, string> = {
 };
 
 const LABELS = {
-  de: { Create: "Erstellen", Playground: "Playground", About: "Über das Projekt", menuClosed: "Menü", menuOpen: "Schließen", lang: "DE" },
-  en: { Create: "Create", Playground: "Playground", About: "About", menuClosed: "Menu", menuOpen: "Close", lang: "ENG" },
+  de: { Create: "Erstellen", Playground: "Playground", About: "Über das Projekt", MyTools: "My Tools", menuClosed: "Menü", menuOpen: "Schließen", lang: "DE" },
+  en: { Create: "Create", Playground: "Playground", About: "About", MyTools: "My Tools", menuClosed: "Menu", menuOpen: "Close", lang: "ENG" },
 };
+
+function hasMyTools(): boolean {
+  if (localStorage.getItem("hasCreatedTool") === "1") return true;
+  try { return (JSON.parse(localStorage.getItem("favoriteToolIds") ?? "[]") as string[]).length > 0; }
+  catch { return false; }
+}
 
 const NAV_CONTAINER = {
   hidden: {},
@@ -219,6 +225,18 @@ export default function TopNav({
                         }}
                       >{L[key]}</motion.button>
                     ))}
+                    {hasMyTools() && (
+                      <motion.button
+                        key="MyTools"
+                        variants={NAV_ITEM}
+                        style={navItemStyle(dark, false)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setMenuOpen(false);
+                          navigate("/playground#my-tools");
+                        }}
+                      >{L.MyTools}</motion.button>
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>

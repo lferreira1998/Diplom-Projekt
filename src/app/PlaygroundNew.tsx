@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useLocation } from "react-router";
 import { deleteNewTool, getAllNewTools, type NewToolData } from "./utils/storage";
 import TopNav from "./components/TopNav";
 
@@ -64,7 +64,7 @@ function ToolShape({ label, style, textStyle, href, video }: {
 }) {
   const theme = useContext(ThemeContext);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [isPreviewing, setIsPreviewing] = useState(false);
+  const [hovered, setHovered] = useState(false);
 
   function prepareVideo(target: HTMLVideoElement) {
     target.muted = true;
@@ -73,41 +73,24 @@ function ToolShape({ label, style, textStyle, href, video }: {
     if (target.readyState === 0) target.load();
   }
 
-  function playPreview() {
-    setIsPreviewing(true);
+  // Autoplay the video by default, on mount
+  useEffect(() => {
     const target = videoRef.current;
     if (!target) return;
     prepareVideo(target);
-    try {
-      if (target.readyState > 0) target.currentTime = 0;
-    } catch {
-      // Browser may block seeking before metadata is ready.
-    }
     const play = () => target.play().catch(() => undefined);
     play();
     if (target.readyState < 2) target.addEventListener("canplay", play, { once: true });
-  }
-
-  function stopPreview() {
-    setIsPreviewing(false);
-    const target = videoRef.current;
-    if (!target) return;
-    target.pause();
-    try {
-      if (target.readyState > 0) target.currentTime = 0;
-    } catch {
-      // Browser may block seeking before metadata is ready.
-    }
-  }
+  }, []);
 
   return (
     <a
       className="playground-tool-shape"
       href={href}
-      onPointerEnter={playPreview}
-      onPointerLeave={stopPreview}
-      onFocus={playPreview}
-      onBlur={stopPreview}
+      onPointerEnter={() => setHovered(true)}
+      onPointerLeave={() => setHovered(false)}
+      onFocus={() => setHovered(true)}
+      onBlur={() => setHovered(false)}
       style={{
         position: "absolute",
         border: `1px dashed ${theme.border}`,
@@ -140,7 +123,7 @@ function ToolShape({ label, style, textStyle, href, video }: {
           width: "100%",
           height: "100%",
           objectFit: "cover",
-          opacity: isPreviewing ? 1 : 0,
+          opacity: hovered ? 0 : 1,
           transition: "opacity 120ms ease",
           pointerEvents: "none",
           transform: "translateZ(0)",
@@ -155,6 +138,7 @@ function ToolShape({ label, style, textStyle, href, video }: {
         style={{
           position: "relative",
           zIndex: 1,
+          opacity: hovered ? 1 : 0,
           transition: "opacity 120ms ease",
           ...textStyle,
         }}
@@ -165,7 +149,21 @@ function ToolShape({ label, style, textStyle, href, video }: {
   );
 }
 
-function ToolCard({ tool, onClick, onDelete }: { tool: NewToolData; onClick: () => void; onDelete?: () => void }) {
+function HeartIcon({ filled, color }: { filled: boolean; color: string }) {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill={filled ? color : "none"} stroke={color} strokeWidth="2" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 21s-7.5-4.6-10-9.5C.5 8 2 4 6 4c2.5 0 4 1.7 4.5 3 .5-1.3 2-3 4.5-3 4 0 5.5 4 4 7.5C19.5 16.4 12 21 12 21z" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function ToolCard({ tool, onClick, onDelete, isFavorite, onToggleFavorite }: {
+  tool: NewToolData;
+  onClick: () => void;
+  onDelete?: () => void;
+  isFavorite?: boolean;
+  onToggleFavorite?: () => void;
+}) {
   const theme = useContext(ThemeContext);
   const [hovered, setHovered] = useState(false);
   const [confirming, setConfirming] = useState(false);
@@ -217,6 +215,30 @@ function ToolCard({ tool, onClick, onDelete }: { tool: NewToolData; onClick: () 
           )}
         </div>
       )}
+      {onToggleFavorite && (
+        <button
+          onClick={(event) => { event.stopPropagation(); onToggleFavorite(); }}
+          title={isFavorite ? "Aus My Tools entfernen" : "Zu My Tools hinzufügen"}
+          style={{
+            position: "absolute",
+            top: "8px",
+            right: "8px",
+            zIndex: 2,
+            width: "28px",
+            height: "28px",
+            background: theme.toolBg,
+            border: `1px dashed ${theme.border}`,
+            borderRadius: "50%",
+            cursor: "pointer",
+            outline: "none",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <HeartIcon filled={!!isFavorite} color={isFavorite ? "#d4607a" : theme.muted} />
+        </button>
+      )}
       <div onClick={onClick} style={{ width: "100%", aspectRatio: "3 / 2", background: theme.panelBg, overflow: "hidden", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
         {tool.params.asciiImage ? (
           <img src={tool.params.asciiImage} alt={tool.name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
@@ -238,12 +260,15 @@ function ToolCard({ tool, onClick, onDelete }: { tool: NewToolData; onClick: () 
   );
 }
 
-function Section({ title, tools, onOpen, onDelete, emptyMsg }: {
+function Section({ title, tools, onOpen, onDelete, emptyMsg, sessionId, favorites, onToggleFavorite }: {
   title: string;
   tools: NewToolData[];
   onOpen: (id: string) => void;
   onDelete?: (id: string) => void;
   emptyMsg: string;
+  sessionId: string;
+  favorites?: string[];
+  onToggleFavorite?: (id: string) => void;
 }) {
   const theme = useContext(ThemeContext);
   return (
@@ -256,9 +281,19 @@ function Section({ title, tools, onOpen, onDelete, emptyMsg }: {
         <p style={{ fontFamily: FONT_SANS, fontSize: "14px", color: theme.muted, margin: 0 }}>{emptyMsg}</p>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "20px" }}>
-          {tools.map((tool) => (
-            <ToolCard key={tool.id} tool={tool} onClick={() => onOpen(tool.id)} onDelete={onDelete ? () => onDelete(tool.id) : undefined} />
-          ))}
+          {tools.map((tool) => {
+            const owned = tool.params.sessionId === sessionId;
+            return (
+              <ToolCard
+                key={tool.id}
+                tool={tool}
+                onClick={() => onOpen(tool.id)}
+                onDelete={owned && onDelete ? () => onDelete(tool.id) : undefined}
+                isFavorite={favorites?.includes(tool.id)}
+                onToggleFavorite={!owned && onToggleFavorite ? () => onToggleFavorite(tool.id) : undefined}
+              />
+            );
+          })}
         </div>
       )}
     </section>
@@ -267,14 +302,30 @@ function Section({ title, tools, onOpen, onDelete, emptyMsg }: {
 
 export default function PlaygroundNew() {
   const navigate = useNavigate();
+  const location = useLocation();
   const sessionId = useMemo(() => getSessionId(), []);
   const [tools, setTools] = useState<NewToolData[]>([]);
   const [loading, setLoading] = useState(true);
   const [lang, setLang] = useState<"de" | "en">(() => (localStorage.getItem("appLang") as "de" | "en") ?? "de");
   const [dark, setDark] = useState<boolean>(() => localStorage.getItem("appTheme") === "dark");
+  const [favorites, setFavorites] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem("favoriteToolIds") ?? "[]") as string[]; }
+    catch { return []; }
+  });
+
+  const toolsRef = useRef<HTMLDivElement>(null);
+  const myToolsRef = useRef<HTMLDivElement>(null);
 
   const DE = lang === "de";
   const theme = getTheme(dark);
+
+  const toggleFavorite = (id: string) => {
+    setFavorites((current) => {
+      const next = current.includes(id) ? current.filter((x) => x !== id) : [...current, id];
+      localStorage.setItem("favoriteToolIds", JSON.stringify(next));
+      return next;
+    });
+  };
 
   useEffect(() => {
     localStorage.setItem("appTheme", dark ? "dark" : "light");
@@ -291,6 +342,13 @@ export default function PlaygroundNew() {
       .finally(() => setLoading(false));
   }, []);
 
+  useEffect(() => {
+    if (loading) return;
+    if (location.hash === "#my-tools") {
+      requestAnimationFrame(() => myToolsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+    }
+  }, [loading, location.hash, location.key]);
+
   const myToolsRaw = tools.filter((tool) => tool.params.sessionId === sessionId);
   const myToolsMap = new Map<string, NewToolData>();
   for (const tool of myToolsRaw) {
@@ -299,6 +357,8 @@ export default function PlaygroundNew() {
     if (!existing || tool.savedAt > existing.savedAt) myToolsMap.set(key, tool);
   }
   const myTools = Array.from(myToolsMap.values()).sort((a, b) => b.savedAt.localeCompare(a.savedAt));
+  const favoriteTools = tools.filter((tool) => favorites.includes(tool.id) && tool.params.sessionId !== sessionId);
+  const myToolsAll = [...myTools, ...favoriteTools];
   const publicTools = tools.filter((tool) => tool.params.sessionId !== sessionId && tool.params.isPublic !== false);
 
   const openTool = (id: string) => navigate(`/new?tool=${id}`);
@@ -346,8 +406,6 @@ export default function PlaygroundNew() {
       >
         <style>{`
           html, body, #root { height: 100%; overflow: hidden; }
-          .playground-tool-shape:hover .playground-tool-label,
-          .playground-tool-shape:focus-visible .playground-tool-label { opacity: 0 !important; }
         `}</style>
 
         <section
@@ -376,31 +434,61 @@ export default function PlaygroundNew() {
           </div>
         </section>
 
-        <div style={{ width: "100%", boxSizing: "border-box", padding: "96px 100px 64px" }}>
+        <div ref={toolsRef} style={{ width: "100%", boxSizing: "border-box", padding: "96px 100px 96px" }}>
           {loading ? (
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "200px" }}>
               <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: theme.muted }}>{DE ? "Lädt..." : "Loading..."}</span>
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: "56px" }}>
-              {myTools.length > 0 && (
-                <Section
-                  title={DE ? "Meine Tools" : "My Tools"}
-                  tools={myTools}
-                  onOpen={openTool}
-                  onDelete={handleDelete}
-                  emptyMsg=""
-                />
+              {myToolsAll.length > 0 && (
+                <div ref={myToolsRef} style={{ scrollMarginTop: "40px" }}>
+                  <Section
+                    title={DE ? "Meine Tools" : "My Tools"}
+                    tools={myToolsAll}
+                    onOpen={openTool}
+                    onDelete={handleDelete}
+                    emptyMsg=""
+                    sessionId={sessionId}
+                    favorites={favorites}
+                    onToggleFavorite={toggleFavorite}
+                  />
+                </div>
               )}
               <Section
                 title={DE ? "Öffentliche Tools" : "Public Tools"}
                 tools={publicTools}
                 onOpen={openTool}
                 emptyMsg={DE ? "Noch keine öffentlichen Tools vorhanden." : "No public tools yet."}
+                sessionId={sessionId}
+                favorites={favorites}
+                onToggleFavorite={toggleFavorite}
               />
             </div>
           )}
         </div>
+
+        <button
+          onClick={() => toolsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+          style={{
+            position: "fixed",
+            bottom: "40px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 50,
+            background: theme.toolBg,
+            border: `1px dashed ${theme.border}`,
+            borderRadius: "4px",
+            cursor: "pointer",
+            outline: "none",
+            padding: "11px 22px",
+            fontFamily: FONT_SANS,
+            fontSize: "15px",
+            color: theme.text,
+          }}
+        >
+          Explore all tools
+        </button>
       </main>
     </ThemeContext.Provider>
   );

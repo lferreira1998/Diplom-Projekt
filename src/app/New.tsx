@@ -147,10 +147,6 @@ const TRANSLATIONS = {
     copyText: "Text kopieren",
     copied: "Kopiert ✓",
     exportText: "Exportieren",
-    exportSVG: "Als SVG exportieren",
-    exportPDF: "Als PDF exportieren",
-    exportTxt: "Als .txt herunterladen",
-    exportCopy: "Text kopieren",
     // Category labels (what shows on sidebar buttons)
     catLabel: (cat: { en: string; de: string }) => cat.de,
     // Category heading in detail panel
@@ -249,10 +245,6 @@ const TRANSLATIONS = {
     copyText: "Copy text",
     copied: "Copied ✓",
     exportText: "Export",
-    exportSVG: "Export as SVG",
-    exportPDF: "Export as PDF",
-    exportTxt: "Download as .txt",
-    exportCopy: "Copy text",
     // Category labels
     catLabel: (cat: { en: string; de: string }) => cat.en,
     catHeading: (cat: { en: string; de: string }) => cat.en,
@@ -833,7 +825,6 @@ export default function New() {
   const [timerDone, setTimerDone]       = useState(false);
   const [textRevealed, setTextRevealed] = useState(false);
   const [copied, setCopied]             = useState(false);
-  const [exportOpen, setExportOpen]     = useState(false);
 
   const t: Tr = TRANSLATIONS[lang];
   const DE = lang === "de";
@@ -1002,46 +993,15 @@ export default function New() {
 
   const handleReveal = useCallback(() => setTextRevealed(true), []);
 
-  const handleExportSVG = useCallback(() => {
-    const zone = document.querySelector('[data-writing-zone]') as HTMLElement | null;
-    if (!zone) return;
-    const w = Math.ceil(zone.getBoundingClientRect().width) || 800;
-    const h = Math.ceil(zone.scrollHeight || zone.getBoundingClientRect().height) || 600;
-    const bg = dark ? (bgHue !== null ? `oklch(32% 0.028 ${bgHue})` : '#484848') : (bgHue !== null ? `oklch(97.5% 0.015 ${bgHue})` : '#fcf6ef');
-    const col = dark ? '#f0e8dc' : '#555555';
-    const ff = FONT_SERIF.replace(/'/g, '"');
-    const fs = computedFontSize;
-    const svgStr = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">\n  <rect width="${w}" height="${h}" fill="${bg}"/>\n  <foreignObject x="0" y="0" width="${w}" height="${h}">\n    <div xmlns="http://www.w3.org/1999/xhtml" style="width:${w}px;min-height:${h}px;font-family:${ff};font-size:${fs}px;color:${col};line-height:1.6;word-break:break-all;overflow-wrap:anywhere;">${zone.innerHTML}</div>\n  </foreignObject>\n</svg>`;
-    const blob = new Blob([svgStr], { type: "image/svg+xml;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = `${toolName.trim() || "text"}.svg`; a.click();
-    URL.revokeObjectURL(url);
-    setExportOpen(false);
-  }, [dark, bgHue, computedFontSize, toolName]);
-
-  const handleExportPDF = useCallback(() => {
-    const zone = document.querySelector('[data-writing-zone]') as HTMLElement | null;
-    const html = zone?.innerHTML ?? extractText(positions);
-    const bg = dark ? (bgHue !== null ? `oklch(32% 0.028 ${bgHue})` : '#484848') : (bgHue !== null ? `oklch(97.5% 0.015 ${bgHue})` : '#fcf6ef');
-    const col = dark ? '#f0e8dc' : '#555555';
-    const printWin = window.open('', '_blank');
-    if (!printWin) return;
-    printWin.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${toolName.trim() || "text"}</title><style>@import url('https://use.typekit.net/hlr3tlm.css');*{box-sizing:border-box;}body{margin:40px 48px;background:${bg};color:${col};font-family:'freight-text-pro','EB Garamond',Georgia,serif;font-size:${computedFontSize}px;line-height:1.6;word-break:break-all;}@media print{body{margin:20mm;}}</style></head><body>${html}</body></html>`);
-    printWin.document.close();
-    printWin.focus();
-    setTimeout(() => { printWin.print(); }, 600);
-    setExportOpen(false);
-  }, [dark, bgHue, computedFontSize, toolName, positions]);
-
-  const handleDownloadTxt = useCallback(() => {
+  const handleExport = useCallback(() => {
     const text = extractText(positions);
     const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url; a.download = `${toolName.trim() || "text"}.txt`; a.click();
+    a.href = url;
+    a.download = `${toolName.trim() || "text"}.txt`;
+    a.click();
     URL.revokeObjectURL(url);
-    setExportOpen(false);
   }, [positions, toolName]);
 
   const handleSave = useCallback(async () => {
@@ -1135,13 +1095,6 @@ export default function New() {
   useEffect(() => {
     setTimeout(() => writingFocusRef.current?.(), 50);
   }, [activeCategory, positionMode]);
-
-  useEffect(() => {
-    if (!exportOpen) return;
-    const close = () => setExportOpen(false);
-    document.addEventListener("mousedown", close, { capture: true });
-    return () => document.removeEventListener("mousedown", close, { capture: true });
-  }, [exportOpen]);
 
   const wzVisibility = visibility === "invisible" ? "hidden" : visibility as "visible"|"hidden"|"sentence"|"word"|"char";
   const wzDeleteMode = deleteMode === "all" ? "deletable" : deleteMode === "none" ? "no-delete" : deleteMode as "sentence"|"word";
@@ -2394,81 +2347,30 @@ export default function New() {
         )}
       </AnimatePresence>
 
-      {/* ── Export button + panel ───────────────────────────────────────── */}
+      {/* ── Export button (bottom-right, appears once text exists) ─────── */}
       <AnimatePresence>
         {positions.length > 0 && createPortal(
-          <div key="export-portal" style={{ position: "fixed", bottom: "28px", right: "28px", zIndex: 150, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "8px" }}>
-            <AnimatePresence>
-              {exportOpen && (
-                <motion.div
-                  key="export-panel"
-                  initial={{ opacity: 0, y: 6, scale: 0.97 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 6, scale: 0.97 }}
-                  transition={{ duration: 0.18 }}
-                  onMouseDown={e => e.stopPropagation()}
-                  style={{
-                    background: dark ? "rgba(45,43,40,0.95)" : "rgba(252,246,239,0.97)",
-                    border: `1px dashed ${dark ? DARK_BORDER : BORDER_COL}`,
-                    borderRadius: "12px",
-                    backdropFilter: "blur(12px)",
-                    padding: "8px",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "2px",
-                    minWidth: "200px",
-                  }}
-                >
-                  {([
-                    ["exportSVG", handleExportSVG],
-                    ["exportPDF", handleExportPDF],
-                    ["exportTxt", handleDownloadTxt],
-                    ["exportCopy", handleCopy],
-                  ] as [keyof typeof t, () => void][]).map(([key, fn]) => (
-                    <button
-                      key={key}
-                      onClick={fn}
-                      style={{
-                        fontFamily: FONT_SANS, fontSize: "13px", letterSpacing: "0.02em",
-                        padding: "9px 16px",
-                        background: "transparent",
-                        border: "none",
-                        borderRadius: "8px",
-                        color: dark ? "rgba(240,232,220,0.85)" : "#555555",
-                        cursor: "pointer",
-                        textAlign: "left",
-                      }}
-                      onMouseEnter={e => (e.currentTarget.style.background = dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)")}
-                      onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-                    >
-                      {t[key] as string}
-                    </button>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
-            <motion.button
-              key="export-btn"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              transition={{ duration: 0.22 }}
-              onMouseDown={e => e.stopPropagation()}
-              onClick={() => setExportOpen(o => !o)}
-              style={{
-                fontFamily: FONT_SANS, fontSize: "13px", letterSpacing: "0.04em",
-                padding: "8px 20px",
-                background: dark ? "rgba(72,64,56,0.85)" : "rgba(252,246,239,0.88)",
-                border: `1px dashed ${dark ? DARK_BORDER : BORDER_COL}`,
-                borderRadius: "100px",
-                backdropFilter: "blur(10px)",
-                color: dark ? "rgba(240,232,220,0.75)" : "#555555",
-                cursor: "pointer",
-              }}
-            >
-              {exportOpen ? (lang === "de" ? "Schließen" : "Close") : t.exportText}
-            </motion.button>
-          </div>,
+          <motion.button
+            key="export-btn"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.22 }}
+            onClick={handleExport}
+            style={{
+              position: "fixed", bottom: "28px", right: "28px", zIndex: 150,
+              fontFamily: FONT_SANS, fontSize: "13px", letterSpacing: "0.04em",
+              padding: "8px 20px",
+              background: dark ? "rgba(72,64,56,0.85)" : "rgba(252,246,239,0.88)",
+              border: `1px dashed ${dark ? DARK_BORDER : BORDER_COL}`,
+              borderRadius: "100px",
+              backdropFilter: "blur(10px)",
+              color: dark ? "rgba(240,232,220,0.75)" : "#555555",
+              cursor: "pointer",
+            }}
+          >
+            {t.exportText}
+          </motion.button>,
           document.body
         )}
       </AnimatePresence>

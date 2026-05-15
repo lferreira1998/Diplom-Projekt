@@ -2446,16 +2446,7 @@ export default function New() {
               exit={{ opacity: 0, y: 10 }}
               transition={{ duration: 0.22 }}
               onClick={() => setExportOpen(o => !o)}
-              style={{
-                fontFamily: FONT_SANS, fontSize: "13px", letterSpacing: "0.04em",
-                padding: "8px 20px",
-                background: dark ? "rgba(72,64,56,0.85)" : "rgba(252,246,239,0.88)",
-                border: `1px dashed ${dark ? DARK_BORDER : BORDER_COL}`,
-                borderRadius: "100px",
-                backdropFilter: "blur(10px)",
-                color: dark ? "rgba(240,232,220,0.75)" : "#555555",
-                cursor: "pointer",
-              }}
+              style={btnStyle(dark, { backdropFilter: "blur(10px)" }, surfaceLight)}
             >
               {t.exportText}
             </motion.button>

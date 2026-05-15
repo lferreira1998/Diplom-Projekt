@@ -2256,7 +2256,7 @@ export default function New() {
             {/* Eye toggle */}
             <button
               style={btnStyle(dark, undefined, surfaceLight)}
-              onClick={(e) => { e.stopPropagation(); setVisible(false); setMenuOpen(false); }}
+              onClick={(e) => { e.stopPropagation(); setVisible(false); setMenuOpen(false); setExportOpen(false); }}
             >
               <IconEyeClosed color={iconColor} />
             </button>
@@ -2406,7 +2406,7 @@ export default function New() {
       {/* ── Export button + panel (bottom-right, appears once text exists) ── */}
       {createPortal(
         <AnimatePresence>
-          {positions.length > 0 && (
+          {visible && positions.length > 0 && (
             <motion.div
               key="export-root"
               initial={{ opacity: 0, y: 10 }}

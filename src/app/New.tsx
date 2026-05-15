@@ -834,6 +834,18 @@ export default function New() {
   const [textRevealed, setTextRevealed] = useState(false);
   const [copied, setCopied]             = useState(false);
   const [exportOpen, setExportOpen]     = useState(false);
+  const exportRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!exportOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (exportRef.current && !exportRef.current.contains(e.target as Node)) {
+        setExportOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [exportOpen]);
 
   const t: Tr = TRANSLATIONS[lang];
   const DE = lang === "de";
@@ -2401,6 +2413,7 @@ export default function New() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
               transition={{ duration: 0.22 }}
+              ref={exportRef}
               style={{ position: "fixed", bottom: "28px", right: "28px", zIndex: 150, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "8px" }}
             >
               <AnimatePresence>

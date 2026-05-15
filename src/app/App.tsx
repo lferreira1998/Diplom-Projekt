@@ -16,7 +16,6 @@ import OffTheGrid from "./projects/offthegrid/App";
 import InASpiral from "./projects/inaspiral/App";
 import RandomlySpatially from "./projects/randomlyspatially/App";
 import New from "./New";
-import Playground from "./Playground";
 import PlaygroundNewScrollDots from "./PlaygroundNewScrollDots";
 import {
   StyledBlindThenWitness,
@@ -52,7 +51,7 @@ export default function App() {
       <Route path="/about-the-project" element={<AboutTheProject />} />
       <Route path="/aboutnew" element={<AboutNew />} />
       <Route path="/all-tools" element={<AllTools />} />
-      <Route path="/playground" element={<Playground />} />
+      <Route path="/playground" element={<PlaygroundNewScrollDots />} />
       <Route path="/playgroundnew" element={<PlaygroundNewScrollDots />} />
       <Route path="/playgroundnew1" element={<PlaygroundNewScrollDots />} />
       <Route path="/new" element={<New />} />

@@ -32,6 +32,7 @@ export interface NewToolParams {
   bgHue: number | null;
   bgMotion?: boolean;
   textEditingEnabled?: boolean;
+  isPublic?: boolean;
 }
 
 export interface NewToolData {

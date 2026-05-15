@@ -299,7 +299,7 @@ export default function PlaygroundNew() {
     if (!existing || tool.savedAt > existing.savedAt) myToolsMap.set(key, tool);
   }
   const myTools = Array.from(myToolsMap.values()).sort((a, b) => b.savedAt.localeCompare(a.savedAt));
-  const publicTools = tools.filter((tool) => tool.params.sessionId !== sessionId);
+  const publicTools = tools.filter((tool) => tool.params.sessionId !== sessionId && tool.params.isPublic !== false);
 
   const openTool = (id: string) => navigate(`/new?tool=${id}`);
 

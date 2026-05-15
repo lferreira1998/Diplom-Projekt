@@ -54,12 +54,12 @@ const NAV_ROUTES: Record<string, string> = {
 };
 
 const SIDEBAR_CATS = [
+  { en: "Look & Feel", de: "Look & Feel",  h: "60px",  br: "100px" },
   { en: "Time",        de: "Zeit",         h: "104px", br: "100px" },
   { en: "Visibility",  de: "Sichtbarkeit", h: "63px",  br: "4px" },
   { en: "Correction",  de: "Korrigieren",  h: "60px",  br: "40px 4px 40px 4px" },
   { en: "Stability",   de: "Stabilität",   h: "46px",  br: "4px" },
   { en: "Position",    de: "Position",     h: "68px",  br: "4px", bottom: true as const },
-  { en: "Look & Feel", de: "Look & Feel",  h: "60px",  br: "100px" },
 ];
 
 // ── Translations ──────────────────────────────────────────────────────────────
@@ -775,7 +775,7 @@ export default function New() {
   const [menuOpen, setMenuOpen]       = useState(false);
   const [menuHovered, setMenuHovered] = useState(false);
   const [rulesOpen, setRulesOpen]     = useState(false);
-  const [activeCategory, setActiveCategory] = useState("Time");
+  const [activeCategory, setActiveCategory] = useState("Look & Feel");
   const [identityOpen, setIdentityOpen]     = useState(false);
   const writingFocusRef = useRef<(() => void) | null>(null);
 
@@ -1060,7 +1060,7 @@ export default function New() {
     setExportOpen(false);
   }, [positions]);
 
-  const handleSave = useCallback(async () => {
+  const handleSave = useCallback(async (isPublic: boolean) => {
     if (!toolName.trim()) {
       // Fix 1: Auto-open Identity panel so user sees the error + name field
       setRulesOpen(true);
@@ -1077,6 +1077,7 @@ export default function New() {
         sessionId,
         prompts,
         asciiImage,
+        isPublic,
         timerEnabled, timerMode, timerMinutes, visualTimer, timerUserReset, cursorRunning,
         visibility, deleteMode, correctionVisible,
         textFliegtEnabled, fliegtUnit, fliegtZeitpunkt, fliegtSchnelligkeit,
@@ -1486,35 +1487,20 @@ export default function New() {
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               {canEdit ? (
-                <>
-                  <button
-                    onClick={() => setIdentityOpen(o => !o)}
-                    style={{
-                      width: "105px", height: "105px",
-                      borderRadius: "4px",
-                      background: identityOpen ? catActiveBg : "transparent",
-                      border: `1px dashed ${innerBorder}`,
-                      cursor: "pointer", outline: "none",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      fontFamily: FONT_SANS, fontSize: "16px", fontWeight: 400,
-                      color: dark ? DARK_TEXT : LIGHT_TEXT,
-                      letterSpacing: "-0.16px", lineHeight: "22px",
-                      textAlign: "center", whiteSpace: "pre-line",
-                    }}>{t.identityBtn}</button>
-                  <button
-                    onClick={handleSave}
-                    disabled={saving}
-                    style={{
-                      width: "105px", borderRadius: "4px", background: "transparent",
-                      border: `1px dashed ${innerBorder}`,
-                      cursor: saving ? "wait" : "pointer", outline: "none",
-                      padding: "6px 12px",
-                      fontFamily: FONT_SANS, fontSize: "16px", fontWeight: 400,
-                      color: dark ? DARK_TEXT : LIGHT_TEXT,
-                      lineHeight: "22px", textAlign: "center",
-                      opacity: saving ? 0.6 : 1,
-                    }}>{saving ? "…" : t.saveBtn}</button>
-                </>
+                <button
+                  onClick={() => setIdentityOpen(o => !o)}
+                  style={{
+                    width: "105px",
+                    borderRadius: "4px",
+                    background: identityOpen ? catActiveBg : "transparent",
+                    border: `1px dashed ${innerBorder}`,
+                    cursor: "pointer", outline: "none",
+                    padding: "14px 12px",
+                    fontFamily: FONT_SANS, fontSize: "15px", fontWeight: 400,
+                    color: dark ? DARK_TEXT : LIGHT_TEXT,
+                    letterSpacing: "-0.16px", lineHeight: "20px",
+                    textAlign: "center",
+                  }}>Save &amp; Share</button>
               ) : loadedToolIsOwn ? (
                 <button
                   onClick={() => { setEditModeEnabledState(true); setIdentityOpen(false); }}
@@ -1610,7 +1596,7 @@ export default function New() {
 
                   {/* Name */}
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                    <span style={{ fontFamily: FONT_SERIF, fontSize: "19px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.nameHeading}</span>
+                    <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.nameHeading}</span>
                     <span style={{ fontFamily: FONT_SANS, fontSize: "13px", color: descColor, lineHeight: "1.45" }}>
                       {t.nameHint}
                     </span>
@@ -1637,7 +1623,7 @@ export default function New() {
 
                   {/* Prompts */}
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                    <span style={{ fontFamily: FONT_SERIF, fontSize: "19px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.promptHeading}</span>
+                    <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.promptHeading}</span>
                     <span style={{ fontFamily: FONT_SANS, fontSize: "13px", color: descColor, lineHeight: "1.45" }}>
                       {t.promptHint}
                     </span>
@@ -1673,7 +1659,7 @@ export default function New() {
 
                   {/* Description */}
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                    <span style={{ fontFamily: FONT_SERIF, fontSize: "19px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.descHeading}</span>
+                    <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.descHeading}</span>
                     <textarea
                       className="identity-textarea"
                       placeholder={t.descPlaceholder}
@@ -1697,18 +1683,31 @@ export default function New() {
                     <span style={{ fontFamily: FONT_SANS, fontSize: "12px", color: "#e05252", textAlign: "center" }}>{saveError}</span>
                   )}
                   <button
-                    onClick={handleSave}
+                    onClick={() => handleSave(true)}
                     disabled={saving}
                     style={{
                       width: "100%", padding: "12px",
-                      background: saving ? "transparent" : (dark ? "rgba(240,232,220,0.1)" : "rgba(85,85,85,0.07)"),
+                      background: dark ? DARK_TEXT : LIGHT_TEXT,
+                      border: `1px solid ${dark ? DARK_TEXT : LIGHT_TEXT}`,
+                      borderRadius: "8px", cursor: saving ? "wait" : "pointer", outline: "none",
+                      fontFamily: FONT_SANS, fontSize: "16px",
+                      color: dark ? DARK_BG : LIGHT_BG,
+                      opacity: saving ? 0.6 : 1,
+                    }}
+                  >{saving ? (lang === "de" ? "Speichert…" : "Saving…") : "Save & Share"}</button>
+                  <button
+                    onClick={() => handleSave(false)}
+                    disabled={saving}
+                    style={{
+                      width: "100%", padding: "12px",
+                      background: "transparent",
                       border: `1px dashed ${innerBorder}`,
                       borderRadius: "8px", cursor: saving ? "wait" : "pointer", outline: "none",
                       fontFamily: FONT_SANS, fontSize: "16px",
                       color: dark ? DARK_TEXT : LIGHT_TEXT,
                       opacity: saving ? 0.6 : 1,
                     }}
-                  >{saving ? (lang === "de" ? "Speichert…" : "Saving…") : t.saveBtn}</button>
+                  >Save privately</button>
                 </div>
               </>
             ) : (
@@ -1729,13 +1728,13 @@ export default function New() {
                   <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
 
                     {/* Timer card */}
-                    <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px", display: "flex", flexDirection: "column", gap: "0" }}>
+                    <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "20px 24px", display: "flex", flexDirection: "column", gap: "0" }}>
                       <div
                         style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px", cursor: "pointer" }}
                         onClick={() => setTimerEnabled(v => !v)}
                       >
                         <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.timerLabel}</span>
-                        <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: descColor }}>{timerEnabled ? t.on : t.off}</span>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{timerEnabled ? t.on : t.off}</span>
                       </div>
                       <AnimatePresence>
                         {timerEnabled && (
@@ -1745,10 +1744,8 @@ export default function New() {
                             transition={{ duration: 0.15 }}
                             style={{ overflow: "hidden" }}
                           >
-                            {/* Divider */}
-                            <div style={{ height: "1px", background: innerBorder, margin: "4px 0" }} />
                             {/* Large number input row */}
-                            <div style={{ display: "flex", alignItems: "center", border: `1px dashed ${innerBorder}`, borderRadius: "4px", margin: "8px 0", height: "48px", overflow: "hidden" }}>
+                            <div style={{ display: "flex", alignItems: "center", border: `1px dashed ${innerBorder}`, borderRadius: "4px", margin: "20px 0", height: "76px", overflow: "hidden" }}>
                               <input
                                 type="number"
                                 min={1}
@@ -1759,21 +1756,19 @@ export default function New() {
                                 style={{
                                   flex: 1, height: "100%", border: "none", outline: "none",
                                   background: "transparent", textAlign: "center",
-                                  fontFamily: FONT_SANS, fontSize: "28px", fontWeight: 400,
+                                  fontFamily: FONT_SANS, fontSize: "36px", fontWeight: 400,
                                   color: dark ? "rgba(240,232,220,0.55)" : "rgba(85,85,85,0.45)",
                                   WebkitAppearance: "none", MozAppearance: "textfield",
                                 }}
                               />
-                              <span style={{ fontFamily: FONT_SANS, fontSize: "13px", color: descColor, paddingRight: "12px", flexShrink: 0 }}>min</span>
+                              <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: descColor, paddingRight: "20px", flexShrink: 0 }}>min</span>
                             </div>
-                            {/* Divider */}
-                            <div style={{ height: "1px", background: innerBorder, margin: "4px 0" }} />
                             {/* User reset row */}
                             <div
                               style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px", cursor: "pointer" }}
                               onClick={e => { e.stopPropagation(); setTimerUserReset(v => !v); }}
                             >
-                              <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.userReset}</span>
+                              <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: descColor }}>{t.userReset}</span>
                               <RadioCircle selected={timerUserReset} dark={dark} />
                             </div>
                           </motion.div>
@@ -1884,15 +1879,13 @@ export default function New() {
                       {/* Option rows with separator between 2nd and 3rd */}
                       {DELETE_OPTS_KEYS.map((key, i) => (
                         <div key={key}>
-                          {i === 2 && (
+                          {i === 1 && (
                             <div style={{ borderTop: `1px dashed ${innerBorder}`, marginBottom: "16px" }} />
                           )}
                           <button className="vis-btn" onClick={() => setDeleteMode(key)} style={{
                             width: "100%", height: "36px",
                             background: dark ? "rgba(240,232,220,0.04)" : "#fcf6ef",
-                            border: deleteMode === key
-                              ? `1px dashed ${dark ? "rgba(240,232,220,0.85)" : LIGHT_TEXT}`
-                              : `1px dashed ${innerBorder}`,
+                            border: `1px dashed ${innerBorder}`,
                             borderRadius: "4px", padding: "0 12px",
                             display: "flex", alignItems: "center", justifyContent: "space-between",
                             cursor: "pointer", outline: "none",
@@ -1914,10 +1907,11 @@ export default function New() {
                     >
                       <div style={{ height: "36px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                         <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.correctionVisible}</span>
-                        <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: descColor }}>{correctionVisible ? t.on : t.off}</span>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: descColor }}>{correctionVisible ? t.on : t.off}</span>
                       </div>
-                      <p style={{ fontFamily: FONT_SANS, fontSize: "13px", lineHeight: "1.45", color: descColor, margin: 0 }}>
-                        {DE ? "Mit Tipp-Ex-Schicht über alten Text. Das Korrigieren hinterlässt Spuren." : "With a Tipp-Ex layer over old text. Corrections leave traces."}
+                      <p style={{ fontFamily: FONT_SANS, fontSize: "13px", lineHeight: "1.6", color: descColor, margin: 0 }}>
+                        <span style={{ background: dark ? "rgba(240,232,220,0.16)" : "#fdfaf4", padding: "1px 3px", borderRadius: "2px" }}>{t.correctionDescHighlight}</span>
+                        {t.correctionDescRest}
                       </p>
                     </div>
 

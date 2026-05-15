@@ -1908,44 +1908,17 @@ export default function New() {
                     </div>
 
                     {/* Korrigieren sichtbar card */}
-                    <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
+                    <div
+                      onClick={() => setCorrectionVisible(v => !v)}
+                      style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px 24px", display: "flex", flexDirection: "column", gap: "16px", cursor: "pointer" }}
+                    >
                       <div style={{ height: "36px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                         <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.correctionVisible}</span>
-                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                          <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: descColor }}>{correctionVisible ? t.on : t.off}</span>
-                          <ToggleBtn on={correctionVisible} onToggle={() => setCorrectionVisible(v => !v)} dark={dark} />
-                        </div>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: descColor }}>{correctionVisible ? t.on : t.off}</span>
                       </div>
-                      <AnimatePresence>
-                        {correctionVisible && (
-                          <motion.div key="corr-desc" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} style={{ overflow: "hidden" }}>
-                            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                              <p style={{ fontFamily: FONT_SANS, fontSize: "13px", lineHeight: "1.45", color: descColor, margin: 0 }}>
-                                <span style={{ color: dark ? "#8faee0" : "#6b82b0" }}>{t.correctionDescHighlight}</span>
-                                {t.correctionDescRest}
-                              </p>
-                              {/* Tipp-Ex visual */}
-                              <div style={{ position: "relative", userSelect: "none", lineHeight: 1 }}>
-                                <span style={{ fontFamily: FONT_SERIF, fontSize: "13px", color: dark ? DARK_TEXT : LIGHT_TEXT, opacity: 0.55, whiteSpace: "nowrap" }}>
-                                  {DE ? "Schreiben ist Denken und Sprechen" : "Writing is thinking and speaking"}
-                                </span>
-                                <div style={{
-                                  position: "absolute",
-                                  left: "62px", right: "48px",
-                                  top: "-3px", bottom: "-3px",
-                                  background: dark ? "rgba(252,246,239,0.82)" : "#fdfaf4",
-                                  borderRadius: "2px",
-                                }} />
-                              </div>
-                            </div>
-                          </motion.div>
-                        )}
-                        {!correctionVisible && (
-                          <motion.p key="corr-off-desc" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} style={{ fontFamily: FONT_SANS, fontSize: "13px", lineHeight: "1.45", color: descColor, margin: 0 }}>
-                            {DE ? "Mit Tipp-Ex-Schicht über alten Text. Das Korrigieren hinterlässt Spuren." : "With a Tipp-Ex layer over old text. Corrections leave traces."}
-                          </motion.p>
-                        )}
-                      </AnimatePresence>
+                      <p style={{ fontFamily: FONT_SANS, fontSize: "13px", lineHeight: "1.45", color: descColor, margin: 0 }}>
+                        {DE ? "Mit Tipp-Ex-Schicht über alten Text. Das Korrigieren hinterlässt Spuren." : "With a Tipp-Ex layer over old text. Corrections leave traces."}
+                      </p>
                     </div>
 
                   </div>

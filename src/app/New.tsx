@@ -1745,6 +1745,9 @@ export default function New() {
                         <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{DE ? "Freies Editieren" : "Free editing"}</span>
                         <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: descColor }}>{textEditingEnabled ? t.on : t.off}</span>
                       </div>
+                      <span style={{ fontFamily: FONT_SANS, fontSize: "12px", color: descColor, lineHeight: "1.5" }}>
+                        {DE ? "Cursor frei setzen, Text markieren und löschen." : "Freely reposition cursor, select and delete text."}
+                      </span>
                     </div>
                   </div>
                 )}

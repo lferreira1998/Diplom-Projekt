@@ -1711,17 +1711,15 @@ export function WritingZone({
           if (deleteMode !== "no-delete") onUpdate([], 0);
           return;
         }
-        // Delete selection range
+        // Delete selection range — always allowed when free editing is on
         const anch = selAnchorRef.current;
         if (textEditingEnabled && anch !== null && anch !== cursor) {
           const start = Math.min(anch, cursor);
           const end   = Math.max(anch, cursor);
           selAnchorRef.current = null; setSelAnchor(null);
-          if (deleteMode !== "no-delete") {
-            const newPos = deleteRange(positions, start, end, correctionMode);
-            onUpdate(newPos, start);
-            lkpt.current = now;
-          }
+          const newPos = deleteRange(positions, start, end, correctionMode);
+          onUpdate(newPos, start);
+          lkpt.current = now;
           return;
         }
         selAnchorRef.current = null; setSelAnchor(null);

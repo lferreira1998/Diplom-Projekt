@@ -770,7 +770,7 @@ export default function New() {
 
   // UI
   const [lang, setLang]               = useState<"de" | "en">(() => (localStorage.getItem("appLang") as "de" | "en") ?? "de");
-  const [dark, setDark]               = useState(false);
+  const [dark, setDark]               = useState<boolean>(() => localStorage.getItem("appTheme") === "dark");
   const [visible, setVisible]         = useState(true);
   const [menuOpen, setMenuOpen]       = useState(false);
   const [menuHovered, setMenuHovered] = useState(false);
@@ -1392,7 +1392,7 @@ export default function New() {
               display: "flex", alignItems: "center", justifyContent: "center",
               zIndex: 25, transition: "background 0.2s",
             }}
-            onClick={(e) => { e.stopPropagation(); setDark(d => !d); }}
+            onClick={(e) => { e.stopPropagation(); setDark(d => { const next = !d; localStorage.setItem("appTheme", next ? "dark" : "light"); return next; }); }}
           >
             <IconHalfCircle color={iconColor} dark={dark} />
           </motion.button>

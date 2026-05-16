@@ -66,7 +66,7 @@ const SIDEBAR_CATS = [
 const TRANSLATIONS = {
   de: {
     langBtn: "DE",
-    rulesBtn: "Regeln",
+    rulesBtn: "Regeln brechen",
     rulesHeading: "Regeln",
     rulesSubtitle: "Ändere sie.",
     identityBtn: "Name,\nBeschreibung\n& mehr",
@@ -168,7 +168,7 @@ const TRANSLATIONS = {
   },
   en: {
     langBtn: "ENG",
-    rulesBtn: "Rules",
+    rulesBtn: "Break Rules",
     rulesHeading: "Rules",
     rulesSubtitle: "Change them.",
     identityBtn: "Name,\nDescription\n& more",
@@ -2286,14 +2286,14 @@ export default function New() {
             )}
             {/* Eye toggle */}
             <button
-              style={btnStyle(dark, undefined, surfaceLight)}
+              style={btnStyle(dark, { background: dark ? darkColors.darkCardBg : "#ece6dc" }, surfaceLight)}
               onClick={(e) => { e.stopPropagation(); setVisible(false); setMenuOpen(false); setExportOpen(false); }}
             >
               <IconEyeClosed color={iconColor} />
             </button>
             {/* Language toggle */}
             <button
-              style={btnStyle(dark, undefined, surfaceLight)}
+              style={btnStyle(dark, { background: dark ? darkColors.darkCardBg : "#ece6dc" }, surfaceLight)}
               onClick={(e) => { e.stopPropagation(); setLang(l => { const next = l === "de" ? "en" : "de"; localStorage.setItem("appLang", next); return next; }); }}
             >
               {t.langBtn}
@@ -2321,7 +2321,7 @@ export default function New() {
                 }}
               />
               <button
-                style={{ ...btnStyle(dark, { background: dark ? darkColors.darkCardBg : surfaceLight }), position: "relative", zIndex: 1 }}
+                style={{ ...btnStyle(dark, { background: dark ? darkColors.darkCardBg : "#ece6dc" }), position: "relative", zIndex: 1 }}
                 onClick={(e) => { e.stopPropagation(); setMenuOpen(o => !o); setMenuHovered(false); }}
               >
                 {menuOpen ? t.menuOpen : t.menuClosed}

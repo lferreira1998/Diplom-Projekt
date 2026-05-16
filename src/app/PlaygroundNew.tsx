@@ -151,8 +151,8 @@ function ToolShape({ label, style, textStyle, href, video }: {
 
 function HeartIcon({ filled, color }: { filled: boolean; color: string }) {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill={filled ? color : "none"} stroke={color} strokeWidth="2" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 21s-7.5-4.6-10-9.5C.5 8 2 4 6 4c2.5 0 4 1.7 4.5 3 .5-1.3 2-3 4.5-3 4 0 5.5 4 4 7.5C19.5 16.4 12 21 12 21z" strokeLinejoin="round" />
+    <svg width="15" height="15" viewBox="0 0 24 24" fill={filled ? color : "none"} stroke={color} strokeWidth="1.8" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 8.2C12 5.4 9.7 3.3 7 3.3 4.2 3.3 2.2 5.6 2.2 8.5c0 2.1 1.2 3.9 2.9 5.6L12 21l6.9-6.9c1.7-1.7 2.9-3.5 2.9-5.6 0-2.9-2-5.2-4.8-5.2-2.7 0-5 2.1-5 4.9Z" strokeLinejoin="round" strokeLinecap="round" />
     </svg>
   );
 }
@@ -315,6 +315,7 @@ export default function PlaygroundNew() {
 
   const toolsRef = useRef<HTMLDivElement>(null);
   const myToolsRef = useRef<HTMLDivElement>(null);
+  const [exploreVisible, setExploreVisible] = useState(true);
 
   const DE = lang === "de";
   const theme = getTheme(dark);
@@ -341,6 +342,18 @@ export default function PlaygroundNew() {
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (loading) return;
+    const target = toolsRef.current;
+    if (!target) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setExploreVisible(!entry.isIntersecting),
+      { threshold: 0 }
+    );
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [loading]);
 
   useEffect(() => {
     if (loading) return;
@@ -427,8 +440,8 @@ export default function PlaygroundNew() {
 
             <div style={{ position: "absolute", left: 456, top: 300, width: 768 }}>
               <h1 style={{ margin: 0, fontFamily: FONT_SERIF, fontSize: 36, lineHeight: "45px", fontWeight: 400, color: theme.headline, textAlign: "center", whiteSpace: "nowrap" }}>
-                Writing Tools shape how we think & write.<br />
-                Explore Writing Tools that break their rules.
+                {DE ? "Schreibwerkzeuge prägen, wie wir denken & schreiben." : "Writing Tools shape how we think & write."}<br />
+                {DE ? "Entdecke Schreibwerkzeuge, die ihre Regeln brechen." : "Explore Writing Tools that break their rules."}
               </h1>
             </div>
           </div>
@@ -456,7 +469,7 @@ export default function PlaygroundNew() {
                 </div>
               )}
               <Section
-                title={DE ? "Öffentliche Tools" : "Public Tools"}
+                title={DE ? "Alle Tools" : "All Tools"}
                 tools={publicTools}
                 onOpen={openTool}
                 emptyMsg={DE ? "Noch keine öffentlichen Tools vorhanden." : "No public tools yet."}
@@ -468,6 +481,7 @@ export default function PlaygroundNew() {
           )}
         </div>
 
+        {exploreVisible && (
         <button
           onClick={() => toolsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
           style={{
@@ -489,6 +503,7 @@ export default function PlaygroundNew() {
         >
           Explore all tools
         </button>
+        )}
       </main>
     </ThemeContext.Provider>
   );

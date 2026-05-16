@@ -14,7 +14,7 @@ const ROUTES: Record<string, string> = {
 };
 
 const LABELS = {
-  de: { Create: "Erstellen", Playground: "Playground", About: "Über das Projekt", MyTools: "My Tools", menuClosed: "Menü", menuOpen: "Schließen", lang: "DE" },
+  de: { Create: "Erstellen", Playground: "Playground", About: "Über das Projekt", MyTools: "Meine Tools", menuClosed: "Menü", menuOpen: "Schließen", lang: "DE" },
   en: { Create: "Create", Playground: "Playground", About: "About", MyTools: "My Tools", menuClosed: "Menu", menuOpen: "Close", lang: "ENG" },
 };
 
@@ -213,18 +213,16 @@ export default function TopNav({
                     initial="hidden" animate="visible" exit="exit"
                     style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, display: "flex", flexDirection: "column", gap: "8px", alignItems: "flex-end" }}
                   >
-                    {(["Create", "Playground", "About"] as const).map((key) => (
-                      <motion.button
-                        key={key}
-                        variants={NAV_ITEM}
-                        style={navItemStyle(dark, key === current)}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setMenuOpen(false);
-                          if (key !== current) navigate(ROUTES[key]);
-                        }}
-                      >{L[key]}</motion.button>
-                    ))}
+                    <motion.button
+                      key="Create"
+                      variants={NAV_ITEM}
+                      style={navItemStyle(dark, current === "Create")}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setMenuOpen(false);
+                        if (current !== "Create") navigate(ROUTES.Create);
+                      }}
+                    >{L.Create}</motion.button>
                     {hasMyTools() && (
                       <motion.button
                         key="MyTools"
@@ -237,6 +235,18 @@ export default function TopNav({
                         }}
                       >{L.MyTools}</motion.button>
                     )}
+                    {(["Playground", "About"] as const).map((key) => (
+                      <motion.button
+                        key={key}
+                        variants={NAV_ITEM}
+                        style={navItemStyle(dark, key === current)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setMenuOpen(false);
+                          if (key !== current) navigate(ROUTES[key]);
+                        }}
+                      >{L[key]}</motion.button>
+                    ))}
                   </motion.div>
                 )}
               </AnimatePresence>

@@ -2211,6 +2211,8 @@ export default function New() {
                             fontSize: `${17 + textSizeLevel / 100 * 13}px`,
                             color: dark ? DARK_TEXT : LIGHT_TEXT,
                             lineHeight: 1,
+                            background: settingsCardBg,
+                            padding: "0 7px",
                           }}>A</span>
                         </div>
                         <span style={{ fontFamily: FONT_SERIF, fontSize: "40px", color: dark ? DARK_TEXT : LIGHT_TEXT, flexShrink: 0, lineHeight: 1 }}>A</span>

@@ -374,35 +374,6 @@ function IconShowHidden({ color }: { color: string }) {
   );
 }
 
-// ── Toggle button ─────────────────────────────────────────────────────────────
-function ToggleBtn({ on, onToggle, dark = false }: { on: boolean; onToggle: () => void; dark?: boolean }) {
-  return (
-    <button
-      onClick={onToggle}
-      style={{
-        width: "36px", height: "20px",
-        background: on ? (dark ? "rgba(240,232,220,0.28)" : "#555555") : "transparent",
-        border: on ? "none" : `1px dashed ${dark ? "rgba(240,232,220,0.3)" : BORDER_COL}`,
-        borderRadius: "100px",
-        cursor: "pointer", outline: "none", padding: "3px",
-        display: "flex", alignItems: "center", justifyContent: "flex-start",
-        boxSizing: "border-box", flexShrink: 0,
-      }}
-    >
-      <motion.div
-        animate={{ x: on ? 16 : 0 }}
-        transition={{ type: "spring", stiffness: 400, damping: 28 }}
-        style={{
-          width: "14px", height: "14px",
-          background: on ? "transparent" : (dark ? "rgba(240,232,220,0.55)" : BORDER_COL),
-          border: on ? `1.5px dashed ${dark ? "rgba(240,232,220,0.9)" : "white"}` : "none",
-          borderRadius: "7px", flexShrink: 0, boxSizing: "border-box",
-        }}
-      />
-    </button>
-  );
-}
-
 // ── Double slider ─────────────────────────────────────────────────────────────
 function DoubleSlider({ value, min, max, step = 1, onChange, dark }: {
   value: number; min: number; max: number; step?: number;
@@ -1730,7 +1701,7 @@ export default function New() {
                       color: dark ? DARK_TEXT : LIGHT_TEXT,
                       opacity: saving ? 0.6 : 1,
                     }}
-                  >{saving ? (lang === "de" ? "Speichert…" : "Saving…") : "Save & Share"}</button>
+                  >{saving ? (lang === "de" ? "Speichert…" : "Saving…") : (lang === "de" ? "Speichern" : "Save my Tool")}</button>
                   <button
                     onClick={() => handleSave(false)}
                     disabled={saving}
@@ -1964,10 +1935,7 @@ export default function New() {
                         {/* Header row */}
                         <div style={{ height: "36px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                           <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.driftLabel}</span>
-                          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                            <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: descColor }}>{textFliegtEnabled ? t.on : t.off}</span>
-                            <ToggleBtn on={textFliegtEnabled} onToggle={() => setTextFliegtEnabled(e => !e)} dark={dark} />
-                          </div>
+                          <span onClick={() => setTextFliegtEnabled(e => !e)} style={{ fontFamily: FONT_SANS, fontSize: "16px", color: descColor, cursor: "pointer" }}>{textFliegtEnabled ? t.on : t.off}</span>
                         </div>
                         <AnimatePresence initial={false} mode="wait">
                           {!textFliegtEnabled ? (
@@ -2037,10 +2005,7 @@ export default function New() {
                     <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
                       <div style={{ height: "36px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                         <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.fadeLabel}</span>
-                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                          <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: descColor }}>{textVerblassEnabled ? t.on : t.off}</span>
-                          <ToggleBtn on={textVerblassEnabled} onToggle={() => setTextVerblassEnabled(e => !e)} dark={dark} />
-                        </div>
+                        <span onClick={() => setTextVerblassEnabled(e => !e)} style={{ fontFamily: FONT_SANS, fontSize: "16px", color: descColor, cursor: "pointer" }}>{textVerblassEnabled ? t.on : t.off}</span>
                       </div>
                       <AnimatePresence initial={false} mode="wait">
                         {!textVerblassEnabled ? (
@@ -2230,10 +2195,7 @@ export default function New() {
                           <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px" }}>
                             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
                               <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.lfBgMotion}</span>
-                              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                                <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: descColor }}>{bgMotion ? t.on : t.off}</span>
-                                <ToggleBtn on={bgMotion} onToggle={() => setBgMotion(v => !v)} dark={dark} />
-                              </div>
+                              <span onClick={() => setBgMotion(v => !v)} style={{ fontFamily: FONT_SANS, fontSize: "16px", color: descColor, cursor: "pointer" }}>{bgMotion ? t.on : t.off}</span>
                             </div>
                           </div>
                         </motion.div>

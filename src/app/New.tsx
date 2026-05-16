@@ -1920,7 +1920,7 @@ export default function New() {
                           )}
                           <button className="vis-btn" onClick={() => setDeleteMode(key)} style={{
                             width: "100%", height: "36px",
-                            background: dark ? "rgba(240,232,220,0.04)" : "#fcf6ef",
+                            background: dark ? "rgba(240,232,220,0.04)" : surfaceLight,
                             border: `1px dashed ${innerBorder}`,
                             borderRadius: "4px", padding: "0 12px",
                             display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -1983,7 +1983,7 @@ export default function New() {
                                 {(["Sätze", "Wörter"] as const).map(u => (
                                   <button key={u} onClick={() => setFliegtUnit(u)} style={{
                                     flex: 1, height: "36px",
-                                    background: dark ? "rgba(240,232,220,0.04)" : "#fcf6ef",
+                                    background: dark ? "rgba(240,232,220,0.04)" : surfaceLight,
                                     border: `1px dashed ${fliegtUnit === u ? (dark ? DARK_TEXT : LIGHT_TEXT) : innerBorder}`,
                                     borderRadius: "4px", cursor: "pointer", outline: "none",
                                     fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT,
@@ -1997,7 +1997,7 @@ export default function New() {
                               </div>
                               <button onClick={() => setFliegtUnit("Buchstabe")} style={{
                                 width: "100%", height: "36px",
-                                background: dark ? "rgba(240,232,220,0.04)" : "#fcf6ef",
+                                background: dark ? "rgba(240,232,220,0.04)" : surfaceLight,
                                 border: `1px dashed ${fliegtUnit === "Buchstabe" ? (dark ? DARK_TEXT : LIGHT_TEXT) : innerBorder}`,
                                 borderRadius: "4px", cursor: "pointer", outline: "none",
                                 fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT,
@@ -2012,7 +2012,7 @@ export default function New() {
                               {/* Timing */}
                               <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.driftTiming}</span>
                               <DoubleSlider value={fliegtZeitpunkt} min={1} max={15} onChange={setFliegtZeitpunkt} dark={dark} />
-                              <div style={{ border: `1px dashed ${innerBorder}`, borderRadius: "4px", padding: "10px 12px", textAlign: "center", fontFamily: FONT_SANS, fontSize: "15px", color: descColor, background: dark ? "rgba(240,232,220,0.04)" : "#fcf6ef" }}>
+                              <div style={{ border: `1px dashed ${innerBorder}`, borderRadius: "4px", padding: "10px 12px", textAlign: "center", fontFamily: FONT_SANS, fontSize: "15px", color: descColor, background: dark ? "rgba(240,232,220,0.04)" : surfaceLight }}>
                                 {t.driftAfter(fliegtZeitpunkt)}
                               </div>
                               {/* Separator */}
@@ -2051,7 +2051,7 @@ export default function New() {
                           <motion.div key="fade-on" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                             <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.fadeTiming}</span>
                             <DoubleSlider value={verblassZeitpunkt} min={1} max={15} onChange={setVerblassZeitpunkt} dark={dark} />
-                            <div style={{ border: `1px dashed ${innerBorder}`, borderRadius: "4px", padding: "10px 12px", textAlign: "center", fontFamily: FONT_SANS, fontSize: "15px", color: descColor, background: dark ? "rgba(240,232,220,0.04)" : "#fcf6ef" }}>
+                            <div style={{ border: `1px dashed ${innerBorder}`, borderRadius: "4px", padding: "10px 12px", textAlign: "center", fontFamily: FONT_SANS, fontSize: "15px", color: descColor, background: dark ? "rgba(240,232,220,0.04)" : surfaceLight }}>
                               {t.fadeAfter(verblassZeitpunkt)}
                             </div>
                             <div style={{ borderTop: `1px dashed ${innerBorder}`, margin: "6px 0" }} />

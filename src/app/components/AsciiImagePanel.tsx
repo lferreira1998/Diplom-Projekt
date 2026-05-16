@@ -77,12 +77,6 @@ function renderAscii(
   ctx.restore();
 }
 
-function buildSliderChars(value: number, min: number, max: number, total = 18) {
-  const ratio = (value - min) / (max - min);
-  const filled = Math.round(ratio * (total - 1));
-  return "═".repeat(filled) + "⬤" + "─".repeat(total - 1 - filled);
-}
-
 type AsciiImagePanelProps = {
   dark: boolean;
   background: string;
@@ -305,8 +299,6 @@ export default function AsciiImagePanel({ dark, background, textColor, fontSans,
   };
 
   const indicatorPct = (colorHue / 360) * 100;
-  const sliderChars = buildSliderChars(brightness, 40, 220);
-  const sliderParts = sliderChars.split("⬤");
 
   const optionBtnStyle: React.CSSProperties = {
     background: dark ? "rgba(240,232,220,0.06)" : "#fcf6ef",
@@ -460,35 +452,34 @@ export default function AsciiImagePanel({ dark, background, textColor, fontSans,
 
       {image && (
         <>
-          <div style={{ background, border: `1px dashed ${BORDER_COL}`, borderRadius: "8px", padding: "12px 16px" }}>
-            <div style={{ color: textColor, fontSize: "15px", marginBottom: "12px" }}>Helligkeit</div>
-            <div style={{ position: "relative", height: "18px", overflow: "hidden" }}>
-              <input
-                type="range"
-                min={40}
-                max={220}
-                value={brightness}
-                onChange={(event) => setBrightness(Number(event.target.value))}
-                style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0, cursor: "pointer", zIndex: 2 }}
-              />
-              <div
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  display: "flex",
-                  alignItems: "center",
-                  fontFamily: "'IBM Plex Mono', monospace",
-                  fontSize: "15px",
-                  lineHeight: "18px",
-                  pointerEvents: "none",
-                  userSelect: "none",
-                  color: dark ? "#fcf6ef" : "#313642",
-                }}
-              >
-                <span>{sliderParts[0]}</span>
-                <span style={{ color: dark ? "#8f8f8f" : "#9a9daa" }}>{"⬤" + sliderParts[1]}</span>
-              </div>
-            </div>
+          <div style={{ background, border: `1px dashed ${BORDER_COL}`, borderRadius: "8px", padding: "12px 16px 16px" }}>
+            <div style={{ color: textColor, fontSize: "15px", marginBottom: "16px" }}>Helligkeit</div>
+            <style>{`
+              .bright-slider {
+                -webkit-appearance: none; appearance: none;
+                width: 100%; height: 2px; border-radius: 2px; cursor: pointer; outline: none;
+                background: ${dark ? "rgba(240,232,220,0.22)" : "#c8bfb5"};
+              }
+              .bright-slider::-webkit-slider-thumb {
+                -webkit-appearance: none; appearance: none;
+                width: 18px; height: 18px; border-radius: 50%;
+                background: ${dark ? "rgba(240,232,220,0.85)" : "#888"};
+                cursor: grab; border: none;
+              }
+              .bright-slider::-moz-range-thumb {
+                width: 18px; height: 18px; border-radius: 50%;
+                background: ${dark ? "rgba(240,232,220,0.85)" : "#888"};
+                cursor: grab; border: none;
+              }
+            `}</style>
+            <input
+              type="range"
+              min={40}
+              max={220}
+              value={brightness}
+              onChange={(event) => setBrightness(Number(event.target.value))}
+              className="bright-slider"
+            />
           </div>
 
           <div style={{ background, border: `1px dashed ${BORDER_COL}`, borderRadius: "8px", padding: "12px 16px 16px" }}>

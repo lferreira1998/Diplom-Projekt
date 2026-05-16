@@ -1722,11 +1722,11 @@ export default function New() {
                     disabled={saving}
                     style={{
                       width: "100%", padding: "12px",
-                      background: dark ? DARK_TEXT : LIGHT_TEXT,
-                      border: `1px solid ${dark ? DARK_TEXT : LIGHT_TEXT}`,
+                      background: "transparent",
+                      border: `1px dashed ${innerBorder}`,
                       borderRadius: "8px", cursor: saving ? "wait" : "pointer", outline: "none",
                       fontFamily: FONT_SANS, fontSize: "16px",
-                      color: dark ? DARK_BG : LIGHT_BG,
+                      color: dark ? DARK_TEXT : LIGHT_TEXT,
                       opacity: saving ? 0.6 : 1,
                     }}
                   >{saving ? (lang === "de" ? "Speichert…" : "Saving…") : "Save & Share"}</button>
@@ -1736,7 +1736,7 @@ export default function New() {
                     style={{
                       width: "100%", padding: "12px",
                       background: "transparent",
-                      border: `1px dashed ${innerBorder}`,
+                      border: "none",
                       borderRadius: "8px", cursor: saving ? "wait" : "pointer", outline: "none",
                       fontFamily: FONT_SANS, fontSize: "16px",
                       color: dark ? DARK_TEXT : LIGHT_TEXT,

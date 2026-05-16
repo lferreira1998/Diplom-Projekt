@@ -1454,7 +1454,8 @@ export default function New() {
                     display: "flex",
                     flexShrink: 0,
                     opacity: rulesHovered ? 1 : 0,
-                    transition: "opacity 0.3s ease",
+                    transform: rulesHovered ? "translateX(0px)" : "translateX(-5px)",
+                    transition: "opacity 0.35s ease, transform 0.35s cubic-bezier(0.4,0,0.2,1)",
                   }}>
                     <svg width="17" height="7" viewBox="0 0 17 7" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M0 3.5H11" stroke={dark ? DARK_TEXT : LIGHT_TEXT} strokeWidth="1.3" strokeLinecap="round" strokeDasharray="2.6 2.6" />

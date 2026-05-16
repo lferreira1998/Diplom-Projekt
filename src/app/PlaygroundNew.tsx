@@ -152,7 +152,7 @@ function ToolShape({ label, style, textStyle, href, video }: {
 function HeartIcon({ filled, color }: { filled: boolean; color: string }) {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill={filled ? color : "none"} stroke={color} strokeWidth="1.8" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 8.2C12 5.4 9.7 3.3 7 3.3 4.2 3.3 2.2 5.6 2.2 8.5c0 2.1 1.2 3.9 2.9 5.6L12 21l6.9-6.9c1.7-1.7 2.9-3.5 2.9-5.6 0-2.9-2-5.2-4.8-5.2-2.7 0-5 2.1-5 4.9Z" strokeLinejoin="round" strokeLinecap="round" />
+      <path d="M12 22 L6.5 12.5 A5.5 5.5 0 1 0 12 7 A5.5 5.5 0 1 0 17.5 12.5 Z" strokeLinejoin="round" strokeLinecap="round" />
     </svg>
   );
 }
@@ -300,9 +300,8 @@ function Section({ title, tools, onOpen, onDelete, emptyMsg, sessionId, favorite
   );
 }
 
-export default function PlaygroundNew() {
+function usePlaygroundData() {
   const navigate = useNavigate();
-  const location = useLocation();
   const sessionId = useMemo(() => getSessionId(), []);
   const [tools, setTools] = useState<NewToolData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -313,24 +312,6 @@ export default function PlaygroundNew() {
     catch { return []; }
   });
 
-  const toolsRef = useRef<HTMLDivElement>(null);
-  const myToolsRef = useRef<HTMLDivElement>(null);
-  const allToolsRef = useRef<HTMLDivElement>(null);
-  const [exploreVisible, setExploreVisible] = useState(true);
-  const [toolsView, setToolsView] = useState<"my" | "all">(
-    () => (localStorage.getItem("playgroundToolsView") as "my" | "all") ?? "my"
-  );
-
-  const DE = lang === "de";
-  const theme = getTheme(dark);
-
-  const selectView = (view: "my" | "all") => {
-    setToolsView(view);
-    localStorage.setItem("playgroundToolsView", view);
-    const ref = view === "my" ? myToolsRef : allToolsRef;
-    ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-
   const toggleFavorite = (id: string) => {
     setFavorites((current) => {
       const next = current.includes(id) ? current.filter((x) => x !== id) : [...current, id];
@@ -339,45 +320,17 @@ export default function PlaygroundNew() {
     });
   };
 
-  useEffect(() => {
-    localStorage.setItem("appTheme", dark ? "dark" : "light");
-  }, [dark]);
+  useEffect(() => { localStorage.setItem("appTheme", dark ? "dark" : "light"); }, [dark]);
 
   useEffect(() => {
     let deletedIds: string[] = [];
-    try {
-      deletedIds = JSON.parse(localStorage.getItem("deletedToolIds") ?? "[]") as string[];
-    } catch { /* ignore */ }
+    try { deletedIds = JSON.parse(localStorage.getItem("deletedToolIds") ?? "[]") as string[]; }
+    catch { /* ignore */ }
     getAllNewTools()
       .then((all) => setTools(all.filter((t) => !deletedIds.includes(t.id))))
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
-
-  useEffect(() => {
-    if (loading) return;
-    const target = toolsRef.current;
-    if (!target) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => setExploreVisible(!entry.isIntersecting),
-      { threshold: 0 }
-    );
-    observer.observe(target);
-    return () => observer.disconnect();
-  }, [loading]);
-
-  useEffect(() => {
-    if (loading) return;
-    if (location.hash === "#my-tools") {
-      requestAnimationFrame(() => myToolsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
-      return;
-    }
-    if (myToolsAll.length > 0) {
-      const ref = toolsView === "my" ? myToolsRef : allToolsRef;
-      requestAnimationFrame(() => ref.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading, location.hash, location.key]);
 
   const myToolsRaw = tools.filter((tool) => tool.params.sessionId === sessionId);
   const myToolsMap = new Map<string, NewToolData>();
@@ -393,60 +346,71 @@ export default function PlaygroundNew() {
 
   const openTool = (id: string) => navigate(`/new?tool=${id}`);
 
-  const addToDeletedBlacklist = (ids: string[]) => {
-    try {
-      const existing = JSON.parse(localStorage.getItem("deletedToolIds") ?? "[]") as string[];
-      const merged = Array.from(new Set([...existing, ...ids]));
-      localStorage.setItem("deletedToolIds", JSON.stringify(merged));
-    } catch { /* ignore */ }
-  };
-
   const handleDelete = (id: string) => {
     const target = tools.find((tool) => tool.id === id);
     const toDelete = target
       ? tools.filter((tool) => tool.params.sessionId === target.params.sessionId && (tool.params.displayName || tool.name) === (target.params.displayName || target.name))
       : tools.filter((tool) => tool.id === id);
     const ids = toDelete.map((tool) => tool.id);
-    // Immediately add to local blacklist so tool never reappears even if Supabase call fails
-    addToDeletedBlacklist(ids);
-    // Optimistically remove from UI
+    try {
+      const existing = JSON.parse(localStorage.getItem("deletedToolIds") ?? "[]") as string[];
+      localStorage.setItem("deletedToolIds", JSON.stringify(Array.from(new Set([...existing, ...ids]))));
+    } catch { /* ignore */ }
     setTools((current) => current.filter((tool) => !ids.includes(tool.id)));
-    // Then delete from Supabase (best-effort, blacklist is the safety net)
     Promise.all(ids.map(deleteNewTool)).catch(console.error);
   };
+
+  return { sessionId, loading, lang, setLang, dark, setDark, favorites, toggleFavorite, myToolsAll, publicTools, openTool, handleDelete };
+}
+
+function PageNavFAB({ dark, myToolsAll, DE, theme }: { dark: boolean; myToolsAll: NewToolData[]; DE: boolean; theme: Theme }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isMyPage = location.pathname.includes("my-tools");
+
+  if (myToolsAll.length === 0) return null;
+
+  return (
+    <div style={{ position: "fixed", bottom: "40px", left: "50%", transform: "translateX(-50%)", zIndex: 50, display: "flex", gap: "4px", background: theme.toolBg, border: `1px dashed ${theme.border}`, borderRadius: "4px", padding: "4px" }}>
+      {([
+        { path: "/my-tools", label: DE ? "Meine Tools" : "My Tools" },
+        { path: "/playground", label: DE ? "Alle Tools" : "All Tools" },
+      ]).map(({ path, label }) => {
+        const active = isMyPage ? path === "/my-tools" : path === "/playground";
+        return (
+          <button key={path} onClick={() => navigate(path)} style={{ border: "none", borderRadius: "3px", cursor: "pointer", outline: "none", padding: "9px 18px", fontFamily: FONT_SANS, fontSize: "14px", background: active ? (dark ? theme.text : theme.headline) : "transparent", color: active ? theme.bg : theme.muted, transition: "background 0.15s, color 0.15s" }}>
+            {label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+export default function PlaygroundNew() {
+  const { sessionId, loading, lang, setLang, dark, setDark, favorites, toggleFavorite, myToolsAll, publicTools, openTool, handleDelete } = usePlaygroundData();
+  const toolsRef = useRef<HTMLDivElement>(null);
+  const [exploreVisible, setExploreVisible] = useState(true);
+
+  const DE = lang === "de";
+  const theme = getTheme(dark);
+
+  useEffect(() => {
+    if (loading) return;
+    const target = toolsRef.current;
+    if (!target) return;
+    const observer = new IntersectionObserver(([entry]) => setExploreVisible(!entry.isIntersecting), { threshold: 0 });
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [loading]);
 
   return (
     <ThemeContext.Provider value={theme}>
       <TopNav current="Playground" dark={dark} setDark={setDark} lang={lang} setLang={setLang} />
-      <main
-        style={{
-          minHeight: "100vh",
-          height: "100vh",
-          width: "100vw",
-          overflowX: "hidden",
-          overflowY: "auto",
-          position: "relative",
-          backgroundColor: theme.bg,
-          backgroundImage: theme.dotGrid,
-          backgroundSize: "42px 42px",
-          color: theme.text,
-          fontFamily: FONT_SANS,
-          WebkitOverflowScrolling: "touch",
-        }}
-      >
-        <style>{`
-          html, body, #root { height: 100%; overflow: hidden; }
-        `}</style>
+      <main style={{ minHeight: "100vh", height: "100vh", width: "100vw", overflowX: "hidden", overflowY: "auto", position: "relative", backgroundColor: theme.bg, backgroundImage: theme.dotGrid, backgroundSize: "42px 42px", color: theme.text, fontFamily: FONT_SANS, WebkitOverflowScrolling: "touch" }}>
+        <style>{`html, body, #root { height: 100%; overflow: hidden; }`}</style>
 
-        <section
-          aria-label="Writing tools playground"
-          style={{
-            position: "relative",
-            minHeight: "100vh",
-            overflow: "hidden",
-            background: "transparent",
-          }}
-        >
+        <section aria-label="Writing tools playground" style={{ position: "relative", minHeight: "100vh", overflow: "hidden", background: "transparent" }}>
           <div style={{ position: "absolute", left: "50%", top: "50%", width: 1680, height: 858, transform: "translate(-50%, -50%)" }}>
             <ToolShape label="...without stopping" href="/Diplom-Projekt/dont-stop-writing" video="without-stopping" style={{ left: 40, top: 197, width: 236, height: 233, transform: "rotate(5.1deg)", borderRadius: 200 }} textStyle={{ transform: "rotate(-5.1deg)" }} />
             <ToolShape label="...uninvited thoughts" href="/Diplom-Projekt/uninvited-thoughts" video="uninvited-thoughts" style={{ left: 420, top: 57, width: 317, height: 155, transform: "rotate(-9.25deg)", borderRadius: 4 }} textStyle={{ transform: "rotate(9.25deg)" }} />
@@ -454,7 +418,6 @@ export default function PlaygroundNew() {
             <ToolShape label="...blind & then witness" href="/Diplom-Projekt/anonymously-in-public" video="blind-then-witness" style={{ left: 213, top: 579, width: 324, height: 163, transform: "rotate(6.45deg)", borderRadius: 100 }} textStyle={{ transform: "rotate(-6.45deg)" }} />
             <ToolShape label="...with visible corrections" href="/Diplom-Projekt/loschen-korrigieren" video="visible-corrections" style={{ left: 774, top: 526, width: 363, height: 174, borderRadius: "40px 4px 40px 4px" }} />
             <ToolShape label="...in a spiral" href="/Diplom-Projekt/in-a-spiral" video="in-a-spiral" style={{ left: 1321, top: 414, width: 211, height: 309, transform: "rotate(12.11deg)", borderRadius: 200 }} textStyle={{ transform: "rotate(-12.11deg)" }} />
-
             <div style={{ position: "absolute", left: 456, top: 300, width: 768 }}>
               <h1 style={{ margin: 0, fontFamily: FONT_SERIF, fontSize: 36, lineHeight: "45px", fontWeight: 400, color: theme.headline, textAlign: "center", whiteSpace: "nowrap" }}>
                 {DE ? "Schreibwerkzeuge prägen, wie wir denken & schreiben." : "Writing Tools shape how we think & write."}<br />
@@ -464,110 +427,78 @@ export default function PlaygroundNew() {
           </div>
         </section>
 
-        <div ref={toolsRef} style={{ width: "100%", boxSizing: "border-box", padding: "96px 100px 96px" }}>
+        <div ref={toolsRef} style={{ width: "100%", boxSizing: "border-box", padding: "96px 100px 160px" }}>
           {loading ? (
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "200px" }}>
               <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: theme.muted }}>{DE ? "Lädt..." : "Loading..."}</span>
             </div>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "56px" }}>
-              {myToolsAll.length > 0 && (
-                <div ref={myToolsRef} style={{ scrollMarginTop: "40px" }}>
-                  <Section
-                    title={DE ? "Meine Tools" : "My Tools"}
-                    tools={myToolsAll}
-                    onOpen={openTool}
-                    onDelete={handleDelete}
-                    emptyMsg=""
-                    sessionId={sessionId}
-                    favorites={favorites}
-                    onToggleFavorite={toggleFavorite}
-                  />
-                </div>
-              )}
-              <div ref={allToolsRef} style={{ scrollMarginTop: "40px" }}>
-                <Section
-                  title={DE ? "Alle Tools" : "All Tools"}
-                  tools={publicTools}
-                  onOpen={openTool}
-                  emptyMsg={DE ? "Noch keine öffentlichen Tools vorhanden." : "No public tools yet."}
-                  sessionId={sessionId}
-                  favorites={favorites}
-                  onToggleFavorite={toggleFavorite}
-                />
-              </div>
-            </div>
+            <Section
+              title={DE ? "Alle Tools" : "All Tools"}
+              tools={publicTools}
+              onOpen={openTool}
+              emptyMsg={DE ? "Noch keine öffentlichen Tools vorhanden." : "No public tools yet."}
+              sessionId={sessionId}
+              favorites={favorites}
+              onToggleFavorite={toggleFavorite}
+            />
           )}
         </div>
 
         {!loading && myToolsAll.length > 0 ? (
-          <div
-            style={{
-              position: "fixed",
-              bottom: "40px",
-              left: "50%",
-              transform: "translateX(-50%)",
-              zIndex: 50,
-              display: "flex",
-              gap: "4px",
-              background: theme.toolBg,
-              border: `1px dashed ${theme.border}`,
-              borderRadius: "4px",
-              padding: "4px",
-            }}
-          >
-            {([
-              { view: "my" as const, label: DE ? "Meine Tools" : "My Tools" },
-              { view: "all" as const, label: DE ? "Alle Tools" : "All Tools" },
-            ]).map(({ view, label }) => {
-              const active = toolsView === view;
-              return (
-                <button
-                  key={view}
-                  onClick={() => selectView(view)}
-                  style={{
-                    border: "none",
-                    borderRadius: "3px",
-                    cursor: "pointer",
-                    outline: "none",
-                    padding: "9px 18px",
-                    fontFamily: FONT_SANS,
-                    fontSize: "14px",
-                    background: active ? (dark ? theme.text : theme.headline) : "transparent",
-                    color: active ? theme.bg : theme.muted,
-                    transition: "background 0.15s, color 0.15s",
-                  }}
-                >
-                  {label}
-                </button>
-              );
-            })}
-          </div>
+          <PageNavFAB dark={dark} myToolsAll={myToolsAll} DE={DE} theme={theme} />
         ) : (
           exploreVisible && (
             <button
               onClick={() => toolsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
-              style={{
-                position: "fixed",
-                bottom: "40px",
-                left: "50%",
-                transform: "translateX(-50%)",
-                zIndex: 50,
-                background: theme.toolBg,
-                border: `1px dashed ${theme.border}`,
-                borderRadius: "4px",
-                cursor: "pointer",
-                outline: "none",
-                padding: "11px 22px",
-                fontFamily: FONT_SANS,
-                fontSize: "15px",
-                color: theme.text,
-              }}
+              style={{ position: "fixed", bottom: "40px", left: "50%", transform: "translateX(-50%)", zIndex: 50, background: theme.toolBg, border: `1px dashed ${theme.border}`, borderRadius: "4px", cursor: "pointer", outline: "none", padding: "11px 22px", fontFamily: FONT_SANS, fontSize: "15px", color: theme.text }}
             >
               {DE ? "Alle Tools entdecken" : "Explore all tools"}
             </button>
           )
         )}
+      </main>
+    </ThemeContext.Provider>
+  );
+}
+
+export function MyToolsPage() {
+  const { sessionId, loading, lang, setLang, dark, setDark, favorites, toggleFavorite, myToolsAll, openTool, handleDelete } = usePlaygroundData();
+
+  const DE = lang === "de";
+  const theme = getTheme(dark);
+
+  return (
+    <ThemeContext.Provider value={theme}>
+      <TopNav current="Playground" dark={dark} setDark={setDark} lang={lang} setLang={setLang} />
+      <main style={{ minHeight: "100vh", height: "100vh", width: "100vw", overflowX: "hidden", overflowY: "auto", position: "relative", backgroundColor: theme.bg, backgroundImage: theme.dotGrid, backgroundSize: "42px 42px", color: theme.text, fontFamily: FONT_SANS, WebkitOverflowScrolling: "touch" }}>
+        <style>{`html, body, #root { height: 100%; overflow: hidden; }`}</style>
+
+        <div style={{ width: "100%", boxSizing: "border-box", padding: "96px 100px 160px" }}>
+          {loading ? (
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "200px" }}>
+              <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: theme.muted }}>{DE ? "Lädt..." : "Loading..."}</span>
+            </div>
+          ) : myToolsAll.length === 0 ? (
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60vh", gap: "16px" }}>
+              <span style={{ fontFamily: FONT_SERIF, fontSize: "28px", color: theme.muted }}>{DE ? "Noch keine eigenen Tools." : "No tools yet."}</span>
+              <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: theme.muted, textAlign: "center" }}>{DE ? "Erstelle ein Tool oder markiere eines als Favorit." : "Create a tool or mark one as favourite."}</span>
+            </div>
+          ) : (
+            <Section
+              title={DE ? "Meine Tools" : "My Tools"}
+              tools={myToolsAll}
+              onOpen={openTool}
+              onDelete={handleDelete}
+              emptyMsg=""
+              sessionId={sessionId}
+              favorites={favorites}
+              onToggleFavorite={toggleFavorite}
+            />
+          )}
+        </div>
+
+        <PageNavFAB dark={dark} myToolsAll={myToolsAll} DE={DE} theme={theme} />
       </main>
     </ThemeContext.Provider>
   );

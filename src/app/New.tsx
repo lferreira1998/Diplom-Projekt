@@ -1423,7 +1423,7 @@ export default function New() {
             transition={SPRING}
             style={{
               position: "fixed", top: "24px", left: BTN_CLOSED.rules,
-              height: "33px", width: rulesOpen ? "33px" : (rulesHovered ? "134px" : "104px"),
+              height: "33px", width: rulesOpen ? "33px" : "auto",
               background: rulesBtnBg,
               border: `1px dashed ${BORDER_COL}`,
               borderRadius: "4px",
@@ -1433,7 +1433,7 @@ export default function New() {
               padding: rulesOpen ? 0 : "0 13px",
               fontFamily: FONT_SANS, color: dark ? DARK_TEXT : LIGHT_TEXT,
               lineHeight: "normal", zIndex: 25, overflow: "hidden",
-              transition: "background 0.2s, width 0.3s cubic-bezier(0.4,0,0.2,1)",
+              transition: "background 0.2s",
             }}
             onMouseEnter={() => setRulesHovered(true)}
             onMouseLeave={() => setRulesHovered(false)}
@@ -1450,12 +1450,13 @@ export default function New() {
                 <motion.span key="r" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.1 }} style={{ display: "flex", alignItems: "center", flexShrink: 0 }}>
                   <span style={{ fontSize: "15px", fontWeight: 400, whiteSpace: "nowrap" }}>{t.rulesBtn}</span>
                   <span style={{
-                    marginLeft: "8px",
                     display: "flex",
                     flexShrink: 0,
+                    overflow: "hidden",
+                    maxWidth: rulesHovered ? "30px" : "0px",
                     opacity: rulesHovered ? 1 : 0,
-                    transform: rulesHovered ? "translateX(0px)" : "translateX(-5px)",
-                    transition: "opacity 0.35s ease, transform 0.35s cubic-bezier(0.4,0,0.2,1)",
+                    marginLeft: rulesHovered ? "8px" : "0px",
+                    transition: "max-width 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.35s ease, margin-left 0.35s cubic-bezier(0.4,0,0.2,1)",
                   }}>
                     <svg width="17" height="7" viewBox="0 0 17 7" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M0 3.5H11" stroke={dark ? DARK_TEXT : LIGHT_TEXT} strokeWidth="1.3" strokeLinecap="round" strokeDasharray="2.6 2.6" />

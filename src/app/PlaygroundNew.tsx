@@ -445,7 +445,7 @@ export default function PlaygroundNew() {
           )}
         </div>
 
-        {!loading && myToolsAll.length > 0 ? (
+        {loading ? null : myToolsAll.length > 0 ? (
           <PageNavFAB dark={dark} myToolsAll={myToolsAll} DE={DE} theme={theme} />
         ) : (
           exploreVisible && (

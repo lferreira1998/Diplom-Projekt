@@ -1426,7 +1426,11 @@ export default function New() {
           >
             <AnimatePresence mode="wait">
               {rulesOpen ? (
-                <motion.span key="x" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.1 }} style={{ fontFamily: FONT_SANS, fontSize: "16px", fontWeight: 400, lineHeight: "1" }}>x</motion.span>
+                <motion.span key="x" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.1 }} style={{ display: "flex" }}>
+                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M2 2L11 11M11 2L2 11" stroke={dark ? DARK_TEXT : LIGHT_TEXT} strokeWidth="1.4" strokeLinecap="round" />
+                  </svg>
+                </motion.span>
               ) : (
                 <motion.span key="r" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.1 }} style={{ fontSize: "15px", fontWeight: 400, whiteSpace: "nowrap" }}>{t.rulesBtn}</motion.span>
               )}
@@ -2126,6 +2130,18 @@ export default function New() {
                         background: ${dark ? "rgba(240,232,220,0.85)" : "#888"};
                         cursor: grab; border: none;
                       }
+                      .txt-slider {
+                        -webkit-appearance: none; appearance: none;
+                        width: 100%; height: 2px; border-radius: 2px; cursor: pointer; outline: none;
+                        background: ${dark ? "rgba(240,232,220,0.22)" : "#c8bfb5"};
+                      }
+                      .txt-slider::-webkit-slider-thumb {
+                        -webkit-appearance: none; appearance: none;
+                        width: 30px; height: 30px; background: transparent; cursor: grab; border: none;
+                      }
+                      .txt-slider::-moz-range-thumb {
+                        width: 30px; height: 30px; background: transparent; cursor: grab; border: none;
+                      }
                       .hue-slider {
                         -webkit-appearance: none; appearance: none;
                         width: 100%; height: 100%; border-radius: 4px; cursor: crosshair; outline: none;
@@ -2149,10 +2165,22 @@ export default function New() {
 
                     <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
                       <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.lfTextSize}</span>
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                        <span style={{ fontFamily: FONT_SERIF, fontSize: "12px", color: dark ? DARK_TEXT : LIGHT_TEXT, flexShrink: 0 }}>A</span>
-                        <input type="range" min={0} max={100} value={textSizeLevel} onChange={e => setTextSizeLevel(Number(e.target.value))} className="lf-slider" style={{ flex: 1 }} />
-                        <span style={{ fontFamily: FONT_SERIF, fontSize: "28px", color: dark ? DARK_TEXT : LIGHT_TEXT, flexShrink: 0, lineHeight: 1 }}>A</span>
+                      <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                        <span style={{ fontFamily: FONT_SERIF, fontSize: "13px", color: dark ? DARK_TEXT : LIGHT_TEXT, flexShrink: 0, lineHeight: 1 }}>A</span>
+                        <div style={{ position: "relative", flex: 1, display: "flex", alignItems: "center" }}>
+                          <input type="range" min={0} max={100} value={textSizeLevel} onChange={e => setTextSizeLevel(Number(e.target.value))} className="txt-slider" style={{ flex: 1 }} />
+                          <span style={{
+                            position: "absolute",
+                            left: `calc(${textSizeLevel}% + ${(50 - textSizeLevel) * 0.3}px)`,
+                            transform: "translateX(-50%)",
+                            pointerEvents: "none",
+                            fontFamily: FONT_SERIF,
+                            fontSize: `${17 + textSizeLevel / 100 * 13}px`,
+                            color: dark ? DARK_TEXT : LIGHT_TEXT,
+                            lineHeight: 1,
+                          }}>A</span>
+                        </div>
+                        <span style={{ fontFamily: FONT_SERIF, fontSize: "40px", color: dark ? DARK_TEXT : LIGHT_TEXT, flexShrink: 0, lineHeight: 1 }}>A</span>
                       </div>
                     </div>
 

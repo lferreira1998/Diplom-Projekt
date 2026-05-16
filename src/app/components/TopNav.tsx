@@ -14,15 +14,9 @@ const ROUTES: Record<string, string> = {
 };
 
 const LABELS = {
-  de: { Create: "Erstellen", Playground: "Playground", About: "Über das Projekt", MyTools: "Meine Tools", menuClosed: "Menü", menuOpen: "Schließen", lang: "DE" },
-  en: { Create: "Create", Playground: "Playground", About: "About", MyTools: "My Tools", menuClosed: "Menu", menuOpen: "Close", lang: "ENG" },
+  de: { Create: "Erstellen", Playground: "Playground", About: "Über das Projekt", menuClosed: "Menü", menuOpen: "Schließen", lang: "DE" },
+  en: { Create: "Create", Playground: "Playground", About: "About", menuClosed: "Menu", menuOpen: "Close", lang: "ENG" },
 };
-
-function hasMyTools(): boolean {
-  if (localStorage.getItem("hasCreatedTool") === "1") return true;
-  try { return (JSON.parse(localStorage.getItem("favoriteToolIds") ?? "[]") as string[]).length > 0; }
-  catch { return false; }
-}
 
 const NAV_CONTAINER = {
   hidden: {},
@@ -213,29 +207,7 @@ export default function TopNav({
                     initial="hidden" animate="visible" exit="exit"
                     style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, display: "flex", flexDirection: "column", gap: "8px", alignItems: "flex-end" }}
                   >
-                    <motion.button
-                      key="Create"
-                      variants={NAV_ITEM}
-                      style={navItemStyle(dark, current === "Create")}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setMenuOpen(false);
-                        if (current !== "Create") navigate(ROUTES.Create);
-                      }}
-                    >{L.Create}</motion.button>
-                    {hasMyTools() && (
-                      <motion.button
-                        key="MyTools"
-                        variants={NAV_ITEM}
-                        style={navItemStyle(dark, false)}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setMenuOpen(false);
-                          navigate("/playground#my-tools");
-                        }}
-                      >{L.MyTools}</motion.button>
-                    )}
-                    {(["Playground", "About"] as const).map((key) => (
+                    {(["Create", "Playground", "About"] as const).map((key) => (
                       <motion.button
                         key={key}
                         variants={NAV_ITEM}

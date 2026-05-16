@@ -1412,7 +1412,7 @@ export default function New() {
             transition={SPRING}
             style={{
               position: "fixed", top: "24px", left: BTN_CLOSED.rules,
-              height: "33px", width: rulesOpen ? "33px" : "62px",
+              height: "33px", width: rulesOpen ? "33px" : "104px",
               background: rulesBtnBg,
               border: `1px dashed ${BORDER_COL}`,
               borderRadius: "4px",
@@ -1428,7 +1428,7 @@ export default function New() {
               {rulesOpen ? (
                 <motion.span key="x" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.1 }} style={{ fontFamily: FONT_SANS, fontSize: "16px", fontWeight: 400, lineHeight: "1" }}>x</motion.span>
               ) : (
-                <motion.span key="r" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.1 }} style={{ fontSize: "15px", fontWeight: 400 }}>{t.rulesBtn}</motion.span>
+                <motion.span key="r" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.1 }} style={{ fontSize: "15px", fontWeight: 400, whiteSpace: "nowrap" }}>{t.rulesBtn}</motion.span>
               )}
             </AnimatePresence>
           </motion.button>
@@ -2286,14 +2286,14 @@ export default function New() {
             )}
             {/* Eye toggle */}
             <button
-              style={btnStyle(dark, { background: dark ? darkColors.darkCardBg : "#ece6dc" }, surfaceLight)}
+              style={btnStyle(dark, { background: dark ? darkColors.darkCardBg : surfaceLight }, surfaceLight)}
               onClick={(e) => { e.stopPropagation(); setVisible(false); setMenuOpen(false); setExportOpen(false); }}
             >
               <IconEyeClosed color={iconColor} />
             </button>
             {/* Language toggle */}
             <button
-              style={btnStyle(dark, { background: dark ? darkColors.darkCardBg : "#ece6dc" }, surfaceLight)}
+              style={btnStyle(dark, { background: dark ? darkColors.darkCardBg : surfaceLight }, surfaceLight)}
               onClick={(e) => { e.stopPropagation(); setLang(l => { const next = l === "de" ? "en" : "de"; localStorage.setItem("appLang", next); return next; }); }}
             >
               {t.langBtn}
@@ -2321,7 +2321,7 @@ export default function New() {
                 }}
               />
               <button
-                style={{ ...btnStyle(dark, { background: dark ? darkColors.darkCardBg : "#ece6dc" }), position: "relative", zIndex: 1 }}
+                style={{ ...btnStyle(dark, { background: dark ? darkColors.darkCardBg : surfaceLight }), position: "relative", zIndex: 1 }}
                 onClick={(e) => { e.stopPropagation(); setMenuOpen(o => !o); setMenuHovered(false); }}
               >
                 {menuOpen ? t.menuOpen : t.menuClosed}

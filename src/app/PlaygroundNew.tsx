@@ -315,10 +315,21 @@ export default function PlaygroundNew() {
 
   const toolsRef = useRef<HTMLDivElement>(null);
   const myToolsRef = useRef<HTMLDivElement>(null);
+  const allToolsRef = useRef<HTMLDivElement>(null);
   const [exploreVisible, setExploreVisible] = useState(true);
+  const [toolsView, setToolsView] = useState<"my" | "all">(
+    () => (localStorage.getItem("playgroundToolsView") as "my" | "all") ?? "my"
+  );
 
   const DE = lang === "de";
   const theme = getTheme(dark);
+
+  const selectView = (view: "my" | "all") => {
+    setToolsView(view);
+    localStorage.setItem("playgroundToolsView", view);
+    const ref = view === "my" ? myToolsRef : allToolsRef;
+    ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   const toggleFavorite = (id: string) => {
     setFavorites((current) => {
@@ -359,7 +370,13 @@ export default function PlaygroundNew() {
     if (loading) return;
     if (location.hash === "#my-tools") {
       requestAnimationFrame(() => myToolsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+      return;
     }
+    if (myToolsAll.length > 0) {
+      const ref = toolsView === "my" ? myToolsRef : allToolsRef;
+      requestAnimationFrame(() => ref.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, location.hash, location.key]);
 
   const myToolsRaw = tools.filter((tool) => tool.params.sessionId === sessionId);
@@ -468,41 +485,88 @@ export default function PlaygroundNew() {
                   />
                 </div>
               )}
-              <Section
-                title={DE ? "Alle Tools" : "All Tools"}
-                tools={publicTools}
-                onOpen={openTool}
-                emptyMsg={DE ? "Noch keine öffentlichen Tools vorhanden." : "No public tools yet."}
-                sessionId={sessionId}
-                favorites={favorites}
-                onToggleFavorite={toggleFavorite}
-              />
+              <div ref={allToolsRef} style={{ scrollMarginTop: "40px" }}>
+                <Section
+                  title={DE ? "Alle Tools" : "All Tools"}
+                  tools={publicTools}
+                  onOpen={openTool}
+                  emptyMsg={DE ? "Noch keine öffentlichen Tools vorhanden." : "No public tools yet."}
+                  sessionId={sessionId}
+                  favorites={favorites}
+                  onToggleFavorite={toggleFavorite}
+                />
+              </div>
             </div>
           )}
         </div>
 
-        {exploreVisible && (
-        <button
-          onClick={() => toolsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
-          style={{
-            position: "fixed",
-            bottom: "40px",
-            left: "50%",
-            transform: "translateX(-50%)",
-            zIndex: 50,
-            background: theme.toolBg,
-            border: `1px dashed ${theme.border}`,
-            borderRadius: "4px",
-            cursor: "pointer",
-            outline: "none",
-            padding: "11px 22px",
-            fontFamily: FONT_SANS,
-            fontSize: "15px",
-            color: theme.text,
-          }}
-        >
-          Explore all tools
-        </button>
+        {!loading && myToolsAll.length > 0 ? (
+          <div
+            style={{
+              position: "fixed",
+              bottom: "40px",
+              left: "50%",
+              transform: "translateX(-50%)",
+              zIndex: 50,
+              display: "flex",
+              gap: "4px",
+              background: theme.toolBg,
+              border: `1px dashed ${theme.border}`,
+              borderRadius: "4px",
+              padding: "4px",
+            }}
+          >
+            {([
+              { view: "my" as const, label: DE ? "Meine Tools" : "My Tools" },
+              { view: "all" as const, label: DE ? "Alle Tools" : "All Tools" },
+            ]).map(({ view, label }) => {
+              const active = toolsView === view;
+              return (
+                <button
+                  key={view}
+                  onClick={() => selectView(view)}
+                  style={{
+                    border: "none",
+                    borderRadius: "3px",
+                    cursor: "pointer",
+                    outline: "none",
+                    padding: "9px 18px",
+                    fontFamily: FONT_SANS,
+                    fontSize: "14px",
+                    background: active ? (dark ? theme.text : theme.headline) : "transparent",
+                    color: active ? theme.bg : theme.muted,
+                    transition: "background 0.15s, color 0.15s",
+                  }}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          exploreVisible && (
+            <button
+              onClick={() => toolsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+              style={{
+                position: "fixed",
+                bottom: "40px",
+                left: "50%",
+                transform: "translateX(-50%)",
+                zIndex: 50,
+                background: theme.toolBg,
+                border: `1px dashed ${theme.border}`,
+                borderRadius: "4px",
+                cursor: "pointer",
+                outline: "none",
+                padding: "11px 22px",
+                fontFamily: FONT_SANS,
+                fontSize: "15px",
+                color: theme.text,
+              }}
+            >
+              {DE ? "Alle Tools entdecken" : "Explore all tools"}
+            </button>
+          )
         )}
       </main>
     </ThemeContext.Provider>

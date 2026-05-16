@@ -773,6 +773,7 @@ export default function New() {
   const [visible, setVisible]         = useState(true);
   const [menuOpen, setMenuOpen]       = useState(false);
   const [menuHovered, setMenuHovered] = useState(false);
+  const [rulesHovered, setRulesHovered] = useState(false);
   const [rulesOpen, setRulesOpen]     = useState(false);
   const [activeCategory, setActiveCategory] = useState("Look & Feel");
   const [identityOpen, setIdentityOpen]     = useState(false);
@@ -1422,16 +1423,19 @@ export default function New() {
             transition={SPRING}
             style={{
               position: "fixed", top: "24px", left: BTN_CLOSED.rules,
-              height: "33px", width: rulesOpen ? "33px" : "104px",
+              height: "33px", width: rulesOpen ? "33px" : (rulesHovered ? "150px" : "104px"),
               background: rulesBtnBg,
               border: `1px dashed ${BORDER_COL}`,
               borderRadius: "4px",
               cursor: "pointer", outline: "none",
               display: "flex", alignItems: "center", justifyContent: "center",
+              gap: "8px",
               fontFamily: FONT_SANS, color: dark ? DARK_TEXT : LIGHT_TEXT,
               lineHeight: "normal", zIndex: 25, overflow: "hidden",
               transition: "background 0.2s, width 0.2s ease",
             }}
+            onMouseEnter={() => setRulesHovered(true)}
+            onMouseLeave={() => setRulesHovered(false)}
             onClick={(e) => { e.stopPropagation(); setRulesOpen(o => { if (o) setIdentityOpen(false); return !o; }); }}
           >
             <AnimatePresence mode="wait">
@@ -1442,7 +1446,26 @@ export default function New() {
                   </svg>
                 </motion.span>
               ) : (
-                <motion.span key="r" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.1 }} style={{ fontSize: "15px", fontWeight: 400, whiteSpace: "nowrap" }}>{t.rulesBtn}</motion.span>
+                <motion.span key="r" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.1 }} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span style={{ fontSize: "15px", fontWeight: 400, whiteSpace: "nowrap" }}>{t.rulesBtn}</span>
+                  <AnimatePresence>
+                    {rulesHovered && (
+                      <motion.span
+                        key="arrow"
+                        initial={{ opacity: 0, width: 0 }}
+                        animate={{ opacity: 1, width: 30 }}
+                        exit={{ opacity: 0, width: 0 }}
+                        transition={{ duration: 0.18 }}
+                        style={{ display: "flex", alignItems: "center", overflow: "hidden" }}
+                      >
+                        <svg width="30" height="10" viewBox="0 0 30 10" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
+                          <path d="M0 5H22" stroke={dark ? DARK_TEXT : LIGHT_TEXT} strokeWidth="1.6" strokeLinecap="round" strokeDasharray="4 4" />
+                          <path d="M20 1L26 5L20 9" stroke={dark ? DARK_TEXT : LIGHT_TEXT} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </motion.span>
               )}
             </AnimatePresence>
           </motion.button>

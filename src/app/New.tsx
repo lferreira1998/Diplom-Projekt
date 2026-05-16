@@ -9,6 +9,7 @@ import {
   extractText,
 } from "./projects/parametrischestool/components/writing-zone";
 import { saveNewTool, updateNewTool, getNewToolById } from "./utils/storage";
+import html2canvas from "html2canvas-pro";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const LIGHT_BG    = "#fcf6ef";
@@ -147,9 +148,8 @@ const TRANSLATIONS = {
     copyText: "Text kopieren",
     copied: "Kopiert ✓",
     exportText: "Exportieren",
-    exportSVG: "Als SVG exportieren",
-    exportPDF: "Als PDF exportieren",
-    exportTxt: ".txt herunterladen",
+    exportJPG: "Als JPG exportieren",
+    exportTxt: "Als TXT exportieren",
     exportCopy: "Text kopieren",
     // Category labels (what shows on sidebar buttons)
     catLabel: (cat: { en: string; de: string }) => cat.de,
@@ -249,9 +249,8 @@ const TRANSLATIONS = {
     copyText: "Copy text",
     copied: "Copied ✓",
     exportText: "Export",
-    exportSVG: "Export as SVG",
-    exportPDF: "Export as PDF",
-    exportTxt: "Download .txt",
+    exportJPG: "Export as JPG",
+    exportTxt: "Export as TXT",
     exportCopy: "Copy text",
     // Category labels
     catLabel: (cat: { en: string; de: string }) => cat.en,
@@ -835,6 +834,7 @@ export default function New() {
   const [copied, setCopied]             = useState(false);
   const [exportOpen, setExportOpen]     = useState(false);
   const exportRef = useRef<HTMLDivElement>(null);
+  const writingZoneRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!exportOpen) return;
@@ -1014,36 +1014,6 @@ export default function New() {
 
   const handleReveal = useCallback(() => setTextRevealed(true), []);
 
-  const handleExportSVG = useCallback(() => {
-    const text = extractText(positions);
-    const lines = text.split("\n");
-    const lineH = 22;
-    const pad = 24;
-    const w = 600;
-    const h = lines.length * lineH + pad * 2;
-    const textRows = lines.map((l, i) =>
-      `<text x="${pad}" y="${pad + i * lineH + 14}" font-family="monospace" font-size="14" fill="#333">${l.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</text>`
-    ).join("\n");
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><rect width="100%" height="100%" fill="#fff"/>${textRows}</svg>`;
-    const blob = new Blob([svg], { type: "image/svg+xml" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = `${toolName.trim() || "text"}.svg`; a.click();
-    URL.revokeObjectURL(url);
-    setExportOpen(false);
-  }, [positions, toolName]);
-
-  const handleExportPDF = useCallback(() => {
-    const text = extractText(positions);
-    const win = window.open("", "_blank");
-    if (!win) return;
-    win.document.write(`<!DOCTYPE html><html><head><title>${toolName.trim() || "text"}</title><style>body{font-family:monospace;white-space:pre-wrap;padding:40px;font-size:14px;color:#333}</style></head><body>${text.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</body></html>`);
-    win.document.close();
-    win.focus();
-    win.print();
-    setExportOpen(false);
-  }, [positions, toolName]);
-
   const handleDownloadTxt = useCallback(() => {
     const text = extractText(positions);
     const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
@@ -1142,6 +1112,45 @@ export default function New() {
   const settingsCardBg = dark ? darkColors.darkCardBg : surfaceLight;
   const descColor      = dark ? DARK_MUTED : "#7c7c7c";
   const innerBorder    = dark ? DARK_BORDER : BORDER_COL;
+
+  const handleExportJPG = async () => {
+    setExportOpen(false);
+    const node = writingZoneRef.current;
+    if (!node) return;
+    const scale = 2;
+    const w = node.offsetWidth;
+    const h = node.offsetHeight;
+    const textCanvas = await html2canvas(node, { backgroundColor: null, scale, logging: false });
+    const out = document.createElement("canvas");
+    out.width = w * scale;
+    out.height = h * scale;
+    const ctx = out.getContext("2d");
+    if (!ctx) return;
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, out.width, out.height);
+    ctx.drawImage(textCanvas, 0, 0, out.width, out.height);
+    if (grainLevel > 0) {
+      const noiseUrl = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E`;
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      await new Promise<void>((res) => { img.onload = () => res(); img.onerror = () => res(); img.src = noiseUrl; });
+      if (img.width > 0) {
+        const pattern = ctx.createPattern(img, "repeat");
+        if (pattern) {
+          pattern.setTransform(new DOMMatrix().scaleSelf(scale));
+          ctx.save();
+          ctx.globalAlpha = (grainLevel / 100) * 0.55;
+          ctx.fillStyle = pattern;
+          ctx.fillRect(0, 0, out.width, out.height);
+          ctx.restore();
+        }
+      }
+    }
+    const a = document.createElement("a");
+    a.href = out.toDataURL("image/jpeg", 0.95);
+    a.download = `${toolName.trim() || "text"}.jpg`;
+    a.click();
+  };
 
   const darkBtnBg  = rulesOpen ? (dark ? "rgba(240,232,220,0.1)" : surfaceDark) : (dark ? "rgba(240,232,220,0.06)" : surfaceLight);
   const rulesBtnBg = rulesOpen ? (dark ? "rgba(240,232,220,0.1)" : surfaceDark) : (dark ? "rgba(240,232,220,0.06)" : surfaceLight);
@@ -1323,6 +1332,7 @@ export default function New() {
 
       {/* ── Writing zone ─────────────────────────────────────────────────── */}
       <motion.div
+        ref={writingZoneRef}
         animate={{
           paddingLeft: rulesOpen ? "507px" : "165px",
         }}
@@ -2284,8 +2294,7 @@ export default function New() {
                       }}
                     >
                       {([
-                        { label: t.exportSVG,  onClick: handleExportSVG },
-                        { label: t.exportPDF,  onClick: handleExportPDF },
+                        { label: t.exportJPG,  onClick: handleExportJPG },
                         { label: t.exportTxt,  onClick: handleDownloadTxt },
                         { label: t.exportCopy, onClick: handleCopyExport },
                       ] as { label: string; onClick: () => void }[]).map(({ label, onClick }) => (

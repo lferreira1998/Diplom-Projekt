@@ -2384,7 +2384,7 @@ export default function New() {
             transition={{ duration: 0.15 }}
             style={{
               position: "fixed", top: "12px", right: "12px", zIndex: 20,
-              background: dark ? "rgba(240,232,220,0.06)" : surfaceLight,
+              background: "transparent",
               border: "none", borderRadius: "4px", cursor: "pointer", outline: "none",
               padding: "4px 6px", display: "flex", alignItems: "center", justifyContent: "center",
             }}

@@ -1073,11 +1073,11 @@ export default function New() {
     ? DARK_TEXT
     : timerEnabled && visualTimer && (timerRunning || (timerDone && !textRevealed))
       ? lerpColor(LIGHT_TEXT, DARK_TEXT, Math.min(1, timerProgress * 1.8))
-      : timerEnabled && visualTimer && timerDone && textRevealed
-        ? DARK_TEXT
-        : LIGHT_TEXT;
+      : LIGHT_TEXT;
 
   const iconColor      = textColor;
+  // Nav buttons always contrast with their own button background (not the writing area bg)
+  const navIconColor   = dark ? DARK_TEXT : LIGHT_TEXT;
   const sidebarBg      = dark ? darkColors.darkSidebarBg : surfaceDark;
   const catActiveBg    = dark ? darkColors.darkActiveCatBg : surfaceLight;
   const catInactiveBg  = dark ? darkColors.darkInactiveCatBg : surfaceDark;
@@ -1403,7 +1403,7 @@ export default function New() {
               justifyContent: rulesOpen ? "center" : "flex-start",
               padding: rulesOpen ? 0 : "0 13px",
               fontFamily: FONT_SANS, color: dark ? DARK_TEXT : LIGHT_TEXT,
-              lineHeight: "normal", zIndex: 25, overflow: "hidden",
+              lineHeight: "normal", zIndex: 25, overflow: rulesOpen ? "hidden" : "visible",
               transition: "background 0.2s",
             }}
             onMouseEnter={() => setRulesHovered(true)}
@@ -1752,7 +1752,7 @@ export default function New() {
                             style={{ overflow: "hidden" }}
                           >
                             {/* Large number input row */}
-                            <div style={{ display: "flex", alignItems: "center", border: `1px dashed ${innerBorder}`, borderRadius: "4px", margin: "20px 0", height: "76px", overflow: "hidden" }}>
+                            <div style={{ position: "relative", border: `1px dashed ${innerBorder}`, borderRadius: "4px", margin: "20px 0", height: "76px", overflow: "hidden" }}>
                               <input
                                 type="number"
                                 min={1}
@@ -1761,14 +1761,15 @@ export default function New() {
                                 onChange={e => setTimerMinutes(Math.max(1, parseInt(e.target.value) || 1))}
                                 onClick={e => e.stopPropagation()}
                                 style={{
-                                  flex: 1, height: "100%", border: "none", outline: "none",
+                                  width: "100%", height: "100%", border: "none", outline: "none",
                                   background: "transparent", textAlign: "center",
                                   fontFamily: FONT_SANS, fontSize: "36px", fontWeight: 400,
                                   color: dark ? "rgba(240,232,220,0.55)" : "rgba(85,85,85,0.45)",
                                   WebkitAppearance: "none", MozAppearance: "textfield",
+                                  boxSizing: "border-box",
                                 }}
                               />
-                              <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: descColor, paddingRight: "20px", flexShrink: 0 }}>min</span>
+                              <span style={{ position: "absolute", right: "20px", top: "50%", transform: "translateY(-50%)", fontFamily: FONT_SANS, fontSize: "15px", color: descColor, pointerEvents: "none" }}>min</span>
                             </div>
                             {/* User reset row */}
                             <div
@@ -2228,7 +2229,23 @@ export default function New() {
         )}
       </AnimatePresence>
 
-      {/* ── Right panel: word count + eye + lang + menu ───────────────────── */}
+      {/* ── Timer countdown (left side) ──────────────────────────────────── */}
+      {visible && timerEnabled && timerRunning && (
+        <div style={{
+          position: "fixed", top: "24px", left: "24px",
+          height: "33px", padding: "0 12px",
+          display: "flex", alignItems: "center",
+          fontFamily: FONT_SANS, fontSize: "13px",
+          color: timeLeft <= 10 ? "#e05252" : textColor,
+          letterSpacing: "0.04em",
+          transition: "color 0.3s",
+          zIndex: 20,
+        }}>
+          {formatTime(timeLeft)}
+        </div>
+      )}
+
+      {/* ── Right panel: eye + lang + menu ───────────────────────────────── */}
       <AnimatePresence mode="wait">
         {visible ? (
           <motion.div
@@ -2237,19 +2254,6 @@ export default function New() {
             transition={{ duration: 0.15 }}
             style={{ position: "fixed", top: "24px", right: "24px", display: "flex", flexDirection: "row", alignItems: "center", gap: "10px", zIndex: 20 }}
           >
-            {/* Timer countdown */}
-            {timerEnabled && timerRunning && (
-              <div style={{
-                height: "31px", padding: "0 12px",
-                display: "flex", alignItems: "center",
-                fontFamily: FONT_SANS, fontSize: "13px",
-                color: timeLeft <= 10 ? "#e05252" : (dark ? DARK_TEXT : LIGHT_TEXT),
-                opacity: 0.7, letterSpacing: "0.04em",
-                transition: "color 0.3s",
-              }}>
-                {formatTime(timeLeft)}
-              </div>
-            )}
             {/* Export trigger (replaces word count) */}
             {positions.length > 0 && !timerRunning && (
               <div style={{ position: "relative" }} ref={exportRef}>
@@ -2308,14 +2312,14 @@ export default function New() {
             )}
             {/* Eye toggle */}
             <button
-              style={btnStyle(dark, { background: dark ? darkColors.darkCardBg : surfaceLight }, surfaceLight)}
+              style={btnStyle(dark, { background: dark ? "rgba(240,232,220,0.13)" : surfaceLight, color: navIconColor }, surfaceLight)}
               onClick={(e) => { e.stopPropagation(); setVisible(false); setMenuOpen(false); setExportOpen(false); }}
             >
-              <IconEyeClosed color={iconColor} />
+              <IconEyeClosed color={navIconColor} />
             </button>
             {/* Language toggle */}
             <button
-              style={btnStyle(dark, { background: dark ? darkColors.darkCardBg : surfaceLight }, surfaceLight)}
+              style={btnStyle(dark, { background: dark ? "rgba(240,232,220,0.13)" : surfaceLight, color: navIconColor }, surfaceLight)}
               onClick={(e) => { e.stopPropagation(); setLang(l => { const next = l === "de" ? "en" : "de"; localStorage.setItem("appLang", next); return next; }); }}
             >
               {t.langBtn}
@@ -2343,7 +2347,7 @@ export default function New() {
                 }}
               />
               <button
-                style={{ ...btnStyle(dark, { background: dark ? darkColors.darkCardBg : surfaceLight }), position: "relative", zIndex: 1 }}
+                style={{ ...btnStyle(dark, { background: dark ? "rgba(240,232,220,0.13)" : surfaceLight, color: navIconColor }), position: "relative", zIndex: 1 }}
                 onClick={(e) => { e.stopPropagation(); setMenuOpen(o => !o); setMenuHovered(false); }}
               >
                 {menuOpen ? t.menuOpen : t.menuClosed}

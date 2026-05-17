@@ -96,7 +96,7 @@ const TRANSLATIONS = {
     minutes: "Minuten",
     visualTimer: "Visueller Timer",
     visualTimerDesc: "Der Hintergrund rennt langsam die Schriftfläche ab. Wenn nichts mehr bleibt ist die Zeit um.",
-    userReset: "User setzt Timer jedes mal neu",
+    userReset: "User setzt Zeit selbst",
     cursorRunning: "Cursor läuft weiter",
     cursorRunningDesc: "Der Cursor läuft automatisch weiter, egal ob man schreibt oder nicht. Damit werden Pausen sichtbar.",
     // Visibility
@@ -197,7 +197,7 @@ const TRANSLATIONS = {
     minutes: "Minutes",
     visualTimer: "Visual Timer",
     visualTimerDesc: "The background slowly runs down the writing area. When nothing is left, time is up.",
-    userReset: "User resets timer each time",
+    userReset: "User sets time themselves",
     cursorRunning: "Cursor keeps running",
     cursorRunningDesc: "The cursor moves automatically whether you type or not. This makes pauses visible.",
     // Visibility

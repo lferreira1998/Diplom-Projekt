@@ -16,6 +16,7 @@ import InASpiral from "./projects/inaspiral/App";
 import RandomlySpatially from "./projects/randomlyspatially/App";
 import New from "./New";
 import PlaygroundNewScrollDots from "./PlaygroundNewScrollDots";
+import PlaygroundCodex, { PlaygroundCodexMyTools } from "./PlaygroundCodex";
 import { MyToolsPage } from "./PlaygroundNew";
 import {
   StyledBlindThenWitness,
@@ -55,6 +56,8 @@ export default function App() {
       <Route path="/my-tools" element={<MyToolsPage />} />
       <Route path="/playgroundnew" element={<PlaygroundNewScrollDots />} />
       <Route path="/playgroundnew1" element={<PlaygroundNewScrollDots />} />
+      <Route path="/playgroundcodex" element={<PlaygroundCodex />} />
+      <Route path="/playgroundcodex/my-tools" element={<PlaygroundCodexMyTools />} />
       <Route path="/new" element={<New />} />
     </Routes>
   );

@@ -210,6 +210,23 @@ function ToolCard({ tool, owned, favorite, shape, onOpen, onDelete, onToggleFavo
   const theme = useContext(ThemeContext);
   const [hovered, setHovered] = useState(false);
   const [confirming, setConfirming] = useState(false);
+  const actionButtonStyle: CSSProperties = {
+    height: 30,
+    padding: "0 11px",
+    border: `1px dashed ${theme.border}`,
+    borderRadius: 999,
+    background: theme.toolBg,
+    color: theme.text,
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 7,
+    fontFamily: FONT_SANS,
+    fontSize: 12,
+    lineHeight: 1,
+    maxWidth: "100%",
+  };
 
   return (
     <div
@@ -226,33 +243,11 @@ function ToolCard({ tool, owned, favorite, shape, onOpen, onDelete, onToggleFavo
         height: "100%",
         minHeight: 0,
         boxSizing: "border-box",
-        padding: 10,
+        padding: 12,
         transform: hovered ? "translateY(-2px) scale(1.01)" : "none",
         transition: "border-color 140ms ease, transform 140ms ease",
       }}
     >
-      {owned && onDelete ? (
-        <div style={{ position: "absolute", top: 14, right: 14, zIndex: 3, opacity: hovered || confirming ? 1 : 0, transition: "opacity 140ms ease" }}>
-          {confirming ? (
-            <div style={{ display: "flex", alignItems: "center", gap: 5, background: theme.toolBg, border: `1px dashed ${theme.border}`, borderRadius: 6, padding: "4px 6px" }}>
-              <span style={{ fontFamily: FONT_SANS, fontSize: 11, color: theme.text }}>Löschen?</span>
-              <button onClick={(event) => { event.stopPropagation(); onDelete(); }} style={{ height: 22, padding: "0 9px", border: "none", borderRadius: 4, background: "#b43c3c", color: "#fff", cursor: "pointer", fontFamily: FONT_SANS, fontSize: 11 }}>Ja</button>
-              <button onClick={(event) => { event.stopPropagation(); setConfirming(false); }} style={{ height: 22, padding: "0 9px", border: `1px dashed ${theme.border}`, borderRadius: 4, background: "transparent", color: theme.text, cursor: "pointer", fontFamily: FONT_SANS, fontSize: 11 }}>Nein</button>
-            </div>
-          ) : (
-            <button onClick={(event) => { event.stopPropagation(); setConfirming(true); }} title="Aus My Tools entfernen" style={{ width: 28, height: 28, border: `1px dashed ${theme.border}`, borderRadius: "50%", background: theme.toolBg, color: theme.muted, cursor: "pointer", fontFamily: FONT_SANS, fontSize: 14, lineHeight: 1 }}>x</button>
-          )}
-        </div>
-      ) : onToggleFavorite ? (
-        <button
-          onClick={(event) => { event.stopPropagation(); onToggleFavorite(); }}
-          title={favorite ? "Aus My Tools entfernen" : "Zu My Tools hinzufügen"}
-          style={{ position: "absolute", top: 14, right: 14, zIndex: 3, width: 28, height: 28, border: `1px dashed ${theme.border}`, borderRadius: "50%", background: theme.toolBg, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
-        >
-          <HeartIcon filled={favorite} color={favorite ? "#d4607a" : theme.muted} />
-        </button>
-      ) : null}
-
       <div onClick={onOpen} style={{ width: "100%", height: shape.previewHeight, minHeight: shape.previewHeight, background: theme.panelBg, overflow: "hidden", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: shape.previewRadius, border: `1px dashed ${theme.border}`, boxSizing: "border-box" }}>
         {tool.params.asciiImage ? (
           <img src={tool.params.asciiImage} alt={tool.name} style={{ display: "block", width: "100%", height: "100%", objectFit: "cover" }} />
@@ -260,12 +255,39 @@ function ToolCard({ tool, owned, favorite, shape, onOpen, onDelete, onToggleFavo
           <span style={{ fontFamily: FONT_SERIF, fontSize: 36, color: theme.border, userSelect: "none" }}>+</span>
         )}
       </div>
-      <div onClick={onOpen} style={{ display: "flex", flexDirection: "column", gap: 6, padding: "14px 12px 10px", minHeight: 0, cursor: "pointer" }}>
+      <div onClick={onOpen} style={{ display: "flex", flexDirection: "column", gap: 6, padding: "16px 12px 10px", minHeight: 0, cursor: "pointer" }}>
         <span style={{ fontFamily: FONT_SERIF, fontSize: 19, color: theme.text, lineHeight: 1.22, overflow: "hidden", overflowWrap: "anywhere", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{tool.name || "Unnamed Tool"}</span>
         {tool.description && (
           <span style={{ fontFamily: FONT_SANS, fontSize: 13, color: theme.muted, lineHeight: 1.42, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{tool.description}</span>
         )}
       </div>
+      {(owned && onDelete) || onToggleFavorite ? (
+        <div style={{ marginTop: "auto", padding: "0 12px 4px", display: "flex", justifyContent: "flex-start", alignItems: "center", minHeight: 34 }}>
+          {owned && onDelete ? (
+            confirming ? (
+              <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0, maxWidth: "100%" }}>
+                <span style={{ fontFamily: FONT_SANS, fontSize: 11, color: theme.text, whiteSpace: "nowrap" }}>Löschen?</span>
+                <button onClick={(event) => { event.stopPropagation(); onDelete(); }} style={{ ...actionButtonStyle, height: 26, padding: "0 9px", background: "#b43c3c", border: "none", color: "#fff" }}>Ja</button>
+                <button onClick={(event) => { event.stopPropagation(); setConfirming(false); }} style={{ ...actionButtonStyle, height: 26, padding: "0 9px" }}>Nein</button>
+              </div>
+            ) : (
+              <button onClick={(event) => { event.stopPropagation(); setConfirming(true); }} title="Aus My Tools entfernen" style={actionButtonStyle}>
+                <span style={{ fontSize: 14, lineHeight: 1 }}>x</span>
+                <span>Remove</span>
+              </button>
+            )
+          ) : onToggleFavorite ? (
+            <button
+              onClick={(event) => { event.stopPropagation(); onToggleFavorite(); }}
+              title={favorite ? "Aus My Tools entfernen" : "Zu My Tools hinzufügen"}
+              style={actionButtonStyle}
+            >
+              <HeartIcon filled={favorite} color={favorite ? "#d4607a" : theme.muted} />
+              <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{favorite ? "In My Tools" : "Add to My Tools"}</span>
+            </button>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -282,12 +304,14 @@ function ToolGrid({ title, tools, sessionId, favorites, onOpen, onDelete, onTogg
 }) {
   const theme = useContext(ThemeContext);
   const layouts: ToolCardShape[] = [
-    { rows: 9, radius: "86px 86px 30px 30px", previewRadius: "72px 72px 18px 18px", previewHeight: 158, rotate: -1.4, shiftX: 0, shiftY: 0 },
-    { rows: 8, radius: "10px 76px 12px 48px", previewRadius: "6px 58px 8px 28px", previewHeight: 144, rotate: 1.7, shiftX: 8, shiftY: 20 },
-    { rows: 10, radius: "46px 8px 86px 8px", previewRadius: "34px 6px 52px 6px", previewHeight: 188, rotate: -2.1, shiftX: -8, shiftY: 8 },
-    { rows: 9, radius: "132px 132px 36px 36px", previewRadius: "112px 112px 22px 22px", previewHeight: 164, rotate: 2.3, shiftX: 4, shiftY: 34 },
-    { rows: 8, radius: "8px 8px 82px 82px", previewRadius: "6px 6px 44px 44px", previewHeight: 146, rotate: -1.1, shiftX: -10, shiftY: 18 },
-    { rows: 10, radius: "72px 14px 72px 14px", previewRadius: "52px 8px 40px 8px", previewHeight: 184, rotate: 1.2, shiftX: 10, shiftY: 0 },
+    { rows: 10, radius: "94px 94px 32px 32px", previewRadius: "78px 78px 20px 20px", previewHeight: 154, rotate: -2.4, shiftX: -18, shiftY: 0 },
+    { rows: 9, radius: "10px 88px 14px 54px", previewRadius: "6px 64px 8px 30px", previewHeight: 138, rotate: 3.2, shiftX: 18, shiftY: 34 },
+    { rows: 12, radius: "52px 8px 96px 8px", previewRadius: "36px 6px 60px 6px", previewHeight: 194, rotate: -3.4, shiftX: -26, shiftY: 16 },
+    { rows: 10, radius: "142px 142px 40px 40px", previewRadius: "118px 118px 24px 24px", previewHeight: 160, rotate: 2.7, shiftX: 26, shiftY: 48 },
+    { rows: 9, radius: "8px 8px 92px 92px", previewRadius: "6px 6px 52px 52px", previewHeight: 142, rotate: -1.9, shiftX: -14, shiftY: 28 },
+    { rows: 12, radius: "78px 14px 82px 14px", previewRadius: "54px 8px 46px 8px", previewHeight: 186, rotate: 1.9, shiftX: 24, shiftY: 6 },
+    { rows: 11, radius: "26px 112px 26px 112px", previewRadius: "18px 78px 18px 72px", previewHeight: 170, rotate: -2.8, shiftX: 8, shiftY: 42 },
+    { rows: 10, radius: "118px 20px 118px 34px", previewRadius: "84px 12px 72px 20px", previewHeight: 156, rotate: 3.5, shiftX: -24, shiftY: 10 },
   ];
 
   return (
@@ -302,14 +326,14 @@ function ToolGrid({ title, tools, sessionId, favorites, onOpen, onDelete, onTogg
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 270px), 1fr))",
-            gridAutoRows: 18,
+            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))",
+            gridAutoRows: 12,
             gridAutoFlow: "dense",
-            columnGap: 26,
-            rowGap: 18,
+            columnGap: 54,
+            rowGap: 28,
             alignItems: "stretch",
             overflow: "visible",
-            padding: "34px 10px 84px",
+            padding: "52px 34px 126px",
             borderBottom: `1px dashed ${theme.border}`,
           }}
         >

@@ -1711,6 +1711,32 @@ export function WritingZone({
           if (deleteMode !== "no-delete") onUpdate([], 0);
           return;
         }
+        // Browser/mouse selection (drag-selected via mouse): map DOM selection
+        // to char indices via charElsRef, then delete that range.
+        if (textEditingEnabled && deleteMode !== "no-delete" && containerRef.current) {
+          const winSel = typeof window !== "undefined" ? window.getSelection() : null;
+          if (winSel && winSel.rangeCount > 0 && !winSel.isCollapsed) {
+            const range = winSel.getRangeAt(0);
+            if (containerRef.current.contains(range.commonAncestorContainer)) {
+              let lo = -1, hi = -1;
+              for (let i = 0; i < charElsRef.current.length; i++) {
+                const el = charElsRef.current[i];
+                if (el && range.intersectsNode(el)) {
+                  if (lo === -1) lo = i;
+                  hi = i;
+                }
+              }
+              if (lo >= 0 && hi >= lo) {
+                winSel.removeAllRanges();
+                selAnchorRef.current = null; setSelAnchor(null);
+                const newPos = deleteRange(positions, lo, hi + 1, correctionMode);
+                onUpdate(newPos, lo);
+                lkpt.current = now;
+                return;
+              }
+            }
+          }
+        }
         // Delete selection range — always allowed when free editing is on
         const anch = selAnchorRef.current;
         if (textEditingEnabled && anch !== null && anch !== cursor) {

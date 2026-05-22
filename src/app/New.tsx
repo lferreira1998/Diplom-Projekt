@@ -54,11 +54,9 @@ const NAV_ROUTES: Record<string, string> = {
   About:           "/about-the-project",
 };
 
-const INTRO_TEXT = `This is not a normal writing tool.
-Write and think differently.
+const INTRO_TEXT = `This is not a normal writing tool. Write and think differently.
 
-<- Break the rules on the right.
-Try other tools on the left. ->`;
+<- Break the rules on the right. Try other tools on the left. ->`;
 
 const SIDEBAR_CATS = [
   { en: "Look & Feel", de: "Look & Feel",  h: "60px",  br: "100px" },

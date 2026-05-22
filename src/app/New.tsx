@@ -279,8 +279,8 @@ type Tr = typeof TRANSLATIONS["de"];
 const DELETE_OPTS_KEYS = ["all", "none", "sentence", "word"] as const;
 type DeleteMode = typeof DELETE_OPTS_KEYS[number];
 
-const BTN_CLOSED = { dark: 24, rules: 67 };
-const BTN_OPEN   = { dark: 371, rules: 414 };
+const BTN_CLOSED = { dark: 24, rules: 67, clear: 230 };
+const BTN_OPEN   = { dark: 371, rules: 414, clear: 577 };
 const SPRING = { type: "spring" as const, stiffness: 300, damping: 30 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -1535,6 +1535,33 @@ export default function New() {
         )}
       </AnimatePresence>
 
+      {/* ── Floating Clear button ─────────────────────────────────────────── */}
+      <AnimatePresence>
+        {visible && positions.length > 0 && (
+          <motion.button
+            key="float-clear"
+            initial={{ opacity: 0 }}
+            animate={{ x: rulesOpen ? BTN_OPEN.clear - BTN_CLOSED.clear : 0, opacity: 1 }}
+            exit={{ opacity: 0, transition: { duration: 0.12 } }}
+            transition={SPRING}
+            style={{
+              position: "fixed", top: "24px", left: BTN_CLOSED.clear,
+              height: "33px", padding: "0 13px",
+              background: dark ? "rgba(240,232,220,0.06)" : surfaceLight,
+              border: `1px dashed ${BORDER_COL}`,
+              borderRadius: "4px",
+              cursor: "pointer", outline: "none",
+              display: "flex", alignItems: "center",
+              fontFamily: FONT_SANS, fontSize: "15px", fontWeight: 400,
+              color: dark ? DARK_TEXT : LIGHT_TEXT,
+              lineHeight: "normal", zIndex: 25, whiteSpace: "nowrap",
+              transition: "background 0.2s",
+            }}
+            onClick={(e) => { e.stopPropagation(); handleResetIntro(); }}
+          >{lang === "de" ? "Leeren" : "Clear"}</motion.button>
+        )}
+      </AnimatePresence>
+
       {/* ── Sidebar ──────────────────────────────────────────────────────── */}
       <AnimatePresence>
         {visible && rulesOpen && (
@@ -2404,20 +2431,6 @@ export default function New() {
                 </AnimatePresence>
               </div>
             )}
-            {/* Reset / replay intro */}
-            <button
-              title={lang === "de" ? "Text zurücksetzen" : "Reset text"}
-              aria-label={lang === "de" ? "Text zurücksetzen" : "Reset text"}
-              style={btnStyle(dark, { background: dark ? "rgba(240,232,220,0.13)" : surfaceLight, color: navIconColor }, surfaceLight)}
-              onClick={(e) => { e.stopPropagation(); handleResetIntro(); }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={navIconColor} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg">
-                <path d="M3 12a9 9 0 0 1 15.5-6.3L21 8" />
-                <polyline points="21 3 21 8 16 8" />
-                <path d="M21 12a9 9 0 0 1-15.5 6.3L3 16" />
-                <polyline points="3 21 3 16 8 16" />
-              </svg>
-            </button>
             {/* Eye toggle */}
             <button
               style={btnStyle(dark, { background: dark ? "rgba(240,232,220,0.13)" : surfaceLight, color: navIconColor }, surfaceLight)}

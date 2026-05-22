@@ -1550,6 +1550,37 @@ export function WritingZone({
   // Focus on mount
   useEffect(() => { containerRef.current?.focus(); }, []);
 
+  // Document-level fallback: if user has a non-collapsed browser selection inside
+  // the writing area, Backspace/Delete should clear that selection — even if the
+  // currently focused element is not the writing container (e.g. <body>).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Backspace" && e.key !== "Delete") return;
+      const ae = document.activeElement as HTMLElement | null;
+      if (ae && (ae.tagName === "INPUT" || ae.tagName === "TEXTAREA" || ae.isContentEditable)) return;
+      if (!containerRef.current) return;
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
+      const range = sel.getRangeAt(0);
+      if (!containerRef.current.contains(range.commonAncestorContainer)) return;
+      if (!textEditingEnabled || deleteMode === "no-delete") return;
+      let lo = -1, hi = -1;
+      for (let i = 0; i < charElsRef.current.length; i++) {
+        const el = charElsRef.current[i];
+        if (el && range.intersectsNode(el)) { if (lo === -1) lo = i; hi = i; }
+      }
+      if (lo < 0 || hi < lo) return;
+      e.preventDefault();
+      sel.removeAllRanges();
+      selAnchorRef.current = null; setSelAnchor(null);
+      const newPos = deleteRange(posRef.current, lo, hi + 1, correctionMode);
+      onUpdateRef.current(newPos, lo);
+      lkpt.current = performance.now();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [textEditingEnabled, deleteMode, correctionMode, lkpt]);
+
   // Keep cursor in view
   useEffect(() => {
     cursorDomRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -2170,6 +2201,7 @@ export function WritingZone({
           tabIndex={0}
           onKeyDown={handleKeyDown}
           onClick={handleClick}
+          onMouseDown={() => containerRef.current?.focus({ preventScroll: true })}
           onBlur={() => { selectAllRef.current = false; setSelectAll(false); selAnchorRef.current = null; setSelAnchor(null); }}
           className="outline-none cursor-text min-h-[60vh] relative"
           style={{

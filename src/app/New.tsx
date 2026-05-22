@@ -54,9 +54,11 @@ const NAV_ROUTES: Record<string, string> = {
   About:           "/about-the-project",
 };
 
-const INTRO_TEXT = `This is not a normal writing tool. Write and think differently.
-
+const INTRO_TEXT_EN = `Explore new ways of thinking by breaking the rules of standard writing tools…
 <- Break the rules on the left. Try other tools on the right. ->`;
+
+const INTRO_TEXT_DE = `Erkunde neue Denkwege, indem du die Regeln üblicher Schreibtools brichst…
+<- Brich die Regeln links. Probiere andere Tools rechts. ->`;
 
 const SIDEBAR_CATS = [
   { en: "Look & Feel", de: "Look & Feel",  h: "60px",  br: "100px" },
@@ -171,7 +173,7 @@ const TRANSLATIONS = {
     writingPrompt: "Erkunde neue Denkwege, indem du die Regeln üblicher Schreibtools brichst…",
   },
   en: {
-    langBtn: "ENG",
+    langBtn: "EN",
     rulesBtn: "Break Rules",
     rulesHeading: "Rules",
     rulesSubtitle: "Change them.",
@@ -814,6 +816,7 @@ export default function New() {
   const introTimeoutRef           = useRef<ReturnType<typeof setTimeout> | null>(null);
   const introPlayingRef           = useRef(false);
   const introCancelledRef         = useRef(false);
+  const introLangRef              = useRef<"de" | "en">("de");
 
   // Timer runtime state
   const [timerRunning, setTimerRunning] = useState(false);
@@ -864,7 +867,7 @@ export default function New() {
             <button
               onClick={() => setLang(l => { const next = l === "de" ? "en" : "de"; localStorage.setItem("appLang", next); return next; })}
               style={{ background: "transparent", border: `1px dashed ${BORDER_COL}`, borderRadius: "4px", cursor: "pointer", outline: "none", fontFamily: FONT_SANS, fontSize: "13px", color: LIGHT_TEXT, height: "29px", padding: "0 10px" }}
-            >{lang === "de" ? "DE" : "ENG"}</button>
+            >{lang === "de" ? "DE" : "EN"}</button>
             <button
               onClick={() => navigate("/about-the-project")}
               style={{ background: "transparent", border: `1px dashed ${BORDER_COL}`, borderRadius: "4px", cursor: "pointer", outline: "none", fontFamily: FONT_SANS, fontSize: "13px", color: LIGHT_TEXT, height: "29px", padding: "0 10px" }}
@@ -998,7 +1001,8 @@ export default function New() {
     introPlayingRef.current = true;
     introCancelledRef.current = false;
     setPositions([]); setCursor(0);
-    const text = INTRO_TEXT;
+    const activeLang = introLangRef.current;
+    const text = activeLang === "de" ? INTRO_TEXT_DE : INTRO_TEXT_EN;
     let i = 0;
     const tick = () => {
       if (introCancelledRef.current) { introPlayingRef.current = false; return; }
@@ -1038,12 +1042,16 @@ export default function New() {
   }, [playIntro]);
 
   // Auto-play intro on first visit per tab session, but only when no tool ID is in URL.
+  // Keep intro language ref in sync with current lang so reset replays in the right language
+  useEffect(() => { introLangRef.current = lang; }, [lang]);
+
   useEffect(() => {
     if (searchParams.get("tool")) return;
     let seen = false;
     try { seen = sessionStorage.getItem("introSeen") === "1"; } catch { /* ignore */ }
     if (seen) return;
     try { sessionStorage.setItem("introSeen", "1"); } catch { /* ignore */ }
+    introLangRef.current = lang;
     const t = setTimeout(() => playIntro({ enableDriftAfter: true }), 260);
     return () => clearTimeout(t);
   // eslint-disable-next-line react-hooks/exhaustive-deps

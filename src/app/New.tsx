@@ -652,11 +652,19 @@ function makeValueNoise(seed: number, cellPx: number): Float32Array {
 }
 
 function makeOrganicBuf(seed: number): Float32Array {
-  const a = makeValueNoise(seed,          18); // coarse shapes
-  const b = makeValueNoise(seed * 7 + 3,   6); // medium
-  const c = makeValueNoise(seed * 13 + 7,  2); // fine grain
+  const a = makeValueNoise(seed,          22); // coarse paper lumps
+  const b = makeValueNoise(seed * 7 + 3,   8); // medium fibres
+  const c = makeValueNoise(seed * 13 + 7,  3); // fine grain
+  const d = makeValueNoise(seed * 23 + 11, 1); // pixel-level speckle
   const buf = new Float32Array(OG_W * OG_H);
-  for (let i = 0; i < buf.length; i++) buf[i] = a[i] * 0.5 + b[i] * 0.35 + c[i] * 0.15;
+  const CONTRAST = 1.55;
+  for (let i = 0; i < buf.length; i++) {
+    // Weight fine grain higher → more visible texture; pixel speckle adds bite
+    const raw = a[i] * 0.32 + b[i] * 0.30 + c[i] * 0.26 + d[i] * 0.12;
+    // Apply contrast curve around midpoint for paper-like punch
+    const v = (raw - 0.5) * CONTRAST + 0.5;
+    buf[i] = v < 0 ? 0 : v > 1 ? 1 : v;
+  }
   return buf;
 }
 
@@ -706,7 +714,7 @@ function OrganicGrainCanvas({ grainLevel }: { grainLevel: number }) {
       style={{
         position: "fixed", inset: 0, zIndex: 3, pointerEvents: "none",
         width: "100%", height: "100%",
-        opacity: (grainLevel / 100) * 0.65,
+        opacity: (grainLevel / 100) * 0.95,
         mixBlendMode: "multiply",
       }}
     />
@@ -1176,7 +1184,7 @@ export default function New() {
     ctx.fillRect(0, 0, out.width, out.height);
     ctx.drawImage(textCanvas, 0, 0, out.width, out.height);
     if (grainLevel > 0) {
-      const noiseUrl = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E`;
+      const noiseUrl = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.55' numOctaves='6' stitchTiles='stitch' seed='7'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='1.5' intercept='-0.25'/%3E%3CfeFuncG type='linear' slope='1.5' intercept='-0.25'/%3E%3CfeFuncB type='linear' slope='1.5' intercept='-0.25'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='320' height='320' filter='url(%23n)'/%3E%3C/svg%3E`;
       const img = new Image();
       img.crossOrigin = "anonymous";
       await new Promise<void>((res) => { img.onload = () => res(); img.onerror = () => res(); img.src = noiseUrl; });
@@ -1185,7 +1193,8 @@ export default function New() {
         if (pattern) {
           pattern.setTransform(new DOMMatrix().scaleSelf(scale));
           ctx.save();
-          ctx.globalAlpha = (grainLevel / 100) * 0.55;
+          ctx.globalCompositeOperation = "multiply";
+          ctx.globalAlpha = (grainLevel / 100) * 0.9;
           ctx.fillStyle = pattern;
           ctx.fillRect(0, 0, out.width, out.height);
           ctx.restore();
@@ -1368,9 +1377,10 @@ export default function New() {
           aria-hidden
           style={{
             position: "fixed", inset: 0, zIndex: 3, pointerEvents: "none",
-            opacity: (grainLevel / 100) * 0.55,
-            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E")`,
-            backgroundRepeat: "repeat", backgroundSize: "200px 200px",
+            opacity: (grainLevel / 100) * 0.9,
+            mixBlendMode: "multiply",
+            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.55' numOctaves='6' stitchTiles='stitch' seed='7'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='1.5' intercept='-0.25'/%3E%3CfeFuncG type='linear' slope='1.5' intercept='-0.25'/%3E%3CfeFuncB type='linear' slope='1.5' intercept='-0.25'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='320' height='320' filter='url(%23n)'/%3E%3C/svg%3E")`,
+            backgroundRepeat: "repeat", backgroundSize: "320px 320px",
           }}
         />
       )}

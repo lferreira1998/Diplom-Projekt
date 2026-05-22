@@ -1009,7 +1009,7 @@ export default function New() {
       setTextFliegtEnabled(true);
       setFliegtUnit("Buchstabe");
       setFliegtZeitpunkt(1);
-      setFliegtSchnelligkeit(5);
+      setFliegtSchnelligkeit(2);
       setDriftImmediate(true);
     }
     const activeLang = introLangRef.current;
@@ -1452,8 +1452,8 @@ export default function New() {
             cursorLaeuftWeiter={cursorRunning}
             driftet={textFliegtEnabled}
             driftSaetze={fliegtUnit === "Sätze"}
-            driftWoerter={fliegtUnit === "Wörter"}
-            driftBuchstaben={fliegtUnit === "Buchstabe"}
+            driftWoerter={driftImmediate || fliegtUnit === "Wörter"}
+            driftBuchstaben={driftImmediate || fliegtUnit === "Buchstabe"}
             driftDelay={wzDriftDelay}
             driftSpeed={wzDriftSpeed}
             verblasst={textVerblassEnabled}

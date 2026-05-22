@@ -1,0 +1,118 @@
+name: Codex one-time intro drift delay patch
+
+on:
+  push:
+    branches:
+      - claude/fix-design-font-default-HJrv9
+    paths:
+      - .github/workflows/codex-delay-intro-drift.yml
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  patch-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: claude/fix-design-font-default-HJrv9
+
+      - name: Patch intro drift delay
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('src/app/New.tsx')
+          text = path.read_text()
+
+          old = '  const introTimeoutRef           = useRef<ReturnType<typeof setTimeout> | null>(null);\n  const introPlayingRef           = useRef(false);'
+          new = '  const introTimeoutRef           = useRef<ReturnType<typeof setTimeout> | null>(null);\n  const introDriftTimeoutRef      = useRef<ReturnType<typeof setTimeout> | null>(null);\n  const introPlayingRef           = useRef(false);'
+          if old in text and new not in text:
+              text = text.replace(old, new, 1)
+
+          old = '''    if (introPlayingRef.current) {
+      introCancelledRef.current = true;
+      introPlayingRef.current = false;
+      if (introTimeoutRef.current) { clearTimeout(introTimeoutRef.current); introTimeoutRef.current = null; }
+    }
+    setDriftImmediate(false);'''
+          new = '''    if (introPlayingRef.current) {
+      introCancelledRef.current = true;
+      introPlayingRef.current = false;
+      if (introTimeoutRef.current) { clearTimeout(introTimeoutRef.current); introTimeoutRef.current = null; }
+      if (introDriftTimeoutRef.current) { clearTimeout(introDriftTimeoutRef.current); introDriftTimeoutRef.current = null; }
+    }
+    setDriftImmediate(false);'''
+          if old in text:
+              text = text.replace(old, new, 1)
+
+          old = '''    if (introTimeoutRef.current) { clearTimeout(introTimeoutRef.current); introTimeoutRef.current = null; }
+    introPlayingRef.current = true;
+    introCancelledRef.current = false;
+    setPositions([]); setCursor(0);
+    if (enableDriftAfter) {
+      setTextFliegtEnabled(true);
+      setFliegtUnit("Buchstabe");
+      setFliegtZeitpunkt(1);
+      setFliegtSchnelligkeit(1);
+      setDriftImmediate(true);
+    }'''
+          new = '''    if (introTimeoutRef.current) { clearTimeout(introTimeoutRef.current); introTimeoutRef.current = null; }
+    if (introDriftTimeoutRef.current) { clearTimeout(introDriftTimeoutRef.current); introDriftTimeoutRef.current = null; }
+    introPlayingRef.current = true;
+    introCancelledRef.current = false;
+    setPositions([]); setCursor(0);
+    if (enableDriftAfter) {
+      setTextFliegtEnabled(true);
+      setFliegtUnit("Buchstabe");
+      setFliegtZeitpunkt(1);
+      setFliegtSchnelligkeit(1);
+      setDriftImmediate(false);
+      introDriftTimeoutRef.current = setTimeout(() => {
+        if (introCancelledRef.current) return;
+        setDriftImmediate(true);
+      }, 1000);
+    }'''
+          if old not in text:
+              raise SystemExit('playIntro block not found')
+          text = text.replace(old, new, 1)
+
+          old = '    if (introTimeoutRef.current) { clearTimeout(introTimeoutRef.current); introTimeoutRef.current = null; }\n    introCancelledRef.current = true;'
+          new = '    if (introTimeoutRef.current) { clearTimeout(introTimeoutRef.current); introTimeoutRef.current = null; }\n    if (introDriftTimeoutRef.current) { clearTimeout(introDriftTimeoutRef.current); introDriftTimeoutRef.current = null; }\n    introCancelledRef.current = true;'
+          if old in text and new not in text:
+              text = text.replace(old, new, 1)
+
+          path.write_text(text)
+          Path('.github/workflows/codex-delay-intro-drift.yml').unlink()
+          PY
+
+      - name: Commit patch
+        run: |
+          git config user.name "Codex"
+          git config user.email "codex@openai.com"
+          git add src/app/New.tsx .github/workflows/codex-delay-intro-drift.yml
+          git commit -m "Delay intro drift by one second"
+          git push
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - run: npm install
+      - run: npm install @supabase/supabase-js
+
+      - run: npm run build
+        env:
+          VITE_SUPABASE_URL: https://lrppyiremhutnwtdhogt.supabase.co
+          VITE_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxycHB5aXJlbWh1dG53dGRob2d0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NjgyMjUsImV4cCI6MjA5MzA0NDIyNX0.hetcvdF-C2HpaqbuWcy16GcuGsRtsZ8CZzh7-EHfTX4
+
+      - name: Deploy patched build
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          publish_branch: gh-pages
+          force_orphan: false

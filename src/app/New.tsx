@@ -49,9 +49,9 @@ const FONT_SERIF = "'freight-text-pro', 'EB Garamond', Georgia, serif";
 const FONT_SANS  = "'general-sans', 'Space Grotesk', sans-serif";
 
 const NAV_ROUTES: Record<string, string> = {
-  Create:     "/new",
-  Playground: "/playground",
-  About:      "/about-the-project",
+  CreateTool:      "/new",
+  ToolCollection:  "/playground",
+  About:           "/about-the-project",
 };
 
 const SIDEBAR_CATS = [
@@ -71,15 +71,15 @@ const TRANSLATIONS = {
     rulesHeading: "Regeln",
     rulesSubtitle: "Ändere sie.",
     identityBtn: "Name,\nBeschreibung\n& mehr",
-    saveBtn: "Speichern",
+    saveBtn: "Save Tool",
     menuClosed: "Menü",
     menuOpen: "Schließen",
     word: "Wort",
     words: "Wörter",
-    navLabels: { Create: "Erstellen", Playground: "Playground", About: "Über das Projekt" },
+    navLabels: { CreateTool: "Create Tool", ToolCollection: "Tool Collection", About: "Über das Projekt" },
     // Identity panel
     identityHeading: "Identität.",
-    identitySubtitle: "Gib deinem Tool ein Bild, einen Namen, Beschreibung und Schreibanstöße.",
+    identitySubtitle: "Speichere dein Regelset als Tool. Füge Name, Beschreibung, Schreibanstoß und Vorschaubild hinzu, damit andere es benutzen können.",
     nameHeading: "Name",
     nameHint: 'Beende mit dem Namen den Satz „Write and think…“',
     namePlaceholder: "Name eingeben",
@@ -147,7 +147,7 @@ const TRANSLATIONS = {
     revealText: "Text sehen",
     copyText: "Text kopieren",
     copied: "Kopiert ✓",
-    exportText: "Exportieren",
+    exportText: "Export Text",
     exportJPG: "Als JPG exportieren",
     exportTxt: "Als TXT exportieren",
     exportCopy: "Text kopieren",
@@ -172,15 +172,15 @@ const TRANSLATIONS = {
     rulesHeading: "Rules",
     rulesSubtitle: "Change them.",
     identityBtn: "Name,\nDescription\n& more",
-    saveBtn: "Save",
+    saveBtn: "Save Tool",
     menuClosed: "Menu",
     menuOpen: "Close",
     word: "word",
     words: "words",
-    navLabels: { Create: "Create", Playground: "Playground", About: "About" },
+    navLabels: { CreateTool: "Create Tool", ToolCollection: "Tool Collection", About: "About" },
     // Identity panel
     identityHeading: "Identity.",
-    identitySubtitle: "Give your tool an image, a name, description, and writing prompts.",
+    identitySubtitle: "Save your rule set as a tool. Add a name, description, prompt, and preview image so others can use it.",
     nameHeading: "Name",
     nameHint: 'Complete the sentence “Write and think…” with the name',
     namePlaceholder: "Enter name",
@@ -248,7 +248,7 @@ const TRANSLATIONS = {
     revealText: "Reveal text",
     copyText: "Copy text",
     copied: "Copied ✓",
-    exportText: "Export",
+    exportText: "Export Text",
     exportJPG: "Export as JPG",
     exportTxt: "Export as TXT",
     exportCopy: "Copy text",
@@ -1701,7 +1701,7 @@ export default function New() {
                       color: dark ? DARK_TEXT : LIGHT_TEXT,
                       opacity: saving ? 0.6 : 1,
                     }}
-                  >{saving ? (lang === "de" ? "Speichert…" : "Saving…") : (lang === "de" ? "Speichern" : "Save my Tool")}</button>
+                  >{saving ? (lang === "de" ? "Speichert…" : "Saving…") : (lang === "de" ? "Save Tool" : "Save Tool")}</button>
                   <button
                     onClick={() => handleSave(false)}
                     disabled={saving}
@@ -2360,7 +2360,7 @@ export default function New() {
                     initial="hidden" animate="visible" exit="exit"
                     style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, display: "flex", flexDirection: "column", gap: "8px", alignItems: "flex-end" }}
                   >
-                    {(["Create", "Playground", "About"] as const).map((key, i) => (
+                    {(["CreateTool", "ToolCollection", "About"] as const).map((key, i) => (
                       <motion.button
                         key={key}
                         variants={NAV_ITEM}
@@ -2368,7 +2368,7 @@ export default function New() {
                         onClick={(e) => {
                           e.stopPropagation();
                           setMenuOpen(false);
-                          if (key !== "Create") navigate(NAV_ROUTES[key]);
+                          if (key !== "CreateTool") navigate(NAV_ROUTES[key]);
                         }}
                       >{t.navLabels[key]}</motion.button>
                     ))}

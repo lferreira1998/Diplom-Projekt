@@ -263,12 +263,12 @@ const TRANSLATIONS = {
     catHeading: (cat: { en: string; de: string }) => cat.en,
     // Category descriptions
     catDesc: {
-      "Time":        "In typical writing tools, time plays no role — yet our thinking and speaking are inherently temporal.",
+      "Time":        "In typical writing tools, time plays no role, yet our thinking and speaking are inherently temporal.",
       "Visibility":  "In typical writing tools, text is always visible. But what happens when we play with that?",
       "Correction":  "In typical writing tools you can always edit and delete. Here, deletion becomes impossible… or visible.",
       "Stability":   "In typical writing tools, text is stable and permanent. But thoughts are fleeting and fade away.",
       "Position":    "In typical writing tools, text is linear, written left to right. Here, that changes.",
-      "Look & Feel": "Modern writing tools are smooth, clean, and static — qualities impossible in our actual thinking.",
+      "Look & Feel": "Modern writing tools are smooth, clean, and static. Qualities impossible in our actual thinking.",
     } as Record<string, string>,
     writingPrompt: "Explore new ways of thinking by breaking the rules of standard writing tools…",
   },

@@ -287,7 +287,7 @@ export default function AboutNew() {
             background: T.titleBoxBg,
           }}
         >
-          <span style={{ fontFamily: SERIF, color: T.ink, fontSize: 21, lineHeight: 1 }}>Shaping Thought — Research Map</span>
+          <span style={{ fontFamily: SERIF, color: T.ink, fontSize: 21, lineHeight: 1 }}>Shaping Thought: Research Map</span>
         </div>
       </header>
 

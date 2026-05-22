@@ -1562,19 +1562,16 @@ export default function New() {
             transition={SPRING}
             style={{
               position: "fixed", top: "24px", left: BTN_CLOSED.clear,
-              height: "33px", padding: "0 13px",
-              background: dark ? "rgba(240,232,220,0.06)" : surfaceLight,
-              border: `1px dashed ${BORDER_COL}`,
-              borderRadius: "4px",
+              height: "31px", padding: "0 12px",
+              background: "none", border: "none",
               cursor: "pointer", outline: "none",
               display: "flex", alignItems: "center",
-              fontFamily: FONT_SANS, fontSize: "15px", fontWeight: 400,
-              color: dark ? DARK_TEXT : LIGHT_TEXT,
+              fontFamily: FONT_SANS, fontSize: "13px", fontWeight: 400,
+              color: dark ? DARK_MUTED : "#9a9daa",
               lineHeight: "normal", zIndex: 25, whiteSpace: "nowrap",
-              transition: "background 0.2s",
             }}
-            onClick={(e) => { e.stopPropagation(); handleResetIntro(); }}
-          >{lang === "de" ? "Leeren" : "Clear"}</motion.button>
+            onClick={(e) => { e.stopPropagation(); handleDelete(); }}
+          >{lang === "de" ? "Text leeren" : "Clear Text"}</motion.button>
         )}
       </AnimatePresence>
 

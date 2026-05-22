@@ -1009,7 +1009,7 @@ export default function New() {
       setTextFliegtEnabled(true);
       setFliegtUnit("Buchstabe");
       setFliegtZeitpunkt(1);
-      setFliegtSchnelligkeit(2);
+      setFliegtSchnelligkeit(0.6);
       setDriftImmediate(true);
     }
     const activeLang = introLangRef.current;
@@ -1258,7 +1258,7 @@ export default function New() {
   const wzCorrection = correctionVisible ? "tippex" as const : "hidden" as const;
   const wzDriftSpeed = fliegtSchnelligkeit * 50;
   const wzVerblSpeed = verblassSchnelligkeit * 50;
-  const wzDriftDelay = driftImmediate ? 1 : fliegtZeitpunkt * 60;
+  const wzDriftDelay = driftImmediate ? 10 : fliegtZeitpunkt * 60;
   const wzVerblDelay = verblassZeitpunkt * 60;
 
   const showDoneModal = timerDone && !textRevealed;

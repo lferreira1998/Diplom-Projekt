@@ -77,12 +77,13 @@ function HeartIcon({ filled, color }: { filled: boolean; color: string }) {
   );
 }
 
-function ToolShape({ label, style, textStyle, href, video }: {
+function ToolShape({ label, style, textStyle, href, video, videoFit = "cover" }: {
   label: string;
   style: CSSProperties;
   textStyle?: CSSProperties;
   href: string;
   video: string;
+  videoFit?: "cover" | "contain";
 }) {
   const theme = useContext(ThemeContext);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -151,7 +152,7 @@ function ToolShape({ label, style, textStyle, href, video }: {
           inset: 0,
           width: "100%",
           height: "100%",
-          objectFit: "cover",
+          objectFit: videoFit,
           opacity: hovered ? 1 : 0,
           transition: "opacity 140ms ease",
           pointerEvents: "none",
@@ -182,12 +183,12 @@ function Hero({ de }: { de: boolean }) {
   return (
     <section aria-label="Writing tools playground" style={{ position: "relative", minHeight: "100vh", overflow: "hidden", background: "transparent" }}>
       <div style={{ position: "absolute", left: "50%", top: "50%", width: 1680, height: 858, transform: "translate(-50%, -50%)" }}>
-        <ToolShape label="...without stopping" href="/Diplom-Projekt/new-experiments/without-stopping" video="without-stopping" style={{ left: 40, top: 197, width: 236, height: 233, transform: "rotate(5.1deg)", borderRadius: 200 }} textStyle={{ transform: "rotate(-5.1deg)" }} />
+        <ToolShape label="...without stopping" href="/Diplom-Projekt/new-experiments/without-stopping" video="without-stopping" videoFit="contain" style={{ left: 40, top: 197, width: 236, height: 233, transform: "rotate(5.1deg)", borderRadius: 200 }} textStyle={{ transform: "rotate(-5.1deg)" }} />
         <ToolShape label="...uninvited thoughts" href="/Diplom-Projekt/new-experiments/uninvited-thoughts" video="uninvited-thoughts" style={{ left: 420, top: 57, width: 241, height: 182, transform: "rotate(-9.25deg)", borderRadius: 4 }} textStyle={{ transform: "rotate(9.25deg)" }} />
         <ToolShape label="...off the grid" href="/Diplom-Projekt/new-experiments/off-the-grid" video="off-the-grid" style={{ left: 1220, top: 112, width: 251, height: 163, transform: "rotate(4.18deg)", borderRadius: 4, justifyContent: "flex-start", alignItems: "flex-end", padding: 12 }} textStyle={{ transform: "rotate(-4.18deg)", marginBottom: 0 }} />
         <ToolShape label="...blind & then witness" href="/Diplom-Projekt/new-experiments/blind-then-witness" video="blind-then-witness" style={{ left: 213, top: 579, width: 324, height: 163, transform: "rotate(6.45deg)", borderRadius: 100 }} textStyle={{ transform: "rotate(-6.45deg)" }} />
         <ToolShape label="...with visible corrections" href="/Diplom-Projekt/new-experiments/visible-corrections" video="visible-corrections" style={{ left: 774, top: 526, width: 363, height: 174, borderRadius: "40px 4px 40px 4px" }} />
-        <ToolShape label="...in a spiral" href="/Diplom-Projekt/new-experiments/in-a-spiral" video="in-a-spiral" style={{ left: 1321, top: 414, width: 211, height: 309, transform: "rotate(12.11deg)", borderRadius: 200 }} textStyle={{ transform: "rotate(-12.11deg)" }} />
+        <ToolShape label="...in a spiral" href="/Diplom-Projekt/new-experiments/in-a-spiral" video="in-a-spiral" videoFit="contain" style={{ left: 1321, top: 414, width: 211, height: 309, transform: "rotate(12.11deg)", borderRadius: 200 }} textStyle={{ transform: "rotate(-12.11deg)" }} />
         <div style={{ position: "absolute", left: 456, top: 300, width: 768 }}>
           <h1 style={{ margin: 0, fontFamily: FONT_SERIF, fontSize: 36, lineHeight: "45px", fontWeight: 400, color: theme.headline, textAlign: "center", whiteSpace: "nowrap" }}>
             {de ? "Schreibwerkzeuge prägen, wie wir denken & schreiben." : "Writing Tools shape how we think & write."}<br />

@@ -1017,7 +1017,7 @@ export default function New() {
             setFliegtUnit("Buchstabe");
             setFliegtZeitpunkt(1);
             setFliegtSchnelligkeit(1);
-          }, 2000);
+          }, 0);
         }
         return;
       }
@@ -1063,10 +1063,6 @@ export default function New() {
 
   useEffect(() => {
     if (searchParams.get("tool")) return;
-    let seen = false;
-    try { seen = sessionStorage.getItem("introSeen") === "1"; } catch { /* ignore */ }
-    if (seen) return;
-    try { sessionStorage.setItem("introSeen", "1"); } catch { /* ignore */ }
     introLangRef.current = lang;
     const t = setTimeout(() => playIntro({ enableDriftAfter: true }), 260);
     return () => clearTimeout(t);

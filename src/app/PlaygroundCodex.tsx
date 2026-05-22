@@ -20,6 +20,16 @@ type Theme = {
 
 type ViewMode = "all" | "mine";
 
+type ToolCardShape = {
+  rows: number;
+  radius: string;
+  previewRadius: string;
+  previewHeight: number;
+  rotate: number;
+  shiftX: number;
+  shiftY: number;
+};
+
 function getTheme(dark: boolean): Theme {
   if (dark) {
     return {
@@ -188,10 +198,11 @@ function Hero({ de }: { de: boolean }) {
   );
 }
 
-function ToolCard({ tool, owned, favorite, onOpen, onDelete, onToggleFavorite }: {
+function ToolCard({ tool, owned, favorite, shape, onOpen, onDelete, onToggleFavorite }: {
   tool: NewToolData;
   owned: boolean;
   favorite: boolean;
+  shape: ToolCardShape;
   onOpen: () => void;
   onDelete?: () => void;
   onToggleFavorite?: () => void;
@@ -210,15 +221,18 @@ function ToolCard({ tool, owned, favorite, onOpen, onDelete, onToggleFavorite }:
         flexDirection: "column",
         overflow: "hidden",
         border: `1px dashed ${hovered ? theme.text : theme.border}`,
-        borderRadius: 8,
+        borderRadius: shape.radius,
         background: theme.bg,
         height: "100%",
-        transform: hovered ? "translateY(-2px)" : "none",
+        minHeight: 0,
+        boxSizing: "border-box",
+        padding: 10,
+        transform: hovered ? "translateY(-2px) scale(1.01)" : "none",
         transition: "border-color 140ms ease, transform 140ms ease",
       }}
     >
       {owned && onDelete ? (
-        <div style={{ position: "absolute", top: 8, right: 8, zIndex: 3, opacity: hovered || confirming ? 1 : 0, transition: "opacity 140ms ease" }}>
+        <div style={{ position: "absolute", top: 14, right: 14, zIndex: 3, opacity: hovered || confirming ? 1 : 0, transition: "opacity 140ms ease" }}>
           {confirming ? (
             <div style={{ display: "flex", alignItems: "center", gap: 5, background: theme.toolBg, border: `1px dashed ${theme.border}`, borderRadius: 6, padding: "4px 6px" }}>
               <span style={{ fontFamily: FONT_SANS, fontSize: 11, color: theme.text }}>Löschen?</span>
@@ -233,23 +247,23 @@ function ToolCard({ tool, owned, favorite, onOpen, onDelete, onToggleFavorite }:
         <button
           onClick={(event) => { event.stopPropagation(); onToggleFavorite(); }}
           title={favorite ? "Aus My Tools entfernen" : "Zu My Tools hinzufügen"}
-          style={{ position: "absolute", top: 8, right: 8, zIndex: 3, width: 28, height: 28, border: `1px dashed ${theme.border}`, borderRadius: "50%", background: theme.toolBg, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+          style={{ position: "absolute", top: 14, right: 14, zIndex: 3, width: 28, height: 28, border: `1px dashed ${theme.border}`, borderRadius: "50%", background: theme.toolBg, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
         >
           <HeartIcon filled={favorite} color={favorite ? "#d4607a" : theme.muted} />
         </button>
       ) : null}
 
-      <div onClick={onOpen} style={{ width: "100%", aspectRatio: "3 / 2", background: theme.panelBg, overflow: "hidden", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div onClick={onOpen} style={{ width: "100%", height: shape.previewHeight, minHeight: shape.previewHeight, background: theme.panelBg, overflow: "hidden", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: shape.previewRadius, border: `1px dashed ${theme.border}`, boxSizing: "border-box" }}>
         {tool.params.asciiImage ? (
           <img src={tool.params.asciiImage} alt={tool.name} style={{ display: "block", width: "100%", height: "100%", objectFit: "cover" }} />
         ) : (
           <span style={{ fontFamily: FONT_SERIF, fontSize: 36, color: theme.border, userSelect: "none" }}>+</span>
         )}
       </div>
-      <div onClick={onOpen} style={{ display: "flex", flexDirection: "column", gap: 5, padding: "16px 18px", cursor: "pointer" }}>
-        <span style={{ fontFamily: FONT_SERIF, fontSize: 19, color: theme.text, lineHeight: 1.25, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{tool.name || "Unnamed Tool"}</span>
+      <div onClick={onOpen} style={{ display: "flex", flexDirection: "column", gap: 6, padding: "14px 12px 10px", minHeight: 0, cursor: "pointer" }}>
+        <span style={{ fontFamily: FONT_SERIF, fontSize: 19, color: theme.text, lineHeight: 1.22, overflow: "hidden", overflowWrap: "anywhere", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{tool.name || "Unnamed Tool"}</span>
         {tool.description && (
-          <span style={{ fontFamily: FONT_SANS, fontSize: 13, color: theme.muted, lineHeight: 1.45, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{tool.description}</span>
+          <span style={{ fontFamily: FONT_SANS, fontSize: 13, color: theme.muted, lineHeight: 1.42, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{tool.description}</span>
         )}
       </div>
     </div>
@@ -267,79 +281,64 @@ function ToolGrid({ title, tools, sessionId, favorites, onOpen, onDelete, onTogg
   emptyMessage: string;
 }) {
   const theme = useContext(ThemeContext);
-  const fieldWidth = Math.max(1280, 560 + tools.length * 270);
-  const fieldHeight = Math.max(620, 420 + Math.ceil(tools.length / 4) * 118);
-  const layouts = [
-    { x: 36, y: 72, w: 324, h: 300, rotate: -5.2, radius: "120px" },
-    { x: 410, y: 22, w: 286, h: 258, rotate: 4.4, radius: "8px" },
-    { x: 746, y: 118, w: 386, h: 318, rotate: -2.1, radius: "48px 6px 48px 6px" },
-    { x: 1188, y: 40, w: 270, h: 354, rotate: 7.5, radius: "160px" },
-    { x: 1510, y: 190, w: 352, h: 276, rotate: -6.4, radius: "8px" },
-    { x: 1920, y: 74, w: 316, h: 330, rotate: 2.8, radius: "100px 100px 18px 18px" },
-    { x: 2282, y: 220, w: 392, h: 288, rotate: 5.6, radius: "40px" },
-    { x: 2732, y: 62, w: 286, h: 310, rotate: -8.2, radius: "160px" },
+  const layouts: ToolCardShape[] = [
+    { rows: 9, radius: "86px 86px 30px 30px", previewRadius: "72px 72px 18px 18px", previewHeight: 158, rotate: -1.4, shiftX: 0, shiftY: 0 },
+    { rows: 8, radius: "10px 76px 12px 48px", previewRadius: "6px 58px 8px 28px", previewHeight: 144, rotate: 1.7, shiftX: 8, shiftY: 20 },
+    { rows: 10, radius: "46px 8px 86px 8px", previewRadius: "34px 6px 52px 6px", previewHeight: 188, rotate: -2.1, shiftX: -8, shiftY: 8 },
+    { rows: 9, radius: "132px 132px 36px 36px", previewRadius: "112px 112px 22px 22px", previewHeight: 164, rotate: 2.3, shiftX: 4, shiftY: 34 },
+    { rows: 8, radius: "8px 8px 82px 82px", previewRadius: "6px 6px 44px 44px", previewHeight: 146, rotate: -1.1, shiftX: -10, shiftY: 18 },
+    { rows: 10, radius: "72px 14px 72px 14px", previewRadius: "52px 8px 40px 8px", previewHeight: 184, rotate: 1.2, shiftX: 10, shiftY: 0 },
   ];
 
   return (
     <section style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <div style={{ display: "flex", alignItems: "baseline", gap: 12, paddingBottom: 8 }}>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 12, borderBottom: `1px dashed ${theme.border}`, paddingBottom: 12 }}>
         <span style={{ fontFamily: FONT_SERIF, fontSize: 31, color: theme.text }}>{title}</span>
         <span style={{ fontFamily: FONT_SANS, fontSize: 13, color: theme.muted }}>{tools.length}</span>
-        {tools.length > 0 && (
-          <span style={{ marginLeft: "auto", fontFamily: FONT_SANS, fontSize: 12, color: theme.muted }}>
-            scroll sideways
-          </span>
-        )}
       </div>
       {tools.length === 0 ? (
         <p style={{ margin: 0, fontFamily: FONT_SANS, fontSize: 14, color: theme.muted }}>{emptyMessage}</p>
       ) : (
         <div
           style={{
-            width: "100%",
-            overflowX: "auto",
-            overflowY: "hidden",
-            padding: "36px 0 50px",
-            WebkitOverflowScrolling: "touch",
-            borderTop: `1px dashed ${theme.border}`,
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 270px), 1fr))",
+            gridAutoRows: 18,
+            gridAutoFlow: "dense",
+            columnGap: 26,
+            rowGap: 18,
+            alignItems: "stretch",
+            overflow: "visible",
+            padding: "34px 10px 84px",
             borderBottom: `1px dashed ${theme.border}`,
           }}
         >
-          <div style={{ position: "relative", width: fieldWidth, height: fieldHeight }}>
-            {tools.map((tool, index) => {
-              const owned = tool.params.sessionId === sessionId;
-              const base = layouts[index % layouts.length];
-              const row = Math.floor(index / layouts.length);
-              const left = base.x + row * 2260;
-              const top = base.y + (row % 2) * 74;
-              const hasImage = Boolean(tool.params.asciiImage);
-              return (
-                <div
-                  key={tool.id}
-                  style={{
-                    position: "absolute",
-                    left,
-                    top,
-                    width: hasImage ? base.w : Math.round(base.w * 0.88),
-                    height: hasImage ? base.h : Math.round(base.h * 0.78),
-                    transform: `rotate(${base.rotate}deg)`,
-                    transformOrigin: "center",
-                  }}
-                >
-                  <div style={{ height: "100%", borderRadius: base.radius, overflow: "hidden" }}>
-                    <ToolCard
-                      tool={tool}
-                      owned={owned}
-                      favorite={favorites.includes(tool.id)}
-                      onOpen={() => onOpen(tool.id)}
-                      onDelete={owned ? () => onDelete(tool.id) : undefined}
-                      onToggleFavorite={!owned ? () => onToggleFavorite(tool.id) : undefined}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          {tools.map((tool, index) => {
+            const owned = tool.params.sessionId === sessionId;
+            const shape = layouts[index % layouts.length];
+            return (
+              <div
+                key={tool.id}
+                style={{
+                  minWidth: 0,
+                  gridRow: `span ${shape.rows}`,
+                  transform: `translate(${shape.shiftX}px, ${shape.shiftY}px) rotate(${shape.rotate}deg)`,
+                  transformOrigin: "center",
+                  zIndex: index % 2 === 0 ? 1 : 2,
+                }}
+              >
+                <ToolCard
+                  tool={tool}
+                  owned={owned}
+                  favorite={favorites.includes(tool.id)}
+                  shape={shape}
+                  onOpen={() => onOpen(tool.id)}
+                  onDelete={owned ? () => onDelete(tool.id) : undefined}
+                  onToggleFavorite={!owned ? () => onToggleFavorite(tool.id) : undefined}
+                />
+              </div>
+            );
+          })}
         </div>
       )}
     </section>

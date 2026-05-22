@@ -1005,6 +1005,13 @@ export default function New() {
     introPlayingRef.current = true;
     introCancelledRef.current = false;
     setPositions([]); setCursor(0);
+    if (enableDriftAfter) {
+      setTextFliegtEnabled(true);
+      setFliegtUnit("Buchstabe");
+      setFliegtZeitpunkt(1);
+      setFliegtSchnelligkeit(1);
+      setDriftImmediate(true);
+    }
     const activeLang = introLangRef.current;
     const text = activeLang === "de" ? INTRO_TEXT_DE : INTRO_TEXT_EN;
     let i = 0;
@@ -1012,18 +1019,6 @@ export default function New() {
       if (introCancelledRef.current) { introPlayingRef.current = false; return; }
       if (i >= text.length) {
         introPlayingRef.current = false;
-        if (enableDriftAfter) {
-          // Give the user ~2s to read the intro, then start a slow character drift
-          // so the rule-breaking becomes visible.
-          introTimeoutRef.current = setTimeout(() => {
-            if (introCancelledRef.current) return;
-            setTextFliegtEnabled(true);
-            setFliegtUnit("Buchstabe");
-            setFliegtZeitpunkt(1);
-            setFliegtSchnelligkeit(1);
-            setDriftImmediate(true);
-          }, 0);
-        }
         return;
       }
       const ch = text[i];

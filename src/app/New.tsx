@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { useNavigate, useSearchParams } from "react-router";
@@ -279,8 +279,8 @@ type Tr = typeof TRANSLATIONS["de"];
 const DELETE_OPTS_KEYS = ["all", "none", "sentence", "word"] as const;
 type DeleteMode = typeof DELETE_OPTS_KEYS[number];
 
-const BTN_CLOSED = { dark: 24, rules: 67, clear: 195 };
-const BTN_OPEN   = { dark: 371, rules: 414, clear: 542 };
+const BTN_CLOSED = { dark: 24, rules: 67, clear: 188 };
+const BTN_OPEN   = { dark: 371, rules: 414, clear: 535 };
 const SPRING = { type: "spring" as const, stiffness: 300, damping: 30 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -760,6 +760,8 @@ export default function New() {
   const [menuHovered, setMenuHovered] = useState(false);
   const [rulesHovered, setRulesHovered] = useState(false);
   const [rulesOpen, setRulesOpen]     = useState(false);
+  const rulesBtnRef = useRef<HTMLButtonElement>(null);
+  const [rulesBtnWidth, setRulesBtnWidth] = useState(0);
   const [activeCategory, setActiveCategory] = useState("Look & Feel");
   const [identityOpen, setIdentityOpen]     = useState(false);
   const writingFocusRef = useRef<(() => void) | null>(null);
@@ -1073,6 +1075,19 @@ export default function New() {
   useEffect(() => {
     return () => { if (introTimeoutRef.current) clearTimeout(introTimeoutRef.current); };
   }, []);
+
+  useLayoutEffect(() => {
+    if (!visible) return;
+    const measure = () => {
+      const el = rulesBtnRef.current;
+      if (!el) return;
+      if (rulesOpen) return;
+      setRulesBtnWidth(el.getBoundingClientRect().width);
+    };
+    measure();
+    const id = window.setTimeout(measure, 50);
+    return () => window.clearTimeout(id);
+  }, [visible, rulesOpen, lang, t.rulesBtn]);
 
   const handleCopy = useCallback(() => {
     const text = extractText(positions);
@@ -1494,6 +1509,7 @@ export default function New() {
         {visible && (
           <motion.button
             key="float-rules"
+            ref={rulesBtnRef}
             initial={false}
             animate={{ x: rulesOpen ? BTN_OPEN.rules - BTN_CLOSED.rules : 0 }}
             exit={{ opacity: 0, transition: { duration: 0.12 } }}
@@ -1549,26 +1565,32 @@ export default function New() {
 
       {/* ── Floating Clear button ─────────────────────────────────────────── */}
       <AnimatePresence>
-        {visible && positions.length > 0 && (
-          <motion.button
-            key="float-clear"
-            initial={{ opacity: 0 }}
-            animate={{ x: rulesOpen ? BTN_OPEN.clear - BTN_CLOSED.clear : 0, opacity: 1 }}
-            exit={{ opacity: 0, transition: { duration: 0.12 } }}
-            transition={SPRING}
-            style={{
-              position: "fixed", top: "24px", left: BTN_CLOSED.clear,
-              height: "31px", padding: "0 12px",
-              background: "none", border: "none",
-              cursor: "pointer", outline: "none",
-              display: "flex", alignItems: "center",
-              fontFamily: FONT_SANS, fontSize: "13px", fontWeight: 400,
-              color: dark ? DARK_MUTED : "#9a9daa",
-              lineHeight: "normal", zIndex: 25, whiteSpace: "nowrap",
-            }}
-            onClick={(e) => { e.stopPropagation(); handleDelete(); }}
-          >{lang === "de" ? "Text leeren" : "Clear Text"}</motion.button>
-        )}
+        {visible && positions.length > 0 && (() => {
+          const clearLeft = rulesBtnWidth > 0
+            ? BTN_CLOSED.rules + rulesBtnWidth + 10
+            : BTN_CLOSED.clear;
+          const clearOpenLeft = BTN_OPEN.rules + 33 + 10;
+          return (
+            <motion.button
+              key="float-clear"
+              initial={{ opacity: 0 }}
+              animate={{ x: rulesOpen ? clearOpenLeft - clearLeft : 0, opacity: 1 }}
+              exit={{ opacity: 0, transition: { duration: 0.12 } }}
+              transition={SPRING}
+              style={{
+                position: "fixed", top: "24px", left: clearLeft,
+                height: "31px", padding: "0 12px",
+                background: "none", border: "none",
+                cursor: "pointer", outline: "none",
+                display: "flex", alignItems: "center",
+                fontFamily: FONT_SANS, fontSize: "13px", fontWeight: 400,
+                color: dark ? DARK_MUTED : "#9a9daa",
+                lineHeight: "normal", zIndex: 25, whiteSpace: "nowrap",
+              }}
+              onClick={(e) => { e.stopPropagation(); handleDelete(); }}
+            >{lang === "de" ? "Text leeren" : "Clear Text"}</motion.button>
+          );
+        })()}
       </AnimatePresence>
 
       {/* ── Sidebar ──────────────────────────────────────────────────────── */}

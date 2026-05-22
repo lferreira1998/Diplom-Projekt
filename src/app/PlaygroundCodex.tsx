@@ -7,6 +7,11 @@ import { deleteNewTool, getAllNewTools, type NewToolData } from "./utils/storage
 const FONT_SERIF = "'freight-text-pro', 'EB Garamond', Georgia, serif";
 const FONT_SANS = "'general-sans', 'Space Grotesk', sans-serif";
 
+const CARD_RADIUS = 14;
+const PREVIEW_RADIUS = 10;
+const PREVIEW_HEIGHT = 176;
+const CARD_MIN_HEIGHT = 372;
+
 type Theme = {
   bg: string;
   panelBg: string;
@@ -20,11 +25,7 @@ type Theme = {
 
 type ViewMode = "all" | "mine";
 
-type ToolCardShape = {
-  rows: number;
-  radius: string;
-  previewRadius: string;
-  previewHeight: number;
+type ToolCardPlacement = {
   rotate: number;
   shiftX: number;
   shiftY: number;
@@ -198,11 +199,10 @@ function Hero({ de }: { de: boolean }) {
   );
 }
 
-function ToolCard({ tool, owned, favorite, shape, onOpen, onDelete, onToggleFavorite }: {
+function ToolCard({ tool, owned, favorite, onOpen, onDelete, onToggleFavorite }: {
   tool: NewToolData;
   owned: boolean;
   favorite: boolean;
-  shape: ToolCardShape;
   onOpen: () => void;
   onDelete?: () => void;
   onToggleFavorite?: () => void;
@@ -214,7 +214,7 @@ function ToolCard({ tool, owned, favorite, shape, onOpen, onDelete, onToggleFavo
     height: 30,
     padding: "0 11px",
     border: `1px dashed ${theme.border}`,
-    borderRadius: 999,
+    borderRadius: 6,
     background: theme.toolBg,
     color: theme.text,
     cursor: "pointer",
@@ -238,24 +238,24 @@ function ToolCard({ tool, owned, favorite, shape, onOpen, onDelete, onToggleFavo
         flexDirection: "column",
         overflow: "hidden",
         border: `1px dashed ${hovered ? theme.text : theme.border}`,
-        borderRadius: shape.radius,
+        borderRadius: CARD_RADIUS,
         background: theme.bg,
         height: "100%",
-        minHeight: 0,
+        minHeight: CARD_MIN_HEIGHT,
         boxSizing: "border-box",
-        padding: 12,
-        transform: hovered ? "translateY(-2px) scale(1.01)" : "none",
+        padding: 14,
+        transform: hovered ? "translateY(-2px)" : "none",
         transition: "border-color 140ms ease, transform 140ms ease",
       }}
     >
-      <div onClick={onOpen} style={{ width: "100%", height: shape.previewHeight, minHeight: shape.previewHeight, background: theme.panelBg, overflow: "hidden", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: shape.previewRadius, border: `1px dashed ${theme.border}`, boxSizing: "border-box" }}>
+      <div onClick={onOpen} style={{ width: "100%", height: PREVIEW_HEIGHT, minHeight: PREVIEW_HEIGHT, background: theme.panelBg, overflow: "hidden", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: PREVIEW_RADIUS, border: `1px dashed ${theme.border}`, boxSizing: "border-box" }}>
         {tool.params.asciiImage ? (
           <img src={tool.params.asciiImage} alt={tool.name} style={{ display: "block", width: "100%", height: "100%", objectFit: "cover" }} />
         ) : (
           <span style={{ fontFamily: FONT_SERIF, fontSize: 36, color: theme.border, userSelect: "none" }}>+</span>
         )}
       </div>
-      <div onClick={onOpen} style={{ display: "flex", flexDirection: "column", gap: 6, padding: "16px 12px 10px", minHeight: 0, cursor: "pointer" }}>
+      <div onClick={onOpen} style={{ display: "flex", flexDirection: "column", gap: 7, padding: "18px 12px 12px", minHeight: 0, cursor: "pointer" }}>
         <span style={{ fontFamily: FONT_SERIF, fontSize: 19, color: theme.text, lineHeight: 1.22, overflow: "hidden", overflowWrap: "anywhere", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{tool.name || "Unnamed Tool"}</span>
         {tool.description && (
           <span style={{ fontFamily: FONT_SANS, fontSize: 13, color: theme.muted, lineHeight: 1.42, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{tool.description}</span>
@@ -303,15 +303,13 @@ function ToolGrid({ title, tools, sessionId, favorites, onOpen, onDelete, onTogg
   emptyMessage: string;
 }) {
   const theme = useContext(ThemeContext);
-  const layouts: ToolCardShape[] = [
-    { rows: 10, radius: "94px 94px 32px 32px", previewRadius: "78px 78px 20px 20px", previewHeight: 154, rotate: -2.4, shiftX: -18, shiftY: 0 },
-    { rows: 9, radius: "10px 88px 14px 54px", previewRadius: "6px 64px 8px 30px", previewHeight: 138, rotate: 3.2, shiftX: 18, shiftY: 34 },
-    { rows: 12, radius: "52px 8px 96px 8px", previewRadius: "36px 6px 60px 6px", previewHeight: 194, rotate: -3.4, shiftX: -26, shiftY: 16 },
-    { rows: 10, radius: "142px 142px 40px 40px", previewRadius: "118px 118px 24px 24px", previewHeight: 160, rotate: 2.7, shiftX: 26, shiftY: 48 },
-    { rows: 9, radius: "8px 8px 92px 92px", previewRadius: "6px 6px 52px 52px", previewHeight: 142, rotate: -1.9, shiftX: -14, shiftY: 28 },
-    { rows: 12, radius: "78px 14px 82px 14px", previewRadius: "54px 8px 46px 8px", previewHeight: 186, rotate: 1.9, shiftX: 24, shiftY: 6 },
-    { rows: 11, radius: "26px 112px 26px 112px", previewRadius: "18px 78px 18px 72px", previewHeight: 170, rotate: -2.8, shiftX: 8, shiftY: 42 },
-    { rows: 10, radius: "118px 20px 118px 34px", previewRadius: "84px 12px 72px 20px", previewHeight: 156, rotate: 3.5, shiftX: -24, shiftY: 10 },
+  const placements: ToolCardPlacement[] = [
+    { rotate: -0.9, shiftX: -10, shiftY: 0 },
+    { rotate: 0.8, shiftX: 12, shiftY: 24 },
+    { rotate: -0.6, shiftX: 6, shiftY: 4 },
+    { rotate: 1.0, shiftX: -8, shiftY: 30 },
+    { rotate: -0.8, shiftX: 14, shiftY: 12 },
+    { rotate: 0.6, shiftX: -12, shiftY: 18 },
   ];
 
   return (
@@ -326,27 +324,24 @@ function ToolGrid({ title, tools, sessionId, favorites, onOpen, onDelete, onTogg
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))",
-            gridAutoRows: 12,
-            gridAutoFlow: "dense",
-            columnGap: 54,
-            rowGap: 28,
-            alignItems: "stretch",
+            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 305px), 1fr))",
+            columnGap: 84,
+            rowGap: 92,
+            alignItems: "start",
             overflow: "visible",
-            padding: "52px 34px 126px",
+            padding: "62px 56px 144px",
             borderBottom: `1px dashed ${theme.border}`,
           }}
         >
           {tools.map((tool, index) => {
             const owned = tool.params.sessionId === sessionId;
-            const shape = layouts[index % layouts.length];
+            const placement = placements[index % placements.length];
             return (
               <div
                 key={tool.id}
                 style={{
                   minWidth: 0,
-                  gridRow: `span ${shape.rows}`,
-                  transform: `translate(${shape.shiftX}px, ${shape.shiftY}px) rotate(${shape.rotate}deg)`,
+                  transform: `translate(${placement.shiftX}px, ${placement.shiftY}px) rotate(${placement.rotate}deg)`,
                   transformOrigin: "center",
                   zIndex: index % 2 === 0 ? 1 : 2,
                 }}
@@ -355,7 +350,6 @@ function ToolGrid({ title, tools, sessionId, favorites, onOpen, onDelete, onTogg
                   tool={tool}
                   owned={owned}
                   favorite={favorites.includes(tool.id)}
-                  shape={shape}
                   onOpen={() => onOpen(tool.id)}
                   onDelete={owned ? () => onDelete(tool.id) : undefined}
                   onToggleFavorite={!owned ? () => onToggleFavorite(tool.id) : undefined}

@@ -56,7 +56,7 @@ const NAV_ROUTES: Record<string, string> = {
 
 const INTRO_TEXT = `This is not a normal writing tool. Write and think differently.
 
-<- Break the rules on the right. Try other tools on the left. ->`;
+<- Break the rules on the left. Try other tools on the right. ->`;
 
 const SIDEBAR_CATS = [
   { en: "Look & Feel", de: "Look & Feel",  h: "60px",  br: "100px" },
@@ -1005,11 +1005,15 @@ export default function New() {
       if (i >= text.length) {
         introPlayingRef.current = false;
         if (enableDriftAfter) {
-          // Subtly enable character drift so it's instantly clear "a rule is broken"
-          setTextFliegtEnabled(true);
-          setFliegtUnit("Buchstabe");
-          setFliegtZeitpunkt(1);
-          setFliegtSchnelligkeit(1);
+          // Give the user ~2s to read the intro, then start a slow character drift
+          // so the rule-breaking becomes visible.
+          introTimeoutRef.current = setTimeout(() => {
+            if (introCancelledRef.current) return;
+            setTextFliegtEnabled(true);
+            setFliegtUnit("Buchstabe");
+            setFliegtZeitpunkt(1);
+            setFliegtSchnelligkeit(1);
+          }, 2000);
         }
         return;
       }

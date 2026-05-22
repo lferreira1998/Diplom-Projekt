@@ -54,6 +54,12 @@ const NAV_ROUTES: Record<string, string> = {
   About:           "/about-the-project",
 };
 
+const INTRO_TEXT = `This is not a normal writing tool.
+Write and think differently.
+
+<- Break the rules on the right.
+Try other tools on the left. ->`;
+
 const SIDEBAR_CATS = [
   { en: "Look & Feel", de: "Look & Feel",  h: "60px",  br: "100px" },
   { en: "Time",        de: "Zeit",         h: "104px", br: "100px" },
@@ -71,12 +77,12 @@ const TRANSLATIONS = {
     rulesHeading: "Regeln",
     rulesSubtitle: "Ändere sie.",
     identityBtn: "Name,\nBeschreibung\n& mehr",
-    saveBtn: "Save Tool",
+    saveBtn: "Mein Tool speichern",
     menuClosed: "Menü",
     menuOpen: "Schließen",
     word: "Wort",
     words: "Wörter",
-    navLabels: { CreateTool: "Create Tool", ToolCollection: "Tool Collection", About: "Über das Projekt" },
+    navLabels: { CreateTool: "Tool erstellen", ToolCollection: "Tool-Sammlung", About: "Über das Projekt" },
     // Identity panel
     identityHeading: "Identität.",
     identitySubtitle: "Speichere dein Regelset als Tool. Füge Name, Beschreibung, Schreibanstoß und Vorschaubild hinzu, damit andere es benutzen können.",
@@ -172,7 +178,7 @@ const TRANSLATIONS = {
     rulesHeading: "Rules",
     rulesSubtitle: "Change them.",
     identityBtn: "Name,\nDescription\n& more",
-    saveBtn: "Save Tool",
+    saveBtn: "Save my Tool",
     menuClosed: "Menu",
     menuOpen: "Close",
     word: "word",
@@ -798,6 +804,11 @@ export default function New() {
   const [cursor, setCursor]       = useState(0);
   const lastKeyPressTimestamp     = useRef(0);
 
+  // Auto-writing intro state
+  const introTimeoutRef           = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const introPlayingRef           = useRef(false);
+  const introCancelledRef         = useRef(false);
+
   // Timer runtime state
   const [timerRunning, setTimerRunning] = useState(false);
   const [timeLeft, setTimeLeft]         = useState(0);
@@ -967,7 +978,70 @@ export default function New() {
   }, []);
 
   const handleUpdate = useCallback((newPos: Position[], newCursor: number) => {
+    if (introPlayingRef.current) {
+      introCancelledRef.current = true;
+      introPlayingRef.current = false;
+      if (introTimeoutRef.current) { clearTimeout(introTimeoutRef.current); introTimeoutRef.current = null; }
+    }
     setPositions(newPos); setCursor(newCursor);
+  }, []);
+
+  const playIntro = useCallback((opts?: { enableDriftAfter?: boolean }) => {
+    const enableDriftAfter = opts?.enableDriftAfter ?? false;
+    if (introTimeoutRef.current) { clearTimeout(introTimeoutRef.current); introTimeoutRef.current = null; }
+    introPlayingRef.current = true;
+    introCancelledRef.current = false;
+    setPositions([]); setCursor(0);
+    const text = INTRO_TEXT;
+    let i = 0;
+    const tick = () => {
+      if (introCancelledRef.current) { introPlayingRef.current = false; return; }
+      if (i >= text.length) {
+        introPlayingRef.current = false;
+        if (enableDriftAfter) {
+          // Subtly enable character drift so it's instantly clear "a rule is broken"
+          setTextFliegtEnabled(true);
+          setFliegtUnit("Buchstabe");
+          setFliegtZeitpunkt(1);
+          setFliegtSchnelligkeit(1);
+        }
+        return;
+      }
+      const ch = text[i];
+      setPositions(prev => [...prev, { layers: [{ type: "char" as const, char: ch }] }]);
+      setCursor(c => c + 1);
+      i++;
+      const delay = ch === "\n" ? 220 : ch === " " ? 55 : 35 + Math.random() * 45;
+      introTimeoutRef.current = setTimeout(tick, delay);
+    };
+    tick();
+  }, []);
+
+  const handleResetIntro = useCallback(() => {
+    if (introTimeoutRef.current) { clearTimeout(introTimeoutRef.current); introTimeoutRef.current = null; }
+    introCancelledRef.current = true;
+    introPlayingRef.current = false;
+    setTimerDone(false); setTextRevealed(false);
+    setTimerRunning(false); setTimeLeft(0);
+    // Reset replays intro text but does NOT change tool parameters (drift, etc.)
+    setTimeout(() => { playIntro({ enableDriftAfter: false }); writingFocusRef.current?.(); }, 60);
+  }, [playIntro]);
+
+  // Auto-play intro on first visit per tab session, but only when no tool ID is in URL.
+  useEffect(() => {
+    if (searchParams.get("tool")) return;
+    let seen = false;
+    try { seen = sessionStorage.getItem("introSeen") === "1"; } catch { /* ignore */ }
+    if (seen) return;
+    try { sessionStorage.setItem("introSeen", "1"); } catch { /* ignore */ }
+    const t = setTimeout(() => playIntro({ enableDriftAfter: true }), 260);
+    return () => clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Cleanup intro timeout on unmount
+  useEffect(() => {
+    return () => { if (introTimeoutRef.current) clearTimeout(introTimeoutRef.current); };
   }, []);
 
   const handleCopy = useCallback(() => {
@@ -1701,7 +1775,7 @@ export default function New() {
                       color: dark ? DARK_TEXT : LIGHT_TEXT,
                       opacity: saving ? 0.6 : 1,
                     }}
-                  >{saving ? (lang === "de" ? "Speichert…" : "Saving…") : (lang === "de" ? "Save Tool" : "Save Tool")}</button>
+                  >{saving ? (lang === "de" ? "Speichert…" : "Saving…") : (lang === "de" ? "Mein Tool speichern" : "Save my Tool")}</button>
                   <button
                     onClick={() => handleSave(false)}
                     disabled={saving}
@@ -2156,11 +2230,6 @@ export default function New() {
                     `}</style>
 
                     <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
-                      <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.lfGrain}</span>
-                      <input type="range" min={0} max={100} value={grainLevel} onChange={e => setGrainLevel(Number(e.target.value))} className="lf-slider" />
-                    </div>
-
-                    <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
                       <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.lfTextSize}</span>
                       <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
                         <span style={{ fontFamily: FONT_SERIF, fontSize: "13px", color: dark ? DARK_TEXT : LIGHT_TEXT, flexShrink: 0, lineHeight: 1 }}>A</span>
@@ -2183,6 +2252,30 @@ export default function New() {
                       </div>
                     </div>
 
+                    <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
+                      <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.lfBgColor}</span>
+                      <div style={{ borderRadius: "4px", border: `1px dashed ${innerBorder}`, height: "44px", position: "relative", overflow: "hidden", background: dark ? "linear-gradient(to right, oklch(32% 0.028 0), oklch(32% 0.028 60), oklch(32% 0.028 120), oklch(32% 0.028 180), oklch(32% 0.028 240), oklch(32% 0.028 300), oklch(32% 0.028 360))" : "linear-gradient(to right, oklch(97.5% 0.015 0), oklch(97.5% 0.015 60), oklch(97.5% 0.015 120), oklch(97.5% 0.015 180), oklch(97.5% 0.015 240), oklch(97.5% 0.015 300), oklch(97.5% 0.015 360))" }}>
+                        <input type="range" min={0} max={360} value={bgHue ?? 0} onChange={e => setBgHue(Number(e.target.value))} className="hue-slider" style={{ position: "absolute", inset: 0 }} />
+                      </div>
+                      <button
+                        onClick={() => setBgHue(null)}
+                        style={{
+                          alignSelf: "flex-start",
+                          fontFamily: FONT_SANS, fontSize: "13px",
+                          padding: "5px 14px", borderRadius: "100px",
+                          border: `1px dashed ${innerBorder}`,
+                          background: bgHue === null ? (dark ? "rgba(240,232,220,0.12)" : "rgba(0,0,0,0.06)") : "transparent",
+                          color: dark ? DARK_MUTED : "#9a9daa",
+                          cursor: "pointer", outline: "none",
+                        }}
+                      >{t.lfNoColor}</button>
+                    </div>
+
+                    <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
+                      <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.lfGrain}</span>
+                      <input type="range" min={0} max={100} value={grainLevel} onChange={e => setGrainLevel(Number(e.target.value))} className="lf-slider" />
+                    </div>
+
                     <AnimatePresence>
                       {grainLevel > 0 && (
                         <motion.div
@@ -2202,25 +2295,6 @@ export default function New() {
                         </motion.div>
                       )}
                     </AnimatePresence>
-
-                    <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
-                      <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.lfBgColor}</span>
-                      <div style={{ borderRadius: "4px", border: `1px dashed ${innerBorder}`, height: "44px", position: "relative", overflow: "hidden", background: dark ? "linear-gradient(to right, oklch(32% 0.028 0), oklch(32% 0.028 60), oklch(32% 0.028 120), oklch(32% 0.028 180), oklch(32% 0.028 240), oklch(32% 0.028 300), oklch(32% 0.028 360))" : "linear-gradient(to right, oklch(97.5% 0.015 0), oklch(97.5% 0.015 60), oklch(97.5% 0.015 120), oklch(97.5% 0.015 180), oklch(97.5% 0.015 240), oklch(97.5% 0.015 300), oklch(97.5% 0.015 360))" }}>
-                        <input type="range" min={0} max={360} value={bgHue ?? 0} onChange={e => setBgHue(Number(e.target.value))} className="hue-slider" style={{ position: "absolute", inset: 0 }} />
-                      </div>
-                      <button
-                        onClick={() => setBgHue(null)}
-                        style={{
-                          alignSelf: "flex-start",
-                          fontFamily: FONT_SANS, fontSize: "13px",
-                          padding: "5px 14px", borderRadius: "100px",
-                          border: `1px dashed ${innerBorder}`,
-                          background: bgHue === null ? (dark ? "rgba(240,232,220,0.12)" : "rgba(0,0,0,0.06)") : "transparent",
-                          color: dark ? DARK_MUTED : "#9a9daa",
-                          cursor: "pointer", outline: "none",
-                        }}
-                      >{t.lfNoColor}</button>
-                    </div>
                   </div>
                 )}
               </div>
@@ -2310,6 +2384,20 @@ export default function New() {
                 </AnimatePresence>
               </div>
             )}
+            {/* Reset / replay intro */}
+            <button
+              title={lang === "de" ? "Text zurücksetzen" : "Reset text"}
+              aria-label={lang === "de" ? "Text zurücksetzen" : "Reset text"}
+              style={btnStyle(dark, { background: dark ? "rgba(240,232,220,0.13)" : surfaceLight, color: navIconColor }, surfaceLight)}
+              onClick={(e) => { e.stopPropagation(); handleResetIntro(); }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={navIconColor} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 12a9 9 0 0 1 15.5-6.3L21 8" />
+                <polyline points="21 3 21 8 16 8" />
+                <path d="M21 12a9 9 0 0 1-15.5 6.3L3 16" />
+                <polyline points="3 21 3 16 8 16" />
+              </svg>
+            </button>
             {/* Eye toggle */}
             <button
               style={btnStyle(dark, { background: dark ? "rgba(240,232,220,0.13)" : surfaceLight, color: navIconColor }, surfaceLight)}

@@ -1487,7 +1487,7 @@ export function WritingZone({
             if (!wordDrift.current.has(id)) wordDrift.current.set(id, { x:0, y:0, vx:0, vy:0 });
             const d   = wordDrift.current.get(id)!;
             const dir = groupDir(id + 1337);
-            const spd = Math.min(age * 0.05, 3.0) * spf;
+            const spd = spf;
             d.vx += dir.ax * 0.12 * spd + (Math.random() - 0.5) * 0.02 * spd;
             d.vy += dir.ay * 0.08 * spd + (Math.random() - 0.5) * 0.02 * spd;
             d.vx *= 0.965;
@@ -1507,7 +1507,7 @@ export function WritingZone({
             dirty = true;
             const d = charDrift.current[i];
             if (!d) continue;
-            const spd = Math.min(age * 0.03, 2.0) * spf;
+            const spd = spf;
             d.vx += (Math.random() - 0.5) * 0.15 * spd;
             d.vy += (Math.random() - 0.5) * 0.1 * spd;
             d.vx *= 0.94;

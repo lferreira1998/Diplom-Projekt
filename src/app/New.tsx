@@ -1009,7 +1009,7 @@ export default function New() {
       setTextFliegtEnabled(true);
       setFliegtUnit("Buchstabe");
       setFliegtZeitpunkt(1);
-      setFliegtSchnelligkeit(0.6);
+      setFliegtSchnelligkeit(0.3);
       setDriftImmediate(true);
     }
     const activeLang = introLangRef.current;

@@ -1045,6 +1045,22 @@ export default function New() {
   // Keep intro language ref in sync with current lang so reset replays in the right language
   useEffect(() => { introLangRef.current = lang; }, [lang]);
 
+  // When the language is switched and the current text is still the intro
+  // (in either language), swap it to the new-language version automatically.
+  useEffect(() => {
+    if (introPlayingRef.current) return; // mid-typing: ignore
+    const current = extractText(positions);
+    if (!current) return;
+    const newText = lang === "de" ? INTRO_TEXT_DE : INTRO_TEXT_EN;
+    if (current === newText) return; // already correct
+    const otherText = lang === "de" ? INTRO_TEXT_EN : INTRO_TEXT_DE;
+    if (current !== otherText) return; // user has modified — don't touch
+    const newPositions: Position[] = [];
+    for (const ch of newText) newPositions.push({ layers: [{ type: "char" as const, char: ch }] });
+    setPositions(newPositions);
+    setCursor(newPositions.length);
+  }, [lang, positions]);
+
   useEffect(() => {
     if (searchParams.get("tool")) return;
     let seen = false;
@@ -1628,7 +1644,7 @@ export default function New() {
                     color: dark ? DARK_TEXT : LIGHT_TEXT,
                     letterSpacing: "-0.16px", lineHeight: "20px",
                     textAlign: "center",
-                  }}>Save &amp; Share</button>
+                  }}>{t.saveBtn}</button>
               ) : loadedToolIsOwn ? (
                 <button
                   onClick={() => { setEditModeEnabledState(true); setIdentityOpen(false); }}

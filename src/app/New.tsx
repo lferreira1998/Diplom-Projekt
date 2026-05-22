@@ -819,6 +819,7 @@ export default function New() {
   const introPlayingRef           = useRef(false);
   const introCancelledRef         = useRef(false);
   const introLangRef              = useRef<"de" | "en">("de");
+  const [driftImmediate, setDriftImmediate] = useState(false);
 
   // Timer runtime state
   const [timerRunning, setTimerRunning] = useState(false);
@@ -994,6 +995,7 @@ export default function New() {
       introPlayingRef.current = false;
       if (introTimeoutRef.current) { clearTimeout(introTimeoutRef.current); introTimeoutRef.current = null; }
     }
+    setDriftImmediate(false);
     setPositions(newPos); setCursor(newCursor);
   }, []);
 
@@ -1019,6 +1021,7 @@ export default function New() {
             setFliegtUnit("Buchstabe");
             setFliegtZeitpunkt(1);
             setFliegtSchnelligkeit(1);
+            setDriftImmediate(true);
           }, 0);
         }
         return;
@@ -1260,7 +1263,7 @@ export default function New() {
   const wzCorrection = correctionVisible ? "tippex" as const : "hidden" as const;
   const wzDriftSpeed = fliegtSchnelligkeit;
   const wzVerblSpeed = verblassSchnelligkeit * 50;
-  const wzDriftDelay = fliegtZeitpunkt * 60;
+  const wzDriftDelay = driftImmediate ? 0 : fliegtZeitpunkt * 60;
   const wzVerblDelay = verblassZeitpunkt * 60;
 
   const showDoneModal = timerDone && !textRevealed;

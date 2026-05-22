@@ -279,8 +279,8 @@ type Tr = typeof TRANSLATIONS["de"];
 const DELETE_OPTS_KEYS = ["all", "none", "sentence", "word"] as const;
 type DeleteMode = typeof DELETE_OPTS_KEYS[number];
 
-const BTN_CLOSED = { dark: 24, rules: 67, clear: 230 };
-const BTN_OPEN   = { dark: 371, rules: 414, clear: 577 };
+const BTN_CLOSED = { dark: 24, rules: 67, clear: 195 };
+const BTN_OPEN   = { dark: 371, rules: 414, clear: 542 };
 const SPRING = { type: "spring" as const, stiffness: 300, damping: 30 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

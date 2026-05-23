@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { useNavigate, useSearchParams } from "react-router";
@@ -760,8 +760,6 @@ export default function New() {
   const [menuHovered, setMenuHovered] = useState(false);
   const [rulesHovered, setRulesHovered] = useState(false);
   const [rulesOpen, setRulesOpen]     = useState(false);
-  const rulesBtnRef = useRef<HTMLButtonElement>(null);
-  const [rulesBtnWidth, setRulesBtnWidth] = useState(0);
   const [activeCategory, setActiveCategory] = useState("Look & Feel");
   const [identityOpen, setIdentityOpen]     = useState(false);
   const writingFocusRef = useRef<(() => void) | null>(null);
@@ -1074,18 +1072,6 @@ export default function New() {
     return () => { if (introTimeoutRef.current) clearTimeout(introTimeoutRef.current); };
   }, []);
 
-  useLayoutEffect(() => {
-    if (!visible) return;
-    const measure = () => {
-      const el = rulesBtnRef.current;
-      if (!el) return;
-      if (rulesOpen) return;
-      setRulesBtnWidth(el.getBoundingClientRect().width);
-    };
-    measure();
-    const id = window.setTimeout(measure, 50);
-    return () => window.clearTimeout(id);
-  }, [visible, rulesOpen, lang, t.rulesBtn]);
 
   const handleCopy = useCallback(() => {
     const text = extractText(positions);
@@ -1502,93 +1488,95 @@ export default function New() {
         )}
       </AnimatePresence>
 
-      {/* ── Floating Rules/× button ───────────────────────────────────────── */}
+      {/* ── Floating Rules/× + Clear container (flex row, always in sync) ──── */}
       <AnimatePresence>
         {visible && (
-          <motion.button
-            key="float-rules"
-            ref={rulesBtnRef}
+          <motion.div
+            key="float-rules-group"
             initial={false}
             animate={{ x: rulesOpen ? BTN_OPEN.rules - BTN_CLOSED.rules : 0 }}
             exit={{ opacity: 0, transition: { duration: 0.12 } }}
             transition={SPRING}
             style={{
               position: "fixed", top: "24px", left: BTN_CLOSED.rules,
-              height: "33px", width: rulesOpen ? "33px" : "auto",
-              background: rulesBtnBg,
-              border: `1px dashed ${BORDER_COL}`,
-              borderRadius: "4px",
-              cursor: "pointer", outline: "none",
               display: "flex", alignItems: "center",
-              justifyContent: rulesOpen ? "center" : "flex-start",
-              padding: rulesOpen ? 0 : "0 13px",
-              fontFamily: FONT_SANS, color: dark ? DARK_TEXT : LIGHT_TEXT,
-              lineHeight: "normal", zIndex: 25, overflow: rulesOpen ? "hidden" : "visible",
-              transition: "background 0.2s",
+              zIndex: 25,
             }}
-            onMouseEnter={() => setRulesHovered(true)}
-            onMouseLeave={() => setRulesHovered(false)}
-            onClick={(e) => { e.stopPropagation(); setRulesOpen(o => { if (o) setIdentityOpen(false); return !o; }); }}
           >
-            <AnimatePresence mode="wait">
-              {rulesOpen ? (
-                <motion.span key="x" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.1 }} style={{ display: "flex" }}>
-                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M2 2L11 11M11 2L2 11" stroke={dark ? DARK_TEXT : LIGHT_TEXT} strokeWidth="1.4" strokeLinecap="round" />
-                  </svg>
-                </motion.span>
-              ) : (
-                <motion.span key="r" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.1 }} style={{ display: "flex", alignItems: "center", flexShrink: 0 }}>
-                  <span style={{ fontSize: "15px", fontWeight: 400, whiteSpace: "nowrap" }}>{t.rulesBtn}</span>
-                  <span style={{
-                    display: "flex",
-                    flexShrink: 0,
-                    overflow: "hidden",
-                    maxWidth: rulesHovered ? "30px" : "0px",
-                    opacity: rulesHovered ? 1 : 0,
-                    marginLeft: rulesHovered ? "8px" : "0px",
-                    transition: "max-width 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.35s ease, margin-left 0.35s cubic-bezier(0.4,0,0.2,1)",
-                  }}>
-                    <svg width="17" height="7" viewBox="0 0 17 7" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M0 3.5H11" stroke={dark ? DARK_TEXT : LIGHT_TEXT} strokeWidth="1.3" strokeLinecap="round" strokeDasharray="2.6 2.6" />
-                      <path d="M11 1L14.5 3.5L11 6" stroke={dark ? DARK_TEXT : LIGHT_TEXT} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </span>
-                </motion.span>
-              )}
-            </AnimatePresence>
-          </motion.button>
-        )}
-      </AnimatePresence>
-
-      {/* ── Floating Clear button ─────────────────────────────────────────── */}
-      <AnimatePresence>
-        {visible && positions.length > 0 && (() => {
-          const clearLeft = rulesBtnWidth > 0
-            ? BTN_CLOSED.rules + rulesBtnWidth + 10
-            : BTN_CLOSED.clear;
-          const clearOpenLeft = BTN_OPEN.rules + 33 + 10;
-          return (
-            <motion.button
-              key="float-clear"
-              initial={{ opacity: 0 }}
-              animate={{ x: rulesOpen ? clearOpenLeft - clearLeft : 0, opacity: 1 }}
-              exit={{ opacity: 0, transition: { duration: 0.12 } }}
-              transition={SPRING}
+            {/* Rules / × button */}
+            <button
               style={{
-                position: "fixed", top: "24px", left: clearLeft,
-                height: "31px", padding: "0 12px",
-                background: "none", border: "none",
+                height: "33px", width: rulesOpen ? "33px" : "auto",
+                background: rulesBtnBg,
+                border: `1px dashed ${BORDER_COL}`,
+                borderRadius: "4px",
                 cursor: "pointer", outline: "none",
                 display: "flex", alignItems: "center",
-                fontFamily: FONT_SANS, fontSize: "13px", fontWeight: 400,
-                color: dark ? DARK_MUTED : "#9a9daa",
-                lineHeight: "normal", zIndex: 25, whiteSpace: "nowrap",
+                justifyContent: rulesOpen ? "center" : "flex-start",
+                padding: rulesOpen ? 0 : "0 13px",
+                fontFamily: FONT_SANS, color: dark ? DARK_TEXT : LIGHT_TEXT,
+                lineHeight: "normal", overflow: rulesOpen ? "hidden" : "visible",
+                transition: "background 0.2s",
+                flexShrink: 0,
               }}
-              onClick={(e) => { e.stopPropagation(); handleDelete(); }}
-            >{lang === "de" ? "Text leeren" : "Clear Text"}</motion.button>
-          );
-        })()}
+              onMouseEnter={() => setRulesHovered(true)}
+              onMouseLeave={() => setRulesHovered(false)}
+              onClick={(e) => { e.stopPropagation(); setRulesOpen(o => { if (o) setIdentityOpen(false); return !o; }); }}
+            >
+              <AnimatePresence mode="wait">
+                {rulesOpen ? (
+                  <motion.span key="x" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.1 }} style={{ display: "flex" }}>
+                    <svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M2 2L11 11M11 2L2 11" stroke={dark ? DARK_TEXT : LIGHT_TEXT} strokeWidth="1.4" strokeLinecap="round" />
+                    </svg>
+                  </motion.span>
+                ) : (
+                  <motion.span key="r" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.1 }} style={{ display: "flex", alignItems: "center", flexShrink: 0 }}>
+                    <span style={{ fontSize: "15px", fontWeight: 400, whiteSpace: "nowrap" }}>{t.rulesBtn}</span>
+                    <span style={{
+                      display: "flex",
+                      flexShrink: 0,
+                      overflow: "hidden",
+                      maxWidth: rulesHovered ? "30px" : "0px",
+                      opacity: rulesHovered ? 1 : 0,
+                      marginLeft: rulesHovered ? "8px" : "0px",
+                      transition: "max-width 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.35s ease, margin-left 0.35s cubic-bezier(0.4,0,0.2,1)",
+                    }}>
+                      <svg width="17" height="7" viewBox="0 0 17 7" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M0 3.5H11" stroke={dark ? DARK_TEXT : LIGHT_TEXT} strokeWidth="1.3" strokeLinecap="round" strokeDasharray="2.6 2.6" />
+                        <path d="M11 1L14.5 3.5L11 6" stroke={dark ? DARK_TEXT : LIGHT_TEXT} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </span>
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </button>
+
+            {/* Clear button — always 10px from Rules right edge */}
+            <AnimatePresence>
+              {positions.length > 0 && (
+                <motion.button
+                  key="float-clear"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0, transition: { duration: 0.12 } }}
+                  style={{
+                    marginLeft: 10,
+                    height: "31px", padding: "0 12px",
+                    background: "none", border: "none",
+                    cursor: "pointer", outline: "none",
+                    display: "flex", alignItems: "center",
+                    fontFamily: FONT_SANS, fontSize: "13px", fontWeight: 400,
+                    color: dark ? DARK_MUTED : "#9a9daa",
+                    lineHeight: "normal", whiteSpace: "nowrap",
+                    flexShrink: 0,
+                  }}
+                  onClick={(e) => { e.stopPropagation(); handleDelete(); }}
+                >{lang === "de" ? "Text leeren" : "Clear Text"}</motion.button>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        )}
       </AnimatePresence>
 
       {/* ── Sidebar ──────────────────────────────────────────────────────── */}

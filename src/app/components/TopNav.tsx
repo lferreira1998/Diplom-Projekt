@@ -15,7 +15,7 @@ const ROUTES: Record<string, string> = {
 
 const LABELS = {
   de: { Create: "Erstellen", Playground: "Playground", About: "Über das Projekt", menuClosed: "Menü", menuOpen: "Schließen", lang: "DE" },
-  en: { Create: "Create", Playground: "Playground", About: "About", menuClosed: "Menu", menuOpen: "Close", lang: "ENG" },
+  en: { Create: "Create", Playground: "Playground", About: "About", menuClosed: "Menu", menuOpen: "Close", lang: "EN" },
 };
 
 const NAV_CONTAINER = {
@@ -120,7 +120,6 @@ export default function TopNav({
   const navigate = useNavigate();
   const [visible, setVisible] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [menuHovered, setMenuHovered] = useState(false);
 
   const L = LABELS[lang];
   const iconColor = dark ? DARK_TEXT : LIGHT_TEXT;
@@ -172,30 +171,10 @@ export default function TopNav({
             >
               {L.lang}
             </button>
-            <div
-              style={{ position: "relative" }}
-              onMouseEnter={() => { if (!menuOpen) setMenuHovered(true); }}
-              onMouseLeave={() => setMenuHovered(false)}
-            >
-              <motion.div
-                aria-hidden
-                animate={
-                  menuOpen
-                    ? { y: 8, opacity: 0, transition: { y: { duration: 0.22, ease: "easeOut" }, opacity: { duration: 0.1 } } }
-                    : menuHovered ? { y: 0, opacity: 1 } : { y: -6, opacity: 0 }
-                }
-                transition={{ duration: 0.22, ease: "easeOut" }}
-                style={{
-                  position: "absolute", left: "2px", top: "9px",
-                  width: "calc(100% - 4px)", height: "28px",
-                  background: dark ? "rgba(240,232,220,0.1)" : "rgba(252,246,239,0.6)",
-                  border: `1px dashed ${BORDER_COL}`,
-                  borderRadius: "4px", rotate: -2.42, zIndex: 0, pointerEvents: "none",
-                }}
-              />
+            <div style={{ position: "relative" }}>
               <button
-                style={{ ...btnStyle(dark), background: dark ? "#2d2b28" : "#fcf6ef", position: "relative", zIndex: 1 }}
-                onClick={(e) => { e.stopPropagation(); setMenuOpen(o => !o); setMenuHovered(false); }}
+                style={{ ...btnStyle(dark), position: "relative", zIndex: 1 }}
+                onClick={(e) => { e.stopPropagation(); setMenuOpen(o => !o); }}
               >
                 {menuOpen ? L.menuOpen : L.menuClosed}
               </button>

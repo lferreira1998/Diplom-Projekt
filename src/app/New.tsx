@@ -1557,11 +1557,11 @@ export default function New() {
               {positions.length > 0 && (
                 <motion.button
                   key="float-clear"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
+                  initial={{ opacity: 0, marginLeft: 10 }}
+                  animate={{ opacity: 1, marginLeft: rulesOpen ? 30 : 10 }}
                   exit={{ opacity: 0, transition: { duration: 0.12 } }}
+                  transition={SPRING}
                   style={{
-                    marginLeft: 10,
                     height: "31px", padding: "0 12px",
                     background: "none", border: "none",
                     cursor: "pointer", outline: "none",

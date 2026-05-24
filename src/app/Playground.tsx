@@ -267,7 +267,7 @@ export default function Playground() {
             fontFamily: FONT_SANS, fontSize: "14px", color: LIGHT_TEXT,
             height: "31px", padding: "0 12px",
           }}
-        >{lang === "de" ? "DE" : "ENG"}</button>
+        >{lang === "de" ? "DE" : "EN"}</button>
       </div>
 
       {/* Content */}

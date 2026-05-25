@@ -341,7 +341,7 @@ function usePlaygroundData() {
   const myTools = Array.from(myToolsMap.values()).sort((a, b) => b.savedAt.localeCompare(a.savedAt));
   const favoriteTools = tools.filter((tool) => favorites.includes(tool.id) && tool.params.sessionId !== sessionId);
   const myToolsAll = [...myTools, ...favoriteTools];
-  const publicTools = tools.filter((tool) => tool.params.sessionId !== sessionId && tool.params.isPublic !== false);
+  const publicTools = tools.filter((tool) => tool.params.isPublic !== false);
 
   useEffect(() => {
     if (!loading) localStorage.setItem("hasOwnTools", String(myToolsAll.length > 0));

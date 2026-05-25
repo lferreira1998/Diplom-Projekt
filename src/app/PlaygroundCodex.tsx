@@ -453,7 +453,7 @@ function usePlaygroundTools() {
   const ownTools = Array.from(ownToolsMap.values()).sort((a, b) => b.savedAt.localeCompare(a.savedAt));
   const likedTools = tools.filter((tool) => favorites.includes(tool.id) && tool.params.sessionId !== sessionId);
   const myTools = [...ownTools, ...likedTools];
-  const allTools = tools.filter((tool) => tool.params.sessionId !== sessionId && tool.params.isPublic !== false);
+  const allTools = tools.filter((tool) => tool.params.isPublic !== false);
 
   return { sessionId, loading, error, lang, setLang, dark, setDark, favorites, toggleFavorite, navigateToTool, tools, handleDelete, myTools, allTools };
 }

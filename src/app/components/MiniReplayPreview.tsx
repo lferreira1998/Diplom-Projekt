@@ -97,7 +97,7 @@ export function MiniReplayPreview({
     } else if (vis === "sentence" && lastEnd > 0 && i <= lastEnd + 1) {
       hide = true;
     }
-    if (hide) return Math.max(0, 1 - t * 2.2);
+    if (hide) return Math.max(0, 1 - t * 1.6);
     return 1;
   }, [text, params.visibility]);
 
@@ -159,7 +159,7 @@ export function MiniReplayPreview({
         });
       }
 
-      flush(0.55);
+      flush(0.28);
       return () => { cancelled = true; timers.forEach(clearTimeout); };
     }
 

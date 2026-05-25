@@ -7,7 +7,8 @@ import {
   type Position,
   extractText,
 } from "./projects/parametrischestool/components/writing-zone";
-import { saveNewTool, updateNewTool, getNewToolById, uploadPreviewVideo } from "./utils/storage";
+import { saveNewTool, updateNewTool, getNewToolById } from "./utils/storage";
+import { RecordPreviewOverlay } from "./components/RecordPreviewOverlay";
 import html2canvas from "html2canvas-pro";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
@@ -743,8 +744,9 @@ export default function New() {
   const [currentToolId, setCurrentToolId] = useState<string | null>(null);
   const [previewVideoUrl, setPreviewVideoUrl]   = useState<string | null>(null);
   const [previewVideoPath, setPreviewVideoPath] = useState<string | null>(null);
-  const [recording, setRecording]               = useState(false);
-  const [recordState, setRecordState]           = useState<"idle" | "done" | "error">("idle");
+  const [showRecordOverlay, setShowRecordOverlay] = useState(false);
+  const [recordState, setRecordState]             = useState<"idle" | "done" | "error">("idle");
+  const [videoPreviewError, setVideoPreviewError] = useState(false);
   // Loaded-tool ownership & edit mode
   const [loadedToolIsOwn, setLoadedToolIsOwn]         = useState(false);
   const [editModeEnabledState, setEditModeEnabledState] = useState(false);
@@ -1240,69 +1242,6 @@ export default function New() {
   };
 
   const darkBtnBg  = rulesOpen ? (dark ? "rgba(240,232,220,0.1)" : surfaceDark) : (dark ? "rgba(240,232,220,0.06)" : surfaceLight);
-  const handleRecordPreview = async () => {
-    const node = writingZoneRef.current;
-    if (!node || recording) return;
-    setRecording(true);
-    setRecordState("idle");
-    try {
-      // Pick first supported MIME type (Safari needs mp4, Chrome/Firefox use webm)
-      const mimeType = [
-        "video/webm;codecs=vp9",
-        "video/webm;codecs=vp8",
-        "video/webm",
-        "video/mp4;codecs=avc1",
-        "video/mp4",
-      ].find(t => MediaRecorder.isTypeSupported(t));
-      if (!mimeType) throw new Error("MediaRecorder not supported in this browser");
-
-      const DURATION_MS = 3500;
-      const FPS         = 10;
-      const frameMs     = 1000 / FPS;
-      const w = node.offsetWidth  || 960;
-      const h = node.offsetHeight || 640;
-
-      const recCanvas = document.createElement("canvas");
-      recCanvas.width  = w;
-      recCanvas.height = h;
-      const ctx = recCanvas.getContext("2d");
-      if (!ctx) throw new Error("Canvas 2d context unavailable");
-
-      const stream   = recCanvas.captureStream(FPS);
-      const recorder = new MediaRecorder(stream, { mimeType });
-      const chunks: Blob[] = [];
-      recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
-      recorder.start(200);
-
-      // Sequential frame loop — no overlapping html2canvas calls
-      const startTs = performance.now();
-      while (performance.now() - startTs < DURATION_MS) {
-        const t0   = performance.now();
-        const snap = await html2canvas(node, { backgroundColor: bg, scale: 1, logging: false, useCORS: true });
-        ctx.clearRect(0, 0, w, h);
-        ctx.drawImage(snap, 0, 0, w, h);
-        const wait = Math.max(0, frameMs - (performance.now() - t0));
-        if (wait > 0) await new Promise(r => setTimeout(r, wait));
-      }
-
-      recorder.stop();
-      await new Promise<void>(r => { recorder.onstop = () => r(); });
-
-      const blob = new Blob(chunks, { type: mimeType });
-      if (blob.size < 1000) throw new Error(`Blob too small (${blob.size} bytes) — recording may have failed`);
-
-      const ext = mimeType.includes("mp4") ? "mp4" : "webm";
-      const { url, path } = await uploadPreviewVideo(blob, sessionId, toolName, ext);
-      setPreviewVideoUrl(url);
-      setPreviewVideoPath(path);
-      setRecordState("done");
-    } catch (err) {
-      console.error("[RecordPreview]", err);
-      setRecordState("error");
-    } finally {
-      setRecording(false);
-    }
-  };
 
   const rulesBtnBg = rulesOpen ? (dark ? "rgba(240,232,220,0.1)" : surfaceDark) : (dark ? "rgba(240,232,220,0.06)" : surfaceLight);
 
@@ -1880,29 +1819,66 @@ export default function New() {
                   </div>
                 </div>
                 <div style={{ padding: "16px 24px", flexShrink: 0, display: "flex", flexDirection: "column", gap: "8px" }}>
-                  {/* Preview recording button */}
-                  <button
-                    onClick={handleRecordPreview}
-                    disabled={recording}
-                    style={{
-                      width: "100%", padding: "10px",
-                      background: recordState === "done" ? (dark ? "rgba(240,232,220,0.08)" : "rgba(0,0,0,0.04)") : "transparent",
-                      border: `1px dashed ${recordState === "error" ? "#e05252" : innerBorder}`,
-                      borderRadius: "8px", cursor: recording ? "wait" : "pointer", outline: "none",
-                      fontFamily: FONT_SANS, fontSize: "14px",
-                      color: recordState === "error" ? "#e05252" : (dark ? DARK_MUTED : "#7c7c7c"),
-                      opacity: recording ? 0.7 : 1,
-                      transition: "all 0.2s",
-                    }}
-                  >
-                    {recording
-                      ? (lang === "de" ? "⏺ Nimmt auf…" : "⏺ Recording…")
-                      : recordState === "done"
-                        ? (lang === "de" ? "✓ Vorschau aufgenommen" : "✓ Preview recorded")
-                        : recordState === "error"
-                          ? (lang === "de" ? "Aufnahme fehlgeschlagen" : "Recording failed")
-                          : (lang === "de" ? "Vorschau aufnehmen" : "Record preview")}
-                  </button>
+                  {/* Preview recording section */}
+                  <div style={{
+                    border: `1px dashed ${innerBorder}`,
+                    borderRadius: "10px",
+                    overflow: "hidden",
+                  }}>
+                    {/* Video thumbnail if recorded */}
+                    {previewVideoUrl && !videoPreviewError && (
+                      <div style={{ position: "relative" }}>
+                        <video
+                          src={previewVideoUrl}
+                          autoPlay loop muted playsInline
+                          onError={() => setVideoPreviewError(true)}
+                          style={{
+                            width: "100%", display: "block",
+                            maxHeight: "110px", objectFit: "cover",
+                          }}
+                        />
+                        <div style={{
+                          position: "absolute", top: "7px", left: "8px",
+                          background: "rgba(0,0,0,0.55)",
+                          borderRadius: "4px", padding: "2px 7px",
+                          fontFamily: FONT_SANS, fontSize: "11px",
+                          color: "rgba(255,255,255,0.85)", fontWeight: 600, letterSpacing: "0.05em",
+                        }}>✓ {DE ? "Vorschau" : "Preview"}</div>
+                      </div>
+                    )}
+                    {/* Info row + button */}
+                    <div style={{ padding: "12px 14px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "14px", fontWeight: 500, color: dark ? DARK_TEXT : LIGHT_TEXT }}>
+                          {DE ? "Vorschau aufnehmen" : "Record preview"}
+                        </span>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "12px", color: dark ? DARK_MUTED : "#9a9daa", lineHeight: "1.45" }}>
+                          {DE
+                            ? "Nimm einen 10-Sek.-Clip auf, der deinen Schreibstil zeigt — er erscheint als Vorschau im Playground."
+                            : "Record a 10-sec clip showing your writing style — it appears as the preview in the Playground."}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => { setVideoPreviewError(false); setShowRecordOverlay(true); }}
+                        style={{
+                          width: "100%", padding: "9px",
+                          background: recordState === "error"
+                            ? (dark ? "rgba(220,80,80,0.1)" : "rgba(220,80,80,0.06)")
+                            : "transparent",
+                          border: `1px dashed ${recordState === "error" ? "#e05252" : innerBorder}`,
+                          borderRadius: "7px", cursor: "pointer", outline: "none",
+                          fontFamily: FONT_SANS, fontSize: "13px",
+                          color: recordState === "error" ? "#e05252" : (dark ? DARK_MUTED : "#7c7c7c"),
+                        }}
+                      >
+                        {recordState === "error"
+                          ? (DE ? "Fehlgeschlagen — erneut versuchen" : "Failed — try again")
+                          : recordState === "done"
+                            ? (DE ? "Neu aufnehmen" : "Re-record")
+                            : (DE ? "Aufnahme starten" : "Start recording")}
+                      </button>
+                    </div>
+                  </div>
                   {saveError && (
                     <span style={{ fontFamily: FONT_SANS, fontSize: "12px", color: "#e05252", textAlign: "center" }}>{saveError}</span>
                   )}
@@ -2676,6 +2652,27 @@ export default function New() {
           document.body
         )}
       </AnimatePresence>
+
+      {/* ── Record preview overlay ─────────────────────────────────────── */}
+      {showRecordOverlay && (
+        <RecordPreviewOverlay
+          zoneRef={writingZoneRef}
+          bg={bg}
+          sessionId={sessionId}
+          toolName={toolName}
+          lang={lang}
+          onDone={(url, path) => {
+            setPreviewVideoUrl(url);
+            setPreviewVideoPath(path);
+            setRecordState("done");
+            setShowRecordOverlay(false);
+          }}
+          onClose={() => {
+            setShowRecordOverlay(false);
+            if (recordState !== "done") setRecordState("error");
+          }}
+        />
+      )}
 
     </div>
   );

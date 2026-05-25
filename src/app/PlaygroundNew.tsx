@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { MiniReplayPreview } from "./components/MiniReplayPreview";
+import { ToolLaunchModal } from "./components/ToolLaunchModal";
 import type { CSSProperties } from "react";
 import { useNavigate, useLocation } from "react-router";
 import { deleteNewTool, getAllNewTools, type NewToolData } from "./utils/storage";
@@ -346,7 +347,10 @@ function usePlaygroundData() {
     if (!loading) localStorage.setItem("hasOwnTools", String(myToolsAll.length > 0));
   }, [loading, myToolsAll.length]);
 
-  const openTool = (id: string) => navigate(`/new?tool=${id}`);
+  const navigateToTool = (id: string, timerMinutes: number | null) => {
+    const timerParam = timerMinutes != null ? `&timer=${timerMinutes}` : "&timer=0";
+    navigate(`/new?tool=${id}${timerParam}`);
+  };
 
   const handleDelete = (id: string) => {
     const target = tools.find((tool) => tool.id === id);
@@ -362,7 +366,7 @@ function usePlaygroundData() {
     Promise.all(ids.map(deleteNewTool)).catch(console.error);
   };
 
-  return { sessionId, loading, lang, setLang, dark, setDark, favorites, toggleFavorite, myToolsAll, publicTools, openTool, handleDelete };
+  return { sessionId, loading, lang, setLang, dark, setDark, favorites, toggleFavorite, myToolsAll, publicTools, tools, navigateToTool, handleDelete };
 }
 
 function PageNavFAB({ dark, myToolsAll, DE, theme, loading }: { dark: boolean; myToolsAll: NewToolData[]; DE: boolean; theme: Theme; loading: boolean }) {
@@ -395,9 +399,15 @@ function PageNavFAB({ dark, myToolsAll, DE, theme, loading }: { dark: boolean; m
 }
 
 export default function PlaygroundNew() {
-  const { sessionId, loading, lang, setLang, dark, setDark, favorites, toggleFavorite, myToolsAll, publicTools, openTool, handleDelete } = usePlaygroundData();
+  const { sessionId, loading, lang, setLang, dark, setDark, favorites, toggleFavorite, myToolsAll, publicTools, tools, navigateToTool, handleDelete } = usePlaygroundData();
   const toolsRef = useRef<HTMLDivElement>(null);
   const [exploreVisible, setExploreVisible] = useState(true);
+  const [launchTool, setLaunchTool] = useState<NewToolData | null>(null);
+
+  const openTool = (id: string) => {
+    const t = tools.find(x => x.id === id) ?? null;
+    setLaunchTool(t);
+  };
 
   const DE = lang === "de";
   const theme = getTheme(dark);
@@ -461,13 +471,25 @@ export default function PlaygroundNew() {
             {DE ? "Alle Tools entdecken" : "Explore all tools"}
           </button>
         )}
+        <ToolLaunchModal
+          tool={launchTool}
+          dark={dark}
+          onConfirm={(id, mins) => { setLaunchTool(null); navigateToTool(id, mins); }}
+          onClose={() => setLaunchTool(null)}
+        />
       </main>
     </ThemeContext.Provider>
   );
 }
 
 export function MyToolsPage() {
-  const { sessionId, loading, lang, setLang, dark, setDark, favorites, toggleFavorite, myToolsAll, openTool, handleDelete } = usePlaygroundData();
+  const { sessionId, loading, lang, setLang, dark, setDark, favorites, toggleFavorite, myToolsAll, tools, navigateToTool, handleDelete } = usePlaygroundData();
+  const [launchTool, setLaunchTool] = useState<NewToolData | null>(null);
+
+  const openTool = (id: string) => {
+    const t = tools.find(x => x.id === id) ?? null;
+    setLaunchTool(t);
+  };
 
   const DE = lang === "de";
   const theme = getTheme(dark);
@@ -503,6 +525,12 @@ export function MyToolsPage() {
         </div>
 
         <PageNavFAB dark={dark} myToolsAll={myToolsAll} DE={DE} theme={theme} loading={loading} />
+        <ToolLaunchModal
+          tool={launchTool}
+          dark={dark}
+          onConfirm={(id, mins) => { setLaunchTool(null); navigateToTool(id, mins); }}
+          onClose={() => setLaunchTool(null)}
+        />
       </main>
     </ThemeContext.Provider>
   );

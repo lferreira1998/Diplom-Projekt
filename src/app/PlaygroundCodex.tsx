@@ -3,6 +3,7 @@ import type { CSSProperties } from "react";
 import { useNavigate } from "react-router";
 import TopNav from "./components/TopNav";
 import { deleteNewTool, getAllNewTools, type NewToolData } from "./utils/storage";
+import { ToolLaunchModal } from "./components/ToolLaunchModal";
 
 const FONT_SERIF = "'freight-text-pro', 'EB Garamond', Georgia, serif";
 const FONT_SANS = "'general-sans', 'Space Grotesk', sans-serif";
@@ -420,7 +421,10 @@ function usePlaygroundTools() {
     });
   };
 
-  const openTool = (id: string) => navigate(`/new?tool=${id}`);
+  const navigateToTool = (id: string, timerMinutes: number | null) => {
+    const timerParam = timerMinutes != null ? `&timer=${timerMinutes}` : "&timer=0";
+    navigate(`/new?tool=${id}${timerParam}`);
+  };
 
   const handleDelete = (id: string) => {
     const target = tools.find((tool) => tool.id === id);
@@ -451,11 +455,13 @@ function usePlaygroundTools() {
   const myTools = [...ownTools, ...likedTools];
   const allTools = tools.filter((tool) => tool.params.sessionId !== sessionId && tool.params.isPublic !== false);
 
-  return { sessionId, loading, error, lang, setLang, dark, setDark, favorites, toggleFavorite, openTool, handleDelete, myTools, allTools };
+  return { sessionId, loading, error, lang, setLang, dark, setDark, favorites, toggleFavorite, navigateToTool, tools, handleDelete, myTools, allTools };
 }
 
 export default function PlaygroundCodex({ mode = "all" }: { mode?: ViewMode }) {
-  const { sessionId, loading, error, lang, setLang, dark, setDark, favorites, toggleFavorite, openTool, handleDelete, myTools, allTools } = usePlaygroundTools();
+  const { sessionId, loading, error, lang, setLang, dark, setDark, favorites, toggleFavorite, navigateToTool, tools, handleDelete, myTools, allTools } = usePlaygroundTools();
+  const [launchTool, setLaunchTool] = useState<NewToolData | null>(null);
+  const openTool = (id: string) => setLaunchTool(tools.find(x => x.id === id) ?? null);
   const de = lang === "de";
   const theme = getTheme(dark);
   const shownTools = mode === "mine" ? myTools : allTools;
@@ -494,6 +500,12 @@ export default function PlaygroundCodex({ mode = "all" }: { mode?: ViewMode }) {
         </div>
 
         <ViewSwitch mode={mode} de={de} dark={dark} />
+        <ToolLaunchModal
+          tool={launchTool}
+          dark={dark}
+          onConfirm={(id, mins) => { setLaunchTool(null); navigateToTool(id, mins); }}
+          onClose={() => setLaunchTool(null)}
+        />
       </main>
     </ThemeContext.Provider>
   );

@@ -944,9 +944,16 @@ export default function New() {
       setToolName(p.displayName ?? tool.name);
       setToolDescription(tool.description ?? "");
       setPrompts(p.prompts?.length ? p.prompts : [""]);
-      setTimerEnabled(p.timerEnabled === true);
+      const timerOverride = searchParams.get("timer");
+      if (timerOverride !== null) {
+        const mins = Number(timerOverride);
+        setTimerEnabled(mins > 0);
+        setTimerMinutes(mins > 0 ? mins : 10);
+      } else {
+        setTimerEnabled(p.timerEnabled === true);
+        setTimerMinutes(typeof p.timerMinutes === "number" ? p.timerMinutes : 10);
+      }
       setTimerMode((p.timerMode as "fixed" | "free") ?? "fixed");
-      setTimerMinutes(typeof p.timerMinutes === "number" ? p.timerMinutes : 10);
       setVisualTimer(p.visualTimer === true);
       setTimerUserReset(p.timerUserReset === true);
       setCursorRunning(p.cursorRunning === true);

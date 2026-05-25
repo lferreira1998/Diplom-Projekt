@@ -222,7 +222,6 @@ function StyledExperimentShell({ info, children }: { info: ExperimentInfo; child
           <ExperimentButton onClick={() => navigate("/aboutnew")}>About</ExperimentButton>
         </div>
         <div style={{ display: "flex", gap: 10, pointerEvents: "auto" }}>
-          <ExperimentButton onClick={() => navigate(info.oldPath)} style={{ opacity: 0.74 }}>Alte Version</ExperimentButton>
           <ExperimentButton onClick={() => navigate("/new")}>Tool bauen</ExperimentButton>
         </div>
       </nav>
@@ -233,49 +232,8 @@ function StyledExperimentShell({ info, children }: { info: ExperimentInfo; child
           height: "100%",
           boxSizing: "border-box",
           padding: "86px 42px 32px",
-          display: "grid",
-          gridTemplateColumns: "342px 1fr",
-          gap: 24,
         }}
       >
-        <aside
-          className="styled-experiment-side"
-          style={{
-            border: `1px dashed ${DASH}`,
-            borderRadius: 10,
-            background: "rgba(249,241,232,0.74)",
-            padding: 22,
-            display: "flex",
-            flexDirection: "column",
-            gap: 18,
-            minHeight: 0,
-          }}
-        >
-          <div>
-            <p style={{ margin: 0, fontFamily: MONO, fontSize: 11, color: MUTED, letterSpacing: "0.08em" }}>NEW DESIGN COPY</p>
-            <h1 style={{ margin: "12px 0 0", fontFamily: SERIF, fontWeight: 400, color: INK, fontSize: 44, lineHeight: "46px" }}>{info.title}</h1>
-          </div>
-
-          <PreviewShape info={info} />
-
-          <div style={{ display: "grid", gap: 12 }}>
-            <div style={{ borderTop: `1px dashed ${DASH}`, paddingTop: 14 }}>
-              <p style={{ margin: 0, fontFamily: MONO, fontSize: 11, color: MUTED }}>REGEL</p>
-              <p style={{ margin: "8px 0 0", fontFamily: SANS, color: TEXT, fontSize: 15, lineHeight: "22px" }}>{info.rule}</p>
-            </div>
-            <div style={{ borderTop: `1px dashed ${DASH}`, paddingTop: 14 }}>
-              <p style={{ margin: 0, fontFamily: MONO, fontSize: 11, color: MUTED }}>NOTIZ</p>
-              <p style={{ margin: "8px 0 0", fontFamily: SERIF, color: INK, fontSize: 22, lineHeight: "27px" }}>{info.note}</p>
-            </div>
-          </div>
-
-          <div style={{ marginTop: "auto", display: "flex", flexWrap: "wrap", gap: 8 }}>
-            <span style={{ border: `1px dashed ${DASH}`, borderRadius: 999, padding: "7px 11px", fontFamily: MONO, color: MUTED, fontSize: 11 }}>{info.kicker}</span>
-            <span style={{ border: `1px dashed ${DASH}`, borderRadius: 999, padding: "7px 11px", fontFamily: MONO, color: MUTED, fontSize: 11 }}>Freight</span>
-            <span style={{ border: `1px dashed ${DASH}`, borderRadius: 999, padding: "7px 11px", fontFamily: MONO, color: MUTED, fontSize: 11 }}>dashed UI</span>
-          </div>
-        </aside>
-
         <div
           className="styled-experiment-stage"
           data-experiment={info.slug}
@@ -290,9 +248,6 @@ function StyledExperimentShell({ info, children }: { info: ExperimentInfo; child
             boxShadow: "0 28px 100px rgba(48,46,44,0.08)",
           }}
         >
-          <div style={{ position: "absolute", top: 16, left: 18, zIndex: 10, fontFamily: MONO, fontSize: 11, color: MUTED, pointerEvents: "none" }}>
-            {info.kicker} / write inside the frame
-          </div>
           <div style={{ width: "100%", height: "100%" }}>{children}</div>
         </div>
       </section>

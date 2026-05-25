@@ -180,7 +180,7 @@ export async function uploadPreviewVideo(
   const path = `previews/${sessionId}/${Date.now()}-${safeName}.${ext}`;
   const { error } = await supabase.storage
     .from("tool-previews")
-    .upload(path, blob, { contentType: blob.type || `video/${ext}`, upsert: true });
+    .upload(path, blob, { contentType: blob.type || `video/${ext}`, upsert: false });
   if (error) throw error;
   const { data } = supabase.storage.from("tool-previews").getPublicUrl(path);
   return { url: data.publicUrl, path };

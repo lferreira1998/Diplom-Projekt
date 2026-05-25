@@ -741,6 +741,7 @@ export default function New() {
   // Save state
   const [saving, setSaving]               = useState(false);
   const [savedId, setSavedId]             = useState<string | null>(null);
+  const [previewSeed]                     = useState(() => Math.floor(Math.random() * 999983));
   const [saveError, setSaveError]         = useState<string | null>(null);
   const [currentToolId, setCurrentToolId] = useState<string | null>(null);
   const [loadedAsciiImage, setLoadedAsciiImage] = useState<string | null>(null);
@@ -1131,6 +1132,11 @@ export default function New() {
         positionMode, randomMode,
         drawnPath: positionMode === "custom" ? drawnPath : [],
         grainLevel, textSizeLevel, bgHue, bgMotion,
+        preview: {
+          text: prompts[0]?.trim().slice(0, 40) || (lang === "de" ? "Ich schreibe anders." : "I write differently."),
+          seed: previewSeed,
+          version: 1,
+        },
       };
       // Fix 3: update existing tool if loaded via URL, otherwise create new
       const id = currentToolId

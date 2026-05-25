@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { MiniReplayPreview } from "./components/MiniReplayPreview";
 import type { CSSProperties } from "react";
 import { useNavigate, useLocation } from "react-router";
 import { deleteNewTool, getAllNewTools, type NewToolData } from "./utils/storage";
@@ -240,12 +241,8 @@ function ToolCard({ tool, onClick, onDelete, isFavorite, onToggleFavorite }: {
           <HeartIcon filled={!!isFavorite} color={isFavorite ? "#d4607a" : theme.muted} />
         </button>
       )}
-      <div onClick={onClick} style={{ width: "100%", aspectRatio: "3 / 2", background: theme.panelBg, overflow: "hidden", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
-        {tool.params.asciiImage ? (
-          <img src={tool.params.asciiImage} alt={tool.name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-        ) : (
-          <span style={{ fontFamily: FONT_SERIF, fontSize: "36px", color: theme.border, userSelect: "none" }}>+</span>
-        )}
+      <div onClick={onClick} style={{ width: "100%", aspectRatio: "3 / 2", overflow: "hidden", flexShrink: 0, cursor: "pointer" }}>
+        <MiniReplayPreview params={tool.params} active={hovered} dark={theme.bg === "#1f1e1c"} toolId={tool.id} />
       </div>
       <div onClick={onClick} style={{ padding: "16px 18px", display: "flex", flexDirection: "column", gap: "5px", cursor: "pointer" }}>
         <span style={{ fontFamily: FONT_SERIF, fontSize: "19px", color: theme.text, lineHeight: "1.25", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>

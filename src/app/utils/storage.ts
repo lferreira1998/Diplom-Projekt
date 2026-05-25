@@ -33,6 +33,7 @@ export interface NewToolParams {
   bgMotion?: boolean;
   textEditingEnabled?: boolean;
   isPublic?: boolean;
+  preview?: { text: string; seed: number; version: number };
 }
 
 export interface NewToolData {

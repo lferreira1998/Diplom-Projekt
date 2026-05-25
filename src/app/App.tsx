@@ -17,6 +17,7 @@ import RandomlySpatially from "./projects/randomlyspatially/App";
 import New from "./New";
 import PlaygroundNewScrollDots from "./PlaygroundNewScrollDots";
 import PlaygroundCodex, { PlaygroundCodexMyTools } from "./PlaygroundCodex";
+import PlaygroundCodex2, { PlaygroundCodex2MyTools } from "./PlaygroundCodex2";
 import { MyToolsPage } from "./PlaygroundNew";
 import {
   StyledBlindThenWitness,
@@ -58,6 +59,8 @@ export default function App() {
       <Route path="/playgroundnew1" element={<PlaygroundNewScrollDots />} />
       <Route path="/playgroundcodex" element={<PlaygroundCodex />} />
       <Route path="/playgroundcodex/my-tools" element={<PlaygroundCodexMyTools />} />
+      <Route path="/playgroundcodex2" element={<PlaygroundCodex2 />} />
+      <Route path="/playgroundcodex2/my-tools" element={<PlaygroundCodex2MyTools />} />
       <Route path="/new" element={<New />} />
     </Routes>
   );

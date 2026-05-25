@@ -1,7 +1,6 @@
 import { useEffect, useRef, useCallback, useMemo } from "react";
 import type { NewToolParams } from "../utils/storage";
 
-// Mulberry32 — fast seeded PRNG
 function mulberry32(seed: number) {
   let s = seed >>> 0;
   return () => {
@@ -27,9 +26,12 @@ interface CharData {
   opacity: number;
 }
 
-const TYPE_MS   = 62;
-const EFFECT_MS = 3800;
-const PAUSE_MS  = 650;
+const TYPE_MS   = 40;
+const EFFECT_MS = 2200;
+const PAUSE_MS  = 400;
+
+// Fixed preview speeds — independent of saved param values
+const DRIFT_SPD = 0.55;
 
 export function MiniReplayPreview({
   params, active, dark, toolId,
@@ -58,58 +60,71 @@ export function MiniReplayPreview({
   const textColor = dark ? "#f0e8dc" : "#2a2a28";
   const fontSize  = Math.round(11 + (params.textSizeLevel / 100) * 11);
 
-  // Which chars get tipp-ex (stable, seed-based)
   const tippexMask = useMemo(() => {
     if (!params.correctionVisible) return [] as boolean[];
     const r = mulberry32(seed + 8321);
-    return text.split("").map(c => c !== " " && r() < 0.22);
+    return text.split("").map(c => c !== " " && r() < 0.38);
   }, [text, seed, params.correctionVisible]);
 
-  const spanRefs  = useRef<(HTMLSpanElement | null)[]>([]);
-  const charData  = useRef<CharData[]>([]);
-  const rafRef    = useRef(0);
-  const phaseRef  = useRef<"typing" | "effect">("typing");
+  const spanRefs = useRef<(HTMLSpanElement | null)[]>([]);
+  const charData = useRef<CharData[]>([]);
+  const rafRef   = useRef(0);
+  const phaseRef = useRef<"typing" | "effect">("typing");
 
-  // Initialise per-char velocities (reset drift offsets each loop)
   const initChars = useCallback(() => {
     const r = mulberry32(seed);
     charData.current = text.split("").map(() => ({
       x: 0, y: 0,
-      vx: (r() - 0.5) * 2.6,
-      vy: (r() - 0.5) * 2.6,
+      vx: (r() - 0.5) * 5,
+      vy: (r() - 0.5) * 5,
       opacity: 0,
     }));
   }, [text, seed]);
 
-  // Write current charData state directly to DOM spans
-  const flush = useCallback(() => {
+  // Returns the target opacity for char i at effect progress t (0–1)
+  const visTarget = useCallback((i: number, t: number): number => {
     const vis    = params.visibility;
-    const isEff  = phaseRef.current === "effect";
     const lastSp = text.lastIndexOf(" ");
     const lastEnd = Math.max(
       text.lastIndexOf(". "), text.lastIndexOf("? "), text.lastIndexOf("! ")
     );
+
+    let hide = false;
+    if (vis === "hidden" || vis === "invisible") {
+      hide = true;
+    } else if (vis === "word" && lastSp > 0 && i <= lastSp) {
+      hide = true;
+    } else if (vis === "sentence" && lastEnd > 0 && i <= lastEnd + 1) {
+      hide = true;
+    }
+    if (hide) return Math.max(0, 1 - t * 2.2);
+    return 1;
+  }, [text, params.visibility]);
+
+  const flush = useCallback((effectProg?: number) => {
+    const isEff = phaseRef.current === "effect";
+    const prog  = effectProg ?? 0;
 
     charData.current.forEach((d, i) => {
       const span = spanRefs.current[i];
       if (!span) return;
 
       let op = d.opacity;
+
       if (isEff) {
-        if (vis === "hidden" || vis === "invisible") {
-          op *= 0.04;
-        } else if (vis === "word") {
-          if (i <= lastSp) op *= 0.06;
-        } else if (vis === "sentence" && lastEnd > 0) {
-          if (i <= lastEnd + 1) op *= 0.06;
+        // Visibility masking — chars ramp to 0
+        op = Math.min(op, visTarget(i, prog));
+
+        // Global fade
+        if (params.textVerblassEnabled) {
+          op *= Math.max(0, 1 - prog);
         }
       }
 
       span.style.opacity   = String(Math.max(0, Math.min(1, op)));
       span.style.transform = `translate(${d.x.toFixed(1)}px,${d.y.toFixed(1)}px)`;
 
-      // Tipp-Ex: paint char with bg colour
-      if (isEff && tippexMask[i] && d.opacity > 0.5) {
+      if (isEff && tippexMask[i] && d.opacity > 0.3) {
         span.style.color      = bgColor;
         span.style.background = bgColor;
       } else {
@@ -117,7 +132,7 @@ export function MiniReplayPreview({
         span.style.background = "transparent";
       }
     });
-  }, [text, params.visibility, tippexMask, bgColor, textColor]);
+  }, [text, visTarget, params.textVerblassEnabled, tippexMask, bgColor, textColor]);
 
   useEffect(() => {
     initChars();
@@ -130,14 +145,24 @@ export function MiniReplayPreview({
     };
 
     if (!active) {
-      // Static: show full text in tool's style
-      phaseRef.current = "effect"; // apply visibility tint even statically
+      // Static snapshot: show text mid-effect so the effect is immediately obvious
+      phaseRef.current = "effect";
       charData.current.forEach(d => { d.opacity = 1; d.x = 0; d.y = 0; });
-      flush();
+
+      if (params.textFliegtEnabled) {
+        const r = mulberry32(seed + 777);
+        charData.current.forEach((d, i) => {
+          if (text[i] !== " ") {
+            d.x = (r() - 0.5) * 18;
+            d.y = (r() - 0.5) * 18;
+          }
+        });
+      }
+
+      flush(0.55);
       return () => { cancelled = true; timers.forEach(clearTimeout); };
     }
 
-    // Reset all chars to invisible
     charData.current.forEach(d => { d.opacity = 0; d.x = 0; d.y = 0; });
     phaseRef.current = "typing";
     flush();
@@ -146,33 +171,31 @@ export function MiniReplayPreview({
       if (cancelled) return;
       phaseRef.current = "effect";
       const start = performance.now();
-      let last  = start;
+      let last    = start;
 
       const tick = (now: number) => {
         if (cancelled) return;
-        const dt      = Math.min((now - last) / 16.67, 3);
-        last          = now;
-        const elapsed = now - start;
+        const dt   = Math.min((now - last) / 16.67, 3);
+        last       = now;
+        const prog = Math.min(1, (now - start) / EFFECT_MS);
 
         if (params.textFliegtEnabled) {
-          const spd = Math.max(0.04, params.fliegtSchnelligkeit * 0.1);
           charData.current.forEach((d, i) => {
             if (text[i] === " ") return;
-            d.x += d.vx * spd * dt;
-            d.y += d.vy * spd * dt;
+            d.x += d.vx * DRIFT_SPD * dt;
+            d.y += d.vy * DRIFT_SPD * dt;
           });
         }
 
         if (params.textVerblassEnabled) {
-          const t = elapsed / EFFECT_MS;
           charData.current.forEach(d => {
-            d.opacity = Math.max(0, 1 - t * 0.88);
+            d.opacity = Math.max(0, 1 - prog);
           });
         }
 
-        flush();
+        flush(prog);
 
-        if (elapsed < EFFECT_MS) {
+        if (prog < 1) {
           rafRef.current = requestAnimationFrame(tick);
         } else {
           later(() => {
@@ -180,7 +203,7 @@ export function MiniReplayPreview({
             charData.current.forEach(d => { d.opacity = 0; });
             phaseRef.current = "typing";
             flush();
-            later(() => type(0), 200);
+            later(() => type(0), 180);
           }, PAUSE_MS);
         }
       };
@@ -189,7 +212,7 @@ export function MiniReplayPreview({
 
     const type = (idx: number) => {
       if (cancelled) return;
-      if (idx >= text.length) { later(startEffect, 420); return; }
+      if (idx >= text.length) { later(startEffect, 280); return; }
       charData.current[idx].opacity = 1;
       flush();
       later(() => type(idx + 1), TYPE_MS);
@@ -203,8 +226,10 @@ export function MiniReplayPreview({
       cancelAnimationFrame(rafRef.current);
     };
   }, [active, initChars, flush, text,
-      params.textFliegtEnabled, params.fliegtSchnelligkeit,
-      params.textVerblassEnabled]);
+      params.textFliegtEnabled,
+      params.textVerblassEnabled,
+      params.visibility,
+      seed]);
 
   return (
     <div style={{

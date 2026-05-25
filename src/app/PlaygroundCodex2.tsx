@@ -2,17 +2,14 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState } from 
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
 import { useNavigate } from "react-router";
 import TopNav from "./components/TopNav";
+import { MiniReplayPreview } from "./components/MiniReplayPreview";
 import { deleteNewTool, getAllNewTools, type NewToolData } from "./utils/storage";
 
 const FONT_SERIF = "'freight-text-pro', 'EB Garamond', Georgia, serif";
 const FONT_SANS = "'general-sans', 'Space Grotesk', sans-serif";
 
-const CARD_WIDTH = 312;
-const CARD_HEIGHT = 364;
-const CARD_RADIUS = 10;
-const PREVIEW_HEIGHT = 176;
-const LANE_GAP = 440;
-const COLUMN_GAP = 460;
+const COLUMN_GAP = 650;
+const LANE_GAP = 520;
 
 type Theme = {
   bg: string;
@@ -26,12 +23,31 @@ type Theme = {
 };
 
 type ViewMode = "all" | "mine";
+type LayoutMode = "field" | "list";
 
-type CanvasPlacement = {
+type ShapePreset = {
+  width: number;
+  height: number;
+  radius: string | number;
+  previewFit?: "cover" | "contain";
+};
+
+type CanvasPlacement = ShapePreset & {
   left: number;
   top: number;
   rotate: number;
 };
+
+const SHAPE_PRESETS: ShapePreset[] = [
+  { width: 368, height: 268, radius: 999, previewFit: "contain" },
+  { width: 408, height: 250, radius: 7 },
+  { width: 438, height: 226, radius: "110px 10px 110px 10px" },
+  { width: 294, height: 386, radius: 180 },
+  { width: 456, height: 260, radius: "10px 90px 10px 90px" },
+  { width: 344, height: 306, radius: "150px 150px 18px 18px" },
+  { width: 396, height: 300, radius: "26px 130px 26px 130px" },
+  { width: 328, height: 328, radius: 999, previewFit: "contain" },
+];
 
 function getTheme(dark: boolean): Theme {
   if (dark) {
@@ -95,29 +111,21 @@ function seededRange(seed: number, min: number, max: number): number {
 
 function getCanvasPlacement(tool: NewToolData, index: number): CanvasPlacement {
   const seed = hashString(`${tool.id}-${index}`);
-  const lanes = [1, 0, 2, 1, 2, 0];
+  const lanes = [1, 0, 3, 2, 0, 2, 1, 3];
   const lane = lanes[index % lanes.length];
-  const column = Math.floor(index / 3);
+  const column = Math.floor(index / 4);
+  const shape = SHAPE_PRESETS[(index + Math.floor(seededRange(seed + 9, 0, SHAPE_PRESETS.length))) % SHAPE_PRESETS.length];
 
   return {
-    left: 260 + column * COLUMN_GAP + seededRange(seed + 1, -46, 54),
-    top: 260 + lane * LANE_GAP + seededRange(seed + 2, -34, 38),
-    rotate: seededRange(seed + 3, -2.4, 2.4),
+    ...shape,
+    left: 280 + column * COLUMN_GAP + seededRange(seed + 1, -120, 140),
+    top: 235 + lane * LANE_GAP + (column % 2) * 72 + seededRange(seed + 2, -96, 112),
+    rotate: seededRange(seed + 3, -8.5, 8.5),
   };
 }
 
-function CanvasToolCard({ tool, owned, favorite, onOpen, onDelete, onToggleFavorite }: {
-  tool: NewToolData;
-  owned: boolean;
-  favorite: boolean;
-  onOpen: () => void;
-  onDelete?: () => void;
-  onToggleFavorite?: () => void;
-}) {
-  const theme = useContext(ThemeContext);
-  const [hovered, setHovered] = useState(false);
-  const [confirming, setConfirming] = useState(false);
-  const actionButtonStyle: CSSProperties = {
+function toolActionButtonStyle(theme: Theme): CSSProperties {
+  return {
     height: 30,
     padding: "0 11px",
     border: `1px dashed ${theme.border}`,
@@ -134,70 +142,136 @@ function CanvasToolCard({ tool, owned, favorite, onOpen, onDelete, onToggleFavor
     lineHeight: 1,
     maxWidth: "100%",
   };
+}
+
+function ToolActions({ owned, favorite, onDelete, onToggleFavorite, compact = false }: {
+  owned: boolean;
+  favorite: boolean;
+  onDelete?: () => void;
+  onToggleFavorite?: () => void;
+  compact?: boolean;
+}) {
+  const theme = useContext(ThemeContext);
+  const [confirming, setConfirming] = useState(false);
+  const actionStyle = toolActionButtonStyle(theme);
+
+  if (owned && onDelete) {
+    if (confirming) {
+      return (
+        <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0, maxWidth: "100%" }}>
+          <span style={{ fontFamily: FONT_SANS, fontSize: 11, color: theme.text, whiteSpace: "nowrap" }}>Löschen?</span>
+          <button onClick={(event) => { event.stopPropagation(); onDelete(); }} style={{ ...actionStyle, height: 26, padding: "0 9px", background: "#b43c3c", border: "none", color: "#fff" }}>Ja</button>
+          <button onClick={(event) => { event.stopPropagation(); setConfirming(false); }} style={{ ...actionStyle, height: 26, padding: "0 9px" }}>Nein</button>
+        </div>
+      );
+    }
+
+    return (
+      <button onClick={(event) => { event.stopPropagation(); setConfirming(true); }} title="Aus My Tools entfernen" style={actionStyle}>
+        <span style={{ fontSize: 14, lineHeight: 1 }}>x</span>
+        {!compact && <span>Remove</span>}
+      </button>
+    );
+  }
+
+  if (!onToggleFavorite) return null;
 
   return (
-    <div
-      data-tool-card="true"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => { setHovered(false); setConfirming(false); }}
+    <button
+      onClick={(event) => { event.stopPropagation(); onToggleFavorite(); }}
+      title={favorite ? "Aus My Tools entfernen" : "Zu My Tools hinzufügen"}
+      style={actionStyle}
+    >
+      <HeartIcon filled={favorite} color={favorite ? "#d4607a" : theme.muted} />
+      {!compact && <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{favorite ? "In My Tools" : "Add to My Tools"}</span>}
+    </button>
+  );
+}
+
+function ShapeTool({ tool, placement, owned, favorite, onOpen, onDelete, onToggleFavorite }: {
+  tool: NewToolData;
+  placement: CanvasPlacement;
+  owned: boolean;
+  favorite: boolean;
+  onOpen: () => void;
+  onDelete?: () => void;
+  onToggleFavorite?: () => void;
+}) {
+  const theme = useContext(ThemeContext);
+  const [hovered, setHovered] = useState(false);
+  const isDark = theme.bg === "#1f1e1c";
+
+  return (
+    <button
+      data-tool-shape="true"
+      onClick={onOpen}
+      onPointerEnter={() => setHovered(true)}
+      onPointerLeave={() => setHovered(false)}
+      onFocus={() => setHovered(true)}
+      onBlur={() => setHovered(false)}
       style={{
-        position: "relative",
-        width: CARD_WIDTH,
-        height: CARD_HEIGHT,
-        display: "flex",
-        flexDirection: "column",
-        overflow: "hidden",
+        position: "absolute",
+        left: placement.left,
+        top: placement.top,
+        width: placement.width,
+        height: placement.height,
+        padding: 0,
         border: `1px dashed ${hovered ? theme.text : theme.border}`,
-        borderRadius: CARD_RADIUS,
-        background: theme.bg,
-        boxSizing: "border-box",
-        padding: 14,
-        boxShadow: hovered ? "0 18px 38px rgba(0,0,0,0.08)" : "none",
-        transform: hovered ? "translateY(-3px)" : "none",
-        transition: "border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease",
+        borderRadius: placement.radius,
+        color: theme.text,
+        background: theme.toolBg,
+        cursor: "pointer",
+        overflow: "hidden",
+        transform: `rotate(${placement.rotate}deg)` + (hovered ? " translateY(-3px)" : ""),
+        transformOrigin: "center",
+        transition: "border-color 140ms ease, transform 140ms ease, box-shadow 140ms ease",
+        boxShadow: hovered ? "0 20px 48px rgba(0,0,0,0.10)" : "none",
       }}
     >
-      <div onClick={onOpen} style={{ width: "100%", height: PREVIEW_HEIGHT, minHeight: PREVIEW_HEIGHT, background: theme.panelBg, overflow: "hidden", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 7, border: `1px dashed ${theme.border}`, boxSizing: "border-box" }}>
-        {tool.params.asciiImage ? (
-          <img src={tool.params.asciiImage} alt={tool.name} style={{ display: "block", width: "100%", height: "100%", objectFit: "cover" }} />
-        ) : (
-          <span style={{ fontFamily: FONT_SERIF, fontSize: 36, color: theme.border, userSelect: "none" }}>+</span>
-        )}
-      </div>
-      <div onClick={onOpen} style={{ display: "flex", flexDirection: "column", gap: 7, padding: "17px 10px 12px", minHeight: 0, cursor: "pointer" }}>
-        <span style={{ fontFamily: FONT_SERIF, fontSize: 20, color: theme.text, lineHeight: 1.2, overflow: "hidden", overflowWrap: "anywhere", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{tool.name || "Unnamed Tool"}</span>
-        {tool.description && (
-          <span style={{ fontFamily: FONT_SANS, fontSize: 13, color: theme.muted, lineHeight: 1.42, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{tool.description}</span>
-        )}
-      </div>
-      {(owned && onDelete) || onToggleFavorite ? (
-        <div style={{ marginTop: "auto", padding: "0 10px 2px", display: "flex", justifyContent: "flex-start", alignItems: "center", minHeight: 34 }}>
-          {owned && onDelete ? (
-            confirming ? (
-              <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0, maxWidth: "100%" }}>
-                <span style={{ fontFamily: FONT_SANS, fontSize: 11, color: theme.text, whiteSpace: "nowrap" }}>Löschen?</span>
-                <button onClick={(event) => { event.stopPropagation(); onDelete(); }} style={{ ...actionButtonStyle, height: 26, padding: "0 9px", background: "#b43c3c", border: "none", color: "#fff" }}>Ja</button>
-                <button onClick={(event) => { event.stopPropagation(); setConfirming(false); }} style={{ ...actionButtonStyle, height: 26, padding: "0 9px" }}>Nein</button>
-              </div>
-            ) : (
-              <button onClick={(event) => { event.stopPropagation(); setConfirming(true); }} title="Aus My Tools entfernen" style={actionButtonStyle}>
-                <span style={{ fontSize: 14, lineHeight: 1 }}>x</span>
-                <span>Remove</span>
-              </button>
-            )
-          ) : onToggleFavorite ? (
-            <button
-              onClick={(event) => { event.stopPropagation(); onToggleFavorite(); }}
-              title={favorite ? "Aus My Tools entfernen" : "Zu My Tools hinzufügen"}
-              style={actionButtonStyle}
-            >
-              <HeartIcon filled={favorite} color={favorite ? "#d4607a" : theme.muted} />
-              <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{favorite ? "In My Tools" : "Add to My Tools"}</span>
-            </button>
-          ) : null}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          opacity: hovered ? 1 : 0.78,
+          transition: "opacity 140ms ease",
+        }}
+      >
+        <div style={{ width: "112%", minWidth: "112%", transform: placement.previewFit === "contain" ? "scale(0.92)" : "scale(1.12)" }}>
+          <MiniReplayPreview params={tool.params} active={hovered} dark={isDark} toolId={tool.id} />
         </div>
-      ) : null}
-    </div>
+      </div>
+
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 12,
+          padding: 26,
+          boxSizing: "border-box",
+          background: hovered ? (isDark ? "rgba(31,30,28,0.78)" : "rgba(252,246,239,0.78)") : "transparent",
+          opacity: hovered ? 1 : 0,
+          transition: "opacity 140ms ease, background 140ms ease",
+          pointerEvents: hovered ? "auto" : "none",
+        }}
+      >
+        <span style={{ fontFamily: FONT_SERIF, fontSize: 23, color: theme.text, lineHeight: 1.16, textAlign: "center", overflowWrap: "anywhere" }}>
+          {tool.name || "Unnamed Tool"}
+        </span>
+        {tool.description && (
+          <span style={{ maxWidth: 260, fontFamily: FONT_SANS, fontSize: 12, color: theme.muted, lineHeight: 1.35, textAlign: "center", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+            {tool.description}
+          </span>
+        )}
+        <ToolActions owned={owned} favorite={favorite} onDelete={onDelete} onToggleFavorite={onToggleFavorite} compact={placement.width < 330} />
+      </div>
+    </button>
   );
 }
 
@@ -215,21 +289,21 @@ function CanvasField({ title, tools, sessionId, favorites, onOpen, onDelete, onT
   const viewportRef = useRef<HTMLDivElement>(null);
   const panRef = useRef({ active: false, x: 0, y: 0, scrollLeft: 0, scrollTop: 0 });
   const [panning, setPanning] = useState(false);
-  const columnCount = Math.max(4, Math.ceil(tools.length / 3));
-  const canvasWidth = Math.max(2400, 700 + columnCount * COLUMN_GAP);
-  const canvasHeight = 1720;
+  const columnCount = Math.max(7, Math.ceil(tools.length / 4) + 2);
+  const canvasWidth = Math.max(5200, 1040 + columnCount * COLUMN_GAP);
+  const canvasHeight = Math.max(2860, 620 + 4 * LANE_GAP);
 
   useEffect(() => {
     const target = viewportRef.current;
     if (!target) return;
-    target.scrollLeft = 110;
-    target.scrollTop = 90;
+    target.scrollLeft = 320;
+    target.scrollTop = 160;
   }, [tools.length, title]);
 
   const handlePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (event.button !== 0) return;
     const target = event.target as HTMLElement;
-    if (target.closest("[data-tool-card='true']")) return;
+    if (target.closest("[data-tool-shape='true']")) return;
     panRef.current = {
       active: true,
       x: event.clientX,
@@ -268,31 +342,111 @@ function CanvasField({ title, tools, sessionId, favorites, onOpen, onDelete, onT
       }}
     >
       <div style={{ position: "relative", width: canvasWidth, height: canvasHeight, minWidth: "100%", minHeight: "100%" }}>
-        <div style={{ position: "absolute", left: 168, top: 146, display: "flex", alignItems: "baseline", gap: 12, pointerEvents: "none" }}>
-          <span style={{ fontFamily: FONT_SERIF, fontSize: 35, color: theme.text }}>{title}</span>
+        <div style={{ position: "absolute", left: 250, top: 138, display: "flex", alignItems: "baseline", gap: 12, pointerEvents: "none" }}>
+          <span style={{ fontFamily: FONT_SERIF, fontSize: 36, color: theme.text }}>{title}</span>
           <span style={{ fontFamily: FONT_SANS, fontSize: 13, color: theme.muted }}>{tools.length}</span>
         </div>
 
         {tools.length === 0 ? (
-          <p style={{ position: "absolute", left: 172, top: 218, margin: 0, fontFamily: FONT_SANS, fontSize: 14, color: theme.muted }}>{emptyMessage}</p>
+          <p style={{ position: "absolute", left: 254, top: 214, margin: 0, fontFamily: FONT_SANS, fontSize: 14, color: theme.muted }}>{emptyMessage}</p>
         ) : (
           tools.map((tool, index) => {
             const owned = tool.params.sessionId === sessionId;
             const placement = getCanvasPlacement(tool, index);
             return (
-              <div
+              <ShapeTool
                 key={tool.id}
-                style={{
-                  position: "absolute",
-                  left: placement.left,
-                  top: placement.top,
-                  width: CARD_WIDTH,
-                  height: CARD_HEIGHT,
-                  transform: `rotate(${placement.rotate}deg)`,
-                  transformOrigin: "center",
-                }}
-              >
-                <CanvasToolCard
+                tool={tool}
+                placement={placement}
+                owned={owned}
+                favorite={favorites.includes(tool.id)}
+                onOpen={() => onOpen(tool.id)}
+                onDelete={owned ? () => onDelete(tool.id) : undefined}
+                onToggleFavorite={!owned ? () => onToggleFavorite(tool.id) : undefined}
+              />
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ListToolCard({ tool, owned, favorite, onOpen, onDelete, onToggleFavorite }: {
+  tool: NewToolData;
+  owned: boolean;
+  favorite: boolean;
+  onOpen: () => void;
+  onDelete?: () => void;
+  onToggleFavorite?: () => void;
+}) {
+  const theme = useContext(ThemeContext);
+  const [hovered, setHovered] = useState(false);
+  const isDark = theme.bg === "#1f1e1c";
+
+  return (
+    <div
+      data-tool-card="true"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        display: "grid",
+        gridTemplateColumns: "minmax(220px, 340px) minmax(0, 1fr) auto",
+        gap: 22,
+        alignItems: "center",
+        border: `1px dashed ${hovered ? theme.text : theme.border}`,
+        borderRadius: 8,
+        background: theme.bg,
+        padding: 14,
+        boxSizing: "border-box",
+        transition: "border-color 140ms ease, transform 140ms ease",
+        transform: hovered ? "translateY(-2px)" : "none",
+      }}
+    >
+      <div onClick={onOpen} style={{ border: `1px dashed ${theme.border}`, borderRadius: 7, overflow: "hidden", cursor: "pointer", background: theme.panelBg }}>
+        <MiniReplayPreview params={tool.params} active={hovered} dark={isDark} toolId={tool.id} />
+      </div>
+      <div onClick={onOpen} style={{ minWidth: 0, cursor: "pointer", display: "flex", flexDirection: "column", gap: 7 }}>
+        <span style={{ fontFamily: FONT_SERIF, fontSize: 24, color: theme.text, lineHeight: 1.16, overflowWrap: "anywhere" }}>{tool.name || "Unnamed Tool"}</span>
+        {tool.description && (
+          <span style={{ fontFamily: FONT_SANS, fontSize: 13, color: theme.muted, lineHeight: 1.45, maxWidth: 620 }}>{tool.description}</span>
+        )}
+      </div>
+      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+        <ToolActions owned={owned} favorite={favorite} onDelete={onDelete} onToggleFavorite={onToggleFavorite} />
+      </div>
+    </div>
+  );
+}
+
+function ListView({ title, tools, sessionId, favorites, onOpen, onDelete, onToggleFavorite, emptyMessage }: {
+  title: string;
+  tools: NewToolData[];
+  sessionId: string;
+  favorites: string[];
+  onOpen: (id: string) => void;
+  onDelete: (id: string) => void;
+  onToggleFavorite: (id: string) => void;
+  emptyMessage: string;
+}) {
+  const theme = useContext(ThemeContext);
+
+  return (
+    <div style={{ position: "absolute", inset: 0, overflowY: "auto", WebkitOverflowScrolling: "touch", padding: "118px 96px 170px", boxSizing: "border-box" }}>
+      <section style={{ display: "flex", flexDirection: "column", gap: 22, maxWidth: 1180, margin: "0 auto" }}>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 12, borderBottom: `1px dashed ${theme.border}`, paddingBottom: 12 }}>
+          <span style={{ fontFamily: FONT_SERIF, fontSize: 34, color: theme.text }}>{title}</span>
+          <span style={{ fontFamily: FONT_SANS, fontSize: 13, color: theme.muted }}>{tools.length}</span>
+        </div>
+        {tools.length === 0 ? (
+          <p style={{ margin: 0, fontFamily: FONT_SANS, fontSize: 14, color: theme.muted }}>{emptyMessage}</p>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
+            {tools.map((tool) => {
+              const owned = tool.params.sessionId === sessionId;
+              return (
+                <ListToolCard
+                  key={tool.id}
                   tool={tool}
                   owned={owned}
                   favorite={favorites.includes(tool.id)}
@@ -300,11 +454,32 @@ function CanvasField({ title, tools, sessionId, favorites, onOpen, onDelete, onT
                   onDelete={owned ? () => onDelete(tool.id) : undefined}
                   onToggleFavorite={!owned ? () => onToggleFavorite(tool.id) : undefined}
                 />
-              </div>
-            );
-          })
+              );
+            })}
+          </div>
         )}
-      </div>
+      </section>
+    </div>
+  );
+}
+
+function LayoutSwitch({ layoutMode, setLayoutMode, de, dark }: { layoutMode: LayoutMode; setLayoutMode: (mode: LayoutMode) => void; de: boolean; dark: boolean }) {
+  const theme = useContext(ThemeContext);
+  const items: Array<{ mode: LayoutMode; label: string }> = [
+    { mode: "field", label: de ? "Feld" : "Field" },
+    { mode: "list", label: de ? "Liste" : "List" },
+  ];
+
+  return (
+    <div style={{ position: "fixed", bottom: 96, left: "50%", transform: "translateX(-50%)", zIndex: 60, display: "flex", gap: 4, padding: 4, border: `1px dashed ${theme.border}`, borderRadius: 4, background: theme.toolBg }}>
+      {items.map((item) => {
+        const active = layoutMode === item.mode;
+        return (
+          <button key={item.mode} onClick={() => setLayoutMode(item.mode)} style={{ border: "none", borderRadius: 3, cursor: "pointer", outline: "none", padding: "8px 16px", fontFamily: FONT_SANS, fontSize: 13, background: active ? (dark ? theme.text : theme.headline) : "transparent", color: active ? theme.bg : theme.muted, transition: "background 140ms ease, color 140ms ease" }}>
+            {item.label}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -401,6 +576,7 @@ function usePlaygroundTools() {
 
 export default function PlaygroundCodex2({ mode = "all" }: { mode?: ViewMode }) {
   const { sessionId, loading, error, lang, setLang, dark, setDark, favorites, toggleFavorite, openTool, handleDelete, myTools, allTools } = usePlaygroundTools();
+  const [layoutMode, setLayoutMode] = useState<LayoutMode>("field");
   const de = lang === "de";
   const theme = getTheme(dark);
   const shownTools = mode === "mine" ? myTools : allTools;
@@ -421,8 +597,19 @@ export default function PlaygroundCodex2({ mode = "all" }: { mode?: ViewMode }) 
           </div>
         ) : error ? (
           <p style={{ position: "absolute", left: 172, top: 170, margin: 0, fontFamily: FONT_SANS, fontSize: 14, color: theme.muted }}>{de ? "Tools konnten gerade nicht geladen werden." : "Tools could not be loaded right now."}</p>
-        ) : (
+        ) : layoutMode === "field" ? (
           <CanvasField
+            title={title}
+            tools={shownTools}
+            sessionId={sessionId}
+            favorites={favorites}
+            onOpen={openTool}
+            onDelete={handleDelete}
+            onToggleFavorite={toggleFavorite}
+            emptyMessage={emptyMessage}
+          />
+        ) : (
+          <ListView
             title={title}
             tools={shownTools}
             sessionId={sessionId}
@@ -434,6 +621,7 @@ export default function PlaygroundCodex2({ mode = "all" }: { mode?: ViewMode }) 
           />
         )}
 
+        <LayoutSwitch layoutMode={layoutMode} setLayoutMode={setLayoutMode} de={de} dark={dark} />
         <ViewSwitch mode={mode} de={de} dark={dark} />
       </main>
     </ThemeContext.Provider>

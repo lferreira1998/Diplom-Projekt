@@ -173,13 +173,14 @@ export async function uploadPreviewVideo(
   blob: Blob,
   sessionId: string,
   toolName?: string,
+  ext = "webm",
 ): Promise<{ url: string; path: string }> {
   const safeName = (toolName ?? "preview")
     .toLowerCase().replace(/[^a-z0-9]/g, "-").slice(0, 40);
-  const path = `previews/${sessionId}/${Date.now()}-${safeName}.webm`;
+  const path = `previews/${sessionId}/${Date.now()}-${safeName}.${ext}`;
   const { error } = await supabase.storage
     .from("tool-previews")
-    .upload(path, blob, { contentType: "video/webm", upsert: true });
+    .upload(path, blob, { contentType: blob.type || `video/${ext}`, upsert: true });
   if (error) throw error;
   const { data } = supabase.storage.from("tool-previews").getPublicUrl(path);
   return { url: data.publicUrl, path };

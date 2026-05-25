@@ -1246,47 +1246,53 @@ export default function New() {
     setRecording(true);
     setRecordState("idle");
     try {
+      // Pick first supported MIME type (Safari needs mp4, Chrome/Firefox use webm)
+      const mimeType = [
+        "video/webm;codecs=vp9",
+        "video/webm;codecs=vp8",
+        "video/webm",
+        "video/mp4;codecs=avc1",
+        "video/mp4",
+      ].find(t => MediaRecorder.isTypeSupported(t));
+      if (!mimeType) throw new Error("MediaRecorder not supported in this browser");
+
       const DURATION_MS = 3500;
-      const FPS = 12;
+      const FPS         = 10;
+      const frameMs     = 1000 / FPS;
       const w = node.offsetWidth  || 960;
       const h = node.offsetHeight || 640;
+
       const recCanvas = document.createElement("canvas");
       recCanvas.width  = w;
       recCanvas.height = h;
       const ctx = recCanvas.getContext("2d");
-      if (!ctx) throw new Error("no ctx");
+      if (!ctx) throw new Error("Canvas 2d context unavailable");
 
-      const mimeType = MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
-        ? "video/webm;codecs=vp9" : "video/webm";
       const stream   = recCanvas.captureStream(FPS);
       const recorder = new MediaRecorder(stream, { mimeType });
       const chunks: Blob[] = [];
       recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
-      recorder.start(100);
+      recorder.start(200);
 
+      // Sequential frame loop — no overlapping html2canvas calls
       const startTs = performance.now();
-      const captureFrame = async () => {
-        const snap = await html2canvas(node, { backgroundColor: bg, scale: 1, logging: false });
+      while (performance.now() - startTs < DURATION_MS) {
+        const t0   = performance.now();
+        const snap = await html2canvas(node, { backgroundColor: bg, scale: 1, logging: false, useCORS: true });
         ctx.clearRect(0, 0, w, h);
         ctx.drawImage(snap, 0, 0, w, h);
-      };
-      await captureFrame();
-      const frameMs = 1000 / FPS;
-      await new Promise<void>(resolve => {
-        const interval = setInterval(async () => {
-          if (performance.now() - startTs >= DURATION_MS) {
-            clearInterval(interval);
-            resolve();
-          } else {
-            await captureFrame();
-          }
-        }, frameMs);
-      });
+        const wait = Math.max(0, frameMs - (performance.now() - t0));
+        if (wait > 0) await new Promise(r => setTimeout(r, wait));
+      }
 
       recorder.stop();
       await new Promise<void>(r => { recorder.onstop = () => r(); });
+
       const blob = new Blob(chunks, { type: mimeType });
-      const { url, path } = await uploadPreviewVideo(blob, sessionId, toolName);
+      if (blob.size < 1000) throw new Error(`Blob too small (${blob.size} bytes) — recording may have failed`);
+
+      const ext = mimeType.includes("mp4") ? "mp4" : "webm";
+      const { url, path } = await uploadPreviewVideo(blob, sessionId, toolName, ext);
       setPreviewVideoUrl(url);
       setPreviewVideoPath(path);
       setRecordState("done");

@@ -2,7 +2,6 @@ import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { useNavigate, useSearchParams } from "react-router";
-import AsciiImagePanel from "./components/AsciiImagePanel";
 import {
   WritingZone,
   type Position,
@@ -736,16 +735,12 @@ export default function New() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const sessionId = useMemo(() => getOrCreateSessionId(), []);
-  const asciiSnapshotRef = useRef<() => string | null>(() => null);
-
   // Save state
   const [saving, setSaving]               = useState(false);
   const [savedId, setSavedId]             = useState<string | null>(null);
   const [previewSeed]                     = useState(() => Math.floor(Math.random() * 999983));
   const [saveError, setSaveError]         = useState<string | null>(null);
   const [currentToolId, setCurrentToolId] = useState<string | null>(null);
-  const [loadedAsciiImage, setLoadedAsciiImage] = useState<string | null>(null);
-
   // Loaded-tool ownership & edit mode
   const [loadedToolIsOwn, setLoadedToolIsOwn]         = useState(false);
   const [editModeEnabledState, setEditModeEnabledState] = useState(false);
@@ -981,7 +976,6 @@ export default function New() {
       setTextSizeLevel(typeof p.textSizeLevel === "number" ? p.textSizeLevel : 20);
       setBgHue(typeof p.bgHue === "number" ? p.bgHue : null);
       setBgMotion(p.bgMotion === true);
-      if (p.asciiImage) setLoadedAsciiImage(p.asciiImage);
     }).catch((err) => {
       console.error("[New] Failed to load tool:", err);
     });
@@ -1117,12 +1111,10 @@ export default function New() {
     setSaving(true);
     setSaveError(null);
     try {
-      const asciiImage = asciiSnapshotRef.current?.() ?? null;
       const params = {
         source: "new" as const,
         sessionId,
         prompts,
-        asciiImage,
         isPublic,
         timerEnabled, timerMode, timerMinutes, visualTimer, timerUserReset, cursorRunning,
         visibility, deleteMode, correctionVisible,
@@ -1351,16 +1343,6 @@ export default function New() {
                 display: "flex", flexDirection: "column", gap: "20px",
               }}
             >
-              {loadedAsciiImage && (
-                <img
-                  src={loadedAsciiImage}
-                  alt={toolName || "Tool"}
-                  style={{
-                    width: "100%", borderRadius: "8px",
-                    aspectRatio: "3/2", objectFit: "cover", display: "block",
-                  }}
-                />
-              )}
               <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                 <span style={{ fontFamily: FONT_SERIF, fontSize: "24px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>
                   {toolName || "Untitled"}
@@ -1735,15 +1717,6 @@ export default function New() {
                   <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: descColor, lineHeight: "1.45" }}>
                     {t.identitySubtitle}
                   </span>
-
-                  <AsciiImagePanel
-                    dark={dark}
-                    background={settingsCardBg}
-                    textColor={dark ? DARK_TEXT : LIGHT_TEXT}
-                    fontSans={FONT_SANS}
-                    snapshotRef={asciiSnapshotRef}
-                    initialImage={loadedAsciiImage}
-                  />
 
                   {/* Name */}
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>

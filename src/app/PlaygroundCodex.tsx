@@ -4,6 +4,7 @@ import { useNavigate } from "react-router";
 import TopNav from "./components/TopNav";
 import { deleteNewTool, getAllNewTools, type NewToolData } from "./utils/storage";
 import { ToolLaunchModal } from "./components/ToolLaunchModal";
+import { ToolPreview } from "./components/ToolPreview";
 
 const FONT_SERIF = "'freight-text-pro', 'EB Garamond', Georgia, serif";
 const FONT_SANS = "'general-sans', 'Space Grotesk', sans-serif";
@@ -250,12 +251,8 @@ function ToolCard({ tool, owned, favorite, onOpen, onDelete, onToggleFavorite }:
         transition: "border-color 140ms ease, transform 140ms ease",
       }}
     >
-      <div onClick={onOpen} style={{ width: "100%", height: PREVIEW_HEIGHT, minHeight: PREVIEW_HEIGHT, background: theme.panelBg, overflow: "hidden", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: PREVIEW_RADIUS, border: `1px dashed ${theme.border}`, boxSizing: "border-box" }}>
-        {tool.params.asciiImage ? (
-          <img src={tool.params.asciiImage} alt={tool.name} style={{ display: "block", width: "100%", height: "100%", objectFit: "cover" }} />
-        ) : (
-          <span style={{ fontFamily: FONT_SERIF, fontSize: 36, color: theme.border, userSelect: "none" }}>+</span>
-        )}
+      <div onClick={onOpen} style={{ width: "100%", height: PREVIEW_HEIGHT, minHeight: PREVIEW_HEIGHT, overflow: "hidden", cursor: "pointer", borderRadius: PREVIEW_RADIUS, border: `1px dashed ${theme.border}`, boxSizing: "border-box" }}>
+        <ToolPreview tool={tool} active={hovered} dark={theme.bg === "#1f1e1c"} />
       </div>
       <div onClick={onOpen} style={{ display: "flex", flexDirection: "column", gap: 7, padding: "18px 12px 12px", minHeight: 0, cursor: "pointer" }}>
         <span style={{ fontFamily: FONT_SERIF, fontSize: 19, color: theme.text, lineHeight: 1.22, overflow: "hidden", overflowWrap: "anywhere", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{tool.name || "Unnamed Tool"}</span>

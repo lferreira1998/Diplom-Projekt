@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { MiniReplayPreview } from "./components/MiniReplayPreview";
+import { ToolPreview } from "./components/ToolPreview";
 import { ToolLaunchModal } from "./components/ToolLaunchModal";
 import type { CSSProperties } from "react";
 import { useNavigate, useLocation } from "react-router";
@@ -243,7 +243,7 @@ function ToolCard({ tool, onClick, onDelete, isFavorite, onToggleFavorite }: {
         </button>
       )}
       <div onClick={onClick} style={{ width: "100%", aspectRatio: "3 / 2", overflow: "hidden", flexShrink: 0, cursor: "pointer" }}>
-        <MiniReplayPreview params={tool.params} active={hovered} dark={theme.bg === "#1f1e1c"} toolId={tool.id} />
+        <ToolPreview tool={tool} active={hovered} dark={theme.bg === "#1f1e1c"} />
       </div>
       <div onClick={onClick} style={{ padding: "16px 18px", display: "flex", flexDirection: "column", gap: "5px", cursor: "pointer" }}>
         <span style={{ fontFamily: FONT_SERIF, fontSize: "19px", color: theme.text, lineHeight: "1.25", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>

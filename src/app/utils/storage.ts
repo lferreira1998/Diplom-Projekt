@@ -34,6 +34,8 @@ export interface NewToolParams {
   textEditingEnabled?: boolean;
   isPublic?: boolean;
   preview?: { text: string; seed: number; version: number };
+  previewVideo?: string;
+  previewVideoPath?: string;
 }
 
 export interface NewToolData {
@@ -165,4 +167,20 @@ export async function getToolById(id: string): Promise<SavedTool | null> {
     .single();
   if (error) return null;
   return mapRow(data);
+}
+
+export async function uploadPreviewVideo(
+  blob: Blob,
+  sessionId: string,
+  toolName?: string,
+): Promise<{ url: string; path: string }> {
+  const safeName = (toolName ?? "preview")
+    .toLowerCase().replace(/[^a-z0-9]/g, "-").slice(0, 40);
+  const path = `previews/${sessionId}/${Date.now()}-${safeName}.webm`;
+  const { error } = await supabase.storage
+    .from("tool-previews")
+    .upload(path, blob, { contentType: "video/webm", upsert: true });
+  if (error) throw error;
+  const { data } = supabase.storage.from("tool-previews").getPublicUrl(path);
+  return { url: data.publicUrl, path };
 }

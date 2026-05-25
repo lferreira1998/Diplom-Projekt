@@ -7,7 +7,7 @@ import {
   type Position,
   extractText,
 } from "./projects/parametrischestool/components/writing-zone";
-import { saveNewTool, updateNewTool, getNewToolById } from "./utils/storage";
+import { saveNewTool, updateNewTool, getNewToolById, uploadPreviewVideo } from "./utils/storage";
 import html2canvas from "html2canvas-pro";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
@@ -741,6 +741,10 @@ export default function New() {
   const [previewSeed]                     = useState(() => Math.floor(Math.random() * 999983));
   const [saveError, setSaveError]         = useState<string | null>(null);
   const [currentToolId, setCurrentToolId] = useState<string | null>(null);
+  const [previewVideoUrl, setPreviewVideoUrl]   = useState<string | null>(null);
+  const [previewVideoPath, setPreviewVideoPath] = useState<string | null>(null);
+  const [recording, setRecording]               = useState(false);
+  const [recordState, setRecordState]           = useState<"idle" | "done" | "error">("idle");
   // Loaded-tool ownership & edit mode
   const [loadedToolIsOwn, setLoadedToolIsOwn]         = useState(false);
   const [editModeEnabledState, setEditModeEnabledState] = useState(false);
@@ -983,6 +987,7 @@ export default function New() {
       setTextSizeLevel(typeof p.textSizeLevel === "number" ? p.textSizeLevel : 20);
       setBgHue(typeof p.bgHue === "number" ? p.bgHue : null);
       setBgMotion(p.bgMotion === true);
+      if (p.previewVideo) { setPreviewVideoUrl(p.previewVideo); setPreviewVideoPath(p.previewVideoPath ?? null); setRecordState("done"); }
     }).catch((err) => {
       console.error("[New] Failed to load tool:", err);
     });
@@ -1131,6 +1136,7 @@ export default function New() {
         positionMode, randomMode,
         drawnPath: positionMode === "custom" ? drawnPath : [],
         grainLevel, textSizeLevel, bgHue, bgMotion,
+        ...(previewVideoUrl ? { previewVideo: previewVideoUrl, previewVideoPath: previewVideoPath ?? undefined } : {}),
         preview: {
           text: prompts[0]?.trim().slice(0, 40) || (lang === "de" ? "Ich schreibe anders." : "I write differently."),
           seed: previewSeed,
@@ -1234,6 +1240,64 @@ export default function New() {
   };
 
   const darkBtnBg  = rulesOpen ? (dark ? "rgba(240,232,220,0.1)" : surfaceDark) : (dark ? "rgba(240,232,220,0.06)" : surfaceLight);
+  const handleRecordPreview = async () => {
+    const node = writingZoneRef.current;
+    if (!node || recording) return;
+    setRecording(true);
+    setRecordState("idle");
+    try {
+      const DURATION_MS = 3500;
+      const FPS = 12;
+      const w = node.offsetWidth  || 960;
+      const h = node.offsetHeight || 640;
+      const recCanvas = document.createElement("canvas");
+      recCanvas.width  = w;
+      recCanvas.height = h;
+      const ctx = recCanvas.getContext("2d");
+      if (!ctx) throw new Error("no ctx");
+
+      const mimeType = MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
+        ? "video/webm;codecs=vp9" : "video/webm";
+      const stream   = recCanvas.captureStream(FPS);
+      const recorder = new MediaRecorder(stream, { mimeType });
+      const chunks: Blob[] = [];
+      recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
+      recorder.start(100);
+
+      const startTs = performance.now();
+      const captureFrame = async () => {
+        const snap = await html2canvas(node, { backgroundColor: bg, scale: 1, logging: false });
+        ctx.clearRect(0, 0, w, h);
+        ctx.drawImage(snap, 0, 0, w, h);
+      };
+      await captureFrame();
+      const frameMs = 1000 / FPS;
+      await new Promise<void>(resolve => {
+        const interval = setInterval(async () => {
+          if (performance.now() - startTs >= DURATION_MS) {
+            clearInterval(interval);
+            resolve();
+          } else {
+            await captureFrame();
+          }
+        }, frameMs);
+      });
+
+      recorder.stop();
+      await new Promise<void>(r => { recorder.onstop = () => r(); });
+      const blob = new Blob(chunks, { type: mimeType });
+      const { url, path } = await uploadPreviewVideo(blob, sessionId, toolName);
+      setPreviewVideoUrl(url);
+      setPreviewVideoPath(path);
+      setRecordState("done");
+    } catch (err) {
+      console.error("[RecordPreview]", err);
+      setRecordState("error");
+    } finally {
+      setRecording(false);
+    }
+  };
+
   const rulesBtnBg = rulesOpen ? (dark ? "rgba(240,232,220,0.1)" : surfaceDark) : (dark ? "rgba(240,232,220,0.06)" : surfaceLight);
 
   // Re-focus writing area after panel close or category switch
@@ -1810,6 +1874,29 @@ export default function New() {
                   </div>
                 </div>
                 <div style={{ padding: "16px 24px", flexShrink: 0, display: "flex", flexDirection: "column", gap: "8px" }}>
+                  {/* Preview recording button */}
+                  <button
+                    onClick={handleRecordPreview}
+                    disabled={recording}
+                    style={{
+                      width: "100%", padding: "10px",
+                      background: recordState === "done" ? (dark ? "rgba(240,232,220,0.08)" : "rgba(0,0,0,0.04)") : "transparent",
+                      border: `1px dashed ${recordState === "error" ? "#e05252" : innerBorder}`,
+                      borderRadius: "8px", cursor: recording ? "wait" : "pointer", outline: "none",
+                      fontFamily: FONT_SANS, fontSize: "14px",
+                      color: recordState === "error" ? "#e05252" : (dark ? DARK_MUTED : "#7c7c7c"),
+                      opacity: recording ? 0.7 : 1,
+                      transition: "all 0.2s",
+                    }}
+                  >
+                    {recording
+                      ? (lang === "de" ? "⏺ Nimmt auf…" : "⏺ Recording…")
+                      : recordState === "done"
+                        ? (lang === "de" ? "✓ Vorschau aufgenommen" : "✓ Preview recorded")
+                        : recordState === "error"
+                          ? (lang === "de" ? "Aufnahme fehlgeschlagen" : "Recording failed")
+                          : (lang === "de" ? "Vorschau aufnehmen" : "Record preview")}
+                  </button>
                   {saveError && (
                     <span style={{ fontFamily: FONT_SANS, fontSize: "12px", color: "#e05252", textAlign: "center" }}>{saveError}</span>
                   )}

@@ -226,37 +226,108 @@ export function RecordPreviewOverlay({
   }, [onClose]);
 
   // ── Render ────────────────────────────────────────────────────────────
+  // frameHeight is ONLY the 3:2 recording area — control strip is outside/below
   const frameHeight = fh(frame.w);
   const isIdle      = phase === "idle";
   const isRecording = phase === "recording";
+
+  // Control strip content
+  const controlStrip = (
+    <div style={{
+      position: "absolute",
+      left: frame.x,
+      top: frame.y + frameHeight,
+      width: frame.w,
+      background: surfaceBg,
+      backdropFilter: "blur(10px)",
+      borderLeft:   `1px dashed ${borderCol}`,
+      borderRight:  `1px dashed ${borderCol}`,
+      borderBottom: `1px dashed ${borderCol}`,
+      borderTop:    `1px dashed ${borderCol}`,
+      padding: "9px 12px",
+      display: "flex", alignItems: "center", gap: "10px",
+      pointerEvents: "auto",
+      boxSizing: "border-box",
+    }}>
+      {phase === "idle" && (
+        <>
+          <span style={{ fontFamily: FONT_SANS, fontSize: "12px", color: mutedCol, flex: 1, lineHeight: "1.4", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+            {DE ? "Max. 10 Sek. · Während der Aufnahme weiterschreiben möglich." : "Max. 10 sec · Keep writing during recording."}
+          </span>
+          <button onClick={handleClose} style={{ fontFamily: FONT_SANS, fontSize: "12px", padding: "6px 14px", background: "transparent", border: `1px dashed ${borderCol}`, borderRadius: "5px", color: mutedCol, cursor: "pointer", flexShrink: 0 }}>
+            {DE ? "Abbrechen" : "Cancel"}
+          </button>
+          <button onClick={startFlow} style={{ fontFamily: FONT_SANS, fontSize: "12px", padding: "6px 16px", background: btnPrimary.bg, border: "none", borderRadius: "5px", color: btnPrimary.text, cursor: "pointer", fontWeight: 500, flexShrink: 0 }}>
+            {DE ? "Starten →" : "Start →"}
+          </button>
+        </>
+      )}
+      {phase === "countdown" && (
+        <>
+          <span style={{ fontFamily: FONT_SANS, fontSize: "12px", color: mutedCol, flex: 1 }}>
+            {DE ? "Gleich startet die Aufnahme…" : "Recording starts soon…"}
+          </span>
+          <button onClick={handleClose} style={{ fontFamily: FONT_SANS, fontSize: "12px", padding: "6px 14px", background: "transparent", border: `1px dashed ${borderCol}`, borderRadius: "5px", color: mutedCol, cursor: "pointer" }}>
+            {DE ? "Abbrechen" : "Cancel"}
+          </button>
+        </>
+      )}
+      {phase === "recording" && (
+        <>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
+            <div style={{ width: "7px", height: "7px", borderRadius: "50%", background: "rgb(195,32,32)", animation: "recPulse 1s ease infinite" }} />
+            <span style={{ fontFamily: FONT_SANS, fontSize: "12px", color: textCol, fontWeight: 600, letterSpacing: "0.05em" }}>REC</span>
+            <span style={{ fontFamily: FONT_SANS, fontSize: "12px", color: mutedCol }}>{elapsed}s / {MAX_SECS}s</span>
+          </div>
+          <div style={{ flex: 1, height: "2px", background: dark ? "rgba(240,232,220,0.12)" : "rgba(0,0,0,0.1)", borderRadius: "1px" }}>
+            <div style={{ height: "100%", width: `${(elapsed / MAX_SECS) * 100}%`, background: "rgb(195,32,32)", borderRadius: "1px", transition: "width 1s linear" }} />
+          </div>
+          <button onClick={stopRecording} style={{ fontFamily: FONT_SANS, fontSize: "12px", padding: "6px 14px", background: "transparent", border: `1px dashed ${borderCol}`, borderRadius: "5px", color: textCol, cursor: "pointer", flexShrink: 0 }}>
+            {DE ? "■ Stop" : "■ Stop"}
+          </button>
+        </>
+      )}
+      {phase === "uploading" && (
+        <span style={{ fontFamily: FONT_SANS, fontSize: "12px", color: mutedCol }}>
+          {DE ? "Wird hochgeladen…" : "Uploading…"}
+        </span>
+      )}
+      {phase === "error" && (
+        <>
+          <span style={{ fontFamily: FONT_SANS, fontSize: "12px", color: "#e05252", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {errorMsg || (DE ? "Aufnahme fehlgeschlagen." : "Recording failed.")}
+          </span>
+          <button onClick={handleClose} style={{ fontFamily: FONT_SANS, fontSize: "12px", padding: "6px 14px", background: "transparent", border: `1px dashed ${borderCol}`, borderRadius: "5px", color: mutedCol, cursor: "pointer" }}>
+            {DE ? "Schließen" : "Close"}
+          </button>
+        </>
+      )}
+    </div>
+  );
 
   return createPortal(
     <>
       <style>{`@keyframes recPulse { 0%,100%{opacity:1} 50%{opacity:0.2} }`}</style>
 
-      {/* Root layer — data-html2canvas-ignore prevents it from appearing in recorded frames */}
+      {/* Root — pointer-events:none passthrough; ignored by html2canvas */}
       <div data-html2canvas-ignore="true" style={{ position: "fixed", inset: 0, zIndex: 200, pointerEvents: "none" }}>
 
-        {/* ── Frame ── */}
+        {/* ── Recording frame (pure 3:2, no controls inside) ── */}
         <div style={{
           position: "absolute",
           left: frame.x, top: frame.y,
           width: frame.w, height: frameHeight,
           pointerEvents: "none",
         }}>
-
-          {/* Drag body handle (top strip) */}
+          {/* Move handle — top strip */}
           {isIdle && (
             <div
               onMouseDown={(e) => startDrag("move", e)}
-              style={{
-                position: "absolute", top: 0, left: HANDLE_PX, right: HANDLE_PX,
-                height: "36px", cursor: "move", pointerEvents: "auto", zIndex: 1,
-              }}
+              style={{ position: "absolute", top: 0, left: HANDLE_PX, right: HANDLE_PX, height: "100%", cursor: "move", pointerEvents: "auto", zIndex: 1 }}
             />
           )}
 
-          {/* Frame border */}
+          {/* Border */}
           <div style={{
             position: "absolute", inset: 0, boxSizing: "border-box",
             border: isRecording
@@ -268,24 +339,24 @@ export function RecordPreviewOverlay({
           {/* Hint label above frame */}
           {isIdle && (
             <div style={{
-              position: "absolute", bottom: "100%", left: 0, marginBottom: "7px",
+              position: "absolute", bottom: "100%", left: 0, marginBottom: "6px",
               fontFamily: FONT_SANS, fontSize: "11px", color: mutedCol,
               letterSpacing: "0.04em", pointerEvents: "none", whiteSpace: "nowrap",
             }}>
-              {DE ? "Verschieben & skalieren — Ecken ziehen" : "Drag to move & resize — drag corners"}
+              {DE ? "Verschieben & Ecken ziehen zum Skalieren" : "Drag to move · drag corners to resize"}
             </div>
           )}
 
-          {/* Corner resize handles (idle only) */}
+          {/* Corner handles (idle only) */}
           {isIdle && (["nw", "ne", "se", "sw"] as const).map(c => (
             <div
               key={c}
               onMouseDown={(e) => { e.stopPropagation(); startDrag(c, e); }}
               style={{
                 position: "absolute", pointerEvents: "auto",
-                width: HANDLE_PX, height: HANDLE_PX,
-                background: dark ? "rgba(240,232,220,0.35)" : "rgba(85,85,85,0.35)",
-                borderRadius: "2px", zIndex: 2,
+                width: HANDLE_PX, height: HANDLE_PX, zIndex: 2,
+                background: dark ? "rgba(240,232,220,0.4)" : "rgba(85,85,85,0.4)",
+                borderRadius: "2px",
                 ...(c === "nw" ? { top: 0,    left: 0,    cursor: "nw-resize" } :
                     c === "ne" ? { top: 0,    right: 0,   cursor: "ne-resize" } :
                     c === "se" ? { bottom: 0, right: 0,   cursor: "se-resize" } :
@@ -294,7 +365,7 @@ export function RecordPreviewOverlay({
             />
           ))}
 
-          {/* Countdown number */}
+          {/* Countdown number centered in frame */}
           {phase === "countdown" && (
             <div style={{
               position: "absolute", inset: 0,
@@ -305,95 +376,15 @@ export function RecordPreviewOverlay({
                 fontFamily: FONT_SERIF,
                 fontSize: Math.round(frameHeight * 0.55) + "px",
                 lineHeight: 1,
-                color: dark ? "rgba(240,232,220,0.7)" : "rgba(42,42,40,0.55)",
+                color: dark ? "rgba(240,232,220,0.65)" : "rgba(42,42,40,0.5)",
               }}>{countdown}</span>
             </div>
           )}
-
-          {/* ── Control strip ── */}
-          <div style={{
-            position: "absolute", bottom: 0, left: 0, right: 0,
-            background: surfaceBg,
-            backdropFilter: "blur(10px)",
-            borderTop: `1px dashed ${borderCol}`,
-            padding: "10px 14px",
-            display: "flex", alignItems: "center", gap: "10px",
-            pointerEvents: "auto",
-            boxSizing: "border-box",
-          }}>
-
-            {/* idle */}
-            {phase === "idle" && (
-              <>
-                <span style={{ fontFamily: FONT_SANS, fontSize: "12px", color: mutedCol, flex: 1, lineHeight: "1.4" }}>
-                  {DE
-                    ? "Max. 10 Sek. · Du kannst während der Aufnahme weiterschreiben."
-                    : "Max. 10 sec · You can keep writing during recording."}
-                </span>
-                <button
-                  onClick={handleClose}
-                  style={{ fontFamily: FONT_SANS, fontSize: "12px", padding: "6px 14px", background: "transparent", border: `1px dashed ${borderCol}`, borderRadius: "5px", color: mutedCol, cursor: "pointer", flexShrink: 0 }}
-                >{DE ? "Abbrechen" : "Cancel"}</button>
-                <button
-                  onClick={startFlow}
-                  style={{ fontFamily: FONT_SANS, fontSize: "12px", padding: "6px 16px", background: btnPrimary.bg, border: "none", borderRadius: "5px", color: btnPrimary.text, cursor: "pointer", fontWeight: 500, flexShrink: 0 }}
-                >{DE ? "Aufnahme starten →" : "Start recording →"}</button>
-              </>
-            )}
-
-            {/* countdown */}
-            {phase === "countdown" && (
-              <>
-                <span style={{ fontFamily: FONT_SANS, fontSize: "12px", color: mutedCol, flex: 1 }}>
-                  {DE ? "Gleich startet die Aufnahme…" : "Recording starts soon…"}
-                </span>
-                <button
-                  onClick={handleClose}
-                  style={{ fontFamily: FONT_SANS, fontSize: "12px", padding: "6px 14px", background: "transparent", border: `1px dashed ${borderCol}`, borderRadius: "5px", color: mutedCol, cursor: "pointer" }}
-                >{DE ? "Abbrechen" : "Cancel"}</button>
-              </>
-            )}
-
-            {/* recording */}
-            {phase === "recording" && (
-              <>
-                <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
-                  <div style={{ width: "7px", height: "7px", borderRadius: "50%", background: "rgb(195,32,32)", animation: "recPulse 1s ease infinite" }} />
-                  <span style={{ fontFamily: FONT_SANS, fontSize: "12px", color: textCol, fontWeight: 600, letterSpacing: "0.05em" }}>REC</span>
-                  <span style={{ fontFamily: FONT_SANS, fontSize: "12px", color: mutedCol }}>{elapsed}s / {MAX_SECS}s</span>
-                </div>
-                <div style={{ flex: 1, height: "2px", background: dark ? "rgba(240,232,220,0.12)" : "rgba(0,0,0,0.1)", borderRadius: "1px" }}>
-                  <div style={{ height: "100%", width: `${(elapsed / MAX_SECS) * 100}%`, background: "rgb(195,32,32)", borderRadius: "1px", transition: "width 1s linear" }} />
-                </div>
-                <button
-                  onClick={stopRecording}
-                  style={{ fontFamily: FONT_SANS, fontSize: "12px", padding: "6px 14px", background: "transparent", border: `1px dashed ${borderCol}`, borderRadius: "5px", color: textCol, cursor: "pointer", flexShrink: 0 }}
-                >{DE ? "■  Stoppen" : "■  Stop"}</button>
-              </>
-            )}
-
-            {/* uploading */}
-            {phase === "uploading" && (
-              <span style={{ fontFamily: FONT_SANS, fontSize: "12px", color: mutedCol }}>
-                {DE ? "Wird hochgeladen…" : "Uploading…"}
-              </span>
-            )}
-
-            {/* error */}
-            {phase === "error" && (
-              <>
-                <span style={{ fontFamily: FONT_SANS, fontSize: "12px", color: "#e05252", flex: 1, lineHeight: "1.4" }}>
-                  {errorMsg || (DE ? "Aufnahme fehlgeschlagen." : "Recording failed.")}
-                </span>
-                <button
-                  onClick={handleClose}
-                  style={{ fontFamily: FONT_SANS, fontSize: "12px", padding: "6px 14px", background: "transparent", border: `1px dashed ${borderCol}`, borderRadius: "5px", color: mutedCol, cursor: "pointer" }}
-                >{DE ? "Schließen" : "Close"}</button>
-              </>
-            )}
-
-          </div>
         </div>
+
+        {/* ── Control strip — below the frame, same width, never inside 3:2 area ── */}
+        {controlStrip}
+
       </div>
     </>,
     document.body

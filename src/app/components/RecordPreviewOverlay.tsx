@@ -152,9 +152,6 @@ export function RecordPreviewOverlay({
     setPhase("recording");
     setElapsed(0);
 
-    const node = zoneRef.current;
-    if (!node) { setError(DE ? "Schreibfläche nicht gefunden." : "Writing zone not found."); setPhase("error"); return; }
-
     const mimeType = [
       "video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm",
       "video/mp4;codecs=avc1", "video/mp4",
@@ -185,7 +182,17 @@ export function RecordPreviewOverlay({
       if (cancelledRef.current) { if (recorder.state !== "inactive") recorder.stop(); return; }
       const t0 = performance.now();
       try {
-        const snap = await html2canvas(node, { backgroundColor: bg, scale: 1, logging: false, useCORS: true });
+        const snap = await html2canvas(document.documentElement, {
+          backgroundColor: bg,
+          scale: 1,
+          logging: false,
+          useCORS: true,
+          allowTaint: true,
+          scrollX: 0,
+          scrollY: 0,
+          windowWidth: window.innerWidth,
+          windowHeight: window.innerHeight,
+        });
         ctx.clearRect(0, 0, cw, ch);
         ctx.drawImage(snap, cx, cy, cw, ch, 0, 0, cw, ch);
       } catch { /* skip frame */ }
@@ -208,7 +215,7 @@ export function RecordPreviewOverlay({
     } catch (err) {
       if (!cancelledRef.current) { setError(String(err)); setPhase("error"); }
     }
-  }, [frame, zoneRef, bg, sessionId, toolName, lang, onDone, DE]);
+  }, [frame, bg, sessionId, toolName, lang, onDone, DE]);
 
   const stopRecording = useCallback(() => { stopRef.current = true; }, []);
 
@@ -227,8 +234,8 @@ export function RecordPreviewOverlay({
     <>
       <style>{`@keyframes recPulse { 0%,100%{opacity:1} 50%{opacity:0.2} }`}</style>
 
-      {/* Root layer — pointer-events:none so writing zone is always reachable */}
-      <div style={{ position: "fixed", inset: 0, zIndex: 200, pointerEvents: "none" }}>
+      {/* Root layer — data-html2canvas-ignore prevents it from appearing in recorded frames */}
+      <div data-html2canvas-ignore="true" style={{ position: "fixed", inset: 0, zIndex: 200, pointerEvents: "none" }}>
 
         {/* ── Frame ── */}
         <div style={{

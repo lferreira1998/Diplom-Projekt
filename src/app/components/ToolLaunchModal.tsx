@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import type { NewToolData } from "../utils/storage";
 
-const FONT_SANS  = "'Inter', 'Helvetica Neue', Arial, sans-serif";
-const FONT_SERIF = "'Cormorant Garamond', Georgia, serif";
+const FONT_SANS  = "'general-sans', 'Space Grotesk', sans-serif";
+const FONT_SERIF = "'freight-text-pro', 'EB Garamond', Georgia, serif";
 
 const QUICK_MINS = [5, 10, 15, 20, 30];
 
@@ -14,29 +14,22 @@ interface Props {
 }
 
 export function ToolLaunchModal({ tool, dark, onConfirm, onClose }: Props) {
-  const [timerOn, setTimerOn]   = useState(false);
-  const [minutes, setMinutes]   = useState(10);
+  const [timerOn, setTimerOn] = useState(false);
+  const [minutes, setMinutes] = useState(10);
 
   useEffect(() => {
     if (!tool) return;
-    const hasTimer = tool.params.timerEnabled === true;
-    setTimerOn(hasTimer);
+    setTimerOn(tool.params.timerEnabled === true);
     setMinutes(typeof tool.params.timerMinutes === "number" ? tool.params.timerMinutes : 10);
   }, [tool]);
 
   if (!tool) return null;
 
-  const bg      = dark ? "#1e1d1b" : "#f5f0ea";
-  const cardBg  = dark ? "#2a2927" : "#fff";
-  const text     = dark ? "#f0e8dc" : "#2a2a28";
-  const muted    = dark ? "rgba(240,232,220,0.45)" : "#888";
-  const border   = dark ? "rgba(240,232,220,0.14)" : "rgba(0,0,0,0.1)";
-  const inputBg  = dark ? "#1e1d1b" : "#f5f0ea";
-  const accent   = dark ? "#f0e8dc" : "#2a2a28";
-
-  const handleConfirm = () => {
-    onConfirm(tool.id, timerOn ? (minutes || 10) : null);
-  };
+  const borderCol = dark ? "rgba(240,232,220,0.16)" : "#a4a4a4";
+  const textCol   = dark ? "#f0e8dc"                : "#555555";
+  const mutedCol  = dark ? "rgba(240,232,220,0.45)" : "#9a9daa";
+  const cardBg    = dark ? "#2d2b28"                : "#fcf6ef";
+  const inputBg   = dark ? "#1e1d1b"                : "#f5f0ea";
 
   const name = tool.params.displayName || tool.name;
   const desc = tool.description || "";
@@ -45,115 +38,116 @@ export function ToolLaunchModal({ tool, dark, onConfirm, onClose }: Props) {
     <div
       onClick={onClose}
       style={{
-        position: "fixed", inset: 0, zIndex: 200,
-        background: dark ? "rgba(0,0,0,0.65)" : "rgba(0,0,0,0.25)",
+        position: "fixed", inset: 0, zIndex: 300,
+        background: dark ? "rgba(20,19,17,0.72)" : "rgba(200,195,188,0.45)",
         display: "flex", alignItems: "center", justifyContent: "center",
-        backdropFilter: "blur(4px)",
+        backdropFilter: "blur(5px)",
       }}
     >
       <div
         onClick={e => e.stopPropagation()}
         style={{
           background: cardBg,
-          border: `1px solid ${border}`,
-          borderRadius: "20px",
-          padding: "40px 44px",
-          maxWidth: "440px",
+          border: `1px dashed ${borderCol}`,
+          borderRadius: "16px",
+          padding: "36px 40px",
+          maxWidth: "400px",
           width: "90vw",
           boxSizing: "border-box",
           display: "flex",
           flexDirection: "column",
-          gap: "28px",
+          gap: "24px",
         }}
       >
-        {/* Header */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-          <span style={{ fontFamily: FONT_SERIF, fontSize: "30px", lineHeight: 1.15, color: text }}>
+        {/* Name + description */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          <span style={{ fontFamily: FONT_SERIF, fontSize: "28px", lineHeight: 1.2, color: textCol }}>
             {name}
           </span>
           {desc && (
-            <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: muted, lineHeight: 1.55 }}>
+            <span style={{ fontFamily: FONT_SANS, fontSize: "13px", color: mutedCol, lineHeight: 1.55 }}>
               {desc}
             </span>
           )}
         </div>
 
-        {/* Timer */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+        {/* Timer toggle */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
           <button
             onClick={() => setTimerOn(v => !v)}
             style={{
               display: "flex", alignItems: "center", justifyContent: "space-between",
-              background: "transparent", border: `1px dashed ${border}`,
-              borderRadius: "10px", padding: "12px 16px",
+              background: "transparent",
+              border: `1px dashed ${borderCol}`,
+              borderRadius: "8px", padding: "11px 14px",
               cursor: "pointer", outline: "none",
             }}
           >
-            <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: text }}>Timer</span>
+            <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: textCol }}>Timer</span>
+            {/* Toggle pill */}
             <span style={{
-              width: "36px", height: "20px", borderRadius: "10px",
-              background: timerOn ? accent : (dark ? "rgba(240,232,220,0.15)" : "rgba(0,0,0,0.12)"),
-              position: "relative", transition: "background 0.18s", flexShrink: 0,
+              width: "34px", height: "18px", borderRadius: "9px", flexShrink: 0,
+              background: timerOn
+                ? (dark ? "#f0e8dc" : "#555555")
+                : (dark ? "rgba(240,232,220,0.14)" : "rgba(164,164,164,0.35)"),
+              position: "relative", transition: "background 0.16s",
+              border: `1px dashed ${timerOn ? "transparent" : borderCol}`,
             }}>
               <span style={{
                 position: "absolute",
-                top: "3px", left: timerOn ? "19px" : "3px",
-                width: "14px", height: "14px",
-                borderRadius: "50%",
-                background: timerOn ? (dark ? "#1e1d1b" : "#fff") : (dark ? "#f0e8dc" : "#fff"),
-                transition: "left 0.18s",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                top: "2px", left: timerOn ? "17px" : "2px",
+                width: "12px", height: "12px", borderRadius: "50%",
+                background: timerOn ? (dark ? "#1e1d1b" : "#fcf6ef") : (dark ? "#f0e8dc" : "#a4a4a4"),
+                transition: "left 0.16s",
               }} />
             </span>
           </button>
 
           {timerOn && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-              <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-                {QUICK_MINS.map(m => (
-                  <button
-                    key={m}
-                    onClick={() => setMinutes(m)}
-                    style={{
-                      height: "30px", padding: "0 12px",
-                      border: `1px solid ${minutes === m ? accent : border}`,
-                      borderRadius: "6px", background: minutes === m ? accent : "transparent",
-                      color: minutes === m ? (dark ? "#1e1d1b" : "#fff") : muted,
-                      fontFamily: FONT_SANS, fontSize: "13px",
-                      cursor: "pointer", outline: "none", transition: "all 0.12s",
-                    }}
-                  >
-                    {m} min
-                  </button>
-                ))}
-                <input
-                  type="number"
-                  min={1}
-                  max={180}
-                  value={minutes}
-                  onChange={e => setMinutes(Math.max(1, Math.min(180, Number(e.target.value))))}
+            <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", paddingLeft: "2px" }}>
+              {QUICK_MINS.map(m => (
+                <button
+                  key={m}
+                  onClick={() => setMinutes(m)}
                   style={{
-                    height: "30px", width: "64px", padding: "0 10px",
-                    border: `1px solid ${border}`,
-                    borderRadius: "6px", background: inputBg,
-                    color: text, fontFamily: FONT_SANS, fontSize: "13px",
-                    outline: "none", boxSizing: "border-box", textAlign: "center",
+                    height: "28px", padding: "0 11px",
+                    border: `1px ${minutes === m ? "solid" : "dashed"} ${minutes === m ? textCol : borderCol}`,
+                    borderRadius: "4px",
+                    background: minutes === m ? textCol : "transparent",
+                    color: minutes === m ? (dark ? "#1e1d1b" : "#fcf6ef") : mutedCol,
+                    fontFamily: FONT_SANS, fontSize: "12px",
+                    cursor: "pointer", outline: "none",
                   }}
-                />
-              </div>
+                >
+                  {m} min
+                </button>
+              ))}
+              <input
+                type="number"
+                min={1} max={180}
+                value={minutes}
+                onChange={e => setMinutes(Math.max(1, Math.min(180, Number(e.target.value))))}
+                style={{
+                  height: "28px", width: "58px", padding: "0 8px",
+                  border: `1px dashed ${borderCol}`,
+                  borderRadius: "4px", background: inputBg,
+                  color: textCol, fontFamily: FONT_SANS, fontSize: "12px",
+                  outline: "none", boxSizing: "border-box", textAlign: "center",
+                }}
+              />
             </div>
           )}
         </div>
 
         {/* CTA */}
         <button
-          onClick={handleConfirm}
+          onClick={() => onConfirm(tool.id, timerOn ? (minutes || 10) : null)}
           style={{
             height: "48px",
-            background: accent,
-            color: dark ? "#1e1d1b" : "#fff",
+            background: textCol,
+            color: dark ? "#1e1d1b" : "#fcf6ef",
             border: "none",
-            borderRadius: "12px",
+            borderRadius: "8px",
             fontFamily: FONT_SERIF,
             fontSize: "20px",
             letterSpacing: "0.01em",

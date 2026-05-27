@@ -1936,19 +1936,6 @@ export default function New() {
                     </div>
                     </div>
 
-                    {/* Freies Editieren card */}
-                    <div
-                      style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px", display: "flex", flexDirection: "column", gap: "10px", cursor: "pointer" }}
-                      onClick={() => setTextEditingEnabled(v => !v)}
-                    >
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
-                        <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{DE ? "Freies Editieren" : "Free editing"}</span>
-                        <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: descColor }}>{textEditingEnabled ? t.on : t.off}</span>
-                      </div>
-                      <span style={{ fontFamily: FONT_SANS, fontSize: "12px", color: descColor, lineHeight: "1.5" }}>
-                        {DE ? "Cursor frei setzen, Text markieren und löschen." : "Freely reposition cursor, select and delete text."}
-                      </span>
-                    </div>
                   </div>
                 )}
 
@@ -2001,6 +1988,20 @@ export default function New() {
                 {/* ── Korrigieren / Correction ──────────────────────────── */}
                 {activeCategory === "Correction" && (
                   <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+
+                    {/* Freies Editieren card */}
+                    <div
+                      style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px", display: "flex", flexDirection: "column", gap: "10px", cursor: "pointer" }}
+                      onClick={() => setTextEditingEnabled(v => !v)}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{DE ? "Freies Editieren" : "Free editing"}</span>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: descColor }}>{textEditingEnabled ? t.on : t.off}</span>
+                      </div>
+                      <span style={{ fontFamily: FONT_SANS, fontSize: "12px", color: descColor, lineHeight: "1.5" }}>
+                        {DE ? "Cursor frei setzen, Text markieren und löschen." : "Freely reposition cursor, select and delete text."}
+                      </span>
+                    </div>
 
                     {/* Löschen card */}
                     <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>

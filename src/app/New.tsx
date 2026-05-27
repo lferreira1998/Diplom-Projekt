@@ -619,8 +619,8 @@ function SavedModal({ dark, savedId, lang, onClose, onPlayground, surfaceLight }
   );
 }
 
-// ── Organic grain canvas ──────────────────────────────────────────────────────
-const OG_W = 256, OG_H = 256;
+// ── Paper grain canvas ────────────────────────────────────────────────────────
+const OG_W = 512, OG_H = 512;
 
 function makeValueNoise(seed: number, cellPx: number): Float32Array {
   const gW = Math.ceil(OG_W / cellPx) + 2;
@@ -645,59 +645,55 @@ function makeValueNoise(seed: number, cellPx: number): Float32Array {
   return buf;
 }
 
-function makeOrganicBuf(seed: number): Float32Array {
-  const a = makeValueNoise(seed,          22); // coarse paper lumps
-  const b = makeValueNoise(seed * 7 + 3,   8); // medium fibres
-  const c = makeValueNoise(seed * 13 + 7,  3); // fine grain
-  const d = makeValueNoise(seed * 23 + 11, 1); // pixel-level speckle
+// Paper grain: fine speckle + micro fibers + subtle surface, no large blobs
+function makePaperBuf(seed: number): Float32Array {
+  const speckle = makeValueNoise(seed,          1);  // pixel-level speckle
+  const micro   = makeValueNoise(seed * 7  + 3, 2);  // micro fibers
+  const fiber   = makeValueNoise(seed * 17 + 5, 5);  // fiber bundles
+  const surface = makeValueNoise(seed * 29 + 9, 11); // subtle paper topography
   const buf = new Float32Array(OG_W * OG_H);
-  const CONTRAST = 1.55;
+  const C = 2.2;
   for (let i = 0; i < buf.length; i++) {
-    // Weight fine grain higher → more visible texture; pixel speckle adds bite
-    const raw = a[i] * 0.32 + b[i] * 0.30 + c[i] * 0.26 + d[i] * 0.12;
-    // Apply contrast curve around midpoint for paper-like punch
-    const v = (raw - 0.5) * CONTRAST + 0.5;
+    const raw = speckle[i] * 0.40 + micro[i] * 0.30 + fiber[i] * 0.22 + surface[i] * 0.08;
+    const v = (raw - 0.5) * C + 0.5;
     buf[i] = v < 0 ? 0 : v > 1 ? 1 : v;
   }
   return buf;
 }
 
-function OrganicGrainCanvas({ grainLevel }: { grainLevel: number }) {
+function OrganicGrainCanvas({ grainLevel, dark }: { grainLevel: number; dark: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef    = useRef(0);
-  const stateRef  = useRef({
-    bufA: makeOrganicBuf(42), bufB: makeOrganicBuf(137),
-    phase: 0, lastTs: 0, seed: 300,
-  });
+  const startRef  = useRef(0);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     canvas.width = OG_W; canvas.height = OG_H;
     const ctx = canvas.getContext("2d")!;
-    const st = stateRef.current;
 
-    const render = (ts: number) => {
-      const dt = st.lastTs ? Math.min((ts - st.lastTs) / 1000, 0.05) : 0;
-      st.lastTs = ts;
-      st.phase += dt / 7; // 7-second morph cycle — calm and organic
-      if (st.phase >= 1) {
-        st.phase -= 1;
-        st.bufA = st.bufB;
-        st.bufB = makeOrganicBuf(st.seed++);
-      }
-      const t = st.phase * st.phase * (3 - 2 * st.phase); // smooth-step
-      const img = ctx.createImageData(OG_W, OG_H);
-      const d = img.data;
-      for (let i = 0; i < OG_W * OG_H; i++) {
-        const v = ((st.bufA[i] + t * (st.bufB[i] - st.bufA[i])) * 255 + 0.5) | 0;
-        const j = i * 4;
-        d[j] = d[j + 1] = d[j + 2] = v; d[j + 3] = 255;
-      }
-      ctx.putImageData(img, 0, 0);
-      rafRef.current = requestAnimationFrame(render);
+    // Draw paper grain texture once — no per-frame pixel work
+    const buf = makePaperBuf(42);
+    const img = ctx.createImageData(OG_W, OG_H);
+    const d = img.data;
+    for (let i = 0; i < OG_W * OG_H; i++) {
+      const v = (buf[i] * 255 + 0.5) | 0;
+      const j = i * 4;
+      d[j] = d[j + 1] = d[j + 2] = v; d[j + 3] = 255;
+    }
+    ctx.putImageData(img, 0, 0);
+
+    // Motion: very slow Lissajous drift via CSS transform — GPU-accelerated, zero pixel work
+    const PERIOD = 46; // seconds per main cycle
+    const tick = (ts: number) => {
+      if (!startRef.current) startRef.current = ts;
+      const t = (ts - startRef.current) / 1000;
+      const dx = 6 * Math.sin((t / PERIOD) * Math.PI * 2);
+      const dy = 5 * Math.cos((t / PERIOD) * Math.PI * 2 * 0.618); // golden ratio desync
+      canvas.style.transform = `translate(${dx}px, ${dy}px)`;
+      rafRef.current = requestAnimationFrame(tick);
     };
-    rafRef.current = requestAnimationFrame(render);
+    rafRef.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(rafRef.current);
   }, []);
 
@@ -706,10 +702,13 @@ function OrganicGrainCanvas({ grainLevel }: { grainLevel: number }) {
       ref={canvasRef}
       aria-hidden
       style={{
-        position: "fixed", inset: 0, zIndex: 3, pointerEvents: "none",
-        width: "100%", height: "100%",
-        opacity: (grainLevel / 100) * 0.95,
-        mixBlendMode: "multiply",
+        position: "fixed",
+        top: "-4%", left: "-4%",
+        width: "108%", height: "108%",
+        zIndex: 3, pointerEvents: "none",
+        opacity: (grainLevel / 100) * 0.88,
+        mixBlendMode: dark ? "screen" : "multiply",
+        willChange: "transform",
       }}
     />
   );
@@ -1120,7 +1119,7 @@ export default function New() {
     ctx.fillRect(0, 0, out.width, out.height);
     ctx.drawImage(textCanvas, 0, 0, out.width, out.height);
     if (grainLevel > 0) {
-      const noiseUrl = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.55' numOctaves='6' stitchTiles='stitch' seed='7'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='1.5' intercept='-0.25'/%3E%3CfeFuncG type='linear' slope='1.5' intercept='-0.25'/%3E%3CfeFuncB type='linear' slope='1.5' intercept='-0.25'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='320' height='320' filter='url(%23n)'/%3E%3C/svg%3E`;
+      const noiseUrl = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='turbulence' baseFrequency='0.65%200.75' numOctaves='4' stitchTiles='stitch' seed='5'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='2.0' intercept='-0.5'/%3E%3CfeFuncG type='linear' slope='2.0' intercept='-0.5'/%3E%3CfeFuncB type='linear' slope='2.0' intercept='-0.5'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23n)'/%3E%3C/svg%3E`;
       const img = new Image();
       img.crossOrigin = "anonymous";
       await new Promise<void>((res) => { img.onload = () => res(); img.onerror = () => res(); img.src = noiseUrl; });
@@ -1304,14 +1303,14 @@ export default function New() {
           aria-hidden
           style={{
             position: "fixed", inset: 0, zIndex: 3, pointerEvents: "none",
-            opacity: (grainLevel / 100) * 0.9,
-            mixBlendMode: "multiply",
-            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.55' numOctaves='6' stitchTiles='stitch' seed='7'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='1.5' intercept='-0.25'/%3E%3CfeFuncG type='linear' slope='1.5' intercept='-0.25'/%3E%3CfeFuncB type='linear' slope='1.5' intercept='-0.25'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='320' height='320' filter='url(%23n)'/%3E%3C/svg%3E")`,
-            backgroundRepeat: "repeat", backgroundSize: "320px 320px",
+            opacity: (grainLevel / 100) * 0.88,
+            mixBlendMode: dark ? "screen" : "multiply",
+            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='turbulence' baseFrequency='0.65%200.75' numOctaves='4' stitchTiles='stitch' seed='5'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='2.0' intercept='-0.5'/%3E%3CfeFuncG type='linear' slope='2.0' intercept='-0.5'/%3E%3CfeFuncB type='linear' slope='2.0' intercept='-0.5'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23n)'/%3E%3C/svg%3E")`,
+            backgroundRepeat: "repeat", backgroundSize: "256px 256px",
           }}
         />
       )}
-      {grainLevel > 0 && bgMotion && <OrganicGrainCanvas grainLevel={grainLevel} />}
+      {grainLevel > 0 && bgMotion && <OrganicGrainCanvas grainLevel={grainLevel} dark={dark} />}
 
       {/* ── Writing zone ─────────────────────────────────────────────────── */}
       <motion.div

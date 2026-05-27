@@ -1399,7 +1399,7 @@ export default function New() {
 
       {/* ── Floating Rules/× + Clear container (flex row, always in sync) ──── */}
       <AnimatePresence>
-        {visible && (
+        {visible && canEdit && (
           <motion.div
             key="float-rules-group"
             initial={false}

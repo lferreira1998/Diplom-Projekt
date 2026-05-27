@@ -1487,6 +1487,32 @@ export default function New() {
                 >{lang === "de" ? "Text leeren" : "Clear Text"}</motion.button>
               )}
             </AnimatePresence>
+
+            {/* Redraw Path button — visible when custom path mode is active */}
+            <AnimatePresence>
+              {positionMode === "custom" && drawnPath.length > 0 && (
+                <motion.button
+                  key="float-redraw"
+                  initial={{ opacity: 0, marginLeft: 6 }}
+                  animate={{ opacity: 1, marginLeft: 6 }}
+                  exit={{ opacity: 0, transition: { duration: 0.12 } }}
+                  transition={SPRING}
+                  style={{
+                    height: "31px", padding: "0 12px",
+                    background: "none",
+                    border: `1px dashed ${dark ? "rgba(240,232,220,0.35)" : "#a4a4a4"}`,
+                    borderRadius: "6px",
+                    cursor: "pointer", outline: "none",
+                    display: "flex", alignItems: "center",
+                    fontFamily: FONT_SANS, fontSize: "13px", fontWeight: 400,
+                    color: dark ? DARK_MUTED : "#9a9daa",
+                    lineHeight: "normal", whiteSpace: "nowrap",
+                    flexShrink: 0,
+                  }}
+                  onClick={(e) => { e.stopPropagation(); setDrawnPath([]); }}
+                >{lang === "de" ? "Pfad neu zeichnen" : "Redraw Path"}</motion.button>
+              )}
+            </AnimatePresence>
           </motion.div>
         )}
       </AnimatePresence>

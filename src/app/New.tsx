@@ -54,12 +54,6 @@ const NAV_ROUTES: Record<string, string> = {
   About:           "/about-the-project",
 };
 
-const INTRO_TEXT_EN = `Explore new ways of thinking by breaking the rules of standard writing tools…
-<- Break the rules on the left. Try other tools on the right. ->`;
-
-const INTRO_TEXT_DE = `Erkunde neue Denkwege, indem du die Regeln üblicher Schreibtools brichst…
-<- Brich die Regeln links. Probiere andere Tools rechts. ->`;
-
 const SIDEBAR_CATS = [
   { en: "Look & Feel", de: "Look & Feel",  h: "60px",  br: "100px" },
   { en: "Time",        de: "Zeit",         h: "104px", br: "100px" },
@@ -82,7 +76,7 @@ const TRANSLATIONS = {
     menuOpen: "Schließen",
     word: "Wort",
     words: "Wörter",
-    navLabels: { CreateTool: "Tool erstellen", ToolCollection: "Tool-Sammlung", About: "Über das Projekt" },
+    navLabels: { CreateTool: "Tool Creation", ToolCollection: "Tool-Sammlung", About: "Über das Projekt" },
     // Identity panel
     identityHeading: "Identität.",
     identitySubtitle: "Speichere dein Regelset als Tool. Füge Name, Beschreibung, Schreibanstoß und Vorschaubild hinzu, damit andere es benutzen können.",
@@ -183,7 +177,7 @@ const TRANSLATIONS = {
     menuOpen: "Close",
     word: "word",
     words: "words",
-    navLabels: { CreateTool: "Create Tool", ToolCollection: "Tool Collection", About: "About" },
+    navLabels: { CreateTool: "Tool Creation", ToolCollection: "Tool Collection", About: "About" },
     // Identity panel
     identityHeading: "Identity.",
     identitySubtitle: "Save your rule set as a tool. Add a name, description, prompt, and preview image so others can use it.",
@@ -814,12 +808,6 @@ export default function New() {
   const [cursor, setCursor]       = useState(0);
   const lastKeyPressTimestamp     = useRef(0);
 
-  // Auto-writing intro state
-  const introTimeoutRef           = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const introPlayingRef           = useRef(false);
-  const introCancelledRef         = useRef(false);
-  const introLangRef              = useRef<"de" | "en">("de");
-  const [driftImmediate, setDriftImmediate] = useState(false);
 
   // Timer runtime state
   const [timerRunning, setTimerRunning] = useState(false);
@@ -997,89 +985,9 @@ export default function New() {
   }, []);
 
   const handleUpdate = useCallback((newPos: Position[], newCursor: number) => {
-    if (introPlayingRef.current) {
-      introCancelledRef.current = true;
-      introPlayingRef.current = false;
-      if (introTimeoutRef.current) { clearTimeout(introTimeoutRef.current); introTimeoutRef.current = null; }
-    }
-    setDriftImmediate(false);
     setPositions(newPos); setCursor(newCursor);
   }, []);
 
-  const playIntro = useCallback((opts?: { enableDriftAfter?: boolean }) => {
-    const enableDriftAfter = opts?.enableDriftAfter ?? false;
-    if (introTimeoutRef.current) { clearTimeout(introTimeoutRef.current); introTimeoutRef.current = null; }
-    introPlayingRef.current = true;
-    introCancelledRef.current = false;
-    setPositions([]); setCursor(0);
-    if (enableDriftAfter) {
-      setTextFliegtEnabled(true);
-      setFliegtUnit("Buchstabe");
-      setFliegtZeitpunkt(1);
-      setFliegtSchnelligkeit(0.08);
-      setDriftImmediate(true);
-    }
-    const activeLang = introLangRef.current;
-    const text = activeLang === "de" ? INTRO_TEXT_DE : INTRO_TEXT_EN;
-    let i = 0;
-    const tick = () => {
-      if (introCancelledRef.current) { introPlayingRef.current = false; return; }
-      if (i >= text.length) {
-        introPlayingRef.current = false;
-        return;
-      }
-      const ch = text[i];
-      setPositions(prev => [...prev, { layers: [{ type: "char" as const, char: ch }] }]);
-      setCursor(c => c + 1);
-      i++;
-      const delay = ch === "\n" ? 220 : ch === " " ? 55 : 35 + Math.random() * 45;
-      introTimeoutRef.current = setTimeout(tick, delay);
-    };
-    tick();
-  }, []);
-
-  const handleResetIntro = useCallback(() => {
-    if (introTimeoutRef.current) { clearTimeout(introTimeoutRef.current); introTimeoutRef.current = null; }
-    introCancelledRef.current = true;
-    introPlayingRef.current = false;
-    setTimerDone(false); setTextRevealed(false);
-    setTimerRunning(false); setTimeLeft(0);
-    // Reset replays intro text but does NOT change tool parameters (drift, etc.)
-    setTimeout(() => { playIntro({ enableDriftAfter: false }); writingFocusRef.current?.(); }, 60);
-  }, [playIntro]);
-
-  // Auto-play intro on first visit per tab session, but only when no tool ID is in URL.
-  // Keep intro language ref in sync with current lang so reset replays in the right language
-  useEffect(() => { introLangRef.current = lang; }, [lang]);
-
-  // When the language is switched and the current text is still the intro
-  // (in either language), swap it to the new-language version automatically.
-  useEffect(() => {
-    if (introPlayingRef.current) return; // mid-typing: ignore
-    const current = extractText(positions);
-    if (!current) return;
-    const newText = lang === "de" ? INTRO_TEXT_DE : INTRO_TEXT_EN;
-    if (current === newText) return; // already correct
-    const otherText = lang === "de" ? INTRO_TEXT_EN : INTRO_TEXT_DE;
-    if (current !== otherText) return; // user has modified — don't touch
-    const newPositions: Position[] = [];
-    for (const ch of newText) newPositions.push({ layers: [{ type: "char" as const, char: ch }] });
-    setPositions(newPositions);
-    setCursor(newPositions.length);
-  }, [lang, positions]);
-
-  useEffect(() => {
-    if (searchParams.get("tool")) return;
-    introLangRef.current = lang;
-    const t = setTimeout(() => playIntro({ enableDriftAfter: true }), 260);
-    return () => clearTimeout(t);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Cleanup intro timeout on unmount
-  useEffect(() => {
-    return () => { if (introTimeoutRef.current) clearTimeout(introTimeoutRef.current); };
-  }, []);
 
 
   const handleCopy = useCallback(() => {
@@ -1258,7 +1166,7 @@ export default function New() {
   const wzCorrection = correctionVisible ? "tippex" as const : "hidden" as const;
   const wzDriftSpeed = fliegtSchnelligkeit * 50;
   const wzVerblSpeed = verblassSchnelligkeit * 50;
-  const wzDriftDelay = driftImmediate ? 10 : fliegtZeitpunkt * 60;
+  const wzDriftDelay = fliegtZeitpunkt * 60;
   const wzVerblDelay = verblassZeitpunkt * 60;
 
   const showDoneModal = timerDone && !textRevealed;
@@ -1442,8 +1350,8 @@ export default function New() {
             cursorLaeuftWeiter={cursorRunning}
             driftet={textFliegtEnabled}
             driftSaetze={fliegtUnit === "Sätze"}
-            driftWoerter={driftImmediate || fliegtUnit === "Wörter"}
-            driftBuchstaben={driftImmediate || fliegtUnit === "Buchstabe"}
+            driftWoerter={fliegtUnit === "Wörter"}
+            driftBuchstaben={fliegtUnit === "Buchstabe"}
             driftDelay={wzDriftDelay}
             driftSpeed={wzDriftSpeed}
             verblasst={textVerblassEnabled}

@@ -1597,6 +1597,7 @@ export function WritingZone({
 
   const visualPosRef      = useRef(0);
   const spacesInsertedRef = useRef(0);
+  const pendingSpacesRef  = useRef(0); // visual advances not yet committed to React state
   const lastFrameRef      = useRef<number>(0);
   const onUpdateRef       = useRef(onUpdate);
   useEffect(() => { onUpdateRef.current = onUpdate; }, [onUpdate]);
@@ -1620,6 +1621,7 @@ export function WritingZone({
     if (!cursorLaeuftWeiter) {
       visualPosRef.current      = 0;
       spacesInsertedRef.current = 0;
+      pendingSpacesRef.current  = 0;
       lastFrameRef.current      = 0;
       if (cursorDomRef.current) cursorDomRef.current.style.transform = "";
       return;
@@ -1647,18 +1649,11 @@ export function WritingZone({
 
       if (frac >= 1) {
         spacesInsertedRef.current++;
-        frac = visualPosRef.current - spacesInsertedRef.current; // recalculate after commit
-        const pos = posRef.current;   // always current thanks to useLayoutEffect
-        const cur = curRef.current;
-        let next: Position[];
-        if (cur < pos.length) {
-          const updated = pos.map(p => ({ layers: [...p.layers] }));
-          updated[cur]  = { layers: [...updated[cur].layers, { type: "char", char: " " }] };
-          next = updated;
-        } else {
-          next = [...pos, { layers: [{ type: "char", char: " " }] }];
-        }
-        onUpdateRef.current(next, cur + 1);
+        // Cap pending at 300 chars to avoid huge flush on very long pauses
+        pendingSpacesRef.current = Math.min(pendingSpacesRef.current + 1, 300);
+        frac = visualPosRef.current - spacesInsertedRef.current;
+        // Do NOT call onUpdate here — no React re-renders during animation.
+        // Pending spaces are flushed synchronously on the next keypress.
       }
 
       if (cursorDomRef.current) {
@@ -1736,6 +1731,11 @@ export function WritingZone({
       const now = performance.now();
 
       if (e.key === "Backspace" || e.key === "Delete") {
+        // Discard any pending visual-only cursor advance on backspace/delete
+        pendingSpacesRef.current  = 0;
+        visualPosRef.current      = 0;
+        spacesInsertedRef.current = 0;
+        lastFrameRef.current      = 0;
         if (selectAllRef.current) {
           selectAllRef.current = false; setSelectAll(false);
           selAnchorRef.current = null; setSelAnchor(null);
@@ -1800,9 +1800,10 @@ export function WritingZone({
       if (selectAllRef.current) {
         selectAllRef.current = false; setSelectAll(false);
         selAnchorRef.current = null; setSelAnchor(null);
-        // Reset cursorLaeuftWeiter frac
-        visualPosRef.current = spacesInsertedRef.current;
-        lastFrameRef.current = 0;
+        pendingSpacesRef.current  = 0;
+        visualPosRef.current      = 0;
+        spacesInsertedRef.current = 0;
+        lastFrameRef.current      = 0;
         onUpdate([{ layers: [{ type: "char", char: ch }] }], 1);
         return;
       }
@@ -1819,9 +1820,23 @@ export function WritingZone({
         baseCur = start;
       }
 
-      // Reset cursorLaeuftWeiter frac so cursor jumps back to typed position
-      visualPosRef.current = spacesInsertedRef.current;
-      lastFrameRef.current = 0;
+      // Flush pending cursor advances: insert all deferred spaces at once,
+      // then append the typed char — only ONE React re-render total.
+      const pending = pendingSpacesRef.current;
+      pendingSpacesRef.current  = 0;
+      visualPosRef.current      = 0;
+      spacesInsertedRef.current = 0;
+      lastFrameRef.current      = 0;
+      for (let pi = 0; pi < pending; pi++) {
+        if (baseCur < basePos.length) {
+          const upd = basePos.map(p => ({ layers: [...p.layers] }));
+          upd[baseCur] = { layers: [...upd[baseCur].layers, { type: "char", char: " " }] };
+          basePos = upd;
+        } else {
+          basePos = [...basePos, { layers: [{ type: "char", char: " " }] }];
+        }
+        baseCur++;
+      }
 
       let newPos: Position[];
       if (baseCur < basePos.length) {

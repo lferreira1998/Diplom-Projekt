@@ -1085,19 +1085,13 @@ export default function New() {
   const { surfaceLight, surfaceDark } = getLookFeelColors(bgHue);
   const darkColors = getLookFeelDarkColors(bgHue);
 
-  const bg = dark
-    ? darkColors.darkBg
-    : timerEnabled && visualTimer && timerRunning
-      ? lerpColor(LIGHT_BG, DARK_BG, timerProgress)
-      : timerEnabled && visualTimer && timerDone && !textRevealed
-        ? DARK_BG
-        : surfaceLight;
+  const bg = dark ? darkColors.darkBg : surfaceLight;
 
-  const textColor = dark
-    ? DARK_TEXT
-    : timerEnabled && visualTimer && (timerRunning || (timerDone && !textRevealed))
-      ? lerpColor(LIGHT_TEXT, DARK_TEXT, Math.min(1, timerProgress * 1.8))
-      : LIGHT_TEXT;
+  const textColor = dark ? DARK_TEXT : LIGHT_TEXT;
+
+  const timerTextOpacity = timerEnabled && visualTimer && (timerRunning || (timerDone && !textRevealed))
+    ? Math.max(0, 1 - timerProgress)
+    : 1;
 
   const iconColor      = textColor;
   // Nav buttons always contrast with their own button background (not the writing area bg)
@@ -1324,8 +1318,12 @@ export default function New() {
         ref={writingZoneRef}
         animate={{
           paddingLeft: rulesOpen ? "507px" : "165px",
+          opacity: timerTextOpacity,
         }}
-        transition={SPRING}
+        transition={{
+          paddingLeft: SPRING,
+          opacity: { duration: 1, ease: "linear" },
+        }}
         style={{
           position: "fixed", inset: 0,
           display: "flex", flexDirection: "column",

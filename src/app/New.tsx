@@ -754,7 +754,7 @@ export default function New() {
   const [menuOpen, setMenuOpen]       = useState(false);
   const [menuHovered, setMenuHovered] = useState(false);
   const [rulesHovered, setRulesHovered] = useState(false);
-  const [rulesOpen, setRulesOpen]     = useState(false);
+  const [rulesOpen, setRulesOpen]     = useState(() => !searchParams.get("tool"));
   const [activeCategory, setActiveCategory] = useState("Look & Feel");
   const [identityOpen, setIdentityOpen]     = useState(false);
   const writingFocusRef = useRef<(() => void) | null>(null);

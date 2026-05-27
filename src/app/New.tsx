@@ -2353,21 +2353,111 @@ export default function New() {
         )}
       </AnimatePresence>
 
-      {/* ── Timer countdown (left side) ──────────────────────────────────── */}
-      {visible && timerEnabled && timerRunning && (
-        <div style={{
-          position: "fixed", top: "24px", left: "24px",
-          height: "33px", padding: "0 12px",
-          display: "flex", alignItems: "center",
-          fontFamily: FONT_SANS, fontSize: "13px",
-          color: timeLeft <= 10 ? "#e05252" : textColor,
-          letterSpacing: "0.04em",
-          transition: "color 0.3s",
-          zIndex: 20,
-        }}>
-          {formatTime(timeLeft)}
-        </div>
-      )}
+      {/* ── Timer circle (bottom-right) ──────────────────────────────────── */}
+      <AnimatePresence>
+        {visible && timerEnabled && timerRunning && (
+          <motion.div
+            key="timer-circle"
+            initial={{ opacity: 0, scale: 0.88 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.88, transition: { duration: 0.15 } }}
+            transition={SPRING}
+            style={{
+              position: "fixed", bottom: "24px", right: "24px",
+              width: "100px", height: "100px",
+              borderRadius: "100px",
+              border: `1px dashed ${dark ? DARK_BORDER : BORDER_COL}`,
+              background: dark ? darkColors.darkCardBg : surfaceLight,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontFamily: FONT_SANS, fontSize: "18px",
+              color: timeLeft <= 10 ? "#e05252" : (dark ? DARK_TEXT : LIGHT_TEXT),
+              letterSpacing: "0.04em",
+              transition: "color 0.3s",
+              zIndex: 20,
+              pointerEvents: "none",
+            }}
+          >
+            {formatTime(timeLeft)}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Export Text circle (bottom-right) ────────────────────────────── */}
+      <AnimatePresence>
+        {visible && positions.length > 0 && !timerRunning && (
+          <motion.div
+            key="export-circle"
+            initial={{ opacity: 0, scale: 0.88 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.88, transition: { duration: 0.15 } }}
+            transition={SPRING}
+            ref={exportRef}
+            style={{ position: "fixed", bottom: "24px", right: "24px", zIndex: 20 }}
+          >
+            <button
+              onClick={() => setExportOpen(o => !o)}
+              style={{
+                width: "100px", height: "100px",
+                borderRadius: "100px",
+                border: `1px dashed ${dark ? DARK_BORDER : BORDER_COL}`,
+                background: dark ? darkColors.darkCardBg : surfaceLight,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontFamily: FONT_SANS, fontSize: "15px",
+                color: dark ? DARK_TEXT : LIGHT_TEXT,
+                cursor: "pointer", outline: "none",
+                transition: "background 0.15s",
+              }}
+            >
+              {t.exportText}
+            </button>
+            <AnimatePresence>
+              {exportOpen && (
+                <motion.div
+                  key="export-panel"
+                  initial={{ opacity: 0, y: 8, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 8, scale: 0.97 }}
+                  transition={{ duration: 0.18 }}
+                  style={{
+                    position: "absolute", bottom: "calc(100% + 8px)", right: 0,
+                    display: "flex", flexDirection: "column", gap: "4px",
+                    background: dark ? "rgba(60,54,48,0.95)" : "rgba(252,246,239,0.96)",
+                    border: `1px dashed ${dark ? DARK_BORDER : BORDER_COL}`,
+                    borderRadius: "12px",
+                    backdropFilter: "blur(12px)",
+                    padding: "8px",
+                    zIndex: 100,
+                  }}
+                >
+                  {([
+                    { label: t.exportJPG,  onClick: handleExportJPG },
+                    { label: t.exportTxt,  onClick: handleDownloadTxt },
+                    { label: t.exportCopy, onClick: handleCopyExport },
+                  ] as { label: string; onClick: () => void }[]).map(({ label, onClick }) => (
+                    <button
+                      key={label}
+                      onClick={onClick}
+                      style={{
+                        fontFamily: FONT_SANS, fontSize: "13px", letterSpacing: "0.04em",
+                        padding: "7px 16px", textAlign: "left",
+                        background: "transparent",
+                        border: "none", borderRadius: "8px",
+                        color: dark ? "rgba(240,232,220,0.8)" : "#555555",
+                        cursor: "pointer",
+                        whiteSpace: "nowrap",
+                      }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)"; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── Right panel: eye + lang + menu ───────────────────────────────── */}
       <AnimatePresence mode="wait">
@@ -2378,62 +2468,6 @@ export default function New() {
             transition={{ duration: 0.15 }}
             style={{ position: "fixed", top: "24px", right: "24px", display: "flex", flexDirection: "row", alignItems: "center", gap: "10px", zIndex: 20 }}
           >
-            {/* Export trigger (replaces word count) */}
-            {positions.length > 0 && !timerRunning && (
-              <div style={{ position: "relative" }} ref={exportRef}>
-                <button
-                  onClick={() => setExportOpen(o => !o)}
-                  style={{ height: "31px", padding: "0 12px", display: "flex", alignItems: "center", fontFamily: FONT_SANS, fontSize: "13px", color: dark ? DARK_MUTED : "#9a9daa", background: "none", border: "none", cursor: "pointer", outline: "none" }}
-                >
-                  {t.exportText}
-                </button>
-                <AnimatePresence>
-                  {exportOpen && (
-                    <motion.div
-                      key="export-panel"
-                      initial={{ opacity: 0, y: 8, scale: 0.97 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 8, scale: 0.97 }}
-                      transition={{ duration: 0.18 }}
-                      style={{
-                        position: "absolute", top: "calc(100% + 8px)", right: 0,
-                        display: "flex", flexDirection: "column", gap: "4px",
-                        background: dark ? "rgba(60,54,48,0.95)" : "rgba(252,246,239,0.96)",
-                        border: `1px dashed ${dark ? DARK_BORDER : BORDER_COL}`,
-                        borderRadius: "12px",
-                        backdropFilter: "blur(12px)",
-                        padding: "8px",
-                        zIndex: 100,
-                      }}
-                    >
-                      {([
-                        { label: t.exportJPG,  onClick: handleExportJPG },
-                        { label: t.exportTxt,  onClick: handleDownloadTxt },
-                        { label: t.exportCopy, onClick: handleCopyExport },
-                      ] as { label: string; onClick: () => void }[]).map(({ label, onClick }) => (
-                        <button
-                          key={label}
-                          onClick={onClick}
-                          style={{
-                            fontFamily: FONT_SANS, fontSize: "13px", letterSpacing: "0.04em",
-                            padding: "7px 16px", textAlign: "left",
-                            background: "transparent",
-                            border: "none", borderRadius: "8px",
-                            color: dark ? "rgba(240,232,220,0.8)" : "#555555",
-                            cursor: "pointer",
-                            whiteSpace: "nowrap",
-                          }}
-                          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)"; }}
-                          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
-                        >
-                          {label}
-                        </button>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            )}
             {/* Eye toggle */}
             <button
               style={btnStyle(dark, { background: dark ? "rgba(240,232,220,0.13)" : surfaceLight, color: navIconColor }, surfaceLight)}

@@ -78,7 +78,7 @@ function IconHalfCircle({ color, dark }: { color: string; dark: boolean }) {
 
 function btnStyle(dark: boolean): React.CSSProperties {
   return {
-    background: dark ? "rgba(240,232,220,0.06)" : "rgba(252,246,239,0.6)",
+    background: dark ? "#1e1d1b" : "#fcf6ef",
     border: `1px dashed ${BORDER_COL}`,
     borderRadius: "4px",
     cursor: "pointer", outline: "none",
@@ -96,7 +96,7 @@ function navItemStyle(dark: boolean, active: boolean): React.CSSProperties {
   return {
     background: active
       ? (dark ? "rgba(240,232,220,0.85)" : activeDarkBg)
-      : (dark ? "rgba(240,232,220,0.06)" : "rgba(252,246,239,0.6)"),
+      : (dark ? "#1e1d1b" : "#fcf6ef"),
     border: active
       ? (dark ? "1px solid rgba(240,232,220,0.85)" : `1px solid ${activeDarkBg}`)
       : `1px dashed ${BORDER_COL}`,
@@ -137,7 +137,7 @@ export default function TopNav({
             style={{
               position: "fixed", top: "24px", left: "24px",
               width: "33px", height: "33px",
-              background: dark ? "rgba(240,232,220,0.06)" : "rgba(252,246,239,0.6)",
+              background: dark ? "#1e1d1b" : "#fcf6ef",
               border: `1px dashed ${BORDER_COL}`,
               borderRadius: "4px",
               cursor: "pointer", outline: "none",

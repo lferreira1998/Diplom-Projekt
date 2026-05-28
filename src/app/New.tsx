@@ -832,7 +832,6 @@ export default function New() {
   const [grainLevel, setGrainLevel]       = useState(0);
   const [textSizeLevel, setTextSizeLevel] = useState(46);
   const [bgHue, setBgHue]                 = useState<number | null>(null);
-  const [bgMotion, setBgMotion]           = useState(false);
 
   // Position sub-options
   const [randomMode, setRandomMode] = useState<"sentences" | "words">("words");
@@ -1015,7 +1014,6 @@ export default function New() {
       setGrainLevel(typeof p.grainLevel === "number" ? p.grainLevel : 0);
       setTextSizeLevel(typeof p.textSizeLevel === "number" ? p.textSizeLevel : 20);
       setBgHue(typeof p.bgHue === "number" ? p.bgHue : null);
-      setBgMotion(p.bgMotion === true);
       if (p.previewVideo) { setPreviewVideoUrl(p.previewVideo); setPreviewVideoPath(p.previewVideoPath ?? null); setRecordState("done"); }
     }).catch((err) => {
       console.error("[New] Failed to load tool:", err);
@@ -1084,7 +1082,7 @@ export default function New() {
         textVerblassEnabled, verblassZeitpunkt, verblassSchnelligkeit,
         positionMode, randomMode,
         drawnPath: positionMode === "custom" ? drawnPath : [],
-        grainLevel, textSizeLevel, bgHue, bgMotion,
+        grainLevel, textSizeLevel, bgHue,
         ...(previewVideoUrl ? { previewVideo: previewVideoUrl, previewVideoPath: previewVideoPath ?? undefined } : {}),
         preview: {
           text: prompts[0]?.trim().slice(0, 40) || (lang === "de" ? "Ich schreibe anders." : "I write differently."),
@@ -1111,7 +1109,7 @@ export default function New() {
     textFliegtEnabled, fliegtUnit, fliegtZeitpunkt, fliegtSchnelligkeit,
     textEditingEnabled,
     textVerblassEnabled, verblassZeitpunkt, verblassSchnelligkeit,
-    positionMode, randomMode, drawnPath, grainLevel, textSizeLevel, bgHue, bgMotion,
+    positionMode, randomMode, drawnPath, grainLevel, textSizeLevel, bgHue,
   ]);
 
   // ── Computed values ──────────────────────────────────────────────────────
@@ -1219,13 +1217,6 @@ export default function New() {
       className="dark-transition"
       style={{
         minHeight: "100vh", background: bg, position: "relative",
-        ...(bgMotion ? {
-          backgroundImage: dark
-            ? `linear-gradient(135deg, ${bg} 0%, oklch(28% 0.032 ${(bgHue ?? 60) + 30}) 50%, ${bg} 100%)`
-            : `linear-gradient(135deg, ${bg} 0%, oklch(96% 0.025 ${(bgHue ?? 60) + 30}) 50%, ${bg} 100%)`,
-          backgroundSize: "400% 400%",
-          animation: "bgDrift 12s ease infinite",
-        } : {}),
       }}
     >
       <link
@@ -1338,7 +1329,7 @@ export default function New() {
       )}
 
       {/* ── Noise overlay ─────────────────────────────────────────────────── */}
-      {grainLevel > 0 && !bgMotion && (
+      {grainLevel > 0 && (
         <div
           aria-hidden
           style={{
@@ -1350,7 +1341,6 @@ export default function New() {
           }}
         />
       )}
-      {grainLevel > 0 && bgMotion && <OrganicGrainCanvas grainLevel={grainLevel} dark={dark} />}
 
       {/* ── Writing zone ─────────────────────────────────────────────────── */}
       <motion.div
@@ -2357,12 +2347,6 @@ export default function New() {
                           transition={{ duration: 0.22, ease: "easeInOut" }}
                           style={{ overflow: "hidden" }}
                         >
-                          <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px" }}>
-                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
-                              <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.lfBgMotion}</span>
-                              <span onClick={() => setBgMotion(v => !v)} style={{ fontFamily: FONT_SANS, fontSize: "16px", color: descColor, cursor: "pointer" }}>{bgMotion ? t.on : t.off}</span>
-                            </div>
-                          </div>
                         </motion.div>
                       )}
                     </AnimatePresence>

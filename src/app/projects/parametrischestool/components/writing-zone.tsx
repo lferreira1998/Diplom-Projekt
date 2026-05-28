@@ -237,7 +237,7 @@ function renderLayers(
         else break;
       }
       const alpha = n === 1 ? 0.91 : n === 2 ? 0.97 : 1.0;
-      const tippexWhite = `rgba(255, 252, 244, ${alpha})`;
+      const tippexWhite = `rgba(255, 255, 255, ${alpha})`;
       out.push(
         <span
           key={`v${idx}`}

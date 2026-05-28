@@ -118,12 +118,26 @@ const TRANSLATIONS = {
     driftDesc: "Text verliert seine stabile Form und fliegt davon.",
     driftSentences: "Sätze", driftWords: "Wörter", driftLetters: "Buchstabe",
     driftTiming: "Zeitpunkt des Fliegens",
-    driftAfter: (n: number) => `Nach ${n} min`,
+    driftAfter: (n: number) => {
+      const totalSec = Math.round(n * 60);
+      const mins = Math.floor(totalSec / 60);
+      const secs = totalSec % 60;
+      if (mins === 0) return `Nach ${secs} Sek`;
+      if (secs === 0) return `Nach ${mins} min`;
+      return `Nach ${mins} min ${secs} Sek`;
+    },
     driftSpeed: "Schnelligkeit des Fliegens",
     fadeLabel: "Text verblasst",
     fadeDesc: "Der Text verblasst und verschwindet langsam.",
     fadeTiming: "Zeitpunkt des Verblassens",
-    fadeAfter: (n: number) => `Nach ${n} min`,
+    fadeAfter: (n: number) => {
+      const totalSec = Math.round(n * 60);
+      const mins = Math.floor(totalSec / 60);
+      const secs = totalSec % 60;
+      if (mins === 0) return `Nach ${secs} Sek`;
+      if (secs === 0) return `Nach ${mins} min`;
+      return `Nach ${mins} min ${secs} Sek`;
+    },
     fadeSpeed: "Schnelligkeit des Verblassens",
     // Position
     posStandard: "Standard",
@@ -219,12 +233,26 @@ const TRANSLATIONS = {
     driftDesc: "Text loses its stable form and drifts away.",
     driftSentences: "Sentences", driftWords: "Words", driftLetters: "Letters",
     driftTiming: "Drift timing",
-    driftAfter: (n: number) => `After ${n} min`,
+    driftAfter: (n: number) => {
+      const totalSec = Math.round(n * 60);
+      const mins = Math.floor(totalSec / 60);
+      const secs = totalSec % 60;
+      if (mins === 0) return `After ${secs} sec`;
+      if (secs === 0) return `After ${mins} min`;
+      return `After ${mins} min ${secs} sec`;
+    },
     driftSpeed: "Drift speed",
     fadeLabel: "Text fades",
     fadeDesc: "Text slowly fades and disappears.",
     fadeTiming: "Fade timing",
-    fadeAfter: (n: number) => `After ${n} min`,
+    fadeAfter: (n: number) => {
+      const totalSec = Math.round(n * 60);
+      const mins = Math.floor(totalSec / 60);
+      const secs = totalSec % 60;
+      if (mins === 0) return `After ${secs} sec`;
+      if (secs === 0) return `After ${mins} min`;
+      return `After ${mins} min ${secs} sec`;
+    },
     fadeSpeed: "Fade speed",
     // Position
     posStandard: "Standard",
@@ -383,11 +411,23 @@ function DoubleSlider({ value, min, max, step = 1, onChange, dark }: {
   const filled   = dark ? DARK_TEXT : LIGHT_TEXT;
   const unfilled = dark ? "rgba(240,232,220,0.25)" : "rgba(164,164,164,0.45)";
   return (
-    <div style={{ position: "relative", height: "16px", display: "flex", alignItems: "center" }}>
+    <div style={{ position: "relative", height: "20px", display: "flex", alignItems: "center" }}>
       <div style={{ position: "absolute", left: 0, right: 0 }}>
-        <div style={{ position: "absolute", left: 0, width: `${pct}%`, height: "2px", background: filled, top: "3px", borderRadius: "1px" }} />
-        <div style={{ position: "absolute", left: 0, width: `${pct}%`, height: "2px", background: filled, top: "8px", borderRadius: "1px" }} />
-        <div style={{ position: "absolute", left: `${pct}%`, right: 0, height: "1px", background: unfilled, top: "6px" }} />
+        <div style={{ position: "absolute", left: 0, width: `${pct}%`, height: "2px", background: filled, top: "5px", borderRadius: "1px" }} />
+        <div style={{ position: "absolute", left: 0, width: `${pct}%`, height: "2px", background: filled, top: "10px", borderRadius: "1px" }} />
+        <div style={{ position: "absolute", left: `${pct}%`, right: 0, height: "1px", background: unfilled, top: "8px" }} />
+        {/* Handle */}
+        <div style={{
+          position: "absolute",
+          left: `calc(${pct}% - 7px)`,
+          top: "0px",
+          width: "14px",
+          height: "14px",
+          borderRadius: "50%",
+          background: filled,
+          boxShadow: "0 1px 3px rgba(0,0,0,0.25)",
+          pointerEvents: "none",
+        }} />
       </div>
       <input
         type="range" min={min} max={max} step={step} value={value}
@@ -2105,7 +2145,7 @@ export default function New() {
                               <div style={{ borderTop: `1px dashed ${innerBorder}`, margin: "6px 0" }} />
                               {/* Timing */}
                               <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.driftTiming}</span>
-                              <DoubleSlider value={fliegtZeitpunkt} min={1} max={15} onChange={setFliegtZeitpunkt} dark={dark} />
+                              <DoubleSlider value={fliegtZeitpunkt} min={0.5} max={15} step={0.5} onChange={setFliegtZeitpunkt} dark={dark} />
                               <div style={{ border: `1px dashed ${innerBorder}`, borderRadius: "4px", padding: "10px 12px", textAlign: "center", fontFamily: FONT_SANS, fontSize: "15px", color: descColor, background: dark ? "rgba(240,232,220,0.04)" : surfaceLight }}>
                                 {t.driftAfter(fliegtZeitpunkt)}
                               </div>
@@ -2141,7 +2181,7 @@ export default function New() {
                         ) : (
                           <motion.div key="fade-on" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                             <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.fadeTiming}</span>
-                            <DoubleSlider value={verblassZeitpunkt} min={1} max={15} onChange={setVerblassZeitpunkt} dark={dark} />
+                            <DoubleSlider value={verblassZeitpunkt} min={0.5} max={15} step={0.5} onChange={setVerblassZeitpunkt} dark={dark} />
                             <div style={{ border: `1px dashed ${innerBorder}`, borderRadius: "4px", padding: "10px 12px", textAlign: "center", fontFamily: FONT_SANS, fontSize: "15px", color: descColor, background: dark ? "rgba(240,232,220,0.04)" : surfaceLight }}>
                               {t.fadeAfter(verblassZeitpunkt)}
                             </div>

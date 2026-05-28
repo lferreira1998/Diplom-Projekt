@@ -1949,7 +1949,7 @@ export function WritingZone({
               verticalAlign:   "text-bottom",
               marginLeft:      "-1px",
               marginRight:     "-1px",
-              animation:       cursorLaeuftWeiter ? "none" : "cursorBlink 1s step-end infinite",
+              animation:       "cursorBlink 1s step-end infinite",
               opacity:         1,
               transition:      "background-color 1s linear",
             }}

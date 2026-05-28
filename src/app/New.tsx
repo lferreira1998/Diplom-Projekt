@@ -96,7 +96,8 @@ const TRANSLATIONS = {
     minutes: "Minuten",
     visualTimer: "Visueller Timer",
     visualTimerDesc: "Der Text verblasst langsam, bis er unsichtbar wird. Wenn nichts mehr zu sehen ist, ist die Zeit um.",
-    userReset: "User setzt Zeit selbst",
+    userReset: "Nutzer können Dauer ändern",
+    userResetDesc: "Wenn deaktiviert, bleibt die Dauer fest.",
     cursorRunning: "Cursor läuft weiter",
     cursorRunningDesc: "Der Cursor läuft automatisch weiter, egal ob man schreibt oder nicht. Damit werden Pausen sichtbar.",
     // Visibility
@@ -211,7 +212,8 @@ const TRANSLATIONS = {
     minutes: "Minutes",
     visualTimer: "Visual Timer",
     visualTimerDesc: "The text slowly fades until it disappears. When nothing is visible, time is up.",
-    userReset: "User sets time themselves",
+    userReset: "Allow users to change duration",
+    userResetDesc: "If disabled, duration stays fixed.",
     cursorRunning: "Cursor keeps running",
     cursorRunningDesc: "The cursor moves automatically whether you type or not. This makes pauses visible.",
     // Visibility
@@ -1907,11 +1909,14 @@ export default function New() {
                             </div>
                             {/* User reset row */}
                             <div
-                              style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px", cursor: "pointer" }}
+                              style={{ display: "flex", flexDirection: "column", gap: "4px", cursor: "pointer" }}
                               onClick={e => { e.stopPropagation(); setTimerUserReset(v => !v); }}
                             >
-                              <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: descColor }}>{t.userReset}</span>
-                              <RadioCircle selected={timerUserReset} dark={dark} />
+                              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                                <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.userReset}</span>
+                                <RadioCircle selected={timerUserReset} dark={dark} />
+                              </div>
+                              <span style={{ fontFamily: FONT_SANS, fontSize: "12px", color: descColor, lineHeight: 1.4 }}>{t.userResetDesc}</span>
                             </div>
                           </motion.div>
                         )}

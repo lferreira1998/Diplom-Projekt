@@ -25,11 +25,11 @@ export function ToolLaunchModal({ tool, dark, onConfirm, onClose }: Props) {
 
   if (!tool) return null;
 
-  const borderCol = dark ? "rgba(240,232,220,0.16)" : "#a4a4a4";
-  const textCol   = dark ? "#f0e8dc"                : "#555555";
-  const mutedCol  = dark ? "rgba(240,232,220,0.45)" : "#9a9daa";
-  const cardBg    = dark ? "#2d2b28"                : "#fcf6ef";
-  const inputBg   = dark ? "#1e1d1b"                : "#f5f0ea";
+  const borderCol  = dark ? "rgba(240,232,220,0.16)" : "#a4a4a4";
+  const textCol    = dark ? "#f0e8dc"                : "#555555";
+  const mutedCol   = dark ? "rgba(240,232,220,0.4)"  : "#9a9daa";
+  const cardBg     = dark ? "#1e1d1b"                : "#fcf6ef";
+  const innerBg    = dark ? "rgba(240,232,220,0.04)" : "#f5f0ea";
 
   const name = tool.params.displayName || tool.name;
   const desc = tool.description || "";
@@ -49,41 +49,44 @@ export function ToolLaunchModal({ tool, dark, onConfirm, onClose }: Props) {
         style={{
           background: cardBg,
           border: `1px dashed ${borderCol}`,
-          borderRadius: "16px",
-          padding: "36px 40px",
-          maxWidth: "400px",
+          borderRadius: "12px",
+          padding: "24px",
+          maxWidth: "380px",
           width: "90vw",
           boxSizing: "border-box",
           display: "flex",
           flexDirection: "column",
-          gap: "24px",
+          gap: "16px",
         }}
       >
         {/* Name + description */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-          <span style={{ fontFamily: FONT_SERIF, fontSize: "28px", lineHeight: 1.2, color: textCol }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+          <span style={{ fontFamily: FONT_SANS, fontSize: "20px", fontWeight: 500, lineHeight: 1.25, color: textCol }}>
             {name}
           </span>
           {desc && (
-            <span style={{ fontFamily: FONT_SANS, fontSize: "13px", color: mutedCol, lineHeight: 1.55 }}>
+            <span style={{ fontFamily: FONT_SANS, fontSize: "13px", color: mutedCol, lineHeight: 1.5 }}>
               {desc}
             </span>
           )}
         </div>
 
-        {/* Timer toggle */}
+        {/* Divider */}
+        <div style={{ borderTop: `1px dashed ${borderCol}` }} />
+
+        {/* Timer section */}
         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
           <button
             onClick={() => setTimerOn(v => !v)}
             style={{
               display: "flex", alignItems: "center", justifyContent: "space-between",
-              background: "transparent",
+              background: innerBg,
               border: `1px dashed ${borderCol}`,
-              borderRadius: "8px", padding: "11px 14px",
-              cursor: "pointer", outline: "none",
+              borderRadius: "6px", padding: "10px 14px",
+              cursor: "pointer", outline: "none", width: "100%",
             }}
           >
-            <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: textCol }}>Timer</span>
+            <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: textCol }}>Timer</span>
             {/* Toggle pill */}
             <span style={{
               width: "34px", height: "18px", borderRadius: "9px", flexShrink: 0,
@@ -113,7 +116,7 @@ export function ToolLaunchModal({ tool, dark, onConfirm, onClose }: Props) {
                     height: "28px", padding: "0 11px",
                     border: `1px ${minutes === m ? "solid" : "dashed"} ${minutes === m ? textCol : borderCol}`,
                     borderRadius: "4px",
-                    background: minutes === m ? textCol : "transparent",
+                    background: minutes === m ? textCol : innerBg,
                     color: minutes === m ? (dark ? "#1e1d1b" : "#fcf6ef") : mutedCol,
                     fontFamily: FONT_SANS, fontSize: "12px",
                     cursor: "pointer", outline: "none",
@@ -130,7 +133,7 @@ export function ToolLaunchModal({ tool, dark, onConfirm, onClose }: Props) {
                 style={{
                   height: "28px", width: "58px", padding: "0 8px",
                   border: `1px dashed ${borderCol}`,
-                  borderRadius: "4px", background: inputBg,
+                  borderRadius: "4px", background: innerBg,
                   color: textCol, fontFamily: FONT_SANS, fontSize: "12px",
                   outline: "none", boxSizing: "border-box", textAlign: "center",
                 }}
@@ -143,13 +146,13 @@ export function ToolLaunchModal({ tool, dark, onConfirm, onClose }: Props) {
         <button
           onClick={() => onConfirm(tool.id, timerOn ? (minutes || 10) : null)}
           style={{
-            height: "48px",
-            background: textCol,
-            color: dark ? "#1e1d1b" : "#fcf6ef",
-            border: "none",
-            borderRadius: "8px",
+            height: "44px",
+            background: "transparent",
+            color: textCol,
+            border: `1px dashed ${borderCol}`,
+            borderRadius: "6px",
             fontFamily: FONT_SERIF,
-            fontSize: "20px",
+            fontSize: "19px",
             letterSpacing: "0.01em",
             cursor: "pointer",
             outline: "none",

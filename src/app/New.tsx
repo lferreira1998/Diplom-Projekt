@@ -81,7 +81,7 @@ const TRANSLATIONS = {
     identityHeading: "Identität.",
     identitySubtitle: "Speichere dein Regelset als Tool. Füge Name, Beschreibung, Schreibanstoß und Vorschaubild hinzu, damit andere es benutzen können.",
     nameHeading: "Name",
-    nameHint: 'Beende mit dem Namen den Satz „Write and think…“',
+    nameHint: 'Gib deinem Tool einen Namen.',
     namePlaceholder: "Name eingeben",
     promptHeading: "Schreibanstoß oder Aufgabe",
     promptHint: "Das hilft Menschen beim Schreiben. Du kannst mehrere anlegen.",
@@ -196,7 +196,7 @@ const TRANSLATIONS = {
     identityHeading: "Identity.",
     identitySubtitle: "Save your rule set as a tool. Add a name, description, prompt, and preview image so others can use it.",
     nameHeading: "Name",
-    nameHint: 'Complete the sentence “Write and think…” with the name',
+    nameHint: 'Give your tool a name.',
     namePlaceholder: "Enter name",
     promptHeading: "Writing Prompt or Task",
     promptHint: "This helps people start writing. You can add multiple.",
@@ -1711,11 +1711,6 @@ export default function New() {
                     <span style={{ fontFamily: FONT_SANS, fontSize: "13px", color: descColor, lineHeight: "1.45" }}>
                       {t.nameHint}
                     </span>
-                    <div style={{ border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "10px 14px", background: settingsCardBg }}>
-                      <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : "#313642" }}>
-                        Write and think&hellip;
-                      </span>
-                    </div>
                     <input
                       className="identity-input"
                       placeholder={t.namePlaceholder}
@@ -1790,65 +1785,50 @@ export default function New() {
                   </div>
                 </div>
                 <div style={{ padding: "16px 24px", flexShrink: 0, display: "flex", flexDirection: "column", gap: "8px" }}>
-                  {/* Preview recording section */}
-                  <div style={{
-                    border: `1px dashed ${innerBorder}`,
-                    borderRadius: "10px",
-                    overflow: "hidden",
-                  }}>
-                    {/* Video thumbnail if recorded */}
-                    {previewVideoUrl && !videoPreviewError && (
-                      <div style={{ position: "relative" }}>
+                  {/* Preview recording — image-upload zone style */}
+                  <div
+                    onClick={() => { setVideoPreviewError(false); setShowRecordOverlay(true); }}
+                    style={{
+                      position: "relative", cursor: "pointer",
+                      border: `1px dashed ${recordState === "error" ? "#e05252" : innerBorder}`,
+                      borderRadius: "8px", overflow: "hidden",
+                      aspectRatio: "16/9", background: settingsCardBg,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                    }}
+                  >
+                    {previewVideoUrl && !videoPreviewError ? (
+                      <>
                         <video
                           src={previewVideoUrl}
                           autoPlay loop muted playsInline
                           onError={() => setVideoPreviewError(true)}
-                          style={{
-                            width: "100%", display: "block",
-                            maxHeight: "110px", objectFit: "cover",
-                          }}
+                          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" }}
                         />
                         <div style={{
-                          position: "absolute", top: "7px", left: "8px",
-                          background: "rgba(0,0,0,0.55)",
-                          borderRadius: "4px", padding: "2px 7px",
-                          fontFamily: FONT_SANS, fontSize: "11px",
-                          color: "rgba(255,255,255,0.85)", fontWeight: 600, letterSpacing: "0.05em",
-                        }}>✓ {DE ? "Vorschau" : "Preview"}</div>
+                          position: "absolute", inset: 0,
+                          background: "rgba(0,0,0,0.38)",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                        }}>
+                          <span style={{ fontFamily: FONT_SANS, fontSize: "13px", color: "#fff", letterSpacing: "0.02em" }}>
+                            {DE ? "Neu aufnehmen" : "Re-record"}
+                          </span>
+                        </div>
+                      </>
+                    ) : (
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", padding: "16px", textAlign: "center" }}>
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={recordState === "error" ? "#e05252" : (dark ? DARK_MUTED : "#a0a0a0")} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.9L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
+                        </svg>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "13px", color: recordState === "error" ? "#e05252" : (dark ? DARK_MUTED : "#9a9daa") }}>
+                          {recordState === "error"
+                            ? (DE ? "Fehlgeschlagen — erneut versuchen" : "Failed — try again")
+                            : (DE ? "Vorschau aufnehmen" : "Add preview")}
+                        </span>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "11px", color: dark ? "rgba(240,232,220,0.3)" : "rgba(150,150,150,0.7)", lineHeight: 1.4 }}>
+                          {DE ? "10-Sek.-Clip" : "10-sec clip"}
+                        </span>
                       </div>
                     )}
-                    {/* Info row + button */}
-                    <div style={{ padding: "12px 14px", display: "flex", flexDirection: "column", gap: "8px" }}>
-                      <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
-                        <span style={{ fontFamily: FONT_SANS, fontSize: "14px", fontWeight: 500, color: dark ? DARK_TEXT : LIGHT_TEXT }}>
-                          {DE ? "Vorschau aufnehmen" : "Record preview"}
-                        </span>
-                        <span style={{ fontFamily: FONT_SANS, fontSize: "12px", color: dark ? DARK_MUTED : "#9a9daa", lineHeight: "1.45" }}>
-                          {DE
-                            ? "Nimm einen 10-Sek.-Clip auf, der deinen Schreibstil zeigt — er erscheint als Vorschau im Playground."
-                            : "Record a 10-sec clip showing your writing style — it appears as the preview in the Playground."}
-                        </span>
-                      </div>
-                      <button
-                        onClick={() => { setVideoPreviewError(false); setShowRecordOverlay(true); }}
-                        style={{
-                          width: "100%", padding: "9px",
-                          background: recordState === "error"
-                            ? (dark ? "rgba(220,80,80,0.1)" : "rgba(220,80,80,0.06)")
-                            : "transparent",
-                          border: `1px dashed ${recordState === "error" ? "#e05252" : innerBorder}`,
-                          borderRadius: "7px", cursor: "pointer", outline: "none",
-                          fontFamily: FONT_SANS, fontSize: "13px",
-                          color: recordState === "error" ? "#e05252" : (dark ? DARK_MUTED : "#7c7c7c"),
-                        }}
-                      >
-                        {recordState === "error"
-                          ? (DE ? "Fehlgeschlagen — erneut versuchen" : "Failed — try again")
-                          : recordState === "done"
-                            ? (DE ? "Neu aufnehmen" : "Re-record")
-                            : (DE ? "Aufnahme starten" : "Start recording")}
-                      </button>
-                    </div>
                   </div>
                   {saveError && (
                     <span style={{ fontFamily: FONT_SANS, fontSize: "12px", color: "#e05252", textAlign: "center" }}>{saveError}</span>
@@ -2112,9 +2092,21 @@ export default function New() {
                           ) : (
                             /* ON: show unit options + timing + speed */
                             <motion.div key="drift-on" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                              {/* Unit options */}
+                              {/* Unit options — Sentences alone, then Words + Letters side by side */}
+                              <button onClick={() => setFliegtUnit("Sätze")} style={{
+                                width: "100%", height: "36px",
+                                background: dark ? "rgba(240,232,220,0.04)" : surfaceLight,
+                                border: `1px dashed ${fliegtUnit === "Sätze" ? (dark ? DARK_TEXT : LIGHT_TEXT) : innerBorder}`,
+                                borderRadius: "4px", cursor: "pointer", outline: "none",
+                                fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT,
+                                display: "flex", alignItems: "center", justifyContent: "space-between",
+                                padding: "0 12px", boxSizing: "border-box",
+                              }}>
+                                {t.driftSentences}
+                                <RadioCircle selected={fliegtUnit === "Sätze"} dark={dark} />
+                              </button>
                               <div style={{ display: "flex", gap: "10px" }}>
-                                {(["Sätze", "Wörter"] as const).map(u => (
+                                {(["Wörter", "Buchstabe"] as const).map(u => (
                                   <button key={u} onClick={() => setFliegtUnit(u)} style={{
                                     flex: 1, height: "36px",
                                     background: dark ? "rgba(240,232,220,0.04)" : surfaceLight,
@@ -2124,23 +2116,11 @@ export default function New() {
                                     display: "flex", alignItems: "center", justifyContent: "space-between",
                                     padding: "0 12px", boxSizing: "border-box",
                                   }}>
-                                    {u === "Sätze" ? t.driftSentences : t.driftWords}
+                                    {u === "Wörter" ? t.driftWords : t.driftLetters}
                                     <RadioCircle selected={fliegtUnit === u} dark={dark} />
                                   </button>
                                 ))}
                               </div>
-                              <button onClick={() => setFliegtUnit("Buchstabe")} style={{
-                                width: "100%", height: "36px",
-                                background: dark ? "rgba(240,232,220,0.04)" : surfaceLight,
-                                border: `1px dashed ${fliegtUnit === "Buchstabe" ? (dark ? DARK_TEXT : LIGHT_TEXT) : innerBorder}`,
-                                borderRadius: "4px", cursor: "pointer", outline: "none",
-                                fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT,
-                                display: "flex", alignItems: "center", justifyContent: "space-between",
-                                padding: "0 12px", boxSizing: "border-box",
-                              }}>
-                                {t.driftLetters}
-                                <RadioCircle selected={fliegtUnit === "Buchstabe"} dark={dark} />
-                              </button>
                               {/* Separator */}
                               <div style={{ borderTop: `1px dashed ${innerBorder}`, margin: "6px 0" }} />
                               {/* Timing */}

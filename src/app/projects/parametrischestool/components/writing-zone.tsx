@@ -247,8 +247,8 @@ function renderLayers(
             backgroundColor: tippexWhite,
             borderRadius:    "1px",
             boxShadow:       n === 1
-              ? "0 1px 3px rgba(160,148,130,0.45), 0 0.5px 1px rgba(160,148,130,0.3)"
-              : "0 1px 5px rgba(140,128,110,0.55), 0 0.5px 2px rgba(140,128,110,0.4)",
+              ? "0 1px 2px rgba(160,148,130,0.22), 0 0.5px 1px rgba(160,148,130,0.15)"
+              : "0 1px 3px rgba(140,128,110,0.28), 0 0.5px 1px rgba(140,128,110,0.18)",
             zIndex: idx,
           }}
         />

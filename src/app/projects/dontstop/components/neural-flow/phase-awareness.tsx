@@ -42,7 +42,7 @@ export function PhaseAwareness({ timeLeft }: PhaseAwarenessProps) {
         transition={{ delay: 0.5 }}
         className="text-center mb-3"
         style={{
-          fontFamily: "'Space Grotesk', sans-serif",
+          fontFamily: "'general-sans', sans-serif",
           fontSize: "clamp(1.1rem, 2.5vw, 1.4rem)",
           color: "#313642",
           lineHeight: 1.6,
@@ -57,7 +57,7 @@ export function PhaseAwareness({ timeLeft }: PhaseAwarenessProps) {
         transition={{ delay: 1 }}
         className="text-center mb-12 max-w-sm"
         style={{
-          fontFamily: "'Space Grotesk', sans-serif",
+          fontFamily: "'general-sans', sans-serif",
           fontSize: "0.9rem",
           color: "#9A9DAA",
           lineHeight: 1.6,
@@ -75,7 +75,7 @@ export function PhaseAwareness({ timeLeft }: PhaseAwarenessProps) {
         transition={{ delay: 1.5 }}
         className="tabular-nums"
         style={{
-          fontFamily: "'Space Grotesk', sans-serif",
+          fontFamily: "'general-sans', sans-serif",
           fontSize: "1.5rem",
           color: "#D0D1D6",
           letterSpacing: "0.2em",

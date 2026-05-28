@@ -7,8 +7,8 @@ const PANEL_BG   = "#f3ebe0";
 const BORDER_COL = "#a4a4a4";
 const LIGHT_TEXT = "#555555";
 const MUTED      = "#9a9daa";
-const FONT_SERIF = "'freight-text-pro', 'EB Garamond', Georgia, serif";
-const FONT_SANS  = "'general-sans', 'Space Grotesk', sans-serif";
+const FONT_SERIF = "'freight-text-pro', serif";
+const FONT_SANS  = "'general-sans', sans-serif";
 
 function getSessionId(): string {
   const key = "diplom_session_id";

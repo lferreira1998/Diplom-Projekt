@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import type { NewToolData } from "../utils/storage";
 
-const FONT_SANS  = "'general-sans', 'Space Grotesk', sans-serif";
-const FONT_SERIF = "'freight-text-pro', 'EB Garamond', Georgia, serif";
+const FONT_SANS  = "'general-sans', sans-serif";
+const FONT_SERIF = "'freight-text-pro', serif";
 
 const QUICK_MINS = [5, 10, 15, 20, 30];
 

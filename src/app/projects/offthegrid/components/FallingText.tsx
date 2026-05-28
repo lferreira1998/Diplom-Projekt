@@ -95,7 +95,7 @@ function svgPath(pts: Point[]): string {
 // ─── Character width measurement ─────────────────────────────────────────────
 
 const FONT_SIZE = 17;
-const FONT_FAMILY = "'Courier New', Courier, monospace";
+const FONT_FAMILY = "'general-sans', sans-serif";
 
 const _measCanvas =
   typeof document !== "undefined" ? document.createElement("canvas") : null;

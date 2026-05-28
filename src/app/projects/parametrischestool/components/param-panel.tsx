@@ -64,11 +64,11 @@ interface ParamPanelProps {
   onToggle: () => void;
 }
 
-const FONT_SEMI   = "'Area Inktrap', 'Space Grotesk', sans-serif";
-const FONT_EXT    = "'Area Inktrap Extended', 'Area Inktrap', sans-serif";
-const FONT_REG    = "'Area Inktrap', 'Space Grotesk', sans-serif";
-const FONT_MONO   = "'IBM Plex Mono', 'Courier New', monospace";
-const FONT_COURIER = "'Courier Prime', 'Courier New', monospace";
+const FONT_SEMI   = "'general-sans', sans-serif";
+const FONT_EXT    = "'general-sans', sans-serif";
+const FONT_REG    = "'general-sans', sans-serif";
+const FONT_MONO   = "'general-sans', sans-serif";
+const FONT_COURIER = "'general-sans', sans-serif";
 
 const sLabel: React.CSSProperties = {
   fontFamily: FONT_SEMI, fontSize: "11.52px", fontWeight: 600,

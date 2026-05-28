@@ -20,7 +20,7 @@ function renderAscii(
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
 
-  const fontStr = `${FONT_SIZE}px "Courier New", Courier, monospace`;
+  const fontStr = `${FONT_SIZE}px "general-sans", sans-serif`;
   ctx.font = fontStr;
 
   const charWidth = ctx.measureText("M").width;

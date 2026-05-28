@@ -87,7 +87,7 @@ export function PhaseResults({
         />
         <span
           style={{
-            fontFamily: "'Space Grotesk', sans-serif",
+            fontFamily: "'general-sans', sans-serif",
             fontSize: "0.75rem",
             color: "#9A9DAA",
             letterSpacing: "0.2em",
@@ -112,7 +112,7 @@ export function PhaseResults({
         >
           <span
             style={{
-              fontFamily: "'Space Grotesk', sans-serif",
+              fontFamily: "'general-sans', sans-serif",
               fontSize: "0.65rem",
               color: "#9A9DAA",
               letterSpacing: "0.15em",
@@ -129,7 +129,7 @@ export function PhaseResults({
             <p
               className="mt-4"
               style={{
-                fontFamily: "'Space Grotesk', sans-serif",
+                fontFamily: "'general-sans', sans-serif",
                 fontSize: "0.8rem",
                 color: "#9A9DAA",
                 fontStyle: "italic",
@@ -148,7 +148,7 @@ export function PhaseResults({
         >
           <span
             style={{
-              fontFamily: "'Space Grotesk', sans-serif",
+              fontFamily: "'general-sans', sans-serif",
               fontSize: "0.65rem",
               color: "#9A9DAA",
               letterSpacing: "0.15em",
@@ -173,7 +173,7 @@ export function PhaseResults({
             <p
               className="mt-4"
               style={{
-                fontFamily: "'Space Grotesk', sans-serif",
+                fontFamily: "'general-sans', sans-serif",
                 fontSize: "0.8rem",
                 color: "#9A9DAA",
                 fontStyle: "italic",
@@ -216,7 +216,7 @@ export function PhaseResults({
           <div
             className="mb-3"
             style={{
-              fontFamily: "'Space Grotesk', sans-serif",
+              fontFamily: "'general-sans', sans-serif",
               fontSize: "0.65rem",
               color: "#9A9DAA",
               letterSpacing: "0.15em",
@@ -230,7 +230,7 @@ export function PhaseResults({
             style={{
               backgroundColor: "#EAEBF0",
               color: "#313642",
-              fontFamily: "'Space Grotesk', sans-serif",
+              fontFamily: "'general-sans', sans-serif",
               fontSize: "clamp(0.85rem, 2vw, 1.1rem)",
               lineHeight: 1.9,
               wordBreak: "break-all",
@@ -254,7 +254,7 @@ export function PhaseResults({
         style={{
           backgroundColor: "#313642",
           color: "#F2F3F6",
-          fontFamily: "'Space Grotesk', sans-serif",
+          fontFamily: "'general-sans', sans-serif",
           fontSize: "0.85rem",
           letterSpacing: "0.15em",
           border: "none",
@@ -288,7 +288,7 @@ function MetricBlock({
     <div className="flex flex-col">
       <span
         style={{
-          fontFamily: "'Space Grotesk', sans-serif",
+          fontFamily: "'general-sans', sans-serif",
           fontSize: "0.6rem",
           color: "#9A9DAA",
           letterSpacing: "0.1em",
@@ -300,7 +300,7 @@ function MetricBlock({
       </span>
       <span
         style={{
-          fontFamily: "'Space Grotesk', sans-serif",
+          fontFamily: "'general-sans', sans-serif",
           fontSize: "1.75rem",
           color: light ? "#F2F3F6" : "#313642",
         }}
@@ -337,7 +337,7 @@ function DiffBadge({
     >
       <span
         style={{
-          fontFamily: "'Space Grotesk', sans-serif",
+          fontFamily: "'general-sans', sans-serif",
           fontSize: "0.7rem",
           color: "#9A9DAA",
           letterSpacing: "0.1em",
@@ -348,7 +348,7 @@ function DiffBadge({
       </span>
       <span
         style={{
-          fontFamily: "'Space Grotesk', sans-serif",
+          fontFamily: "'general-sans', sans-serif",
           fontSize: "1.1rem",
           color:
             diff === 0

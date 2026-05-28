@@ -156,7 +156,7 @@ export default function App() {
           >
             <h1
               style={{
-                fontFamily: "'Space Grotesk', monospace, sans-serif",
+                fontFamily: "'general-sans', sans-serif",
                 fontSize: "clamp(2rem, 6vw, 3.5rem)",
                 color: "#313642",
                 letterSpacing: "-0.02em",
@@ -173,7 +173,7 @@ export default function App() {
             transition={{ delay: 0.3, duration: 0.6 }}
             className="text-center mb-12 max-w-md"
             style={{
-              fontFamily: "system-ui, sans-serif",
+              fontFamily: "'general-sans', sans-serif",
               fontSize: "0.95rem",
               color: "#6B6F7B",
               lineHeight: 1.7,
@@ -192,7 +192,7 @@ export default function App() {
             onClick={handleBegin}
             className="group cursor-pointer"
             style={{
-              fontFamily: "'Space Grotesk', monospace, sans-serif",
+              fontFamily: "'general-sans', sans-serif",
               fontSize: "0.8rem",
               letterSpacing: "0.2em",
               textTransform: "uppercase",

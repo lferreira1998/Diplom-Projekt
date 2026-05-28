@@ -4,8 +4,8 @@ import { motion, AnimatePresence } from "motion/react";
 
 const BG    = "#f8f7f4";
 const INK   = "#222222";
-const FONT  = "'IBM Plex Mono', 'Courier New', monospace";
-const SERIF = "'Georgia', 'Times New Roman', serif";
+const FONT  = "'general-sans', sans-serif";
+const SERIF = "'freight-text-pro', serif";
 
 function lerp(a: string, b: string, t: number): string {
   const p = (h: string) => [

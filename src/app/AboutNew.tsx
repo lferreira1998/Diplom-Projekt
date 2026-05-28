@@ -3,9 +3,9 @@ import { AnimatePresence, motion } from "motion/react";
 import { nodes as allNodes } from "./projects/abouttheproject/components/mindmap-data";
 import TopNav from "./components/TopNav";
 
-const SERIF = "'freight-text-pro', 'EB Garamond', Georgia, serif";
-const SANS = "'general-sans', 'Space Grotesk', sans-serif";
-const MONO = "'Courier Prime', 'Courier New', monospace";
+const SERIF = "'freight-text-pro', serif";
+const SANS = "'general-sans', sans-serif";
+const MONO = "'general-sans', sans-serif";
 
 type AboutTheme = {
   bg: string; panelBg: string; ink: string; text: string; muted: string;

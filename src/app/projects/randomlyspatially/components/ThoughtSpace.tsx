@@ -259,7 +259,7 @@ export function ThoughtSpace() {
               ref={el => { if (el) elMapRef.current.set(w.id, el); }}
               style={{
                 position: "absolute", left: "50%", top: "50%",
-                fontFamily: "'IBM Plex Mono', 'Courier New', monospace",
+                fontFamily: "'general-sans', sans-serif",
                 fontSize: "16px", fontWeight: 400,
                 color: "rgba(230, 225, 210, 1)",
                 letterSpacing: "0.04em",
@@ -280,7 +280,7 @@ export function ThoughtSpace() {
         <div style={{
           position: "absolute", bottom: "80px", left: "50%",
           transform: "translateX(-50%)",
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: "'general-sans', sans-serif",
           fontSize: "16px", color: "rgba(230,225,210,0.9)",
           letterSpacing: "0.04em", whiteSpace: "nowrap",
           pointerEvents: "none",
@@ -303,7 +303,7 @@ export function ThoughtSpace() {
           pointerEvents: "none",
         }}>
           <p style={{
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: "'general-sans', sans-serif",
             fontSize: "13px", color: "rgba(200,195,180,0.3)",
             letterSpacing: "0.12em", margin: 0,
           }}>
@@ -326,7 +326,7 @@ export function ThoughtSpace() {
             key={m}
             onClick={e => { e.stopPropagation(); setMode(m); inputRef.current?.focus(); }}
             style={{
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: "'general-sans', sans-serif",
               fontSize: "10px", letterSpacing: "0.06em",
               padding: "5px 14px", borderRadius: "100px",
               border: "none", cursor: "pointer",

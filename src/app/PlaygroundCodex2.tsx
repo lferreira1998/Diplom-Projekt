@@ -5,8 +5,8 @@ import TopNav from "./components/TopNav";
 import { MiniReplayPreview } from "./components/MiniReplayPreview";
 import { deleteNewTool, getAllNewTools, type NewToolData } from "./utils/storage";
 
-const FONT_SERIF = "'freight-text-pro', 'EB Garamond', Georgia, serif";
-const FONT_SANS = "'general-sans', 'Space Grotesk', sans-serif";
+const FONT_SERIF = "'freight-text-pro', serif";
+const FONT_SANS = "'general-sans', sans-serif";
 
 const COLUMN_GAP = 650;
 const LANE_GAP = 520;

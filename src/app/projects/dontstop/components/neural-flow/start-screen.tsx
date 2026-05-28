@@ -58,7 +58,7 @@ export function StartScreen({ onBegin }: StartScreenProps) {
         </div>
         <span
           style={{
-            fontFamily: "'Space Grotesk', sans-serif",
+            fontFamily: "'general-sans', sans-serif",
             fontSize: "0.8rem",
             color: "#313642",
             letterSpacing: "0.2em",
@@ -76,7 +76,7 @@ export function StartScreen({ onBegin }: StartScreenProps) {
         transition={{ delay: 0.3 }}
         className="text-center mb-3"
         style={{
-          fontFamily: "'Space Grotesk', sans-serif",
+          fontFamily: "'general-sans', sans-serif",
           fontSize: "clamp(1.5rem, 4vw, 2.25rem)",
           color: "#313642",
           lineHeight: 1.2,
@@ -93,7 +93,7 @@ export function StartScreen({ onBegin }: StartScreenProps) {
         transition={{ delay: 0.4 }}
         className="text-center mb-12 max-w-md"
         style={{
-          fontFamily: "'Space Grotesk', sans-serif",
+          fontFamily: "'general-sans', sans-serif",
           fontSize: "0.9rem",
           color: "#9A9DAA",
           lineHeight: 1.6,
@@ -122,7 +122,7 @@ export function StartScreen({ onBegin }: StartScreenProps) {
             >
               <span
                 style={{
-                  fontFamily: "'Space Grotesk', sans-serif",
+                  fontFamily: "'general-sans', sans-serif",
                   fontSize: "0.65rem",
                   color: "#B0B3BC",
                   letterSpacing: "0.1em",
@@ -136,7 +136,7 @@ export function StartScreen({ onBegin }: StartScreenProps) {
                 <div className="flex items-baseline justify-between gap-4">
                   <span
                     style={{
-                      fontFamily: "'Space Grotesk', sans-serif",
+                      fontFamily: "'general-sans', sans-serif",
                       fontSize: "0.95rem",
                       color: "#313642",
                     }}
@@ -145,7 +145,7 @@ export function StartScreen({ onBegin }: StartScreenProps) {
                   </span>
                   <span
                     style={{
-                      fontFamily: "'Space Grotesk', sans-serif",
+                      fontFamily: "'general-sans', sans-serif",
                       fontSize: "0.7rem",
                       color: "#B0B3BC",
                       letterSpacing: "0.1em",
@@ -156,7 +156,7 @@ export function StartScreen({ onBegin }: StartScreenProps) {
                 </div>
                 <span
                   style={{
-                    fontFamily: "'Space Grotesk', sans-serif",
+                    fontFamily: "'general-sans', sans-serif",
                     fontSize: "0.8rem",
                     color: "#9A9DAA",
                     lineHeight: 1.5,
@@ -180,7 +180,7 @@ export function StartScreen({ onBegin }: StartScreenProps) {
         style={{
           backgroundColor: "#313642",
           color: "#F2F3F6",
-          fontFamily: "'Space Grotesk', sans-serif",
+          fontFamily: "'general-sans', sans-serif",
           fontSize: "0.85rem",
           letterSpacing: "0.15em",
           border: "none",

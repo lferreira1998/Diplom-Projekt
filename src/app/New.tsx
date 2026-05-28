@@ -45,8 +45,8 @@ function getLookFeelDarkColors(bgHue: number | null): {
   };
 }
 
-const FONT_SERIF = "'freight-text-pro', 'EB Garamond', Georgia, serif";
-const FONT_SANS  = "'general-sans', 'Space Grotesk', sans-serif";
+const FONT_SERIF = "'freight-text-pro', serif";
+const FONT_SANS  = "'general-sans', sans-serif";
 
 const NAV_ROUTES: Record<string, string> = {
   CreateTool:      "/new",

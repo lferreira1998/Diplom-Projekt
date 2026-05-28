@@ -6,8 +6,8 @@ import { useNavigate, useLocation } from "react-router";
 import { deleteNewTool, getAllNewTools, type NewToolData } from "./utils/storage";
 import TopNav from "./components/TopNav";
 
-const FONT_SERIF = "'freight-text-pro', 'EB Garamond', Georgia, serif";
-const FONT_SANS = "'general-sans', 'Space Grotesk', sans-serif";
+const FONT_SERIF = "'freight-text-pro', serif";
+const FONT_SANS = "'general-sans', sans-serif";
 
 type Theme = {
   bg: string;

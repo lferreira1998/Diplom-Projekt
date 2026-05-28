@@ -359,7 +359,7 @@ interface RandomTextZoneProps {
   fontSize?: number;
 }
 
-function RandomTextZone({ textColor, fontFamily = "'IBM Plex Mono', 'Courier New', monospace", positions, cursor, fontSize = 22 }: RandomTextZoneProps) {
+function RandomTextZone({ textColor, fontFamily = "'general-sans', sans-serif", positions, cursor, fontSize = 22 }: RandomTextZoneProps) {
   const wrapRef    = useRef<HTMLDivElement>(null);
   const rafRef     = useRef(0);
   const elMapRef   = useRef<Map<number, HTMLDivElement>>(new Map());
@@ -589,7 +589,7 @@ function SpiralCanvas({
   verblassenDelay,
   verblassenSpeed,
   driftTick,
-  fontFamily = "'IBM Plex Mono', 'Courier New', monospace",
+  fontFamily = "'general-sans', sans-serif",
   coverBgColor = "#f2f3f6",
   fontSize = 20,
 }: SpiralCanvasProps) {
@@ -808,7 +808,7 @@ function RunningLineCanvas({
   verblassenDelay,
   verblassenSpeed,
   driftTick,
-  fontFamily = "'IBM Plex Mono', 'Courier New', monospace",
+  fontFamily = "'general-sans', sans-serif",
   fontSize = 20,
 }: RunningLineCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -1012,7 +1012,7 @@ function CustomPathSvg({
   positions,
   cursor,
   textColor,
-  fontFamily = "'IBM Plex Mono', 'Courier New', monospace",
+  fontFamily = "'general-sans', sans-serif",
   fontSize = 20,
   customPath,
   onCustomPathChange,
@@ -1358,7 +1358,7 @@ export function WritingZone({
   customPathDe       = true,
   writingPrompt      = "",
   fontSize           = 20,
-  fontFamily         = "'IBM Plex Mono', 'Courier New', monospace",
+  fontFamily         = "'general-sans', sans-serif",
   centeredPrompt     = false,
   containerWidth     = "1010px",
 }: WritingZoneProps) {
@@ -1603,7 +1603,7 @@ export function WritingZone({
   const onUpdateRef       = useRef(onUpdate);
   useEffect(() => { onUpdateRef.current = onUpdate; }, [onUpdate]);
 
-  // Char-width measurement (IBM Plex Mono is monospace → one span suffices)
+  // Char-width measurement for cursor-keeps-running spacing
   const charWidthRef = useRef(10);
   const measSpanRef  = useRef<HTMLSpanElement>(null);
 

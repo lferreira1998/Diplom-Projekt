@@ -6,8 +6,8 @@ import { deleteNewTool, getAllNewTools, type NewToolData } from "./utils/storage
 import { ToolLaunchModal } from "./components/ToolLaunchModal";
 import { ToolPreview } from "./components/ToolPreview";
 
-const FONT_SERIF = "'freight-text-pro', 'EB Garamond', Georgia, serif";
-const FONT_SANS = "'general-sans', 'Space Grotesk', sans-serif";
+const FONT_SERIF = "'freight-text-pro', serif";
+const FONT_SANS = "'general-sans', sans-serif";
 
 const CARD_RADIUS = 14;
 const PREVIEW_RADIUS = 10;

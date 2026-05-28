@@ -43,7 +43,7 @@ export function PhaseInput({ type, onSubmit }: PhaseInputProps) {
       >
         <h2
           style={{
-            fontFamily: "'Space Grotesk', sans-serif",
+            fontFamily: "'general-sans', sans-serif",
             fontSize: "clamp(1.1rem, 2.5vw, 1.4rem)",
             color: "#313642",
             marginBottom: "6px",
@@ -55,7 +55,7 @@ export function PhaseInput({ type, onSubmit }: PhaseInputProps) {
         </h2>
         <p
           style={{
-            fontFamily: "'Space Grotesk', sans-serif",
+            fontFamily: "'general-sans', sans-serif",
             fontSize: "0.8rem",
             color: "#9A9DAA",
           }}
@@ -107,7 +107,7 @@ export function PhaseInput({ type, onSubmit }: PhaseInputProps) {
       >
         <label
           style={{
-            fontFamily: "'Space Grotesk', sans-serif",
+            fontFamily: "'general-sans', sans-serif",
             fontSize: "0.7rem",
             color: "#9A9DAA",
             letterSpacing: "0.15em",
@@ -129,7 +129,7 @@ export function PhaseInput({ type, onSubmit }: PhaseInputProps) {
           rows={3}
           className="w-full outline-none resize-none rounded-lg p-4"
           style={{
-            fontFamily: "'Space Grotesk', sans-serif",
+            fontFamily: "'general-sans', sans-serif",
             fontSize: "0.9rem",
             color: "#313642",
             backgroundColor: "#EAEBF0",
@@ -150,7 +150,7 @@ export function PhaseInput({ type, onSubmit }: PhaseInputProps) {
         style={{
           backgroundColor: canSubmit ? "#313642" : "#D0D1D6",
           color: "#F2F3F6",
-          fontFamily: "'Space Grotesk', sans-serif",
+          fontFamily: "'general-sans', sans-serif",
           fontSize: "0.85rem",
           letterSpacing: "0.15em",
           border: "none",

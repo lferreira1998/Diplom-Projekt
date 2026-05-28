@@ -174,7 +174,7 @@ export function WritingZone({
         className="w-full outline-none cursor-text min-h-[200px] relative"
         style={{
           color: "#313642",
-          fontFamily: "'IBM Plex Sans', sans-serif",
+          fontFamily: "'general-sans', sans-serif",
           fontSize: "clamp(1.25rem, 3vw, 1.75rem)",
           lineHeight: 1.9,
           caretColor: "transparent",

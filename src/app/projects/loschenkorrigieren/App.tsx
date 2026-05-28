@@ -253,7 +253,7 @@ export default function App() {
       <div className="w-full max-w-2xl px-8 pt-16 pb-8">
         <p
           className="text-[#aaa] tracking-wide"
-          style={{ fontSize: "13px", fontFamily: "'Georgia', serif" }}
+          style={{ fontSize: "13px", fontFamily: "'freight-text-pro', serif" }}
         >
           Schreib etwas & ändere dann deine Meinung.
         </p>
@@ -274,7 +274,7 @@ export default function App() {
             fontSize: "22px",
             lineHeight: "1.9",
             color: "#222",
-            fontFamily: "'Georgia', 'Times New Roman', serif",
+            fontFamily: "'freight-text-pro', serif",
           }}
         >
           {positions.length === 0 ? (

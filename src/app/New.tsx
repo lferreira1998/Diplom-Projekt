@@ -2363,7 +2363,7 @@ export default function New() {
         )}
       </AnimatePresence>
 
-      {/* ── Timer circle (bottom-right) ──────────────────────────────────── */}
+      {/* ── Timer circle (bottom-left) ───────────────────────────────────── */}
       <AnimatePresence>
         {visible && timerEnabled && timerRunning && (
           <motion.div
@@ -2373,13 +2373,13 @@ export default function New() {
             exit={{ opacity: 0, scale: 0.88, transition: { duration: 0.15 } }}
             transition={SPRING}
             style={{
-              position: "fixed", bottom: "24px", right: "24px",
-              width: "100px", height: "100px",
+              position: "fixed", bottom: "24px", left: "24px",
+              width: "84px", height: "84px",
               borderRadius: "100px",
               border: `1px dashed ${dark ? DARK_BORDER : BORDER_COL}`,
               background: dark ? darkColors.darkCardBg : surfaceLight,
               display: "flex", alignItems: "center", justifyContent: "center",
-              fontFamily: FONT_SANS, fontSize: "18px",
+              fontFamily: FONT_SANS, fontSize: "17px",
               color: timeLeft <= 10 ? "#e05252" : (dark ? DARK_TEXT : LIGHT_TEXT),
               letterSpacing: "0.04em",
               transition: "color 0.3s",
@@ -2392,9 +2392,9 @@ export default function New() {
         )}
       </AnimatePresence>
 
-      {/* ── Export Text circle (bottom-right) ────────────────────────────── */}
+      {/* ── Export Text button (bottom-right, rectangle) ─────────────────── */}
       <AnimatePresence>
-        {visible && positions.length > 0 && !timerRunning && (
+        {visible && positions.length > 0 && (
           <motion.div
             key="export-circle"
             initial={{ opacity: 0, scale: 0.88 }}
@@ -2407,15 +2407,15 @@ export default function New() {
             <button
               onClick={() => setExportOpen(o => !o)}
               style={{
-                width: "100px", height: "100px",
-                borderRadius: "100px",
+                height: "44px", padding: "0 24px",
+                borderRadius: "8px",
                 border: `1px dashed ${dark ? DARK_BORDER : BORDER_COL}`,
                 background: dark ? darkColors.darkCardBg : surfaceLight,
                 display: "flex", alignItems: "center", justifyContent: "center",
                 fontFamily: FONT_SANS, fontSize: "15px",
                 color: dark ? DARK_TEXT : LIGHT_TEXT,
                 cursor: "pointer", outline: "none",
-                transition: "background 0.15s",
+                whiteSpace: "nowrap",
               }}
             >
               {t.exportText}

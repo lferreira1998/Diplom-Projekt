@@ -1714,6 +1714,52 @@ export default function New() {
                     {t.identitySubtitle}
                   </span>
 
+                  {/* Preview recording — image-upload zone style */}
+                  <div
+                    onClick={() => { setVideoPreviewError(false); setShowRecordOverlay(true); }}
+                    style={{
+                      position: "relative", cursor: "pointer",
+                      border: `1px dashed ${recordState === "error" ? "#e05252" : innerBorder}`,
+                      borderRadius: "8px", overflow: "hidden",
+                      aspectRatio: "16/9", background: settingsCardBg,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                    }}
+                  >
+                    {previewVideoUrl && !videoPreviewError ? (
+                      <>
+                        <video
+                          src={previewVideoUrl}
+                          autoPlay loop muted playsInline
+                          onError={() => setVideoPreviewError(true)}
+                          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                        />
+                        <div style={{
+                          position: "absolute", inset: 0,
+                          background: "rgba(0,0,0,0.38)",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                        }}>
+                          <span style={{ fontFamily: FONT_SANS, fontSize: "13px", color: "#fff", letterSpacing: "0.02em" }}>
+                            {DE ? "Neu aufnehmen" : "Re-record"}
+                          </span>
+                        </div>
+                      </>
+                    ) : (
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", padding: "16px", textAlign: "center" }}>
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={recordState === "error" ? "#e05252" : (dark ? DARK_MUTED : "#a0a0a0")} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.9L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
+                        </svg>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "13px", color: recordState === "error" ? "#e05252" : (dark ? DARK_MUTED : "#9a9daa") }}>
+                          {recordState === "error"
+                            ? (DE ? "Fehlgeschlagen — erneut versuchen" : "Failed — try again")
+                            : (DE ? "Vorschau aufnehmen" : "Add preview")}
+                        </span>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "11px", color: dark ? "rgba(240,232,220,0.3)" : "rgba(150,150,150,0.7)", lineHeight: 1.4 }}>
+                          {DE ? "10-Sek.-Clip" : "10-sec clip"}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
                   {/* Name */}
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                     <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.nameHeading}</span>
@@ -1794,51 +1840,6 @@ export default function New() {
                   </div>
                 </div>
                 <div style={{ padding: "16px 24px", flexShrink: 0, display: "flex", flexDirection: "column", gap: "8px" }}>
-                  {/* Preview recording — image-upload zone style */}
-                  <div
-                    onClick={() => { setVideoPreviewError(false); setShowRecordOverlay(true); }}
-                    style={{
-                      position: "relative", cursor: "pointer",
-                      border: `1px dashed ${recordState === "error" ? "#e05252" : innerBorder}`,
-                      borderRadius: "8px", overflow: "hidden",
-                      aspectRatio: "16/9", background: settingsCardBg,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                    }}
-                  >
-                    {previewVideoUrl && !videoPreviewError ? (
-                      <>
-                        <video
-                          src={previewVideoUrl}
-                          autoPlay loop muted playsInline
-                          onError={() => setVideoPreviewError(true)}
-                          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                        />
-                        <div style={{
-                          position: "absolute", inset: 0,
-                          background: "rgba(0,0,0,0.38)",
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                        }}>
-                          <span style={{ fontFamily: FONT_SANS, fontSize: "13px", color: "#fff", letterSpacing: "0.02em" }}>
-                            {DE ? "Neu aufnehmen" : "Re-record"}
-                          </span>
-                        </div>
-                      </>
-                    ) : (
-                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", padding: "16px", textAlign: "center" }}>
-                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={recordState === "error" ? "#e05252" : (dark ? DARK_MUTED : "#a0a0a0")} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.9L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
-                        </svg>
-                        <span style={{ fontFamily: FONT_SANS, fontSize: "13px", color: recordState === "error" ? "#e05252" : (dark ? DARK_MUTED : "#9a9daa") }}>
-                          {recordState === "error"
-                            ? (DE ? "Fehlgeschlagen — erneut versuchen" : "Failed — try again")
-                            : (DE ? "Vorschau aufnehmen" : "Add preview")}
-                        </span>
-                        <span style={{ fontFamily: FONT_SANS, fontSize: "11px", color: dark ? "rgba(240,232,220,0.3)" : "rgba(150,150,150,0.7)", lineHeight: 1.4 }}>
-                          {DE ? "10-Sek.-Clip" : "10-sec clip"}
-                        </span>
-                      </div>
-                    )}
-                  </div>
                   {saveError && (
                     <span style={{ fontFamily: FONT_SANS, fontSize: "12px", color: "#e05252", textAlign: "center" }}>{saveError}</span>
                   )}

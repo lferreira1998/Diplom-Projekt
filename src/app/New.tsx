@@ -1194,6 +1194,21 @@ export default function New() {
     setTimeout(() => writingFocusRef.current?.(), 50);
   }, [activeCategory, positionMode]);
 
+  // Re-focus writing area after any rule-panel interaction (button, toggle,
+  // slider release), but NOT when the user is editing a text field.
+  const handlePanelInteraction = useCallback((e: React.PointerEvent) => {
+    const tgt = e.target as HTMLElement | null;
+    if (tgt) {
+      const tag = tgt.tagName;
+      if (tag === "TEXTAREA" || tgt.isContentEditable) return;
+      if (tag === "INPUT") {
+        const it = (tgt as HTMLInputElement).type;
+        if (it !== "range" && it !== "checkbox" && it !== "radio" && it !== "button" && it !== "submit") return;
+      }
+    }
+    setTimeout(() => writingFocusRef.current?.(), 0);
+  }, []);
+
   const wzVisibility = visibility === "invisible" ? "hidden" : visibility as "visible"|"hidden"|"sentence"|"word"|"char";
   const wzDeleteMode = deleteMode === "all" ? "deletable" : deleteMode === "none" ? "no-delete" : deleteMode as "sentence"|"word";
   const wzCorrection = correctionVisible ? "tippex" as const : "hidden" as const;
@@ -1551,6 +1566,7 @@ export default function New() {
         {visible && rulesOpen && (
           <motion.div
             key="sidebar"
+            onPointerUp={handlePanelInteraction}
             initial={{ x: -153, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: -153, opacity: 0, transition: { duration: 0.22, ease: "easeIn" } }}
@@ -1648,6 +1664,7 @@ export default function New() {
         {visible && rulesOpen && (
           <motion.div
             key="detail"
+            onPointerUp={handlePanelInteraction}
             initial={{ x: -314, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: -314, opacity: 0, transition: { duration: 0.22, ease: "easeIn" } }}

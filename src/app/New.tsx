@@ -2058,7 +2058,7 @@ export default function New() {
                         <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: descColor }}>{correctionVisible ? t.on : t.off}</span>
                       </div>
                       <p style={{ fontFamily: FONT_SANS, fontSize: "13px", lineHeight: "1.6", color: descColor, margin: 0 }}>
-                        <span style={{ background: dark ? "rgba(240,232,220,0.16)" : "#fdfaf4", padding: "1px 3px", borderRadius: "2px" }}>{t.correctionDescHighlight}</span>
+                        <span style={{ background: dark ? "rgba(240,232,220,0.16)" : "#ffffff", padding: "1px 4px", borderRadius: "2px", boxShadow: dark ? "0 1px 3px rgba(0,0,0,0.35)" : "0 1px 4px rgba(180,170,155,0.45), 0 0.5px 1px rgba(180,170,155,0.3)" }}>{t.correctionDescHighlight}</span>
                         {t.correctionDescRest}
                       </p>
                     </div>

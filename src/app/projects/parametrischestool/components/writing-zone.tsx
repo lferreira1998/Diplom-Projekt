@@ -247,8 +247,8 @@ function renderLayers(
             backgroundColor: tippexWhite,
             borderRadius:    "1px",
             boxShadow:       n === 1
-              ? "0 0.5px 1px rgba(200,190,170,0.25)"
-              : "0 0.5px 2px rgba(200,190,170,0.35)",
+              ? "0 1px 3px rgba(160,148,130,0.45), 0 0.5px 1px rgba(160,148,130,0.3)"
+              : "0 1px 5px rgba(140,128,110,0.55), 0 0.5px 2px rgba(140,128,110,0.4)",
             zIndex: idx,
           }}
         />
@@ -1657,7 +1657,9 @@ export function WritingZone({
       }
 
       if (cursorDomRef.current) {
-        cursorDomRef.current.style.transform = `translateX(${frac * charW}px)`;
+        // Full offset: integer pending chars + fractional current char
+        const totalOffset = (pendingSpacesRef.current + frac) * charW;
+        cursorDomRef.current.style.transform = `translateX(${totalOffset}px)`;
       }
 
       animId = requestAnimationFrame(loop);
@@ -1669,6 +1671,33 @@ export function WritingZone({
       if (cursorDomRef.current) cursorDomRef.current.style.transform = "";
     };
   }, [cursorLaeuftWeiter]); // onUpdate/lkpt excluded intentionally – via ref
+
+  // Flush pending spaces every ~1s so the cursor doesn't drift off-screen
+  useEffect(() => {
+    if (!cursorLaeuftWeiter) return;
+    const id = setInterval(() => {
+      const pending = pendingSpacesRef.current;
+      if (pending === 0) return;
+      pendingSpacesRef.current  = 0;
+      visualPosRef.current      = 0;
+      spacesInsertedRef.current = 0;
+      lastFrameRef.current      = 0;
+      let basePos = posRef.current;
+      let baseCur = curRef.current;
+      for (let pi = 0; pi < pending; pi++) {
+        if (baseCur < basePos.length) {
+          const upd = basePos.map((p: { layers: { type: string; char?: string }[] }) => ({ layers: [...p.layers] }));
+          upd[baseCur] = { layers: [...upd[baseCur].layers, { type: "char", char: " " }] };
+          basePos = upd;
+        } else {
+          basePos = [...basePos, { layers: [{ type: "char", char: " " }] }];
+        }
+        baseCur++;
+      }
+      onUpdateRef.current(basePos, baseCur);
+    }, 900);
+    return () => clearInterval(id);
+  }, [cursorLaeuftWeiter]);
 
   // ── Backspace ─────────────────────────────────────────────────────────────
 

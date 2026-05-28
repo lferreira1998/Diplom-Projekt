@@ -95,7 +95,7 @@ export function MindMap() {
               letterSpacing: "-0.04em", textAlign: "center", width: "100%",
               whiteSpace: "nowrap",
             }}>
-              Shaping Thought: Research Map
+              Shaping Thoughts: Research Map
             </span>
           </div>
         </div>

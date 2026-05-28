@@ -506,7 +506,7 @@ export default function Overview() {
               margin: 0,
               whiteSpace: "pre-wrap",
             }}>
-              {"Schreibtools formen durch ihre Regeln, wie und was wir Denken. \n\nShaping Thought erforscht, was passiert, wenn wir diese Regeln verändern."}
+              {"Schreibtools formen durch ihre Regeln, wie und was wir denken. \n\nShaping Thoughts erforscht, was passiert, wenn wir diese Regeln verändern."}
             </p>
           </div>
 

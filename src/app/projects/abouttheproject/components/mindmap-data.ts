@@ -139,7 +139,7 @@ export const nodes: Node[] = [
   // ── MAIN 06 ───────────────────────────────────────────────────────────────
   {
     id: "projekt",
-    label: "Shaping Thought",
+    label: "Shaping Thoughts",
     nodeType: "main",
     x: 1340, y: 460,
     title: "Das Projekt: drei Teile",
@@ -370,7 +370,7 @@ export const nodes: Node[] = [
     body: [
       "Digitale Schreibinterfaces sind nicht neutral. Sie formen was gedacht und geschrieben werden kann, meist unsichtbar.",
       "Standard-Interfaces erlauben nur eine Art zu schreiben. Dabei gibt es eine Bandbreite von Möglichkeiten.",
-      "Shaping Thought macht diese Regeln sichtbar, erfahrbar und veränderbar. Als Einladung, nicht als Kritik.",
+      "Shaping Thoughts macht diese Regeln sichtbar, erfahrbar und veränderbar. Als Einladung, nicht als Kritik.",
       "Diese Erkenntnis lässt sich nicht lesen. Sie muss erlebt werden.",
     ],
   },

@@ -146,6 +146,7 @@ const TRANSLATIONS = {
     posRandom: "Text erscheint zufällig",
     posRunning: "Fortlaufende Linie",
     posCustom: "Zeichne deine eigene Linie",
+    posZigzag: "Zig Zag",
     posRandomSentences: "Ganze Sätze",
     posRandomWords: "Einzelne Wörter",
     // Look & Feel
@@ -262,6 +263,7 @@ const TRANSLATIONS = {
     posRandom: "Text appears random",
     posRunning: "Running Line",
     posCustom: "Draw your own path",
+    posZigzag: "Zig Zag",
     posRandomSentences: "Full sentences",
     posRandomWords: "Individual words",
     // Look & Feel
@@ -827,7 +829,7 @@ export default function New() {
   const [verblassSchnelligkeit, setVerblassSchnelligkeit] = useState(2.0);
 
   // Position params
-  const [positionMode, setPositionMode] = useState<"standard" | "spiral" | "random" | "running" | "custom">("standard");
+  const [positionMode, setPositionMode] = useState<"standard" | "spiral" | "random" | "running" | "custom" | "zigzag">("standard");
   const [drawnPath, setDrawnPath]       = useState<{ x: number; y: number }[][]>([]);
 
   // Compatibility toast
@@ -840,7 +842,7 @@ export default function New() {
   }, []);
 
   // Non-standard positions block: drift, cursor-running, correction-visible
-  const NON_STANDARD_POSITIONS = ["spiral", "random", "running", "custom"] as const;
+  const NON_STANDARD_POSITIONS = ["spiral", "random", "running", "custom", "zigzag"] as const;
   type NonStdPos = typeof NON_STANDARD_POSITIONS[number];
   const isNonStandard = NON_STANDARD_POSITIONS.includes(positionMode as NonStdPos);
 
@@ -1477,6 +1479,7 @@ export default function New() {
             spiralModus={positionMode === "spiral"}
             runningLineModus={positionMode === "running"}
             textAppearsRandom={positionMode === "random"}
+            boustrophedonModus={positionMode === "zigzag"}
             customPathModus={positionMode === "custom"}
             customPath={drawnPath}
             onCustomPathChange={setDrawnPath}
@@ -2272,6 +2275,7 @@ export default function New() {
                       { value: "spiral" as const, label: t.posSpiral, disabled: false },
                       { value: "random" as const, label: t.posRandom, disabled: false },
                       { value: "running" as const, label: t.posRunning, disabled: false },
+                      { value: "zigzag" as const, label: t.posZigzag, disabled: false },
                       { value: "custom" as const, label: t.posCustom, disabled: false },
                     ]).map((opt) => (
                       <div key={opt.value}>

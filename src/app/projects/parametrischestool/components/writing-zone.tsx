@@ -39,6 +39,7 @@ interface WritingZoneProps {
   spiralModus?: boolean;
   runningLineModus?: boolean;
   textAppearsRandom?: boolean;
+  boustrophedonModus?: boolean;
   randomMode?: "words" | "sentences";
   customPathModus?: boolean;
   customPath?: { x: number; y: number }[][];
@@ -1322,6 +1323,144 @@ function CustomPathSvg({
   );
 }
 
+// ── BoustrophedonZone ─────────────────────────────────────────────────────────
+// Renders text in alternating left-to-right / right-to-left lines.
+// Even lines (0, 2, 4…): normal direction.
+// Odd lines  (1, 3, 5…): mirrored horizontally with scaleX(-1).
+
+interface BoustrophedonZoneProps {
+  positions: Position[];
+  cursor: number;
+  textColor: string;
+  fontFamily: string;
+  fontSize: number;
+  coverBgColor: string;
+  showTippex: boolean;
+  cursorDomRef: React.RefObject<HTMLSpanElement>;
+  writingPrompt?: string;
+}
+
+function BoustrophedonZone({
+  positions,
+  cursor,
+  textColor,
+  fontFamily,
+  fontSize,
+  coverBgColor,
+  showTippex,
+  cursorDomRef,
+  writingPrompt,
+}: BoustrophedonZoneProps) {
+  const containerRef  = useRef<HTMLDivElement>(null);
+  const measCtxRef    = useRef<CanvasRenderingContext2D | null>(null);
+  const [lineW, setLineW] = useState(700);
+
+  useEffect(() => {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    if (ctx) measCtxRef.current = ctx;
+  }, []);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([e]) => setLineW(e.contentRect.width || 700));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  // Build lines: arrays of position indices; -1 = cursor slot
+  const lines = useMemo(() => {
+    const ctx = measCtxRef.current;
+    if (!ctx || lineW <= 0) return [[-1]] as number[][];
+    ctx.font = `${fontSize}px ${fontFamily}`;
+
+    const result: number[][] = [];
+    let currentLine: number[] = [];
+    let lineUsed = 0;
+
+    const pushLine = () => { result.push(currentLine); currentLine = []; lineUsed = 0; };
+
+    for (let i = 0; i <= positions.length; i++) {
+      if (i === cursor) currentLine.push(-1); // cursor slot — 0 width
+      if (i >= positions.length) break;
+
+      const pos = positions[i];
+      const top = getTopChar(pos);
+      if (!top) continue;
+
+      if (top === "\n") { pushLine(); continue; }
+
+      const visChar = getVisibleChar(pos) ?? top;
+      const w = ctx.measureText(visChar === " " ? " " : visChar).width;
+
+      if (lineUsed + w > lineW && currentLine.filter(x => x >= 0).length > 0) pushLine();
+      currentLine.push(i);
+      lineUsed += w;
+    }
+    if (currentLine.length > 0) result.push(currentLine);
+    return result.length > 0 ? result : [[-1]];
+  }, [positions, cursor, fontSize, fontFamily, lineW]);
+
+  const [r, g, b] = parseRgb(textColor);
+
+  return (
+    <div
+      ref={containerRef}
+      style={{ width: "100%", fontFamily, fontSize: `${fontSize}px`, color: textColor, lineHeight: 1.6, position: "relative" }}
+    >
+      {positions.length === 0 && (
+        <span style={{ position: "absolute", top: 0, left: 0, color: "#AAAAAA", pointerEvents: "none", userSelect: "none" }}>
+          {writingPrompt || "Fang einfach an zu schreiben…"}
+        </span>
+      )}
+      {lines.map((line, lineIdx) => {
+        const isFlipped = lineIdx % 2 === 1;
+        return (
+          <div
+            key={lineIdx}
+            style={{
+              display: "block",
+              transform: isFlipped ? "scaleX(-1)" : undefined,
+              transformOrigin: "left center",
+              whiteSpace: "nowrap",
+              minHeight: `${fontSize * 1.6}px`,
+              lineHeight: 1.6,
+            }}
+          >
+            {line.map((posIdx, j) => {
+              if (posIdx === -1) {
+                return (
+                  <span
+                    key={`csr-${j}`}
+                    ref={cursorDomRef}
+                    style={{
+                      display: "inline-block",
+                      width: "2px",
+                      backgroundColor: textColor,
+                      height: "1.15em",
+                      verticalAlign: "text-bottom",
+                      marginLeft: "-1px",
+                      marginRight: "-1px",
+                      animation: "cursorBlink 1s step-end infinite",
+                    }}
+                  />
+                );
+              }
+              const pos = positions[posIdx];
+              return (
+                <span key={posIdx} style={{ display: "inline", color: `rgb(${r},${g},${b})` }}>
+                  {renderLayers(pos, showTippex, coverBgColor)}
+                </span>
+              );
+            })}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // ── WritingZone ───────────────────────────────────────────────────────────────
 
 export function WritingZone({
@@ -1350,6 +1489,7 @@ export function WritingZone({
   spiralModus        = false,
   runningLineModus   = false,
   textAppearsRandom  = false,
+  boustrophedonModus = false,
   randomMode         = "words" as const,
   customPathModus    = false,
   customPath         = [] as { x: number; y: number }[][],
@@ -1400,10 +1540,10 @@ export function WritingZone({
 
   // Auto-focus when switching to spiral, random, or running line mode
   useEffect(() => {
-    if (spiralModus || textAppearsRandom || runningLineModus) {
+    if (spiralModus || textAppearsRandom || runningLineModus || boustrophedonModus) {
       setTimeout(() => containerRef.current?.focus(), 0);
     }
-  }, [spiralModus, textAppearsRandom, runningLineModus]);
+  }, [spiralModus, textAppearsRandom, runningLineModus, boustrophedonModus]);
 
   // Sync arrays with positions length
   useEffect(() => {
@@ -2084,10 +2224,40 @@ export function WritingZone({
     return els;
   };
 
-  const nodes = spiralModus ? [] : buildNodes();
+  const nodes = (spiralModus || boustrophedonModus) ? [] : buildNodes();
 
   // ── JSX ──────────────────────────────────────────────────────────────────
 
+  if (boustrophedonModus) {
+    return (
+      <div
+        className="flex-1 relative transition-all duration-300"
+        style={{ paddingRight: panelOpen ? "343px" : "0px" }}
+      >
+        <div
+          ref={containerRef}
+          tabIndex={0}
+          onKeyDown={handleKeyDown}
+          onBlur={() => { selectAllRef.current = false; setSelectAll(false); }}
+          onClick={() => containerRef.current?.focus()}
+          className="absolute inset-0 outline-none cursor-text"
+          style={{ padding: "40px 48px", boxSizing: "border-box", caretColor: "transparent", overflowY: "auto" }}
+        >
+          <BoustrophedonZone
+            positions={positions}
+            cursor={cursor}
+            textColor={textColor}
+            fontFamily={fontFamily}
+            fontSize={fontSize}
+            coverBgColor={coverBgColor}
+            showTippex={showTippex}
+            cursorDomRef={cursorDomRef}
+            writingPrompt={writingPrompt}
+          />
+        </div>
+      </div>
+    );
+  }
 
   if (textAppearsRandom) {
     return (

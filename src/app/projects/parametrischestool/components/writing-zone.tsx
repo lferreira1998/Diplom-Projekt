@@ -356,9 +356,10 @@ interface RandomTextZoneProps {
   fontFamily?: string;
   positions: Position[];
   cursor: number;
+  fontSize?: number;
 }
 
-function RandomTextZone({ textColor, fontFamily = "'IBM Plex Mono', 'Courier New', monospace", positions, cursor }: RandomTextZoneProps) {
+function RandomTextZone({ textColor, fontFamily = "'IBM Plex Mono', 'Courier New', monospace", positions, cursor, fontSize = 22 }: RandomTextZoneProps) {
   const wrapRef    = useRef<HTMLDivElement>(null);
   const rafRef     = useRef(0);
   const elMapRef   = useRef<Map<number, HTMLDivElement>>(new Map());
@@ -511,7 +512,7 @@ function RandomTextZone({ textColor, fontFamily = "'IBM Plex Mono', 'Courier New
               position: "absolute", left: "50%", top: "50%",
               color: `rgb(${r},${g},${b})`,
               fontFamily,
-              fontSize: "clamp(0.9rem, 2vw, 1.15rem)",
+              fontSize: `${fontSize}px`,
               fontWeight: 400, letterSpacing: "0.02em",
               whiteSpace: "nowrap", userSelect: "none", pointerEvents: "none",
               willChange: "transform, opacity", transformStyle: "preserve-3d",
@@ -534,7 +535,7 @@ function RandomTextZone({ textColor, fontFamily = "'IBM Plex Mono', 'Courier New
           position: "absolute", left: "50%", top: "50%",
           transform: "translate(-50%, -50%)", pointerEvents: "none",
           fontFamily,
-          fontSize: "clamp(0.9rem, 2vw, 1.15rem)",
+          fontSize: `${fontSize}px`,
           color: `rgb(${r},${g},${b})`, opacity: 0.25,
           letterSpacing: "0.1em", whiteSpace: "nowrap",
           fontStyle: "italic",
@@ -2108,6 +2109,7 @@ export function WritingZone({
             fontFamily={fontFamily}
             positions={positions}
             cursor={cursor}
+            fontSize={fontSize}
           />
         </div>
       </div>

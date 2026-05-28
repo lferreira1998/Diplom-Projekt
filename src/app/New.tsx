@@ -154,7 +154,7 @@ const TRANSLATIONS = {
     lfBgMotion: "Bewegung des Hintergrunds",
     lfBgColor: "Hintergrundfarbe anpassen",
     lfBgColorReset: "Farbe zurücksetzen",
-    lfNoColor: "Keine Farbe",
+    lfNoColor: "Originalfarbe",
     // Timer overlay
     timesUp: "Zeit abgelaufen.",
     timesUpSub: "Dein Text ist noch da — unsichtbar.",
@@ -270,7 +270,7 @@ const TRANSLATIONS = {
     lfBgMotion: "Background Motion",
     lfBgColor: "Adjust background color",
     lfBgColorReset: "Reset color",
-    lfNoColor: "No color",
+    lfNoColor: "Original Color",
     // Timer overlay
     timesUp: "Time's up.",
     timesUpSub: "Your text is still there — invisible.",

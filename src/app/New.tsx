@@ -830,6 +830,79 @@ export default function New() {
   const [positionMode, setPositionMode] = useState<"standard" | "spiral" | "random" | "running" | "custom">("standard");
   const [drawnPath, setDrawnPath]       = useState<{ x: number; y: number }[][]>([]);
 
+  // Compatibility toast
+  const [compatMsg, setCompatMsg] = useState<string | null>(null);
+  const compatTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showCompatMsg = useCallback((msg: string) => {
+    setCompatMsg(msg);
+    if (compatTimerRef.current) clearTimeout(compatTimerRef.current);
+    compatTimerRef.current = setTimeout(() => setCompatMsg(null), 3000);
+  }, []);
+
+  // Non-standard positions block: drift, cursor-running, correction-visible
+  const NON_STANDARD_POSITIONS = ["spiral", "random", "running", "custom"] as const;
+  type NonStdPos = typeof NON_STANDARD_POSITIONS[number];
+  const isNonStandard = NON_STANDARD_POSITIONS.includes(positionMode as NonStdPos);
+
+  // Smart position setter — auto-clears incompatible rules and shows toast
+  const applyPositionMode = useCallback((
+    mode: "standard" | "spiral" | "random" | "running" | "custom",
+    opts: { setTextFliegtEnabled: (v: boolean) => void; setCursorRunning: (v: boolean) => void; setCorrectionVisible: (v: boolean) => void; textFliegtEnabled: boolean; cursorRunning: boolean; correctionVisible: boolean; de: boolean; posNames: Record<string, string> }
+  ) => {
+    setPositionMode(mode);
+    if (mode === "standard") return;
+    const turned: string[] = [];
+    if (opts.textFliegtEnabled) { opts.setTextFliegtEnabled(false); turned.push(opts.de ? "Text fliegt davon" : "Text drift"); }
+    if (opts.cursorRunning && mode !== "running") { opts.setCursorRunning(false); turned.push(opts.de ? "Cursor läuft weiter" : "Cursor keeps running"); }
+    if (opts.correctionVisible) { opts.setCorrectionVisible(false); turned.push(opts.de ? "Korrigieren sichtbar" : "Correction visible"); }
+    if (turned.length > 0) {
+      const posLabel = opts.posNames[mode] ?? mode;
+      showCompatMsg(opts.de
+        ? `${posLabel} aktiv. Ausgeschaltet: ${turned.join(", ")}.`
+        : `${posLabel} enabled. Turned off: ${turned.join(", ")}.`
+      );
+    }
+  }, [showCompatMsg]);
+
+  // Smart drift setter — resets position to standard if incompatible
+  const applyDrift = useCallback((enabled: boolean, de: boolean, posLabel: string) => {
+    setTextFliegtEnabled(enabled);
+    if (enabled && isNonStandard) {
+      setPositionMode("standard");
+      showCompatMsg(de
+        ? `Text fliegt davon aktiv. Position zurück auf Standard.`
+        : `Text drift enabled. Position reset to Standard.`
+      );
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isNonStandard, showCompatMsg]);
+
+  // Smart cursorRunning setter
+  const applyCursorRunning = useCallback((enabled: boolean, de: boolean) => {
+    setCursorRunning(enabled);
+    if (enabled && isNonStandard && positionMode !== "running") {
+      setPositionMode("standard");
+      showCompatMsg(de
+        ? `Cursor läuft weiter aktiv. Position zurück auf Standard.`
+        : `Cursor keeps running enabled. Position reset to Standard.`
+      );
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isNonStandard, positionMode, showCompatMsg]);
+
+  // Smart correctionVisible setter
+  const applyCorrectionVisible = useCallback((enabled: boolean, de: boolean) => {
+    setCorrectionVisible(enabled);
+    if (enabled && isNonStandard) {
+      setPositionMode("standard");
+      showCompatMsg(de
+        ? `Korrigieren sichtbar aktiv. Position zurück auf Standard.`
+        : `Correction visible enabled. Position reset to Standard.`
+      );
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isNonStandard, showCompatMsg]);
+
   // Look & Feel params
   const [grainLevel, setGrainLevel]       = useState(0);
   const [textSizeLevel, setTextSizeLevel] = useState(46);
@@ -1954,19 +2027,19 @@ export default function New() {
                     </div>
 
                     {/* Cursor läuft weiter */}
-                    <div style={{ opacity: (positionMode === "spiral" || positionMode === "running") ? 0.4 : 1, transition: "opacity 0.2s", pointerEvents: (positionMode === "spiral" || positionMode === "running") ? "none" : "auto" }}>
                     <div
-                      style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px", display: "flex", flexDirection: "column", gap: "10px", cursor: "pointer" }}
-                      onClick={() => setCursorRunning(v => !v)}
+                      style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px", display: "flex", flexDirection: "column", gap: "10px", cursor: "pointer", opacity: (isNonStandard && positionMode !== "running") ? 0.55 : 1, transition: "opacity 0.2s" }}
+                      onClick={() => applyCursorRunning(!cursorRunning, DE)}
                     >
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
                         <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.cursorRunning}</span>
                         <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: descColor }}>{cursorRunning ? t.on : t.off}</span>
                       </div>
                       <p style={{ fontFamily: FONT_SANS, fontSize: "13px", color: descColor, lineHeight: "1.45", margin: 0 }}>
-                        {(positionMode === "spiral" || positionMode === "running") ? (DE ? "Nicht verfügbar in diesem Modus" : "Not available in this mode") : t.cursorRunningDesc}
+                        {(isNonStandard && positionMode !== "running")
+                          ? (DE ? "Aktivieren setzt Position auf Standard zurück" : "Enabling resets position to Standard")
+                          : t.cursorRunningDesc}
                       </p>
-                    </div>
                     </div>
 
                   </div>
@@ -2068,16 +2141,18 @@ export default function New() {
 
                     {/* Korrigieren sichtbar card */}
                     <div
-                      onClick={() => setCorrectionVisible(v => !v)}
-                      style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px 24px", display: "flex", flexDirection: "column", gap: "16px", cursor: "pointer" }}
+                      onClick={() => applyCorrectionVisible(!correctionVisible, DE)}
+                      style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px 24px", display: "flex", flexDirection: "column", gap: "16px", cursor: "pointer", opacity: isNonStandard ? 0.55 : 1, transition: "opacity 0.2s" }}
                     >
                       <div style={{ height: "36px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                         <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.correctionVisible}</span>
                         <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: descColor }}>{correctionVisible ? t.on : t.off}</span>
                       </div>
                       <p style={{ fontFamily: FONT_SANS, fontSize: "13px", lineHeight: "1.6", color: descColor, margin: 0 }}>
-                        <span style={{ background: dark ? "rgba(240,232,220,0.16)" : "#ffffff", padding: "1px 4px", borderRadius: "2px", boxShadow: dark ? "0 1px 3px rgba(0,0,0,0.35)" : "0 1px 4px rgba(180,170,155,0.45), 0 0.5px 1px rgba(180,170,155,0.3)" }}>{t.correctionDescHighlight}</span>
-                        {t.correctionDescRest}
+                        {isNonStandard
+                          ? (DE ? "Aktivieren setzt Position auf Standard zurück" : "Enabling resets position to Standard")
+                          : <><span style={{ background: dark ? "rgba(240,232,220,0.16)" : "#ffffff", padding: "1px 4px", borderRadius: "2px", boxShadow: dark ? "0 1px 3px rgba(0,0,0,0.35)" : "0 1px 4px rgba(180,170,155,0.45), 0 0.5px 1px rgba(180,170,155,0.3)" }}>{t.correctionDescHighlight}</span>{t.correctionDescRest}</>
+                        }
                       </p>
                     </div>
 
@@ -2090,11 +2165,11 @@ export default function New() {
 
                     {/* Text fliegt davon card */}
                     <div style={{ position: "relative" }}>
-                      <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px 24px", display: "flex", flexDirection: "column", gap: "16px", opacity: positionMode !== "standard" ? 0.4 : 1, transition: "opacity 0.2s", pointerEvents: positionMode !== "standard" ? "none" : "auto" }}>
+                      <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px 24px", display: "flex", flexDirection: "column", gap: "16px", opacity: isNonStandard ? 0.55 : 1, transition: "opacity 0.2s" }}>
                         {/* Header row */}
                         <div style={{ height: "36px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                           <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.driftLabel}</span>
-                          <span onClick={() => setTextFliegtEnabled(e => !e)} style={{ fontFamily: FONT_SANS, fontSize: "16px", color: descColor, cursor: "pointer" }}>{textFliegtEnabled ? t.on : t.off}</span>
+                          <span onClick={() => applyDrift(!textFliegtEnabled, DE, t.driftLabel)} style={{ fontFamily: FONT_SANS, fontSize: "16px", color: descColor, cursor: "pointer" }}>{textFliegtEnabled ? t.on : t.off}</span>
                         </div>
                         <AnimatePresence initial={false} mode="wait">
                           {!textFliegtEnabled ? (
@@ -2151,10 +2226,10 @@ export default function New() {
                           )}
                         </AnimatePresence>
                       </div>
-                      {positionMode !== "standard" && (
+                      {isNonStandard && (
                         <div style={{ position: "absolute", bottom: "10px", left: 0, right: 0, textAlign: "center", pointerEvents: "none" }}>
                           <span style={{ fontFamily: FONT_SANS, fontSize: "11px", color: descColor }}>
-                            {DE ? "Nicht verfügbar in diesem Modus" : "Not available in this mode"}
+                            {DE ? "Aktivieren setzt Position auf Standard zurück" : "Enabling resets position to Standard"}
                           </span>
                         </div>
                       )}
@@ -2201,8 +2276,9 @@ export default function New() {
                     ]).map((opt) => (
                       <div key={opt.value}>
                         <div onClick={() => {
-                          setPositionMode(opt.value);
                           if (opt.value === "custom") setDrawnPath([]);
+                          const posNames = { spiral: t.posSpiral, random: t.posRandom, running: t.posRunning, custom: t.posCustom, standard: t.posStandard };
+                          applyPositionMode(opt.value, { setTextFliegtEnabled, setCursorRunning, setCorrectionVisible, textFliegtEnabled, cursorRunning, correctionVisible, de: DE, posNames });
                         }} style={{
                           display: "flex", alignItems: "center", justifyContent: "space-between",
                           border: positionMode === opt.value
@@ -2643,6 +2719,38 @@ export default function New() {
             </div>
           </motion.div>,
           document.body
+        )}
+      </AnimatePresence>
+
+      {/* ── Compatibility toast ──────────────────────────────────────────── */}
+      <AnimatePresence>
+        {compatMsg && (
+          <motion.div
+            key="compat-toast"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
+            transition={{ duration: 0.18 }}
+            style={{
+              position: "fixed", bottom: "28px", left: "50%",
+              transform: "translateX(-50%)",
+              zIndex: 200,
+              background: dark ? "rgba(40,38,34,0.96)" : "rgba(252,246,239,0.97)",
+              border: `1px dashed ${dark ? "rgba(240,232,220,0.25)" : "#a4a4a4"}`,
+              borderRadius: "8px",
+              padding: "10px 18px",
+              fontFamily: FONT_SANS, fontSize: "13px",
+              color: dark ? "rgba(240,232,220,0.85)" : "#555555",
+              boxShadow: "0 2px 12px rgba(0,0,0,0.12)",
+              pointerEvents: "none",
+              whiteSpace: "nowrap",
+              maxWidth: "90vw",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
+            {compatMsg}
+          </motion.div>
         )}
       </AnimatePresence>
 

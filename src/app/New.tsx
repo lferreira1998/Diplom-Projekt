@@ -819,12 +819,12 @@ export default function New() {
   // Stability params
   const [textFliegtEnabled, setTextFliegtEnabled]         = useState(false);
   const [fliegtUnit, setFliegtUnit]                       = useState<"Sätze" | "Wörter" | "Buchstabe">("Sätze");
-  const [fliegtZeitpunkt, setFliegtZeitpunkt]             = useState(2);
+  const [fliegtZeitpunkt, setFliegtZeitpunkt]             = useState(0.5);
   const [fliegtSchnelligkeit, setFliegtSchnelligkeit]     = useState(2.0);
   const [textEditingEnabled, setTextEditingEnabled]        = useState(true);
   const [textVerblassEnabled, setTextVerblassEnabled]     = useState(false);
-  const [verblassZeitpunkt, setVerblassZeitpunkt]         = useState(2);
-  const [verblassSchnelligkeit, setVerblassSchnelligkeit] = useState(3);
+  const [verblassZeitpunkt, setVerblassZeitpunkt]         = useState(0.5);
+  const [verblassSchnelligkeit, setVerblassSchnelligkeit] = useState(2.0);
 
   // Position params
   const [positionMode, setPositionMode] = useState<"standard" | "spiral" | "random" | "running" | "custom">("standard");
@@ -996,11 +996,11 @@ export default function New() {
       setCorrectionVisible(p.correctionVisible === true);
       setTextFliegtEnabled(p.textFliegtEnabled === true);
       setFliegtUnit((p.fliegtUnit as typeof fliegtUnit) ?? "Sätze");
-      setFliegtZeitpunkt(typeof p.fliegtZeitpunkt === "number" ? p.fliegtZeitpunkt : 2);
-      setFliegtSchnelligkeit(typeof p.fliegtSchnelligkeit === "number" ? p.fliegtSchnelligkeit : 3);
+      setFliegtZeitpunkt(typeof p.fliegtZeitpunkt === "number" ? p.fliegtZeitpunkt : 0.5);
+      setFliegtSchnelligkeit(typeof p.fliegtSchnelligkeit === "number" ? p.fliegtSchnelligkeit : 2.0);
       setTextVerblassEnabled(p.textVerblassEnabled === true);
-      setVerblassZeitpunkt(typeof p.verblassZeitpunkt === "number" ? p.verblassZeitpunkt : 2);
-      setVerblassSchnelligkeit(typeof p.verblassSchnelligkeit === "number" ? p.verblassSchnelligkeit : 3);
+      setVerblassZeitpunkt(typeof p.verblassZeitpunkt === "number" ? p.verblassZeitpunkt : 0.5);
+      setVerblassSchnelligkeit(typeof p.verblassSchnelligkeit === "number" ? p.verblassSchnelligkeit : 2.0);
       setPositionMode((p.positionMode as typeof positionMode) ?? "standard");
       setRandomMode((p.randomMode as "sentences" | "words") ?? "words");
       if (p.positionMode === "custom" && Array.isArray(p.drawnPath) && p.drawnPath.length > 0) {
@@ -2162,7 +2162,7 @@ export default function New() {
                             </div>
                             <div style={{ borderTop: `1px dashed ${innerBorder}`, margin: "6px 0" }} />
                             <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.fadeSpeed}</span>
-                            <DoubleSlider value={verblassSchnelligkeit} min={1} max={10} onChange={setVerblassSchnelligkeit} dark={dark} />
+                            <DoubleSlider value={verblassSchnelligkeit} min={0.1} max={10} step={0.1} onChange={setVerblassSchnelligkeit} dark={dark} />
                           </motion.div>
                         )}
                       </AnimatePresence>

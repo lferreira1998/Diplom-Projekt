@@ -1440,7 +1440,7 @@ export default function New() {
             transition={SPRING}
             style={{
               position: "fixed", top: "24px", left: BTN_CLOSED.rules,
-              display: "flex", alignItems: "center",
+              display: "flex", alignItems: "center", gap: "8px",
               zIndex: 25,
             }}
           >
@@ -1498,8 +1498,8 @@ export default function New() {
               {positions.length > 0 && (
                 <motion.button
                   key="float-clear"
-                  initial={{ opacity: 0, marginLeft: 10 }}
-                  animate={{ opacity: 1, marginLeft: rulesOpen ? 30 : 10 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
                   exit={{ opacity: 0, transition: { duration: 0.12 } }}
                   transition={SPRING}
                   style={{
@@ -1522,8 +1522,8 @@ export default function New() {
               {positionMode === "custom" && drawnPath.length > 0 && (
                 <motion.button
                   key="float-redraw"
-                  initial={{ opacity: 0, marginLeft: 6 }}
-                  animate={{ opacity: 1, marginLeft: 6 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
                   exit={{ opacity: 0, transition: { duration: 0.12 } }}
                   transition={SPRING}
                   style={{

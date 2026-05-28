@@ -2363,17 +2363,17 @@ export default function New() {
         )}
       </AnimatePresence>
 
-      {/* ── Timer circle (bottom-left) ───────────────────────────────────── */}
+      {/* ── Timer circle (bottom of writing area, aligned with Rules button x) ── */}
       <AnimatePresence>
         {visible && timerEnabled && timerRunning && (
           <motion.div
             key="timer-circle"
             initial={{ opacity: 0, scale: 0.88 }}
-            animate={{ opacity: 1, scale: 1 }}
+            animate={{ opacity: 1, scale: 1, x: rulesOpen ? BTN_OPEN.rules - BTN_CLOSED.rules : 0 }}
             exit={{ opacity: 0, scale: 0.88, transition: { duration: 0.15 } }}
             transition={SPRING}
             style={{
-              position: "fixed", bottom: "24px", left: "24px",
+              position: "fixed", bottom: "24px", left: BTN_CLOSED.rules,
               width: "84px", height: "84px",
               borderRadius: "100px",
               border: `1px dashed ${dark ? DARK_BORDER : BORDER_COL}`,

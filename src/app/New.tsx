@@ -1397,7 +1397,7 @@ export default function New() {
             randomMode={randomMode === "sentences" ? "sentences" : "words"}
             writingPrompt={prompts[0] || t.writingPrompt}
             fontSize={computedFontSize}
-            fontFamily={FONT_SERIF}
+            fontFamily={cursorRunning ? "'IBM Plex Mono', 'Courier New', monospace" : FONT_SERIF}
             centeredPrompt={false}
             containerWidth="764px"
           />

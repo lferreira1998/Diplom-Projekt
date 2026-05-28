@@ -2298,7 +2298,7 @@ export function WritingZone({
           whiteSpace: "pre",
         }}
       >
-        X
+        {" "}
       </span>
     </>
   );

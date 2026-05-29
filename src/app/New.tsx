@@ -2025,7 +2025,7 @@ export default function New() {
                     <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "20px 24px", display: "flex", flexDirection: "column", gap: "0" }}>
                       <div
                         style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px", cursor: "pointer" }}
-                        onClick={() => setTimerEnabled(v => !v)}
+                        onClick={() => setTimerEnabled(v => { const next = !v; if (!next) setVisualTimer(false); return next; })}
                       >
                         <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.timerLabel}</span>
                         <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{timerEnabled ? t.on : t.off}</span>
@@ -2074,17 +2074,30 @@ export default function New() {
                       </AnimatePresence>
                     </div>
 
-                    {/* Visueller Timer */}
-                    <div
-                      style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px", display: "flex", flexDirection: "column", gap: "10px", cursor: "pointer" }}
-                      onClick={() => setVisualTimer(v => !v)}
-                    >
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
-                        <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.visualTimer}</span>
-                        <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: descColor }}>{visualTimer ? t.on : t.off}</span>
-                      </div>
-                      <p style={{ fontFamily: FONT_SANS, fontSize: "13px", color: descColor, lineHeight: "1.45", margin: 0 }}>{t.visualTimerDesc}</p>
-                    </div>
+                    {/* Visueller Timer — only available once the normal timer is on */}
+                    <AnimatePresence initial={false}>
+                      {timerEnabled && (
+                        <motion.div
+                          key="visual-timer-card"
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.2 }}
+                          style={{ overflow: "hidden" }}
+                        >
+                          <div
+                            style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px", display: "flex", flexDirection: "column", gap: "10px", cursor: "pointer" }}
+                            onClick={() => setVisualTimer(v => !v)}
+                          >
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
+                              <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.visualTimer}</span>
+                              <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: descColor }}>{visualTimer ? t.on : t.off}</span>
+                            </div>
+                            <p style={{ fontFamily: FONT_SANS, fontSize: "13px", color: descColor, lineHeight: "1.45", margin: 0 }}>{t.visualTimerDesc}</p>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
 
                     {/* Cursor läuft weiter */}
                     <div

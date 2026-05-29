@@ -26,6 +26,7 @@ interface WritingZoneProps {
   correctionMode?: CorrectionMode;
   textEditingEnabled?: boolean;
   cursorLaeuftWeiter?: boolean;
+  cursorSchnelligkeit?: number; // 1–100; how fast the cursor auto-advances
   driftet?: boolean;
   driftSaetze?: boolean;
   driftWoerter?: boolean;
@@ -1481,6 +1482,7 @@ export function WritingZone({
   correctionMode     = "hidden",
   textEditingEnabled = true,
   cursorLaeuftWeiter = false,
+  cursorSchnelligkeit = 50,
   driftet            = false,
   driftSaetze        = false,
   driftWoerter       = false,
@@ -1815,6 +1817,13 @@ export function WritingZone({
   const charWidthRef = useRef(10);
   const measSpanRef  = useRef<HTMLSpanElement>(null);
 
+  // Speed kept in a ref so adjusting the slider doesn't restart the rAF loop
+  // (which would reset the cursor position). Maps 1–100 → ~0.4–3.2 chars/sec.
+  const cursorSpeedRef = useRef(0.4 + (cursorSchnelligkeit / 100) * 2.8);
+  useEffect(() => {
+    cursorSpeedRef.current = 0.4 + (cursorSchnelligkeit / 100) * 2.8;
+  }, [cursorSchnelligkeit]);
+
   useEffect(() => {
     const measure = () => {
       if (measSpanRef.current) {
@@ -1840,7 +1849,6 @@ export function WritingZone({
     visualPosRef.current      = 0;
     spacesInsertedRef.current = 0;
 
-    const CHARS_PER_SEC = 1.8;   // slower, smoother
     let animId: number;
 
     const loop = (timestamp: number) => {
@@ -1848,7 +1856,7 @@ export function WritingZone({
       const dt = Math.min((timestamp - lastFrameRef.current) / 1000, 0.1);
       lastFrameRef.current = timestamp;
 
-      visualPosRef.current += dt * CHARS_PER_SEC;
+      visualPosRef.current += dt * cursorSpeedRef.current;
 
       // frac: fractional offset within the current character cell (0..1).
       // We commit a space FIRST, then recalculate frac, so the transform is

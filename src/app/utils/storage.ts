@@ -14,6 +14,7 @@ export interface NewToolParams {
   visualTimer: boolean;
   timerUserReset: boolean;
   cursorRunning: boolean;
+  cursorSchnelligkeit?: number;
   visibility: string;
   deleteMode: string;
   correctionVisible: boolean;

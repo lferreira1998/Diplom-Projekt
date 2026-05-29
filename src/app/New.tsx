@@ -100,6 +100,7 @@ const TRANSLATIONS = {
     userResetDesc: "Wenn deaktiviert, bleibt die Dauer fest.",
     cursorRunning: "Cursor läuft weiter",
     cursorRunningDesc: "Der Cursor läuft automatisch weiter, egal ob man schreibt oder nicht. Damit werden Pausen sichtbar.",
+    cursorSpeed: "Geschwindigkeit",
     // Visibility
     visVisible: "Sichtbar", visInvisible: "Unsichtbar",
     visSentence: "Nur aktueller Satz sichtbar",
@@ -229,6 +230,7 @@ const TRANSLATIONS = {
     userResetDesc: "If disabled, duration stays fixed.",
     cursorRunning: "Cursor keeps running",
     cursorRunningDesc: "The cursor moves automatically whether you type or not. This makes pauses visible.",
+    cursorSpeed: "Speed",
     // Visibility
     visVisible: "Visible", visInvisible: "Invisible",
     visSentence: "Current sentence only",
@@ -834,6 +836,7 @@ export default function New() {
   const [visualTimer, setVisualTimer]       = useState(false);
   const [timerUserReset, setTimerUserReset] = useState(false);
   const [cursorRunning, setCursorRunning]   = useState(false);
+  const [cursorSchnelligkeit, setCursorSchnelligkeit] = useState(50);
 
   // Visibility params
   const [visibility, setVisibility] = useState<"visible" | "invisible" | "sentence" | "word" | "char">("visible");
@@ -1107,6 +1110,7 @@ export default function New() {
       setVisualTimer(p.visualTimer === true);
       setTimerUserReset(p.timerUserReset === true);
       setCursorRunning(p.cursorRunning === true);
+      setCursorSchnelligkeit(typeof p.cursorSchnelligkeit === "number" ? p.cursorSchnelligkeit : 50);
       setVisibility((p.visibility as typeof visibility) ?? "visible");
       setDeleteMode((p.deleteMode as typeof deleteMode) ?? "all");
       setCorrectionVisible(p.correctionVisible === true);
@@ -1196,7 +1200,7 @@ export default function New() {
         sessionId,
         prompts,
         isPublic,
-        timerEnabled, timerMode, timerMinutes, visualTimer, timerUserReset, cursorRunning,
+        timerEnabled, timerMode, timerMinutes, visualTimer, timerUserReset, cursorRunning, cursorSchnelligkeit,
         visibility, deleteMode, correctionVisible,
         textFliegtEnabled, fliegtUnit, fliegtZeitpunkt, fliegtSchnelligkeit,
         textEditingEnabled,
@@ -1226,7 +1230,7 @@ export default function New() {
     }
   }, [
     toolName, toolDescription, prompts, sessionId, lang, currentToolId,
-    timerEnabled, timerMode, timerMinutes, visualTimer, timerUserReset, cursorRunning,
+    timerEnabled, timerMode, timerMinutes, visualTimer, timerUserReset, cursorRunning, cursorSchnelligkeit,
     visibility, deleteMode, correctionVisible,
     textFliegtEnabled, fliegtUnit, fliegtZeitpunkt, fliegtSchnelligkeit,
     textEditingEnabled,
@@ -1515,6 +1519,7 @@ export default function New() {
             correctionMode={wzCorrection}
             textEditingEnabled={textEditingEnabled}
             cursorLaeuftWeiter={cursorRunning}
+            cursorSchnelligkeit={cursorSchnelligkeit}
             driftet={textFliegtEnabled}
             driftSaetze={fliegtUnit === "Sätze"}
             driftWoerter={fliegtUnit === "Wörter"}
@@ -2095,6 +2100,22 @@ export default function New() {
                           ? (DE ? "Aktivieren setzt Position auf Standard zurück" : "Enabling resets position to Standard")
                           : t.cursorRunningDesc}
                       </p>
+                      <AnimatePresence initial={false}>
+                        {cursorRunning && (
+                          <motion.div
+                            key="cursor-speed"
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.18 }}
+                            onClick={(e) => e.stopPropagation()}
+                            style={{ display: "flex", flexDirection: "column", gap: "10px", overflow: "hidden", cursor: "default" }}
+                          >
+                            <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT, marginTop: "4px" }}>{t.cursorSpeed}</span>
+                            <DoubleSlider value={cursorSchnelligkeit} min={1} max={100} step={1} onChange={setCursorSchnelligkeit} dark={dark} />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
 
                   </div>

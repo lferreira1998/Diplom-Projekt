@@ -67,6 +67,7 @@ const SIDEBAR_CATS = [
 const TRANSLATIONS = {
   de: {
     langBtn: "DE",
+    backBtn: "Zurück",
     rulesBtn: "Regeln brechen",
     rulesHeading: "Regeln",
     rulesSubtitle: "Ändere sie.",
@@ -197,6 +198,7 @@ const TRANSLATIONS = {
   },
   en: {
     langBtn: "EN",
+    backBtn: "Back",
     rulesBtn: "Break Rules",
     rulesHeading: "Rules",
     rulesSubtitle: "Change them.",
@@ -1576,6 +1578,35 @@ export default function New() {
         )}
       </AnimatePresence>
 
+      {/* ── Zurück button (viewer mode only) ────────────────────────────── */}
+      <AnimatePresence>
+        {visible && currentToolId && (
+          <motion.button
+            key="float-back"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, transition: { duration: 0.12 } }}
+            transition={{ duration: 0.15 }}
+            style={{
+              position: "fixed", top: "24px", left: BTN_CLOSED.dark + 33 + 8,
+              height: "33px",
+              background: dark ? darkColors.darkBg : surfaceLight,
+              border: `1px dashed ${BORDER_COL}`,
+              borderRadius: "4px",
+              cursor: "pointer", outline: "none",
+              display: "flex", alignItems: "center",
+              padding: "0 13px",
+              fontFamily: FONT_SANS, fontSize: "13px",
+              color: dark ? DARK_TEXT : LIGHT_TEXT,
+              zIndex: 25,
+            }}
+            onClick={(e) => { e.stopPropagation(); navigate("/playground"); }}
+          >
+            {t.backBtn}
+          </motion.button>
+        )}
+      </AnimatePresence>
+
       {/* ── Floating Rules/× button ──────────────────────────────────────── */}
       <AnimatePresence>
         {visible && canEdit && (
@@ -2705,15 +2736,17 @@ export default function New() {
             >
               <IconEyeClosed color={navIconColor} />
             </button>
-            {/* Language toggle */}
-            <button
-              style={btnStyle(dark, { background: dark ? darkColors.darkBg : surfaceLight, color: navIconColor }, surfaceLight)}
-              onClick={(e) => { e.stopPropagation(); setLang(l => { const next = l === "de" ? "en" : "de"; localStorage.setItem("appLang", next); return next; }); }}
-            >
-              {t.langBtn}
-            </button>
-            {/* Menu button + dropdown */}
-            <div
+            {/* Language toggle — hidden in viewer mode */}
+            {!currentToolId && (
+              <button
+                style={btnStyle(dark, { background: dark ? darkColors.darkBg : surfaceLight, color: navIconColor }, surfaceLight)}
+                onClick={(e) => { e.stopPropagation(); setLang(l => { const next = l === "de" ? "en" : "de"; localStorage.setItem("appLang", next); return next; }); }}
+              >
+                {t.langBtn}
+              </button>
+            )}
+            {/* Menu button + dropdown — hidden in viewer mode */}
+            {!currentToolId && <div
               style={{ position: "relative" }}
               onMouseEnter={() => { if (!menuOpen) setMenuHovered(true); }}
               onMouseLeave={() => setMenuHovered(false)}
@@ -2763,7 +2796,7 @@ export default function New() {
                   </motion.div>
                 )}
               </AnimatePresence>
-            </div>
+            </div>}
           </motion.div>
         ) : (
           <motion.button

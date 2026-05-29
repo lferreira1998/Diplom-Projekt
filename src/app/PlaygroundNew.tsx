@@ -381,19 +381,26 @@ function PageNavFAB({ dark, myToolsAll, DE, theme, loading }: { dark: boolean; m
     : myToolsAll.length > 0;
   if (!hasOwnTools) return null;
 
+  const BW = 114, H = 46, TR = 12, BR = 5;
+  const leftActive = isMyPage;
+  const activeFill = dark ? theme.text : theme.headline;
+  const lPath = `M 0,${BR} Q 0,0 ${BR},0 L ${BW},0 L ${BW},${H/2-TR} A ${TR} ${TR} 0 0 1 ${BW},${H/2+TR} L ${BW},${H} L ${BR},${H} Q 0,${H} 0,${H-BR} Z`;
+  const rPath = `M ${BW},0 L ${BW*2-BR},0 Q ${BW*2},0 ${BW*2},${BR} L ${BW*2},${H-BR} Q ${BW*2},${H} ${BW*2-BR},${H} L ${BW},${H} L ${BW},${H/2+TR} A ${TR} ${TR} 0 0 0 ${BW},${H/2-TR} Z`;
+
   return (
-    <div style={{ position: "fixed", bottom: "40px", left: "50%", transform: "translateX(-50%)", zIndex: 50, display: "flex", gap: "4px", background: theme.toolBg, border: `1px dashed ${theme.border}`, borderRadius: "4px", padding: "4px" }}>
-      {([
-        { path: "/my-tools", label: DE ? "Meine Tools" : "My Tools" },
-        { path: "/playground", label: DE ? "Alle Tools" : "All Tools" },
-      ]).map(({ path, label }) => {
-        const active = isMyPage ? path === "/my-tools" : path === "/playground";
-        return (
-          <button key={path} onClick={() => navigate(path)} style={{ border: "none", borderRadius: "3px", cursor: "pointer", outline: "none", padding: "9px 18px", fontFamily: FONT_SANS, fontSize: "14px", background: active ? (dark ? theme.text : theme.headline) : "transparent", color: active ? theme.bg : theme.muted, transition: "background 0.15s, color 0.15s" }}>
-            {label}
-          </button>
-        );
-      })}
+    <div style={{ position: "fixed", bottom: "40px", left: "50%", transform: "translateX(-50%)", zIndex: 50 }}>
+      <svg width={BW * 2} height={H} style={{ display: "block", overflow: "visible" }}>
+        {/* Right piece drawn first so left tab renders on top */}
+        <path d={rPath} fill={!leftActive ? activeFill : "transparent"} stroke={theme.border} strokeWidth={1} strokeDasharray="4 3" style={{ cursor: "pointer" }} onClick={() => navigate("/playground")} />
+        {/* Left piece on top — its tab visually locks into right's notch */}
+        <path d={lPath} fill={leftActive ? activeFill : "transparent"} stroke={theme.border} strokeWidth={1} strokeDasharray="4 3" style={{ cursor: "pointer" }} onClick={() => navigate("/my-tools")} />
+        <text x={BW / 2} y={H / 2 + 5} textAnchor="middle" fill={leftActive ? theme.bg : theme.muted} fontSize={13} fontFamily={FONT_SANS} style={{ pointerEvents: "none", userSelect: "none" }}>
+          {DE ? "Meine Tools" : "My Tools"}
+        </text>
+        <text x={BW + BW / 2} y={H / 2 + 5} textAnchor="middle" fill={!leftActive ? theme.bg : theme.muted} fontSize={13} fontFamily={FONT_SANS} style={{ pointerEvents: "none", userSelect: "none" }}>
+          {DE ? "Alle Tools" : "All Tools"}
+        </text>
+      </svg>
     </div>
   );
 }

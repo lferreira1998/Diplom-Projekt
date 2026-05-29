@@ -2585,11 +2585,12 @@ export default function New() {
             exit={{ opacity: 0, scale: 0.88, transition: { duration: 0.15 } }}
             transition={SPRING}
             ref={exportRef}
-            style={{ position: "fixed", bottom: "24px", right: "24px", zIndex: 20 }}
+            style={{ position: "fixed", bottom: "24px", right: "24px", zIndex: 20, width: "200px" }}
           >
             <button
               onClick={() => setExportOpen(o => !o)}
               style={{
+                width: "100%",
                 height: "44px", padding: "0 24px",
                 borderRadius: "8px",
                 border: `1px dashed ${dark ? DARK_BORDER : BORDER_COL}`,
@@ -2613,6 +2614,7 @@ export default function New() {
                   transition={{ duration: 0.18 }}
                   style={{
                     position: "absolute", bottom: "calc(100% + 8px)", right: 0,
+                    width: "100%", boxSizing: "border-box",
                     display: "flex", flexDirection: "column", gap: "4px",
                     background: dark ? "rgba(60,54,48,0.95)" : "rgba(252,246,239,0.96)",
                     border: `1px dashed ${dark ? DARK_BORDER : BORDER_COL}`,

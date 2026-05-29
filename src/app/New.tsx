@@ -1571,7 +1571,7 @@ export default function New() {
         )}
       </AnimatePresence>
 
-      {/* ── Floating Rules/× + Clear container (flex row, always in sync) ──── */}
+      {/* ── Floating Rules/× button ──────────────────────────────────────── */}
       <AnimatePresence>
         {visible && canEdit && (
           <motion.div
@@ -1635,30 +1635,6 @@ export default function New() {
               </AnimatePresence>
             </button>
 
-            {/* Clear button — always 10px from Rules right edge */}
-            <AnimatePresence>
-              {positions.length > 0 && (
-                <motion.button
-                  key="float-clear"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0, transition: { duration: 0.12 } }}
-                  transition={SPRING}
-                  style={{
-                    height: "31px", padding: "0 12px",
-                    background: "none", border: "none",
-                    cursor: "pointer", outline: "none",
-                    display: "flex", alignItems: "center",
-                    fontFamily: FONT_SANS, fontSize: "13px", fontWeight: 400,
-                    color: dark ? DARK_MUTED : "#9a9daa",
-                    lineHeight: "normal", whiteSpace: "nowrap",
-                    flexShrink: 0,
-                  }}
-                  onClick={(e) => { e.stopPropagation(); handleDelete(); }}
-                >{lang === "de" ? "Text leeren" : "Clear Text"}</motion.button>
-              )}
-            </AnimatePresence>
-
             {/* Redraw Path button — visible when custom path mode is active */}
             <AnimatePresence>
               {positionMode === "custom" && drawnPath.length > 0 && (
@@ -1685,6 +1661,31 @@ export default function New() {
               )}
             </AnimatePresence>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Clear Text button — 16px right of panel edge, top ────────────── */}
+      <AnimatePresence>
+        {visible && canEdit && positions.length > 0 && (
+          <motion.button
+            key="float-clear"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, x: rulesOpen ? 314 : 0 }}
+            exit={{ opacity: 0, transition: { duration: 0.12 } }}
+            transition={SPRING}
+            style={{
+              position: "fixed", top: "24px", left: 169,
+              height: "33px", padding: "0 12px",
+              background: "none", border: "none",
+              cursor: "pointer", outline: "none",
+              display: "flex", alignItems: "center",
+              fontFamily: FONT_SANS, fontSize: "13px", fontWeight: 400,
+              color: dark ? DARK_MUTED : "#9a9daa",
+              lineHeight: "normal", whiteSpace: "nowrap",
+              zIndex: 25,
+            }}
+            onClick={(e) => { e.stopPropagation(); handleDelete(); }}
+          >{lang === "de" ? "Text leeren" : "Clear Text"}</motion.button>
         )}
       </AnimatePresence>
 
@@ -2546,17 +2547,17 @@ export default function New() {
         )}
       </AnimatePresence>
 
-      {/* ── Timer circle (bottom of writing area, aligned with Rules button x) ── */}
+      {/* ── Timer circle (bottom of writing area, 16px right of panel right edge) ── */}
       <AnimatePresence>
         {visible && timerEnabled && timerRunning && (
           <motion.div
             key="timer-circle"
             initial={{ opacity: 0, scale: 0.88 }}
-            animate={{ opacity: 1, scale: 1, x: rulesOpen ? BTN_OPEN.rules - BTN_CLOSED.rules : 0 }}
+            animate={{ opacity: 1, scale: 1, x: rulesOpen ? 314 : 0 }}
             exit={{ opacity: 0, scale: 0.88, transition: { duration: 0.15 } }}
             transition={SPRING}
             style={{
-              position: "fixed", bottom: "24px", left: BTN_CLOSED.rules,
+              position: "fixed", bottom: "16px", left: 169,
               width: "84px", height: "84px",
               borderRadius: "100px",
               border: `1px dashed ${dark ? DARK_BORDER : BORDER_COL}`,

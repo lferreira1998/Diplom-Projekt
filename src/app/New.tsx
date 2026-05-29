@@ -1885,7 +1885,8 @@ export default function New() {
                       position: "relative", cursor: "pointer",
                       border: `1px dashed ${recordState === "error" ? "#e05252" : innerBorder}`,
                       borderRadius: "8px", overflow: "hidden",
-                      aspectRatio: "3 / 2", background: settingsCardBg,
+                      width: "100%", aspectRatio: "3 / 2", flexShrink: 0,
+                      background: settingsCardBg,
                       display: "flex", alignItems: "center", justifyContent: "center",
                     }}
                   >

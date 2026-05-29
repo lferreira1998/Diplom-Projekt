@@ -1849,7 +1849,7 @@ export default function New() {
                       position: "relative", cursor: "pointer",
                       border: `1px dashed ${recordState === "error" ? "#e05252" : innerBorder}`,
                       borderRadius: "8px", overflow: "hidden",
-                      aspectRatio: "16/9", background: settingsCardBg,
+                      aspectRatio: "3 / 2", background: settingsCardBg,
                       display: "flex", alignItems: "center", justifyContent: "center",
                     }}
                   >
@@ -1879,7 +1879,7 @@ export default function New() {
                         <span style={{ fontFamily: FONT_SANS, fontSize: "13px", color: recordState === "error" ? "#e05252" : (dark ? DARK_MUTED : "#9a9daa") }}>
                           {recordState === "error"
                             ? (DE ? "Fehlgeschlagen — erneut versuchen" : "Failed — try again")
-                            : (DE ? "Vorschau aufnehmen" : "Add preview")}
+                            : (DE ? "Vorschau-Video aufnehmen" : "Add Preview-Video")}
                         </span>
                         <span style={{ fontFamily: FONT_SANS, fontSize: "11px", color: dark ? "rgba(240,232,220,0.3)" : "rgba(150,150,150,0.7)", lineHeight: 1.4 }}>
                           {DE ? "10-Sek.-Clip" : "10-sec clip"}

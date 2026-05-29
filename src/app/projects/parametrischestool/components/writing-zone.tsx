@@ -1421,8 +1421,9 @@ function BoustrophedonZone({
             key={lineIdx}
             style={{
               display: "block",
+              width: "100%",
               transform: isFlipped ? "scaleX(-1)" : undefined,
-              transformOrigin: "left center",
+              transformOrigin: "center center",
               whiteSpace: "nowrap",
               minHeight: `${fontSize * 1.6}px`,
               lineHeight: 1.6,

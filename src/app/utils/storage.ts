@@ -24,6 +24,8 @@ export interface NewToolParams {
   textVerblassEnabled: boolean;
   verblassZeitpunkt: number;
   verblassSchnelligkeit: number;
+  textSchwerEnabled?: boolean;
+  schwerZeitpunkt?: number;
   positionMode: string;
   randomMode?: string;
   drawnPath?: { x: number; y: number }[] | { x: number; y: number }[][];

@@ -36,6 +36,8 @@ interface WritingZoneProps {
   fontSize?: number;
   verblassenDelay?: number;
   verblassenSpeed?: number; // 10–500, default 100
+  schwer?: boolean;         // "Text gets heavy" — letters fall to the floor
+  schwerDelay?: number;     // seconds before a letter starts falling
   spiralModus?: boolean;
   runningLineModus?: boolean;
   textAppearsRandom?: boolean;
@@ -1487,6 +1489,8 @@ export function WritingZone({
   verblasst          = false,
   verblassenDelay    = 120,
   verblassenSpeed    = 100,
+  schwer             = false,
+  schwerDelay        = 30,
   spiralModus        = false,
   runningLineModus   = false,
   textAppearsRandom  = false,
@@ -1532,6 +1536,9 @@ export function WritingZone({
   const charDrift    = useRef<DE[]>([]);
   const groupsRef    = useRef<{ sid: number[]; wid: number[] }>({ sid: [], wid: [] });
 
+  // Per-char gravity state for "Text gets heavy" (vy = velocity, restDy = floor offset)
+  const charHeavy    = useRef<{ vy: number; dy: number; restDy: number | null; rot: number; vr: number }[]>([]);
+
   // Per-char accumulated drift offset (sum of all layers)
   const charOffsets  = useRef<{ dx: number; dy: number }[]>([]);
   // Refs to inline char spans for measuring their rects (for wrapping clones)
@@ -1552,12 +1559,14 @@ export function WritingZone({
     while (posTimesRef.current.length < positions.length) {
       posTimesRef.current.push(now);
       charDrift.current.push({ x: 0, y: 0, vx: 0, vy: 0 });
+      charHeavy.current.push({ vy: 0, dy: 0, restDy: null, rot: 0, vr: 0 });
       charOffsets.current.push({ dx: 0, dy: 0 });
       charElsRef.current.push(null);
     }
     if (positions.length < posTimesRef.current.length) {
       posTimesRef.current.length = positions.length;
       charDrift.current.length   = positions.length;
+      charHeavy.current.length   = positions.length;
       charOffsets.current.length = positions.length;
       charElsRef.current.length  = positions.length;
     }
@@ -1577,9 +1586,17 @@ export function WritingZone({
     }
   }, [driftet]);
 
+  // Reset gravity state when "heavy" is turned off
+  useEffect(() => {
+    if (!schwer) {
+      charHeavy.current = charHeavy.current.map(() => ({ vy: 0, dy: 0, restDy: null, rot: 0, vr: 0 }));
+      charOffsets.current = charOffsets.current.map(() => ({ dx: 0, dy: 0 }));
+    }
+  }, [schwer]);
+
   // rAF physics loop
   useEffect(() => {
-    if (!driftet && !verblasst) return;
+    if (!driftet && !verblasst && !schwer) return;
     let animId: number;
     const spf = driftSpeed / 100;
 
@@ -1681,13 +1698,60 @@ export function WritingZone({
         }
       }
 
+      // "Text gets heavy" — letters fall to the floor under gravity
+      if (schwer) {
+        const GRAVITY = 0.85;   // px per frame² (acceleration)
+        const BOUNCE  = 0.28;   // energy kept on impact
+        const heavyDelayMs = schwerDelay * 1000;
+        const floorY = (typeof window !== "undefined" ? window.innerHeight : 900) - 6;
+        for (let i = 0; i < pos.length; i++) {
+          const t = posTimesRef.current[i];
+          if (!t) continue;
+          const age = (now - t - heavyDelayMs) / 1000;
+          if (age <= 0) continue;
+          const h = charHeavy.current[i];
+          if (!h) continue;
+          dirty = true;
+
+          // Resolve floor offset once, on first fall frame
+          if (h.restDy === null) {
+            const el = charElsRef.current[i];
+            if (el) {
+              const rect = el.getBoundingClientRect();
+              const naturalBottom = rect.bottom - h.dy;
+              h.restDy = Math.max(0, floorY - naturalBottom);
+              h.vr = (Math.random() - 0.5) * 4; // initial spin
+            } else {
+              h.restDy = 0;
+            }
+          }
+
+          if (h.dy < h.restDy) {
+            h.vy += GRAVITY;
+            h.dy += h.vy;
+            h.rot += h.vr;
+            if (h.dy >= h.restDy) {
+              h.dy = h.restDy;
+              h.vy = -h.vy * BOUNCE;
+              h.vr *= BOUNCE;
+              if (Math.abs(h.vy) < 1.2) { h.vy = 0; h.vr = 0; }
+            }
+          }
+
+          if (charOffsets.current[i]) {
+            charOffsets.current[i].dx = 0;
+            charOffsets.current[i].dy = h.dy;
+          }
+        }
+      }
+
       if (dirty || verblasst) setDriftTick(n => n + 1);
       animId = requestAnimationFrame(loop);
     };
 
     animId = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(animId);
-  }, [driftet, driftSaetze, driftWoerter, driftBuchstaben, driftDelay, driftSpeed, verblasst, verblassenDelay, verblassenSpeed]);
+  }, [driftet, driftSaetze, driftWoerter, driftBuchstaben, driftDelay, driftSpeed, verblasst, verblassenDelay, verblassenSpeed, schwer, schwerDelay]);
 
   // Focus on mount
   useEffect(() => { containerRef.current?.focus(); }, []);
@@ -2121,11 +2185,12 @@ export function WritingZone({
           ? { filter: "blur(5px)", userSelect: "none" }
           : {};
 
-      // Drift transform
+      // Drift / gravity transform
       const offset = charOffsets.current[i];
-      const hasDrift = driftet && offset && (Math.abs(offset.dx) > 0.01 || Math.abs(offset.dy) > 0.01);
+      const hasDrift = (driftet || schwer) && offset && (Math.abs(offset.dx) > 0.01 || Math.abs(offset.dy) > 0.01);
       const dx = offset?.dx ?? 0;
       const dy = offset?.dy ?? 0;
+      const rot = schwer ? (charHeavy.current[i]?.rot ?? 0) : 0;
 
       // Fade opacity
       let fadeOpacity = 1;
@@ -2139,7 +2204,7 @@ export function WritingZone({
       }
 
       const driftStyle: React.CSSProperties = hasDrift
-        ? { transform: `translate(${dx}px, ${dy}px)`, zIndex: 10 }
+        ? { transform: `translate(${dx}px, ${dy}px) rotate(${rot}deg)`, zIndex: 10 }
         : {};
 
       // Newlines

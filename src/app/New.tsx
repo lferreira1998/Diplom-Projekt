@@ -140,6 +140,17 @@ const TRANSLATIONS = {
       return `Nach ${mins} min ${secs} Sek`;
     },
     fadeSpeed: "Schnelligkeit des Verblassens",
+    heavyLabel: "Text wird schwer",
+    heavyDesc: "Die Buchstaben werden zu schwer und fallen nach und nach auf den Boden der Seite.",
+    heavyTiming: "Zeitpunkt des Fallens",
+    heavyAfter: (n: number) => {
+      const totalSec = Math.round(n * 60);
+      const mins = Math.floor(totalSec / 60);
+      const secs = totalSec % 60;
+      if (mins === 0) return `Nach ${secs} Sek`;
+      if (secs === 0) return `Nach ${mins} min`;
+      return `Nach ${mins} min ${secs} Sek`;
+    },
     // Position
     posStandard: "Standard",
     posSpiral: "Spiralförmiger Text",
@@ -257,6 +268,17 @@ const TRANSLATIONS = {
       return `After ${mins} min ${secs} sec`;
     },
     fadeSpeed: "Fade speed",
+    heavyLabel: "Text gets heavy",
+    heavyDesc: "The letters grow too heavy and fall, one by one, to the floor of the page.",
+    heavyTiming: "Falling timing",
+    heavyAfter: (n: number) => {
+      const totalSec = Math.round(n * 60);
+      const mins = Math.floor(totalSec / 60);
+      const secs = totalSec % 60;
+      if (mins === 0) return `After ${secs} sec`;
+      if (secs === 0) return `After ${mins} min`;
+      return `After ${mins} min ${secs} sec`;
+    },
     // Position
     posStandard: "Standard",
     posSpiral: "Spiraling Text",
@@ -827,6 +849,8 @@ export default function New() {
   const [textVerblassEnabled, setTextVerblassEnabled]     = useState(false);
   const [verblassZeitpunkt, setVerblassZeitpunkt]         = useState(0.5);
   const [verblassSchnelligkeit, setVerblassSchnelligkeit] = useState(2.0);
+  const [textSchwerEnabled, setTextSchwerEnabled]         = useState(false);
+  const [schwerZeitpunkt, setSchwerZeitpunkt]             = useState(0.5);
 
   // Position params
   const [positionMode, setPositionMode] = useState<"standard" | "spiral" | "random" | "running" | "custom" | "zigzag">("standard");
@@ -848,8 +872,8 @@ export default function New() {
 
   // Smart position setter — auto-clears incompatible rules and shows toast
   const applyPositionMode = useCallback((
-    mode: "standard" | "spiral" | "random" | "running" | "custom",
-    opts: { setTextFliegtEnabled: (v: boolean) => void; setCursorRunning: (v: boolean) => void; setCorrectionVisible: (v: boolean) => void; textFliegtEnabled: boolean; cursorRunning: boolean; correctionVisible: boolean; de: boolean; posNames: Record<string, string> }
+    mode: "standard" | "spiral" | "random" | "running" | "custom" | "zigzag",
+    opts: { setTextFliegtEnabled: (v: boolean) => void; setCursorRunning: (v: boolean) => void; setCorrectionVisible: (v: boolean) => void; setTextSchwerEnabled: (v: boolean) => void; textFliegtEnabled: boolean; cursorRunning: boolean; correctionVisible: boolean; textSchwerEnabled: boolean; de: boolean; posNames: Record<string, string> }
   ) => {
     setPositionMode(mode);
     if (mode === "standard") return;
@@ -857,6 +881,7 @@ export default function New() {
     if (opts.textFliegtEnabled) { opts.setTextFliegtEnabled(false); turned.push(opts.de ? "Text fliegt davon" : "Text drift"); }
     if (opts.cursorRunning && mode !== "running") { opts.setCursorRunning(false); turned.push(opts.de ? "Cursor läuft weiter" : "Cursor keeps running"); }
     if (opts.correctionVisible) { opts.setCorrectionVisible(false); turned.push(opts.de ? "Korrigieren sichtbar" : "Correction visible"); }
+    if (opts.textSchwerEnabled) { opts.setTextSchwerEnabled(false); turned.push(opts.de ? "Text wird schwer" : "Text gets heavy"); }
     if (turned.length > 0) {
       const posLabel = opts.posNames[mode] ?? mode;
       showCompatMsg(opts.de
@@ -874,6 +899,19 @@ export default function New() {
       showCompatMsg(de
         ? `Text fliegt davon aktiv. Position zurück auf Standard.`
         : `Text drift enabled. Position reset to Standard.`
+      );
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isNonStandard, showCompatMsg]);
+
+  // Smart heavy setter — resets position to standard if incompatible
+  const applyHeavy = useCallback((enabled: boolean, de: boolean) => {
+    setTextSchwerEnabled(enabled);
+    if (enabled && isNonStandard) {
+      setPositionMode("standard");
+      showCompatMsg(de
+        ? `Text wird schwer aktiv. Position zurück auf Standard.`
+        : `Text gets heavy enabled. Position reset to Standard.`
       );
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1076,6 +1114,8 @@ export default function New() {
       setTextVerblassEnabled(p.textVerblassEnabled === true);
       setVerblassZeitpunkt(typeof p.verblassZeitpunkt === "number" ? p.verblassZeitpunkt : 0.5);
       setVerblassSchnelligkeit(typeof p.verblassSchnelligkeit === "number" ? p.verblassSchnelligkeit : 2.0);
+      setTextSchwerEnabled(p.textSchwerEnabled === true);
+      setSchwerZeitpunkt(typeof p.schwerZeitpunkt === "number" ? p.schwerZeitpunkt : 0.5);
       setPositionMode((p.positionMode as typeof positionMode) ?? "standard");
       setRandomMode((p.randomMode as "sentences" | "words") ?? "words");
       if (p.positionMode === "custom" && Array.isArray(p.drawnPath) && p.drawnPath.length > 0) {
@@ -1157,6 +1197,7 @@ export default function New() {
         textFliegtEnabled, fliegtUnit, fliegtZeitpunkt, fliegtSchnelligkeit,
         textEditingEnabled,
         textVerblassEnabled, verblassZeitpunkt, verblassSchnelligkeit,
+        textSchwerEnabled, schwerZeitpunkt,
         positionMode, randomMode,
         drawnPath: positionMode === "custom" ? drawnPath : [],
         grainLevel, textSizeLevel, bgHue,
@@ -1186,6 +1227,7 @@ export default function New() {
     textFliegtEnabled, fliegtUnit, fliegtZeitpunkt, fliegtSchnelligkeit,
     textEditingEnabled,
     textVerblassEnabled, verblassZeitpunkt, verblassSchnelligkeit,
+    textSchwerEnabled, schwerZeitpunkt,
     positionMode, randomMode, drawnPath, grainLevel, textSizeLevel, bgHue,
   ]);
 
@@ -1291,6 +1333,7 @@ export default function New() {
   const wzVerblSpeed = verblassSchnelligkeit * 50;
   const wzDriftDelay = fliegtZeitpunkt * 60;
   const wzVerblDelay = verblassZeitpunkt * 60;
+  const wzSchwerDelay = schwerZeitpunkt * 60;
 
   const showDoneModal = timerDone && !textRevealed;
   const showRevealBar = timerDone && textRevealed && visualTimer;
@@ -1476,6 +1519,8 @@ export default function New() {
             verblasst={textVerblassEnabled}
             verblassenDelay={wzVerblDelay}
             verblassenSpeed={wzVerblSpeed}
+            schwer={textSchwerEnabled}
+            schwerDelay={wzSchwerDelay}
             spiralModus={positionMode === "spiral"}
             runningLineModus={positionMode === "running"}
             textAppearsRandom={positionMode === "random"}
@@ -2264,6 +2309,38 @@ export default function New() {
                       </AnimatePresence>
                     </div>
 
+                    {/* Text wird schwer card */}
+                    <div style={{ position: "relative" }}>
+                      <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px 24px", display: "flex", flexDirection: "column", gap: "16px", opacity: isNonStandard ? 0.55 : 1, transition: "opacity 0.2s" }}>
+                        <div style={{ height: "36px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                          <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.heavyLabel}</span>
+                          <span onClick={() => applyHeavy(!textSchwerEnabled, DE)} style={{ fontFamily: FONT_SANS, fontSize: "16px", color: descColor, cursor: "pointer" }}>{textSchwerEnabled ? t.on : t.off}</span>
+                        </div>
+                        <AnimatePresence initial={false} mode="wait">
+                          {!textSchwerEnabled ? (
+                            <motion.p key="heavy-off" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} style={{ fontFamily: FONT_SANS, fontSize: "13px", color: descColor, lineHeight: "1.45", margin: 0 }}>
+                              {t.heavyDesc}
+                            </motion.p>
+                          ) : (
+                            <motion.div key="heavy-on" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                              <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.heavyTiming}</span>
+                              <DoubleSlider value={schwerZeitpunkt} min={0.5} max={15} step={0.5} onChange={setSchwerZeitpunkt} dark={dark} />
+                              <div style={{ border: `1px dashed ${innerBorder}`, borderRadius: "4px", padding: "10px 12px", textAlign: "center", fontFamily: FONT_SANS, fontSize: "15px", color: descColor, background: dark ? "rgba(240,232,220,0.04)" : surfaceLight }}>
+                                {t.heavyAfter(schwerZeitpunkt)}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                      {isNonStandard && (
+                        <div style={{ position: "absolute", bottom: "10px", left: 0, right: 0, textAlign: "center", pointerEvents: "none" }}>
+                          <span style={{ fontFamily: FONT_SANS, fontSize: "11px", color: descColor }}>
+                            {DE ? "Aktivieren setzt Position auf Standard zurück" : "Enabling resets position to Standard"}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
                   </div>
                 )}
 
@@ -2282,7 +2359,7 @@ export default function New() {
                         <div onClick={() => {
                           if (opt.value === "custom") setDrawnPath([]);
                           const posNames = { spiral: t.posSpiral, random: t.posRandom, running: t.posRunning, custom: t.posCustom, standard: t.posStandard };
-                          applyPositionMode(opt.value, { setTextFliegtEnabled, setCursorRunning, setCorrectionVisible, textFliegtEnabled, cursorRunning, correctionVisible, de: DE, posNames });
+                          applyPositionMode(opt.value, { setTextFliegtEnabled, setCursorRunning, setCorrectionVisible, setTextSchwerEnabled, textFliegtEnabled, cursorRunning, correctionVisible, textSchwerEnabled, de: DE, posNames });
                         }} style={{
                           display: "flex", alignItems: "center", justifyContent: "space-between",
                           border: positionMode === opt.value

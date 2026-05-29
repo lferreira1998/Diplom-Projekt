@@ -2666,14 +2666,14 @@ export default function New() {
           >
             {/* Eye toggle */}
             <button
-              style={btnStyle(dark, { background: dark ? "rgba(240,232,220,0.13)" : surfaceLight, color: navIconColor }, surfaceLight)}
+              style={btnStyle(dark, { background: dark ? darkColors.darkBg : surfaceLight, color: navIconColor }, surfaceLight)}
               onClick={(e) => { e.stopPropagation(); setVisible(false); setMenuOpen(false); setExportOpen(false); }}
             >
               <IconEyeClosed color={navIconColor} />
             </button>
             {/* Language toggle */}
             <button
-              style={btnStyle(dark, { background: dark ? "rgba(240,232,220,0.13)" : surfaceLight, color: navIconColor }, surfaceLight)}
+              style={btnStyle(dark, { background: dark ? darkColors.darkBg : surfaceLight, color: navIconColor }, surfaceLight)}
               onClick={(e) => { e.stopPropagation(); setLang(l => { const next = l === "de" ? "en" : "de"; localStorage.setItem("appLang", next); return next; }); }}
             >
               {t.langBtn}
@@ -2701,7 +2701,7 @@ export default function New() {
                 }}
               />
               <button
-                style={{ ...btnStyle(dark, { background: dark ? darkColors.darkCardBg : surfaceLight, color: navIconColor }), position: "relative", zIndex: 1 }}
+                style={{ ...btnStyle(dark, { background: dark ? darkColors.darkBg : surfaceLight, color: navIconColor }), position: "relative", zIndex: 1 }}
                 onClick={(e) => { e.stopPropagation(); setMenuOpen(o => !o); setMenuHovered(false); }}
               >
                 {menuOpen ? t.menuOpen : t.menuClosed}

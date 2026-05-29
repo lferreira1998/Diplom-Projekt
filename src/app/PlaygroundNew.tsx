@@ -386,7 +386,8 @@ function TypewriterHero({ DE, theme }: { DE: boolean; theme: Theme }) {
 
   useEffect(() => {
     if (done || count >= full.length) { setDone(true); return; }
-    const t = setTimeout(() => setCount(c => c + 1), 28);
+    const perChar = 6000 / full.length;
+    const t = setTimeout(() => setCount(c => c + 1), perChar);
     return () => clearTimeout(t);
   }, [count, done, full.length]);
 

@@ -370,40 +370,23 @@ function usePlaygroundData() {
   return { sessionId, loading, lang, setLang, dark, setDark, favorites, toggleFavorite, myToolsAll, publicTools, tools, navigateToTool, handleDelete };
 }
 
-function TypewriterHero({ DE, theme }: { DE: boolean; theme: Theme }) {
+function HeroHeading({ DE, theme }: { DE: boolean; theme: Theme }) {
   const line1 = DE
     ? "Schreibwerkzeuge prägen, wie wir denken & schreiben."
     : "Writing Tools shape how we think & write.";
   const line2 = DE
     ? "Entdecke Schreibwerkzeuge, die ihre Regeln brechen."
     : "Explore Writing Tools that break their rules.";
-  const full = `${line1}\n${line2}`;
-
-  const [count, setCount] = useState(0);
-  const [done, setDone] = useState(false);
-
-  useEffect(() => { setCount(0); setDone(false); }, [full]);
-
-  useEffect(() => {
-    if (done || count >= full.length) { setDone(true); return; }
-    const perChar = 6000 / full.length;
-    const t = setTimeout(() => setCount(c => c + 1), perChar);
-    return () => clearTimeout(t);
-  }, [count, done, full.length]);
-
-  const l1 = full.slice(0, Math.min(count, line1.length));
-  const l2 = count > line1.length ? full.slice(line1.length + 1, count) : "";
 
   return (
-    <h1 style={{ margin: 0, fontFamily: FONT_CMP_SERIF, fontSize: 36, lineHeight: "45px", fontWeight: 400, color: theme.headline, textAlign: "center", whiteSpace: "nowrap", minHeight: "90px" }}>
-      <style>{`@keyframes _cursorBlink { 0%,49%{opacity:1} 50%,100%{opacity:0} }`}</style>
-      {l1}
-      {l2 ? <><br />{l2}</> : null}
-      <span style={{
-        display: "inline-block", width: "1.5px", height: "0.85em",
-        background: theme.headline, marginLeft: "3px", verticalAlign: "middle",
-        animation: done ? "_cursorBlink 1s steps(1) infinite" : "none",
-      }} />
+    <h1 style={{ margin: 0, fontFamily: FONT_CMP_SERIF, fontSize: 36, lineHeight: "45px", fontWeight: 400, color: theme.headline, textAlign: "center", whiteSpace: "nowrap", animation: "_heroIn 1s ease-out both" }}>
+      <style>{`
+        @keyframes _heroIn { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: none; } }
+        @keyframes _toolIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes _cursorBlink { 0%,49%{opacity:1} 50%,100%{opacity:0} }
+      `}</style>
+      {line1}<br />{line2}
+      <span style={{ display: "inline-block", width: "1.5px", height: "0.85em", background: theme.headline, marginLeft: "3px", verticalAlign: "middle", animation: "_cursorBlink 1s steps(1) infinite", animationDelay: "1s" }} />
     </h1>
   );
 }
@@ -420,26 +403,18 @@ function PageNavFAB({ dark, myToolsAll, DE, theme, loading }: { dark: boolean; m
     : myToolsAll.length > 0;
   if (!hasOwnTools) return null;
 
-  const BW = 114, H = 46, TR = 12, BR = 5;
-  const leftActive = isMyPage;
-  const activeFill = dark ? theme.text : theme.headline;
-  const lPath = `M 0,${BR} Q 0,0 ${BR},0 L ${BW},0 L ${BW},${H/2-TR} A ${TR} ${TR} 0 0 1 ${BW},${H/2+TR} L ${BW},${H} L ${BR},${H} Q 0,${H} 0,${H-BR} Z`;
-  const rPath = `M ${BW},0 L ${BW*2-BR},0 Q ${BW*2},0 ${BW*2},${BR} L ${BW*2},${H-BR} Q ${BW*2},${H} ${BW*2-BR},${H} L ${BW},${H} L ${BW},${H/2+TR} A ${TR} ${TR} 0 0 0 ${BW},${H/2-TR} Z`;
+  const active = isMyPage ? "/my-tools" : "/playground";
 
   return (
-    <div style={{ position: "fixed", bottom: "40px", left: "50%", transform: "translateX(-50%)", zIndex: 50 }}>
-      <svg width={BW * 2} height={H} style={{ display: "block", overflow: "visible" }}>
-        {/* Right piece drawn first so left tab renders on top */}
-        <path d={rPath} fill={!leftActive ? activeFill : "transparent"} stroke={theme.border} strokeWidth={1} strokeDasharray="4 3" style={{ cursor: "pointer" }} onClick={() => navigate("/playground")} />
-        {/* Left piece on top — its tab visually locks into right's notch */}
-        <path d={lPath} fill={leftActive ? activeFill : "transparent"} stroke={theme.border} strokeWidth={1} strokeDasharray="4 3" style={{ cursor: "pointer" }} onClick={() => navigate("/my-tools")} />
-        <text x={BW / 2} y={H / 2 + 5} textAnchor="middle" fill={leftActive ? theme.bg : theme.muted} fontSize={13} fontFamily={FONT_SANS} style={{ pointerEvents: "none", userSelect: "none" }}>
-          {DE ? "Meine Tools" : "My Tools"}
-        </text>
-        <text x={BW + BW / 2} y={H / 2 + 5} textAnchor="middle" fill={!leftActive ? theme.bg : theme.muted} fontSize={13} fontFamily={FONT_SANS} style={{ pointerEvents: "none", userSelect: "none" }}>
-          {DE ? "Alle Tools" : "All Tools"}
-        </text>
-      </svg>
+    <div style={{ position: "fixed", bottom: "40px", left: "50%", transform: "translateX(-50%)", zIndex: 50, display: "flex", gap: "4px", background: theme.toolBg, border: `1px dashed ${theme.border}`, borderRadius: "100px", padding: "4px" }}>
+      {([
+        { path: "/my-tools", label: DE ? "Meine Tools" : "My Tools" },
+        { path: "/playground", label: DE ? "Alle Tools" : "All Tools" },
+      ]).map(({ path, label }) => (
+        <button key={path} onClick={() => navigate(path)} style={{ border: "none", borderRadius: "100px", cursor: "pointer", outline: "none", padding: "9px 20px", fontFamily: FONT_SANS, fontSize: "14px", background: active === path ? (dark ? theme.text : theme.headline) : "transparent", color: active === path ? theme.bg : theme.muted, transition: "background 0.15s, color 0.15s" }}>
+          {label}
+        </button>
+      ))}
     </div>
   );
 }
@@ -475,14 +450,16 @@ export default function PlaygroundNew() {
 
         <section aria-label="Writing tools playground" style={{ position: "relative", minHeight: "100vh", overflow: "hidden", background: "transparent" }}>
           <div style={{ position: "absolute", left: "50%", top: "50%", width: 1680, height: 858, transform: "translate(-50%, -50%)" }}>
-            <ToolShape label="...without stopping" href="/Diplom-Projekt/dont-stop-writing" video="without-stopping" videoFit="contain" style={{ left: 40, top: 197, width: 236, height: 233, transform: "rotate(5.1deg)", borderRadius: 200 }} textStyle={{ transform: "rotate(-5.1deg)" }} />
-            <ToolShape label="...uninvited thoughts" href="/Diplom-Projekt/uninvited-thoughts" video="uninvited-thoughts" style={{ left: 420, top: 57, width: 241, height: 182, transform: "rotate(-9.25deg)", borderRadius: 4 }} textStyle={{ transform: "rotate(9.25deg)" }} />
-            <ToolShape label="...off the grid" href="/Diplom-Projekt/off-the-grid" video="off-the-grid" style={{ left: 1220, top: 112, width: 251, height: 163, transform: "rotate(4.18deg)", borderRadius: 4, justifyContent: "flex-start", alignItems: "flex-end", padding: 12 }} textStyle={{ transform: "rotate(-4.18deg)", marginBottom: 0 }} />
-            <ToolShape label="...blind & then witness" href="/Diplom-Projekt/anonymously-in-public" video="blind-then-witness" style={{ left: 213, top: 579, width: 324, height: 163, transform: "rotate(6.45deg)", borderRadius: 100 }} textStyle={{ transform: "rotate(-6.45deg)" }} />
-            <ToolShape label="...with visible corrections" href="/Diplom-Projekt/loschen-korrigieren" video="visible-corrections" style={{ left: 774, top: 526, width: 363, height: 174, borderRadius: "40px 4px 40px 4px" }} />
-            <ToolShape label="...in a spiral" href="/Diplom-Projekt/in-a-spiral" video="in-a-spiral" videoFit="cover" style={{ left: 1321, top: 414, width: 211, height: 309, transform: "rotate(12.11deg)", borderRadius: 200 }} textStyle={{ transform: "rotate(-12.11deg)" }} />
+            <div style={{ position: "absolute", inset: 0, animation: "_toolIn 1.2s ease-out 0.8s both" }}>
+              <ToolShape label="...without stopping" href="/Diplom-Projekt/dont-stop-writing" video="without-stopping" videoFit="contain" style={{ left: 40, top: 197, width: 236, height: 233, transform: "rotate(5.1deg)", borderRadius: 200 }} textStyle={{ transform: "rotate(-5.1deg)" }} />
+              <ToolShape label="...uninvited thoughts" href="/Diplom-Projekt/uninvited-thoughts" video="uninvited-thoughts" style={{ left: 420, top: 57, width: 241, height: 182, transform: "rotate(-9.25deg)", borderRadius: 4 }} textStyle={{ transform: "rotate(9.25deg)" }} />
+              <ToolShape label="...off the grid" href="/Diplom-Projekt/off-the-grid" video="off-the-grid" style={{ left: 1220, top: 112, width: 251, height: 163, transform: "rotate(4.18deg)", borderRadius: 4, justifyContent: "flex-start", alignItems: "flex-end", padding: 12 }} textStyle={{ transform: "rotate(-4.18deg)", marginBottom: 0 }} />
+              <ToolShape label="...blind & then witness" href="/Diplom-Projekt/anonymously-in-public" video="blind-then-witness" style={{ left: 213, top: 579, width: 324, height: 163, transform: "rotate(6.45deg)", borderRadius: 100 }} textStyle={{ transform: "rotate(-6.45deg)" }} />
+              <ToolShape label="...with visible corrections" href="/Diplom-Projekt/loschen-korrigieren" video="visible-corrections" style={{ left: 774, top: 526, width: 363, height: 174, borderRadius: "40px 4px 40px 4px" }} />
+              <ToolShape label="...in a spiral" href="/Diplom-Projekt/in-a-spiral" video="in-a-spiral" videoFit="cover" style={{ left: 1321, top: 414, width: 211, height: 309, transform: "rotate(12.11deg)", borderRadius: 200 }} textStyle={{ transform: "rotate(-12.11deg)" }} />
+            </div>
             <div style={{ position: "absolute", left: 456, top: 300, width: 768 }}>
-              <TypewriterHero DE={DE} theme={theme} />
+              <HeroHeading DE={DE} theme={theme} />
             </div>
           </div>
         </section>

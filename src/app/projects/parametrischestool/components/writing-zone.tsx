@@ -38,6 +38,7 @@ interface WritingZoneProps {
   verblassenSpeed?: number; // 10–500, default 100
   schwer?: boolean;         // "Text gets heavy" — letters fall to the floor
   schwerDelay?: number;     // seconds before a letter starts falling
+  schwerSchnelligkeit?: number; // 1–100; maps to gravity acceleration (1=feather, 100=heavy object)
   spiralModus?: boolean;
   runningLineModus?: boolean;
   textAppearsRandom?: boolean;
@@ -1491,6 +1492,7 @@ export function WritingZone({
   verblassenSpeed    = 100,
   schwer             = false,
   schwerDelay        = 30,
+  schwerSchnelligkeit = 50,
   spiralModus        = false,
   runningLineModus   = false,
   textAppearsRandom  = false,
@@ -1700,7 +1702,7 @@ export function WritingZone({
 
       // "Text gets heavy" — letters fall to the floor under gravity
       if (schwer) {
-        const GRAVITY = 0.85;   // px per frame² (acceleration)
+        const GRAVITY = 0.05 + (schwerSchnelligkeit / 100) * 1.5; // 1=feather(0.065), 100=heavy(1.55)
         const BOUNCE  = 0.28;   // energy kept on impact
         const heavyDelayMs = schwerDelay * 1000;
         const floorY = (typeof window !== "undefined" ? window.innerHeight : 900) - 6;
@@ -1739,8 +1741,9 @@ export function WritingZone({
           }
 
           if (charOffsets.current[i]) {
-            charOffsets.current[i].dx = 0;
-            charOffsets.current[i].dy = h.dy;
+            // Add heavy's vertical drop on top of any drift offset already computed
+            if (!driftet) charOffsets.current[i].dx = 0;
+            charOffsets.current[i].dy = (driftet ? charOffsets.current[i].dy : 0) + h.dy;
           }
         }
       }
@@ -1751,7 +1754,7 @@ export function WritingZone({
 
     animId = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(animId);
-  }, [driftet, driftSaetze, driftWoerter, driftBuchstaben, driftDelay, driftSpeed, verblasst, verblassenDelay, verblassenSpeed, schwer, schwerDelay]);
+  }, [driftet, driftSaetze, driftWoerter, driftBuchstaben, driftDelay, driftSpeed, verblasst, verblassenDelay, verblassenSpeed, schwer, schwerDelay, schwerSchnelligkeit]);
 
   // Focus on mount
   useEffect(() => { containerRef.current?.focus(); }, []);

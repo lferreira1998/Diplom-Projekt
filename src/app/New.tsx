@@ -143,6 +143,7 @@ const TRANSLATIONS = {
     heavyLabel: "Text wird schwer",
     heavyDesc: "Die Buchstaben werden zu schwer und fallen nach und nach auf den Boden der Seite.",
     heavyTiming: "Zeitpunkt des Fallens",
+    heavySpeed: "Schwere",
     heavyAfter: (n: number) => {
       const totalSec = Math.round(n * 60);
       const mins = Math.floor(totalSec / 60);
@@ -271,6 +272,7 @@ const TRANSLATIONS = {
     heavyLabel: "Text gets heavy",
     heavyDesc: "The letters grow too heavy and fall, one by one, to the floor of the page.",
     heavyTiming: "Falling timing",
+    heavySpeed: "Weight",
     heavyAfter: (n: number) => {
       const totalSec = Math.round(n * 60);
       const mins = Math.floor(totalSec / 60);
@@ -851,6 +853,7 @@ export default function New() {
   const [verblassSchnelligkeit, setVerblassSchnelligkeit] = useState(2.0);
   const [textSchwerEnabled, setTextSchwerEnabled]         = useState(false);
   const [schwerZeitpunkt, setSchwerZeitpunkt]             = useState(0.5);
+  const [schwerSchnelligkeit, setSchwerSchnelligkeit]     = useState(50);
 
   // Position params
   const [positionMode, setPositionMode] = useState<"standard" | "spiral" | "random" | "running" | "custom" | "zigzag">("standard");
@@ -1116,6 +1119,7 @@ export default function New() {
       setVerblassSchnelligkeit(typeof p.verblassSchnelligkeit === "number" ? p.verblassSchnelligkeit : 2.0);
       setTextSchwerEnabled(p.textSchwerEnabled === true);
       setSchwerZeitpunkt(typeof p.schwerZeitpunkt === "number" ? p.schwerZeitpunkt : 0.5);
+      setSchwerSchnelligkeit(typeof p.schwerSchnelligkeit === "number" ? p.schwerSchnelligkeit : 50);
       setPositionMode((p.positionMode as typeof positionMode) ?? "standard");
       setRandomMode((p.randomMode as "sentences" | "words") ?? "words");
       if (p.positionMode === "custom" && Array.isArray(p.drawnPath) && p.drawnPath.length > 0) {
@@ -1197,7 +1201,7 @@ export default function New() {
         textFliegtEnabled, fliegtUnit, fliegtZeitpunkt, fliegtSchnelligkeit,
         textEditingEnabled,
         textVerblassEnabled, verblassZeitpunkt, verblassSchnelligkeit,
-        textSchwerEnabled, schwerZeitpunkt,
+        textSchwerEnabled, schwerZeitpunkt, schwerSchnelligkeit,
         positionMode, randomMode,
         drawnPath: positionMode === "custom" ? drawnPath : [],
         grainLevel, textSizeLevel, bgHue,
@@ -1227,7 +1231,7 @@ export default function New() {
     textFliegtEnabled, fliegtUnit, fliegtZeitpunkt, fliegtSchnelligkeit,
     textEditingEnabled,
     textVerblassEnabled, verblassZeitpunkt, verblassSchnelligkeit,
-    textSchwerEnabled, schwerZeitpunkt,
+    textSchwerEnabled, schwerZeitpunkt, schwerSchnelligkeit,
     positionMode, randomMode, drawnPath, grainLevel, textSizeLevel, bgHue,
   ]);
 
@@ -1334,6 +1338,7 @@ export default function New() {
   const wzDriftDelay = fliegtZeitpunkt * 60;
   const wzVerblDelay = verblassZeitpunkt * 60;
   const wzSchwerDelay = schwerZeitpunkt * 60;
+  const wzSchwerSpeed = schwerSchnelligkeit;
 
   const showDoneModal = timerDone && !textRevealed;
   const showRevealBar = timerDone && textRevealed && visualTimer;
@@ -1521,6 +1526,7 @@ export default function New() {
             verblassenSpeed={wzVerblSpeed}
             schwer={textSchwerEnabled}
             schwerDelay={wzSchwerDelay}
+            schwerSchnelligkeit={wzSchwerSpeed}
             spiralModus={positionMode === "spiral"}
             runningLineModus={positionMode === "running"}
             textAppearsRandom={positionMode === "random"}
@@ -2328,6 +2334,8 @@ export default function New() {
                               <div style={{ border: `1px dashed ${innerBorder}`, borderRadius: "4px", padding: "10px 12px", textAlign: "center", fontFamily: FONT_SANS, fontSize: "15px", color: descColor, background: dark ? "rgba(240,232,220,0.04)" : surfaceLight }}>
                                 {t.heavyAfter(schwerZeitpunkt)}
                               </div>
+                              <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT, marginTop: "6px" }}>{t.heavySpeed}</span>
+                              <DoubleSlider value={schwerSchnelligkeit} min={1} max={100} step={1} onChange={setSchwerSchnelligkeit} dark={dark} />
                             </motion.div>
                           )}
                         </AnimatePresence>

@@ -7,6 +7,7 @@ import { deleteNewTool, getAllNewTools, type NewToolData } from "./utils/storage
 import TopNav from "./components/TopNav";
 
 const FONT_SERIF = "'freight-text-pro', serif";
+const FONT_CMP_SERIF = "'freight-text-cmp-pro', 'freight-text-pro', serif";
 const FONT_SANS = "'general-sans', sans-serif";
 
 type Theme = {
@@ -369,6 +370,43 @@ function usePlaygroundData() {
   return { sessionId, loading, lang, setLang, dark, setDark, favorites, toggleFavorite, myToolsAll, publicTools, tools, navigateToTool, handleDelete };
 }
 
+function TypewriterHero({ DE, theme }: { DE: boolean; theme: Theme }) {
+  const line1 = DE
+    ? "Schreibwerkzeuge prägen, wie wir denken & schreiben."
+    : "Writing Tools shape how we think & write.";
+  const line2 = DE
+    ? "Entdecke Schreibwerkzeuge, die ihre Regeln brechen."
+    : "Explore Writing Tools that break their rules.";
+  const full = `${line1}\n${line2}`;
+
+  const [count, setCount] = useState(0);
+  const [done, setDone] = useState(false);
+
+  useEffect(() => { setCount(0); setDone(false); }, [full]);
+
+  useEffect(() => {
+    if (done || count >= full.length) { setDone(true); return; }
+    const t = setTimeout(() => setCount(c => c + 1), 28);
+    return () => clearTimeout(t);
+  }, [count, done, full.length]);
+
+  const l1 = full.slice(0, Math.min(count, line1.length));
+  const l2 = count > line1.length ? full.slice(line1.length + 1, count) : "";
+
+  return (
+    <h1 style={{ margin: 0, fontFamily: FONT_CMP_SERIF, fontSize: 36, lineHeight: "45px", fontWeight: 400, color: theme.headline, textAlign: "center", whiteSpace: "nowrap", minHeight: "90px" }}>
+      <style>{`@keyframes _cursorBlink { 0%,49%{opacity:1} 50%,100%{opacity:0} }`}</style>
+      {l1}
+      {l2 ? <><br />{l2}</> : null}
+      <span style={{
+        display: "inline-block", width: "1.5px", height: "0.85em",
+        background: theme.headline, marginLeft: "3px", verticalAlign: "middle",
+        animation: done ? "_cursorBlink 1s steps(1) infinite" : "none",
+      }} />
+    </h1>
+  );
+}
+
 function PageNavFAB({ dark, myToolsAll, DE, theme, loading }: { dark: boolean; myToolsAll: NewToolData[]; DE: boolean; theme: Theme; loading: boolean }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -443,10 +481,7 @@ export default function PlaygroundNew() {
             <ToolShape label="...with visible corrections" href="/Diplom-Projekt/loschen-korrigieren" video="visible-corrections" style={{ left: 774, top: 526, width: 363, height: 174, borderRadius: "40px 4px 40px 4px" }} />
             <ToolShape label="...in a spiral" href="/Diplom-Projekt/in-a-spiral" video="in-a-spiral" videoFit="cover" style={{ left: 1321, top: 414, width: 211, height: 309, transform: "rotate(12.11deg)", borderRadius: 200 }} textStyle={{ transform: "rotate(-12.11deg)" }} />
             <div style={{ position: "absolute", left: 456, top: 300, width: 768 }}>
-              <h1 style={{ margin: 0, fontFamily: FONT_SERIF, fontSize: 36, lineHeight: "45px", fontWeight: 400, color: theme.headline, textAlign: "center", whiteSpace: "nowrap" }}>
-                {DE ? "Schreibwerkzeuge prägen, wie wir denken & schreiben." : "Writing Tools shape how we think & write."}<br />
-                {DE ? "Entdecke Schreibwerkzeuge, die ihre Regeln brechen." : "Explore Writing Tools that break their rules."}
-              </h1>
+              <TypewriterHero DE={DE} theme={theme} />
             </div>
           </div>
         </section>

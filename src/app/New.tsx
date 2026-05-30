@@ -696,7 +696,7 @@ function SavedModal({ dark, savedId, lang, onClose, onPlayground, surfaceLight, 
 }) {
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
-  const link = `${window.location.origin}/Diplom-Projekt/new?tool=${savedId}`;
+  const link = `${window.location.origin}/new?tool=${savedId}`;
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(link).then(() => {

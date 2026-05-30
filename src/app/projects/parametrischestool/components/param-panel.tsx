@@ -553,14 +553,14 @@ export function ParamPanel({ params, onChange, isOpen, onToggle }: ParamPanelPro
                   </div>
                   <div style={{ display: "flex", border: "1px dashed #b4b3b3", borderTop: "none" }}>
                     <button
-                      onClick={() => { window.location.href = `${window.location.origin}/Diplom-Projekt/parametrisches-tool?tool=${savedToolId}`; }}
+                      onClick={() => { window.location.href = `${window.location.origin}/parametrisches-tool?tool=${savedToolId}`; }}
                       style={{ flex: 1, height: "48px", border: "none", borderRight: "1px dashed #b4b3b3", backgroundColor: "transparent", cursor: "pointer", fontFamily: FONT_SEMI, fontSize: "11px", color: "#11112d", letterSpacing: "0.1152px", outline: "none" }}
                     >
                       Tool benutzen
                     </button>
                     <button
                       onClick={() => {
-                        navigator.clipboard.writeText(`${window.location.origin}/Diplom-Projekt/parametrisches-tool?tool=${savedToolId}`)
+                        navigator.clipboard.writeText(`${window.location.origin}/parametrisches-tool?tool=${savedToolId}`)
                           .then(() => { setLinkCopied(true); setTimeout(() => setLinkCopied(false), 2000); });
                       }}
                       style={{ flex: 1, height: "48px", border: "none", backgroundColor: "transparent", cursor: "pointer", fontFamily: FONT_SEMI, fontSize: "11px", color: "#11112d", letterSpacing: "0.1152px", outline: "none" }}

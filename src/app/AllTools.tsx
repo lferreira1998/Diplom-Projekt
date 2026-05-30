@@ -31,7 +31,7 @@ export default function AllTools() {
   };
 
   const copyLink = (tool: SavedTool) => {
-    const url = `${window.location.origin}/Diplom-Projekt/parametrisches-tool?tool=${tool.id}`;
+    const url = `${window.location.origin}/parametrisches-tool?tool=${tool.id}`;
     navigator.clipboard.writeText(url).then(() => {
       setCopiedId(tool.id);
       setTimeout(() => setCopiedId(null), 2000);

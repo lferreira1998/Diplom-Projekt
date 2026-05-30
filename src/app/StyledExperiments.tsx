@@ -101,7 +101,7 @@ const experiments = {
 } satisfies Record<string, ExperimentInfo>;
 
 function videoPath(video: string) {
-  return `/Diplom-Projekt/videos/${video}.mp4`;
+  return `/videos/${video}.mp4`;
 }
 
 function ExperimentButton({ children, onClick, style }: { children: ReactNode; onClick: () => void; style?: CSSProperties }) {

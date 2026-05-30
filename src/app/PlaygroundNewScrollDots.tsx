@@ -2,13 +2,13 @@ import { useEffect } from "react";
 import PlaygroundNew from "./PlaygroundNew";
 
 const linkMap: Record<string, string> = {
-  "/Diplom-Projekt/uninvited-thoughts": "/Diplom-Projekt/new-experiments/uninvited-thoughts",
-  "/Diplom-Projekt/dont-stop-writing": "/Diplom-Projekt/new-experiments/without-stopping",
-  "/Diplom-Projekt/anonymously-in-public": "/Diplom-Projekt/new-experiments/blind-then-witness",
-  "/Diplom-Projekt/one-word-replay": "/Diplom-Projekt/new-experiments/blind-then-witness",
-  "/Diplom-Projekt/loschen-korrigieren": "/Diplom-Projekt/new-experiments/visible-corrections",
-  "/Diplom-Projekt/off-the-grid": "/Diplom-Projekt/new-experiments/off-the-grid",
-  "/Diplom-Projekt/in-a-spiral": "/Diplom-Projekt/new-experiments/in-a-spiral",
+  "/uninvited-thoughts": "/new-experiments/uninvited-thoughts",
+  "/dont-stop-writing": "/new-experiments/without-stopping",
+  "/anonymously-in-public": "/new-experiments/blind-then-witness",
+  "/one-word-replay": "/new-experiments/blind-then-witness",
+  "/loschen-korrigieren": "/new-experiments/visible-corrections",
+  "/off-the-grid": "/new-experiments/off-the-grid",
+  "/in-a-spiral": "/new-experiments/in-a-spiral",
 };
 
 export default function PlaygroundNewScrollDots() {

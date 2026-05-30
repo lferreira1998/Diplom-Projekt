@@ -26,7 +26,7 @@ const phases = [
   {
     num: "04",
     title: "The Record",
-    duration: "—",
+    duration: "·",
     desc: "Measure the difference in your mental state.",
   },
 ];

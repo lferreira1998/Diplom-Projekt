@@ -1416,7 +1416,7 @@ function BoustrophedonZone({
       style={{ width: "100%", fontFamily, fontSize: `${fontSize}px`, color: textColor, lineHeight: 1.6, position: "relative" }}
     >
       {positions.length === 0 && (
-        <span style={{ position: "absolute", top: 0, left: 0, color: "#AAAAAA", pointerEvents: "none", userSelect: "none" }}>
+        <span style={{ position: "absolute", top: 0, left: 0, color: "#AAAAAA", pointerEvents: "none", userSelect: "none", whiteSpace: "nowrap" }}>
           {writingPrompt || "Fang einfach an zu schreiben…"}
         </span>
       )}

@@ -52,9 +52,9 @@ const DICE_PROMPTS_DE = [
   "Schreib einen Satz, den du niemandem zeigen würdest.",
   "Was würdest du sagen, wenn niemand zuhört?",
   "Beschreib eine Farbe, ohne ihren Namen zu nennen.",
-  "Wenn deine Angst einen Namen hätte – was würde sie sagen?",
+  "Wenn deine Angst einen Namen hätte, was würde sie sagen?",
   "Schreib den ersten Satz eines Briefes, den du nie abschicken wirst.",
-  "Erkläre in drei Sätzen, wer du bist – ohne Beruf, Herkunft oder Namen.",
+  "Erkläre in drei Sätzen, wer du bist, ohne Beruf, Herkunft oder Namen.",
   "Was macht dich wütend, das dir gleichzeitig peinlich ist?",
   "Schreib über das, was du nicht bist.",
   "Stell dir vor, deine Gedanken haben Gewicht. Was ist gerade am schwersten?",
@@ -74,9 +74,9 @@ const DICE_PROMPTS_EN = [
   "Write a sentence you'd never show anyone.",
   "What would you say if nobody was listening?",
   "Describe a color without naming it.",
-  "If your fear had a name — what would it say?",
+  "If your fear had a name, what would it say?",
   "Write the first line of a letter you'll never send.",
-  "Describe who you are in three sentences — no job, no hometown, no name.",
+  "Describe who you are in three sentences: no job, no hometown, no name.",
   "What makes you angry that also embarrasses you?",
   "Write about what you are not.",
   "Imagine your thoughts have weight. What's the heaviest one right now?",
@@ -259,7 +259,7 @@ const TRANSLATIONS = {
     lfNoColor: "Originalfarbe",
     // Timer overlay
     timesUp: "Zeit abgelaufen.",
-    timesUpSub: "Dein Text ist noch da — unsichtbar.",
+    timesUpSub: "Dein Text ist noch da, unsichtbar.",
     deleteText: "Text löschen",
     revealText: "Text sehen",
     copyText: "Text kopieren",
@@ -390,7 +390,7 @@ const TRANSLATIONS = {
     lfNoColor: "Original Color",
     // Timer overlay
     timesUp: "Time's up.",
-    timesUpSub: "Your text is still there — invisible.",
+    timesUpSub: "Your text is still there, invisible.",
     deleteText: "Delete text",
     revealText: "Reveal text",
     copyText: "Copy text",
@@ -1996,7 +1996,7 @@ export default function New() {
                 backdropFilter: "blur(4px)",
               }}>
                 <span style={{ fontFamily: FONT_SANS, fontSize: "12px", color: dark ? DARK_MUTED : "#9a9daa" }}>
-                  {lang === "de" ? "Nur ansehen – Regeln nicht änderbar" : "View only – rules cannot be changed"}
+                  {lang === "de" ? "Nur ansehen, Regeln nicht änderbar" : "View only, rules cannot be changed"}
                 </span>
               </div>
             )}
@@ -2058,7 +2058,7 @@ export default function New() {
                         </svg>
                         <span style={{ fontFamily: FONT_SANS, fontSize: "13px", color: recordState === "error" ? "#e05252" : (dark ? DARK_MUTED : "#9a9daa") }}>
                           {recordState === "error"
-                            ? (DE ? "Fehlgeschlagen — erneut versuchen" : "Failed — try again")
+                            ? (DE ? "Fehlgeschlagen, erneut versuchen" : "Failed, try again")
                             : (DE ? "Vorschau-Video aufnehmen" : "Add Preview-Video")}
                         </span>
                         <span style={{ fontFamily: FONT_SANS, fontSize: "11px", color: dark ? "rgba(240,232,220,0.3)" : "rgba(150,150,150,0.7)", lineHeight: 1.4 }}>

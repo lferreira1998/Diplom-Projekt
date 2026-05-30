@@ -205,7 +205,7 @@ export function RecordPreviewOverlay({
     if (cancelledRef.current) return;
 
     const blob = new Blob(chunks, { type: mimeType });
-    if (blob.size < 1000) { setError(DE ? `Aufnahme leer — bitte erneut versuchen.` : `Recording empty — please try again.`); setPhase("error"); return; }
+    if (blob.size < 1000) { setError(DE ? `Aufnahme leer, bitte erneut versuchen.` : `Recording empty, please try again.`); setPhase("error"); return; }
 
     setPhase("uploading");
     try {

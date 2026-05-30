@@ -181,7 +181,7 @@ export default function App() {
           >
             Während des Schreibens bleibt die Oberfläche leer. 
             Keine visuelle Rückmeldung. Du produzierst im Unsichtbaren. 
-            Erst nach dem Abschluss beginnt die Sichtbarkeit – Buchstabe für Buchstabe, 
+            Erst nach dem Abschluss beginnt die Sichtbarkeit, Buchstabe für Buchstabe, 
             Wort für Wort, in der exakten Geschwindigkeit deines Denkens.
           </motion.p>
 

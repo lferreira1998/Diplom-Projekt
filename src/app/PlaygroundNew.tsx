@@ -260,7 +260,7 @@ function ToolCard({ tool, onClick, onDelete, isFavorite, onToggleFavorite }: {
   );
 }
 
-// Fades each card in as it scrolls into view (subtle, once)
+// Cross-fades each card in as it scrolls into view (subtle, once, no slide)
 function Reveal({ children, index = 0 }: { children: ReactNode; index?: number }) {
   const ref = useRef<HTMLDivElement>(null);
   const [shown, setShown] = useState(false);
@@ -280,9 +280,8 @@ function Reveal({ children, index = 0 }: { children: ReactNode; index?: number }
       ref={ref}
       style={{
         opacity: shown ? 1 : 0,
-        transform: shown ? "none" : "translateY(12px)",
-        transition: `opacity 0.6s ease ${delay}s, transform 0.6s ease ${delay}s`,
-        willChange: "opacity, transform",
+        transition: `opacity 0.5s ease ${delay}s`,
+        willChange: "opacity",
       }}
     >
       {children}
@@ -334,8 +333,9 @@ function Section({ title, tools, onOpen, onDelete, emptyMsg, sessionId, favorite
 // ── Skeleton placeholders shown while tools load ──────────────────────────────
 function SkeletonCard({ hue, dark, delay }: { hue: number; dark: boolean; delay: number }) {
   const theme = useContext(ThemeContext);
-  const block = dark ? `oklch(48% 0.055 ${hue})` : `oklch(89% 0.062 ${hue})`;
-  const bar   = dark ? `oklch(40% 0.02 ${hue})`  : `oklch(92% 0.02 ${hue})`;
+  // Very subtle, low-chroma tint of the Look & Feel hue
+  const block = dark ? `oklch(40% 0.016 ${hue})` : `oklch(94.5% 0.016 ${hue})`;
+  const bar   = dark ? `oklch(37% 0.010 ${hue})` : `oklch(93% 0.010 ${hue})`;
   return (
     <div
       style={{
@@ -346,7 +346,7 @@ function SkeletonCard({ hue, dark, delay }: { hue: number; dark: boolean; delay:
         display: "flex",
         flexDirection: "column",
         boxSizing: "border-box",
-        animation: `_skelPulse 1.5s ease-in-out ${delay}s infinite`,
+        animation: `_skelIn 0.5s ease-out ${delay}s both, _skelPulse 1.9s ease-in-out ${delay + 0.5}s infinite`,
       }}
     >
       <div style={{ width: "100%", aspectRatio: "3 / 2", background: block, flexShrink: 0 }} />
@@ -363,7 +363,7 @@ function SkeletonGrid({ title, dark, count = 6 }: { title: string; dark: boolean
   const hues = useMemo(() => Array.from({ length: count }, () => Math.floor(Math.random() * 360)), [count]);
   return (
     <section style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-      <style>{`@keyframes _skelPulse { 0%,100%{opacity:1} 50%{opacity:0.5} }`}</style>
+      <style>{`@keyframes _skelPulse { 0%,100%{opacity:1} 50%{opacity:0.72} } @keyframes _skelIn { from{opacity:0} to{opacity:1} }`}</style>
       <div style={{ display: "flex", alignItems: "baseline", gap: "12px", borderBottom: `1px dashed ${theme.border}`, paddingBottom: "12px" }}>
         <span style={{ fontFamily: FONT_SERIF, fontSize: "28px", color: theme.text }}>{title}</span>
       </div>

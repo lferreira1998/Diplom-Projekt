@@ -248,6 +248,7 @@ const TRANSLATIONS = {
     posRunning: "Fortlaufende Linie",
     posCustom: "Zeichne deine eigene Linie",
     posZigzag: "Zig Zag",
+    posFollowDot: "Dem Punkt folgen",
     posRandomSentences: "Ganze Sätze",
     posRandomWords: "Einzelne Wörter",
     // Look & Feel
@@ -379,6 +380,7 @@ const TRANSLATIONS = {
     posRunning: "Running Line",
     posCustom: "Draw your own path",
     posZigzag: "Zig Zag",
+    posFollowDot: "Follow the dot",
     posRandomSentences: "Full sentences",
     posRandomWords: "Individual words",
     // Look & Feel
@@ -988,7 +990,7 @@ export default function New() {
   const [schwerSchnelligkeit, setSchwerSchnelligkeit]     = useState(50);
 
   // Position params
-  const [positionMode, setPositionMode] = useState<"standard" | "spiral" | "random" | "running" | "custom" | "zigzag">("standard");
+  const [positionMode, setPositionMode] = useState<"standard" | "spiral" | "random" | "running" | "custom" | "zigzag" | "followdot">("standard");
   const [drawnPath, setDrawnPath]       = useState<{ x: number; y: number }[][]>([]);
 
   // Compatibility toast
@@ -1001,13 +1003,13 @@ export default function New() {
   }, []);
 
   // Non-standard positions block: drift, cursor-running, correction-visible
-  const NON_STANDARD_POSITIONS = ["spiral", "random", "running", "custom", "zigzag"] as const;
+  const NON_STANDARD_POSITIONS = ["spiral", "random", "running", "custom", "zigzag", "followdot"] as const;
   type NonStdPos = typeof NON_STANDARD_POSITIONS[number];
   const isNonStandard = NON_STANDARD_POSITIONS.includes(positionMode as NonStdPos);
 
   // Smart position setter — auto-clears incompatible rules and shows toast
   const applyPositionMode = useCallback((
-    mode: "standard" | "spiral" | "random" | "running" | "custom" | "zigzag",
+    mode: "standard" | "spiral" | "random" | "running" | "custom" | "zigzag" | "followdot",
     opts: { setTextFliegtEnabled: (v: boolean) => void; setCursorRunning: (v: boolean) => void; setCorrectionVisible: (v: boolean) => void; setTextSchwerEnabled: (v: boolean) => void; textFliegtEnabled: boolean; cursorRunning: boolean; correctionVisible: boolean; textSchwerEnabled: boolean; de: boolean; posNames: Record<string, string> }
   ) => {
     setPositionMode(mode);
@@ -1692,6 +1694,7 @@ export default function New() {
             textAppearsRandom={positionMode === "random"}
             boustrophedonModus={positionMode === "zigzag"}
             customPathModus={positionMode === "custom"}
+            followDotModus={positionMode === "followdot"}
             customPath={drawnPath}
             onCustomPathChange={setDrawnPath}
             customPathDark={dark}
@@ -2589,12 +2592,13 @@ export default function New() {
                       { value: "random" as const, label: t.posRandom, disabled: false },
                       { value: "running" as const, label: t.posRunning, disabled: false },
                       { value: "zigzag" as const, label: t.posZigzag, disabled: false },
+                      { value: "followdot" as const, label: t.posFollowDot, disabled: false },
                       { value: "custom" as const, label: t.posCustom, disabled: false },
                     ]).map((opt) => (
                       <div key={opt.value}>
                         <div onClick={() => {
                           if (opt.value === "custom") setDrawnPath([]);
-                          const posNames = { spiral: t.posSpiral, random: t.posRandom, running: t.posRunning, custom: t.posCustom, standard: t.posStandard };
+                          const posNames = { spiral: t.posSpiral, random: t.posRandom, running: t.posRunning, custom: t.posCustom, standard: t.posStandard, zigzag: t.posZigzag, followdot: t.posFollowDot };
                           applyPositionMode(opt.value, { setTextFliegtEnabled, setCursorRunning, setCorrectionVisible, setTextSchwerEnabled, textFliegtEnabled, cursorRunning, correctionVisible, textSchwerEnabled, de: DE, posNames });
                         }} style={{
                           display: "flex", alignItems: "center", justifyContent: "space-between",

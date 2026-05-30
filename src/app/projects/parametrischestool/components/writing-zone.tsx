@@ -46,6 +46,7 @@ interface WritingZoneProps {
   boustrophedonModus?: boolean;
   randomMode?: "words" | "sentences";
   customPathModus?: boolean;
+  followDotModus?: boolean;
   customPath?: { x: number; y: number }[][];
   onCustomPathChange?: (updater: (prev: { x: number; y: number }[][]) => { x: number; y: number }[][]) => void;
   customPathDark?: boolean;
@@ -547,6 +548,174 @@ function RandomTextZone({ textColor, fontFamily = "'general-sans', sans-serif", 
           color: `rgb(${r},${g},${b})`, opacity: 0.25,
           letterSpacing: "0.1em", whiteSpace: "nowrap",
           fontStyle: "italic",
+        }}>
+          Fang einfach an zu schreiben…
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── FollowDotZone (wandering dot — words freeze where the dot was) ──────────────
+// Mirrors the "uninvited thoughts" experiment: a dot drifts across the canvas with
+// velocity physics and slows down while you type. The word you are writing follows
+// the dot; once you finish it (space / newline) it freezes at the dot's position.
+
+interface FollowDotZoneProps {
+  textColor: string;
+  fontFamily?: string;
+  positions: Position[];
+  cursor: number;
+  fontSize?: number;
+}
+
+function FollowDotZone({ textColor, fontFamily = "'general-sans', sans-serif", positions, cursor, fontSize = 22 }: FollowDotZoneProps) {
+  const wrapRef     = useRef<HTMLDivElement>(null);
+  const canvasRef   = useRef<HTMLCanvasElement>(null);
+  const activeElRef = useRef<HTMLDivElement>(null);
+  const rafRef      = useRef(0);
+
+  // Wandering dot physics in percentage coords (0–100)
+  const posRef    = useRef({ x: 50, y: 50 });
+  const velRef    = useRef({ vx: 0.15, vy: 0.1 });
+  const trailRef  = useRef<Array<{ x: number; y: number }>>([]);
+  const lastPtRef = useRef<{ x: number; y: number } | null>(null);
+
+  // Derive word groups from positions (same source of truth as RandomTextZone)
+  const wordGroups  = extractWordGroups(positions, cursor);
+  const activeGroup = wordGroups.find(w => w.isActive);
+  const isTyping    = !!activeGroup && activeGroup.text.length > 0;
+  const typingRef   = useRef(isTyping);
+  useEffect(() => { typingRef.current = isTyping; }, [isTyping]);
+
+  // Frozen positions for completed words, captured at the dot's spot when the word
+  // stops being active. Kept in state so newly frozen words paint immediately.
+  const [frozen, setFrozen] = useState<Record<number, { x: number; y: number }>>({});
+  useLayoutEffect(() => {
+    setFrozen(prev => {
+      const next: Record<number, { x: number; y: number }> = {};
+      let changed = false;
+      for (const w of wordGroups) {
+        if (w.isActive || !w.text) continue;
+        if (prev[w.ordinal]) next[w.ordinal] = prev[w.ordinal];
+        else { next[w.ordinal] = { x: posRef.current.x, y: posRef.current.y }; changed = true; }
+      }
+      if (!changed && Object.keys(prev).length !== Object.keys(next).length) changed = true;
+      return changed ? next : prev;
+    });
+  }, [positions, cursor]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const [r, g, b] = parseRgb(textColor);
+
+  // Animation loop: drift the dot, draw the trail, position the active word
+  useEffect(() => {
+    const drawTrail = () => {
+      const canvas = canvasRef.current;
+      const wrap = wrapRef.current;
+      if (!canvas || !wrap) return;
+      const rect = wrap.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      if (canvas.width !== rect.width * dpr || canvas.height !== rect.height * dpr) {
+        canvas.width = rect.width * dpr; canvas.height = rect.height * dpr;
+        canvas.style.width = `${rect.width}px`; canvas.style.height = `${rect.height}px`;
+      }
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, rect.width, rect.height);
+      const pts = trailRef.current;
+      if (pts.length < 2) return;
+      ctx.beginPath();
+      ctx.strokeStyle = `rgba(${r},${g},${b},0.15)`;
+      ctx.lineWidth = 0.5; ctx.lineCap = "round"; ctx.lineJoin = "round";
+      const toPx = (p: { x: number; y: number }) => ({ x: (p.x / 100) * rect.width, y: (p.y / 100) * rect.height });
+      const f = toPx(pts[0]); ctx.moveTo(f.x, f.y);
+      for (let i = 1; i < pts.length; i++) { const p = toPx(pts[i]); ctx.lineTo(p.x, p.y); }
+      ctx.stroke();
+    };
+
+    const loop = () => {
+      const wrap = wrapRef.current;
+      if (wrap) {
+        const rect = wrap.getBoundingClientRect();
+        const pos = posRef.current;
+        const vel = velRef.current;
+        const speed = Math.sqrt(vel.vx * vel.vx + vel.vy * vel.vy);
+        let angle = Math.atan2(vel.vy, vel.vx);
+        angle += (Math.random() - 0.5) * 0.04;
+        const clamped = Math.max(0.08, Math.min(0.2, speed + (Math.random() - 0.5) * 0.002));
+        vel.vx = Math.cos(angle) * clamped;
+        vel.vy = Math.sin(angle) * clamped;
+        const mult = typingRef.current ? 0.08 : 1;
+        let nx = pos.x + vel.vx * mult;
+        let ny = pos.y + vel.vy * mult;
+        const margin = 4;
+        if (nx <= margin) { nx = margin; vel.vx = Math.abs(vel.vx); }
+        else if (nx >= 100 - margin) { nx = 100 - margin; vel.vx = -Math.abs(vel.vx); }
+        if (ny <= margin) { ny = margin; vel.vy = Math.abs(vel.vy); }
+        else if (ny >= 100 - margin) { ny = 100 - margin; vel.vy = -Math.abs(vel.vy); }
+        pos.x = nx; pos.y = ny;
+
+        const last = lastPtRef.current;
+        if (!last) { trailRef.current.push({ x: nx, y: ny }); lastPtRef.current = { x: nx, y: ny }; }
+        else {
+          const dpx = Math.sqrt(Math.pow(((nx - last.x) / 100) * rect.width, 2) + Math.pow(((ny - last.y) / 100) * rect.height, 2));
+          if (dpx > 2) {
+            trailRef.current.push({ x: nx, y: ny });
+            if (trailRef.current.length > 4000) trailRef.current.shift();
+            lastPtRef.current = { x: nx, y: ny };
+          }
+        }
+        drawTrail();
+        const el = activeElRef.current;
+        if (el) { el.style.left = `${nx}%`; el.style.top = `${ny}%`; }
+      }
+      rafRef.current = requestAnimationFrame(loop);
+    };
+    rafRef.current = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [r, g, b]);
+
+  return (
+    <div ref={wrapRef} style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
+      <canvas ref={canvasRef} style={{ position: "absolute", inset: 0, pointerEvents: "none" }} />
+
+      {/* Frozen (completed) words */}
+      {wordGroups.filter(w => !w.isActive && frozen[w.ordinal]).map(w => {
+        const p = frozen[w.ordinal];
+        return (
+          <div key={w.ordinal} style={{
+            position: "absolute", left: `${p.x}%`, top: `${p.y}%`,
+            transform: "translate(-50%,-50%)", whiteSpace: "nowrap",
+            fontFamily, fontSize: `${fontSize}px`, fontWeight: 400, letterSpacing: "0.02em",
+            color: `rgba(${r},${g},${b},0.6)`, userSelect: "none", pointerEvents: "none",
+          }}>{w.text}</div>
+        );
+      })}
+
+      {/* Active word / dot — follows the wandering dot */}
+      <div ref={activeElRef} style={{
+        position: "absolute", left: "50%", top: "50%",
+        transform: "translate(-50%,-50%)", whiteSpace: "nowrap",
+        fontFamily, fontSize: `${fontSize}px`, fontWeight: 400, letterSpacing: "0.02em",
+        color: `rgb(${r},${g},${b})`, userSelect: "none", pointerEvents: "none",
+        display: "flex", alignItems: "center",
+      }}>
+        {activeGroup && activeGroup.text ? (
+          <>
+            {activeGroup.text}
+            <span style={{ display: "inline-block", width: "2px", height: "1.1em", background: `rgb(${r},${g},${b})`, marginLeft: "1px", animation: "cursorBlink 1s step-end infinite" }} />
+          </>
+        ) : (
+          <span style={{ width: "6px", height: "6px", borderRadius: "999px", background: `rgb(${r},${g},${b})`, display: "block" }} />
+        )}
+      </div>
+
+      {positions.length === 0 && (
+        <div style={{
+          position: "absolute", left: "50%", top: "8%", transform: "translateX(-50%)",
+          pointerEvents: "none", fontFamily, fontSize: `${fontSize}px`,
+          color: `rgb(${r},${g},${b})`, opacity: 0.25, fontStyle: "italic", whiteSpace: "nowrap",
         }}>
           Fang einfach an zu schreiben…
         </div>
@@ -1504,6 +1673,7 @@ export function WritingZone({
   boustrophedonModus = false,
   randomMode         = "words" as const,
   customPathModus    = false,
+  followDotModus     = false,
   customPath         = [] as { x: number; y: number }[][],
   onCustomPathChange,
   customPathDark     = false,
@@ -1558,10 +1728,10 @@ export function WritingZone({
 
   // Auto-focus when switching to spiral, random, or running line mode
   useEffect(() => {
-    if (spiralModus || textAppearsRandom || runningLineModus || boustrophedonModus) {
+    if (spiralModus || textAppearsRandom || runningLineModus || boustrophedonModus || followDotModus) {
       setTimeout(() => containerRef.current?.focus(), 0);
     }
-  }, [spiralModus, textAppearsRandom, runningLineModus, boustrophedonModus]);
+  }, [spiralModus, textAppearsRandom, runningLineModus, boustrophedonModus, followDotModus]);
 
   // Sync arrays with positions length
   useEffect(() => {
@@ -2307,7 +2477,7 @@ export function WritingZone({
     return els;
   };
 
-  const nodes = (spiralModus || boustrophedonModus) ? [] : buildNodes();
+  const nodes = (spiralModus || boustrophedonModus || followDotModus) ? [] : buildNodes();
 
   // ── JSX ──────────────────────────────────────────────────────────────────
 
@@ -2358,6 +2528,33 @@ export function WritingZone({
           style={{ caretColor: "transparent" }}
         >
           <RandomTextZone
+            textColor={textColor}
+            fontFamily={fontFamily}
+            positions={positions}
+            cursor={cursor}
+            fontSize={fontSize}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (followDotModus) {
+    return (
+      <div
+        className="flex-1 relative transition-all duration-300"
+        style={{ paddingRight: panelOpen ? "343px" : "0px" }}
+      >
+        <div
+          ref={containerRef}
+          tabIndex={0}
+          onKeyDown={handleKeyDown}
+          onBlur={() => { selectAllRef.current = false; setSelectAll(false); }}
+          onClick={() => containerRef.current?.focus()}
+          className="absolute inset-0 outline-none cursor-text"
+          style={{ caretColor: "transparent" }}
+        >
+          <FollowDotZone
             textColor={textColor}
             fontFamily={fontFamily}
             positions={positions}

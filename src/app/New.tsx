@@ -1873,18 +1873,18 @@ export default function New() {
                 <motion.button
                   key="float-redraw"
                   initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
+                  animate={{ opacity: 1, x: rulesOpen ? 20 : 0 }}
                   exit={{ opacity: 0, transition: { duration: 0.12 } }}
                   transition={SPRING}
                   style={{
-                    height: "31px", padding: "0 12px",
-                    background: "none",
-                    border: `1px dashed ${dark ? "rgba(240,232,220,0.35)" : "#a4a4a4"}`,
-                    borderRadius: "6px",
+                    height: "33px", padding: "0 13px", marginLeft: "2px",
+                    background: rulesBtnBg,
+                    border: `1px dashed ${BORDER_COL}`,
+                    borderRadius: "4px",
                     cursor: "pointer", outline: "none",
                     display: "flex", alignItems: "center",
-                    fontFamily: FONT_SANS, fontSize: "13px", fontWeight: 400,
-                    color: dark ? DARK_MUTED : "#9a9daa",
+                    fontFamily: FONT_SANS, fontSize: "15px", fontWeight: 400,
+                    color: dark ? DARK_TEXT : LIGHT_TEXT,
                     lineHeight: "normal", whiteSpace: "nowrap",
                     flexShrink: 0,
                   }}

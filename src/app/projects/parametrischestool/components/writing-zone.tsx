@@ -2531,10 +2531,9 @@ export function WritingZone({
                   onClick={(e) => { e.stopPropagation(); onDiceRoll(); }}
                   aria-label="Roll the dice"
                   style={{
-                    position: "absolute", top: 0, left: `-${fontSize * 1.05 + 16}px`,
-                    height: "1.6em",
-                    display: "flex", alignItems: "center", justifyContent: "center",
+                    position: "absolute", top: "0.42em", left: `-${fontSize * 1.05 + 16}px`,
                     background: "none", border: "none", padding: 0, margin: 0,
+                    display: "block",
                     cursor: "pointer", pointerEvents: "auto", lineHeight: 0,
                     color: "#AAAAAA",
                     animation: diceSpinning ? "_diceRoll 0.55s ease-in-out" : "none",

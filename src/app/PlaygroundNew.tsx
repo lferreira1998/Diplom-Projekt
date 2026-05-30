@@ -331,6 +331,49 @@ function Section({ title, tools, onOpen, onDelete, emptyMsg, sessionId, favorite
   );
 }
 
+// ── Skeleton placeholders shown while tools load ──────────────────────────────
+function SkeletonCard({ hue, dark, delay }: { hue: number; dark: boolean; delay: number }) {
+  const theme = useContext(ThemeContext);
+  const block = dark ? `oklch(48% 0.055 ${hue})` : `oklch(89% 0.062 ${hue})`;
+  const bar   = dark ? `oklch(40% 0.02 ${hue})`  : `oklch(92% 0.02 ${hue})`;
+  return (
+    <div
+      style={{
+        border: `1px dashed ${theme.border}`,
+        borderRadius: "8px",
+        overflow: "hidden",
+        background: theme.bg,
+        display: "flex",
+        flexDirection: "column",
+        boxSizing: "border-box",
+        animation: `_skelPulse 1.5s ease-in-out ${delay}s infinite`,
+      }}
+    >
+      <div style={{ width: "100%", aspectRatio: "3 / 2", background: block, flexShrink: 0 }} />
+      <div style={{ padding: "16px 18px", display: "flex", flexDirection: "column", gap: "9px" }}>
+        <div style={{ height: "14px", width: "58%", borderRadius: "4px", background: bar }} />
+        <div style={{ height: "11px", width: "86%", borderRadius: "4px", background: bar }} />
+      </div>
+    </div>
+  );
+}
+
+function SkeletonGrid({ title, dark, count = 6 }: { title: string; dark: boolean; count?: number }) {
+  const theme = useContext(ThemeContext);
+  const hues = useMemo(() => Array.from({ length: count }, () => Math.floor(Math.random() * 360)), [count]);
+  return (
+    <section style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+      <style>{`@keyframes _skelPulse { 0%,100%{opacity:1} 50%{opacity:0.5} }`}</style>
+      <div style={{ display: "flex", alignItems: "baseline", gap: "12px", borderBottom: `1px dashed ${theme.border}`, paddingBottom: "12px" }}>
+        <span style={{ fontFamily: FONT_SERIF, fontSize: "28px", color: theme.text }}>{title}</span>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "20px" }}>
+        {hues.map((h, i) => <SkeletonCard key={i} hue={h} dark={dark} delay={(i % 3) * 0.15} />)}
+      </div>
+    </section>
+  );
+}
+
 function usePlaygroundData() {
   const navigate = useNavigate();
   const sessionId = useMemo(() => getSessionId(), []);
@@ -497,9 +540,7 @@ export default function PlaygroundNew() {
 
         <div ref={toolsRef} style={{ width: "100%", boxSizing: "border-box", padding: "96px 100px 160px" }}>
           {loading ? (
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "200px" }}>
-              <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: theme.muted }}>{DE ? "Lädt..." : "Loading..."}</span>
-            </div>
+            <SkeletonGrid title={DE ? "Alle Tools" : "All Tools"} dark={dark} />
           ) : (
             <Section
               title={DE ? "Alle Tools" : "All Tools"}
@@ -553,9 +594,7 @@ export function MyToolsPage() {
 
         <div style={{ width: "100%", boxSizing: "border-box", padding: "96px 100px 160px" }}>
           {loading ? (
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "200px" }}>
-              <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: theme.muted }}>{DE ? "Lädt..." : "Loading..."}</span>
-            </div>
+            <SkeletonGrid title={DE ? "Meine Tools" : "My Tools"} dark={dark} />
           ) : myToolsAll.length === 0 ? (
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60vh", gap: "16px" }}>
               <span style={{ fontFamily: FONT_SERIF, fontSize: "28px", color: theme.muted }}>{DE ? "Noch keine eigenen Tools." : "No tools yet."}</span>

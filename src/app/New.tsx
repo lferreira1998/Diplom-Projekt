@@ -778,6 +778,45 @@ function SavedModal({ dark, savedId, lang, onClose, onPlayground, surfaceLight, 
   );
 }
 
+// ── Organic grain overlay (SVG turbulence layers) ─────────────────────────────
+// One uniform tile looks artificial, so we stack several noise layers with
+// different scales, octaves and seeds — a fine speckle, larger soft grains, and
+// an anisotropic layer that reads as fibres/streaks. Seeds derive from the
+// tool's seed so each tool gets its own organic texture.
+function grainNoiseUrl(freq: string, octaves: number, seed: number, slope: number, type: "fractalNoise" | "turbulence" = "fractalNoise", size = 256): string {
+  const intercept = (1 - slope) / 2; // keep mid-grey centred
+  const svg =
+    `<svg xmlns='http://www.w3.org/2000/svg' width='${size}' height='${size}'>` +
+    `<filter id='n'>` +
+    `<feTurbulence type='${type}' baseFrequency='${freq}' numOctaves='${octaves}' stitchTiles='stitch' seed='${seed}'/>` +
+    `<feColorMatrix type='saturate' values='0'/>` +
+    `<feComponentTransfer>` +
+    `<feFuncR type='linear' slope='${slope}' intercept='${intercept}'/>` +
+    `<feFuncG type='linear' slope='${slope}' intercept='${intercept}'/>` +
+    `<feFuncB type='linear' slope='${slope}' intercept='${intercept}'/>` +
+    `</feComponentTransfer></filter>` +
+    `<rect width='${size}' height='${size}' filter='url(#n)'/></svg>`;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
+
+interface GrainLayer { url: string; size: number; alpha: number; }
+function buildGrainLayers(seed: number): GrainLayer[] {
+  const s1 = Math.abs(seed) % 1000;
+  const s2 = Math.abs(seed * 7 + 13) % 1000;
+  const s3 = Math.abs(seed * 13 + 29) % 1000;
+  const s4 = Math.abs(seed * 31 + 7) % 1000;
+  return [
+    // fine speckle (the main grain)
+    { url: grainNoiseUrl("0.9", 3, s1, 2.0),          size: 190, alpha: 0.5  },
+    // larger soft grains / blotches
+    { url: grainNoiseUrl("0.16", 4, s2, 1.5),         size: 430, alpha: 0.4  },
+    // vertical-ish fibres / streaks
+    { url: grainNoiseUrl("0.012 0.42", 2, s3, 1.45),  size: 512, alpha: 0.2  },
+    // faint horizontal-ish streaks for cross-grain
+    { url: grainNoiseUrl("0.4 0.014", 2, s4, 1.35),   size: 512, alpha: 0.14 },
+  ];
+}
+
 // ── Paper grain canvas ────────────────────────────────────────────────────────
 const OG_W = 512, OG_H = 512;
 
@@ -892,6 +931,7 @@ export default function New() {
   const [saving, setSaving]               = useState(false);
   const [savedId, setSavedId]             = useState<string | null>(null);
   const [previewSeed]                     = useState(() => Math.floor(Math.random() * 999983));
+  const grainLayers = useMemo(() => buildGrainLayers(previewSeed), [previewSeed]);
   const [saveError, setSaveError]         = useState<string | null>(null);
   const [currentToolId, setCurrentToolId] = useState<string | null>(null);
   const [previewVideoUrl, setPreviewVideoUrl]   = useState<string | null>(null);
@@ -1395,20 +1435,22 @@ export default function New() {
     ctx.fillRect(0, 0, out.width, out.height);
     ctx.drawImage(textCanvas, 0, 0, out.width, out.height);
     if (grainLevel > 0) {
-      const noiseUrl = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='turbulence' baseFrequency='0.65%200.75' numOctaves='4' stitchTiles='stitch' seed='5'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='2.0' intercept='-0.5'/%3E%3CfeFuncG type='linear' slope='2.0' intercept='-0.5'/%3E%3CfeFuncB type='linear' slope='2.0' intercept='-0.5'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23n)'/%3E%3C/svg%3E`;
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-      await new Promise<void>((res) => { img.onload = () => res(); img.onerror = () => res(); img.src = noiseUrl; });
-      if (img.width > 0) {
-        const pattern = ctx.createPattern(img, "repeat");
-        if (pattern) {
-          pattern.setTransform(new DOMMatrix().scaleSelf(scale));
-          ctx.save();
-          ctx.globalCompositeOperation = "multiply";
-          ctx.globalAlpha = (grainLevel / 100) * 0.9;
-          ctx.fillStyle = pattern;
-          ctx.fillRect(0, 0, out.width, out.height);
-          ctx.restore();
+      const blend = dark ? "screen" : "multiply";
+      for (const layer of grainLayers) {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        await new Promise<void>((res) => { img.onload = () => res(); img.onerror = () => res(); img.src = layer.url; });
+        if (img.width > 0) {
+          const pattern = ctx.createPattern(img, "repeat");
+          if (pattern) {
+            pattern.setTransform(new DOMMatrix().scaleSelf(scale * (layer.size / 256)));
+            ctx.save();
+            ctx.globalCompositeOperation = blend as GlobalCompositeOperation;
+            ctx.globalAlpha = (grainLevel / 100) * 0.92 * layer.alpha;
+            ctx.fillStyle = pattern;
+            ctx.fillRect(0, 0, out.width, out.height);
+            ctx.restore();
+          }
         }
       }
     }
@@ -1584,19 +1626,20 @@ export default function New() {
         document.body
       )}
 
-      {/* ── Noise overlay ─────────────────────────────────────────────────── */}
-      {grainLevel > 0 && (
+      {/* ── Noise overlay (layered, organic) ──────────────────────────────── */}
+      {grainLevel > 0 && grainLayers.map((layer, i) => (
         <div
+          key={i}
           aria-hidden
           style={{
             position: "fixed", inset: 0, zIndex: 3, pointerEvents: "none",
-            opacity: (grainLevel / 100) * 0.88,
+            opacity: (grainLevel / 100) * 0.92 * layer.alpha,
             mixBlendMode: dark ? "screen" : "multiply",
-            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='turbulence' baseFrequency='0.65%200.75' numOctaves='4' stitchTiles='stitch' seed='5'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='2.0' intercept='-0.5'/%3E%3CfeFuncG type='linear' slope='2.0' intercept='-0.5'/%3E%3CfeFuncB type='linear' slope='2.0' intercept='-0.5'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23n)'/%3E%3C/svg%3E")`,
-            backgroundRepeat: "repeat", backgroundSize: "256px 256px",
+            backgroundImage: `url("${layer.url}")`,
+            backgroundRepeat: "repeat", backgroundSize: `${layer.size}px ${layer.size}px`,
           }}
         />
-      )}
+      ))}
 
       {/* ── Writing zone ─────────────────────────────────────────────────── */}
       <motion.div

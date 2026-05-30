@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router";
+import { Routes, Route, Navigate } from "react-router";
 import Overview from "./Overview";
 import OneWordReplay from "./OneWordReplay";
 import AboutNew from "./AboutNew";
@@ -31,7 +31,7 @@ import {
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<Overview />} />
+      <Route path="/" element={<Navigate to="/playground" replace />} />
       <Route path="/one-word-replay" element={<OneWordReplay />} />
       <Route path="/dont-stop-writing" element={<DontStopWriting />} />
       <Route path="/uninvited-thoughts" element={<UninvitedThoughts />} />

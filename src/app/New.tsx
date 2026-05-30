@@ -48,6 +48,51 @@ function getLookFeelDarkColors(bgHue: number | null): {
 const FONT_SERIF = "'freight-text-pro', serif";
 const FONT_SANS  = "'general-sans', sans-serif";
 
+const DICE_PROMPTS_DE = [
+  "Schreib einen Satz, den du niemandem zeigen würdest.",
+  "Was würdest du sagen, wenn niemand zuhört?",
+  "Beschreib eine Farbe, ohne ihren Namen zu nennen.",
+  "Wenn deine Angst einen Namen hätte – was würde sie sagen?",
+  "Schreib den ersten Satz eines Briefes, den du nie abschicken wirst.",
+  "Erkläre in drei Sätzen, wer du bist – ohne Beruf, Herkunft oder Namen.",
+  "Was macht dich wütend, das dir gleichzeitig peinlich ist?",
+  "Schreib über das, was du nicht bist.",
+  "Stell dir vor, deine Gedanken haben Gewicht. Was ist gerade am schwersten?",
+  "Was fängst du an zu denken, wenn du aufhörst zu denken?",
+  "Schreib eine Lüge, die du dir selbst immer wieder erzählst.",
+  "Was würde sich ändern, wenn niemand zuschaute?",
+  "Schreib über etwas, das du weißt, aber nie sagst.",
+  "Was wäre, wenn das Gegenteil von dem, was du glaubst, wahr wäre?",
+  "Schreib über einen Moment, den du vergessen hast, aber dein Körper noch kennt.",
+  "Was fragst du dich mitten in der Nacht?",
+  "Schreib einen Satz, den du erst in zehn Jahren verstehen wirst.",
+  "Beschreib das letzte Mal, als du dich geirrt hast.",
+  "Was kannst du nicht aufhören zu wollen, obwohl du weißt, dass du es solltest?",
+  "Schreib so, als ob niemand jemals lesen wird, was du schreibst.",
+];
+const DICE_PROMPTS_EN = [
+  "Write a sentence you'd never show anyone.",
+  "What would you say if nobody was listening?",
+  "Describe a color without naming it.",
+  "If your fear had a name — what would it say?",
+  "Write the first line of a letter you'll never send.",
+  "Describe who you are in three sentences — no job, no hometown, no name.",
+  "What makes you angry that also embarrasses you?",
+  "Write about what you are not.",
+  "Imagine your thoughts have weight. What's the heaviest one right now?",
+  "What do you start thinking when you stop thinking?",
+  "Write a lie you keep telling yourself.",
+  "What would change if nobody was watching?",
+  "Write about something you know but never say.",
+  "What if the opposite of what you believe were true?",
+  "Write about a moment you've forgotten, but your body still remembers.",
+  "What do you wonder about in the middle of the night?",
+  "Write a sentence you'll only understand in ten years.",
+  "Describe the last time you were wrong.",
+  "What can't you stop wanting, even though you know you should?",
+  "Write as if nobody will ever read what you're writing.",
+];
+
 const NAV_ROUTES: Record<string, string> = {
   CreateTool:      "/new",
   ToolCollection:  "/playground",
@@ -962,6 +1007,8 @@ export default function New() {
   // Identity panel state
   const [toolName, setToolName]               = useState("");
   const [prompts, setPrompts]                 = useState<string[]>([""]);
+  const [diceIdx, setDiceIdx]                 = useState(0);
+  const [diceSpinning, setDiceSpinning]       = useState(false);
   const [toolDescription, setToolDescription] = useState("");
 
   // Writing engine state
@@ -1167,6 +1214,20 @@ export default function New() {
     setTimerDone(false); setTextRevealed(false);
     setTimerRunning(false); setTimeLeft(0);
   }, []);
+
+  const handleDiceRoll = useCallback(() => {
+    if (diceSpinning) return;
+    setDiceSpinning(true);
+    setTimeout(() => {
+      setDiceIdx(i => {
+        let next = i;
+        const len = DICE_PROMPTS_DE.length;
+        while (next === i) next = Math.floor(Math.random() * len);
+        return next;
+      });
+      setDiceSpinning(false);
+    }, 550);
+  }, [diceSpinning]);
 
   const handleReveal = useCallback(() => setTextRevealed(true), []);
 
@@ -1544,7 +1605,9 @@ export default function New() {
             customPathDark={dark}
             customPathDe={DE}
             randomMode={randomMode === "sentences" ? "sentences" : "words"}
-            writingPrompt={prompts[0] || t.writingPrompt}
+            writingPrompt={prompts[0] || (lang === "de" ? DICE_PROMPTS_DE[diceIdx] : DICE_PROMPTS_EN[diceIdx])}
+            onDiceRoll={prompts[0] ? undefined : handleDiceRoll}
+            diceSpinning={diceSpinning}
             fontSize={computedFontSize}
             fontFamily={FONT_SERIF}
             centeredPrompt={false}

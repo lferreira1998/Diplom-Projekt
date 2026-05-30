@@ -54,6 +54,8 @@ interface WritingZoneProps {
   fontFamily?: string;
   centeredPrompt?: boolean;
   containerWidth?: string;
+  onDiceRoll?: () => void;
+  diceSpinning?: boolean;
 }
 
 // ── Pure helpers ──────────────────────────────────────────────────────────────
@@ -1510,6 +1512,8 @@ export function WritingZone({
   fontFamily         = "'general-sans', sans-serif",
   centeredPrompt     = false,
   containerWidth     = "1010px",
+  onDiceRoll,
+  diceSpinning       = false,
 }: WritingZoneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const cursorDomRef = useRef<HTMLSpanElement>(null);
@@ -2516,10 +2520,36 @@ export function WritingZone({
         >
           {positions.length === 0 && !centeredPrompt && (
             <span
-              className="select-none absolute top-0 left-0 pointer-events-none"
-              style={{ color: "#AAAAAA" }}
+              className="select-none absolute top-0 left-0"
+              style={{ color: "#AAAAAA", display: "flex", alignItems: "flex-start", gap: "6px" }}
             >
-              {writingPrompt || "Fang einfach an zu schreiben…"}
+              {onDiceRoll && (
+                <button
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onClick={(e) => { e.stopPropagation(); onDiceRoll(); }}
+                  style={{
+                    background: "none", border: "none", padding: 0, margin: 0,
+                    cursor: "pointer", color: "#AAAAAA",
+                    display: "inline-flex", alignItems: "center", flexShrink: 0,
+                    marginTop: "3px",
+                    animation: diceSpinning ? "_diceRoll 0.55s ease-in-out" : "none",
+                    transformOrigin: "center",
+                  }}
+                >
+                  <svg width={fontSize * 0.85} height={fontSize * 0.85} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <style>{`@keyframes _diceRoll{0%{transform:rotate(0)scale(1)}20%{transform:rotate(-20deg)scale(.85)}55%{transform:rotate(170deg)scale(.9)}80%{transform:rotate(340deg)scale(1.05)}100%{transform:rotate(360deg)scale(1)}}`}</style>
+                    <path d="M12 2L22 7.5V16.5L12 22L2 16.5V7.5Z" stroke="#AAAAAA" strokeWidth="1.6" strokeLinejoin="round"/>
+                    <path d="M12 2L22 7.5L12 12.5L2 7.5Z" stroke="#AAAAAA" strokeWidth="1.6" strokeLinejoin="round"/>
+                    <line x1="12" y1="12.5" x2="12" y2="22" stroke="#AAAAAA" strokeWidth="1.6" strokeLinecap="round"/>
+                    <circle cx="8.5" cy="6.5" r="0.9" fill="#AAAAAA"/>
+                    <circle cx="15.5" cy="6.5" r="0.9" fill="#AAAAAA"/>
+                    <circle cx="7" cy="13.5" r="0.85" fill="#AAAAAA"/>
+                    <circle cx="6.5" cy="17" r="0.85" fill="#AAAAAA"/>
+                    <circle cx="17" cy="15" r="0.85" fill="#AAAAAA"/>
+                  </svg>
+                </button>
+              )}
+              <span className="pointer-events-none">{writingPrompt || "Fang einfach an zu schreiben…"}</span>
             </span>
           )}
           {nodes}

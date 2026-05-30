@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { ToolPreview } from "./components/ToolPreview";
 import { ToolLaunchModal } from "./components/ToolLaunchModal";
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { useNavigate, useLocation } from "react-router";
 import { deleteNewTool, getAllNewTools, type NewToolData } from "./utils/storage";
 import TopNav from "./components/TopNav";
@@ -260,6 +260,36 @@ function ToolCard({ tool, onClick, onDelete, isFavorite, onToggleFavorite }: {
   );
 }
 
+// Fades each card in as it scrolls into view (subtle, once)
+function Reveal({ children, index = 0 }: { children: ReactNode; index?: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [shown, setShown] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setShown(true); io.disconnect(); } },
+      { threshold: 0.12, rootMargin: "0px 0px -6% 0px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  const delay = (index % 3) * 0.06;
+  return (
+    <div
+      ref={ref}
+      style={{
+        opacity: shown ? 1 : 0,
+        transform: shown ? "none" : "translateY(12px)",
+        transition: `opacity 0.6s ease ${delay}s, transform 0.6s ease ${delay}s`,
+        willChange: "opacity, transform",
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
 function Section({ title, tools, onOpen, onDelete, emptyMsg, sessionId, favorites, onToggleFavorite }: {
   title: string;
   tools: NewToolData[];
@@ -281,17 +311,18 @@ function Section({ title, tools, onOpen, onDelete, emptyMsg, sessionId, favorite
         <p style={{ fontFamily: FONT_SANS, fontSize: "14px", color: theme.muted, margin: 0 }}>{emptyMsg}</p>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "20px" }}>
-          {tools.map((tool) => {
+          {tools.map((tool, i) => {
             const owned = tool.params.sessionId === sessionId;
             return (
-              <ToolCard
-                key={tool.id}
-                tool={tool}
-                onClick={() => onOpen(tool.id)}
-                onDelete={owned && onDelete ? () => onDelete(tool.id) : undefined}
-                isFavorite={favorites?.includes(tool.id)}
-                onToggleFavorite={!owned && onToggleFavorite ? () => onToggleFavorite(tool.id) : undefined}
-              />
+              <Reveal key={tool.id} index={i}>
+                <ToolCard
+                  tool={tool}
+                  onClick={() => onOpen(tool.id)}
+                  onDelete={owned && onDelete ? () => onDelete(tool.id) : undefined}
+                  isFavorite={favorites?.includes(tool.id)}
+                  onToggleFavorite={!owned && onToggleFavorite ? () => onToggleFavorite(tool.id) : undefined}
+                />
+              </Reveal>
             );
           })}
         </div>

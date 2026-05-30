@@ -2728,7 +2728,7 @@ export function WritingZone({
                   onClick={(e) => { e.stopPropagation(); onDiceRoll(); }}
                   aria-label="Roll the dice"
                   style={{
-                    position: "absolute", top: "0.42em", left: `-${fontSize * 1.05 + 16}px`,
+                    position: "absolute", top: "0.42em", left: `-${fontSize * 1.26 + 16}px`,
                     background: "none", border: "none", padding: 0, margin: 0,
                     display: "block",
                     cursor: "pointer", pointerEvents: "auto", lineHeight: 0,
@@ -2737,7 +2737,7 @@ export function WritingZone({
                     transformOrigin: "center",
                   }}
                 >
-                  <svg width={fontSize * 1.05} height={fontSize * 1.05} viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <svg width={fontSize * 1.26} height={fontSize * 1.26} viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <style>{`@keyframes _diceRoll{0%{transform:rotate(0)scale(1)}20%{transform:rotate(-20deg)scale(.85)}55%{transform:rotate(170deg)scale(.9)}80%{transform:rotate(340deg)scale(1.05)}100%{transform:rotate(360deg)scale(1)}}`}</style>
                     {dicePaths.map((d, i) => <path key={i} d={d} fill="#AAAAAA" />)}
                   </svg>

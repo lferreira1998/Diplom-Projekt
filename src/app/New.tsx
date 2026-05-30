@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
-import { useNavigate, useSearchParams } from "react-router";
+import { useNavigate, useSearchParams, useLocation } from "react-router";
 import {
   WritingZone,
   type Position,
@@ -927,7 +927,16 @@ function useWindowWidth() {
 
 export default function New() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
+
+  // Go back to wherever the user came from (preserving their scroll position).
+  // If they landed here directly (e.g. via a shared tool link) there's no
+  // in-app history, so fall back to the tool collection.
+  const goBack = () => {
+    if (location.key && location.key !== "default") navigate(-1);
+    else navigate("/tool-collection");
+  };
   const sessionId = useMemo(() => getOrCreateSessionId(), []);
   // Save state
   const [saving, setSaving]               = useState(false);
@@ -1553,11 +1562,11 @@ export default function New() {
               border: `1px dashed ${BORDER_COL}`,
               background: "transparent", cursor: "pointer", outline: "none",
               display: "flex", alignItems: "center", justifyContent: "center",
-              fontFamily: FONT_SANS, fontSize: "12px",
+              fontFamily: FONT_SERIF, fontSize: "13px", fontStyle: "italic",
               color: dark ? DARK_MUTED : "#9a9daa",
-              flexShrink: 0,
+              flexShrink: 0, lineHeight: 1,
             }}
-          >ⓘ</button>
+          >i</button>
         </div>
       )}
 
@@ -1759,7 +1768,7 @@ export default function New() {
               color: dark ? DARK_TEXT : LIGHT_TEXT,
               zIndex: 25,
             }}
-            onClick={(e) => { e.stopPropagation(); navigate("/tool-collection"); }}
+            onClick={(e) => { e.stopPropagation(); goBack(); }}
           >
             {t.backBtn}
           </motion.button>

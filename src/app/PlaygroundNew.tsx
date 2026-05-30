@@ -24,14 +24,14 @@ type Theme = {
 function getTheme(dark: boolean): Theme {
   if (dark) {
     return {
-      bg: "#1f1e1c",
-      panelBg: "#2d2b28",
-      toolBg: "#2d2b28",
+      bg: "#484848",
+      panelBg: "#3a3836",
+      toolBg: "#3a3836",
       border: "rgba(240,232,220,0.28)",
       text: "#f0e8dc",
       muted: "rgba(240,232,220,0.5)",
       headline: "#f0e8dc",
-      dotGrid: "radial-gradient(circle, rgba(240,232,220,0.16) 1px, transparent 1.2px)",
+      dotGrid: "radial-gradient(circle, rgba(240,232,220,0.18) 1px, transparent 1.2px)",
     };
   }
   return {
@@ -244,7 +244,7 @@ function ToolCard({ tool, onClick, onDelete, isFavorite, onToggleFavorite }: {
         </button>
       )}
       <div onClick={onClick} style={{ width: "100%", aspectRatio: "3 / 2", overflow: "hidden", flexShrink: 0, cursor: "pointer" }}>
-        <ToolPreview tool={tool} active={hovered} dark={theme.bg === "#1f1e1c"} />
+        <ToolPreview tool={tool} active={hovered} dark={theme.bg === "#484848"} />
       </div>
       <div onClick={onClick} style={{ padding: "16px 18px", display: "flex", flexDirection: "column", gap: "5px", cursor: "pointer" }}>
         <span style={{ fontFamily: FONT_SERIF, fontSize: "19px", color: theme.text, lineHeight: "1.25", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>

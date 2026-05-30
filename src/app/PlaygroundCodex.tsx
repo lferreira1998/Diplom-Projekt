@@ -36,9 +36,9 @@ type ToolCardPlacement = {
 function getTheme(dark: boolean): Theme {
   if (dark) {
     return {
-      bg: "#1f1e1c",
-      panelBg: "#2d2b28",
-      toolBg: "#2d2b28",
+      bg: "#484848",
+      panelBg: "#3a3836",
+      toolBg: "#3a3836",
       border: "rgba(240,232,220,0.28)",
       text: "#f0e8dc",
       muted: "rgba(240,232,220,0.5)",
@@ -252,7 +252,7 @@ function ToolCard({ tool, owned, favorite, onOpen, onDelete, onToggleFavorite }:
       }}
     >
       <div onClick={onOpen} style={{ width: "100%", height: PREVIEW_HEIGHT, minHeight: PREVIEW_HEIGHT, overflow: "hidden", cursor: "pointer", borderRadius: PREVIEW_RADIUS, border: `1px dashed ${theme.border}`, boxSizing: "border-box" }}>
-        <ToolPreview tool={tool} active={hovered} dark={theme.bg === "#1f1e1c"} />
+        <ToolPreview tool={tool} active={hovered} dark={theme.bg === "#484848"} />
       </div>
       <div onClick={onOpen} style={{ display: "flex", flexDirection: "column", gap: 7, padding: "18px 12px 12px", minHeight: 0, cursor: "pointer" }}>
         <span style={{ fontFamily: FONT_SERIF, fontSize: 19, color: theme.text, lineHeight: 1.22, overflow: "hidden", overflowWrap: "anywhere", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{tool.name || "Unnamed Tool"}</span>

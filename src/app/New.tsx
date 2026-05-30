@@ -1682,12 +1682,14 @@ export default function New() {
                   exit={{ opacity: 0, transition: { duration: 0.12 } }}
                   transition={SPRING}
                   style={{
-                    height: "31px", padding: "0 12px", marginLeft: "8px",
-                    background: "none", border: "none",
+                    height: "33px", padding: "0 13px", marginLeft: "8px",
+                    background: rulesBtnBg,
+                    border: `1px dashed ${BORDER_COL}`,
+                    borderRadius: "4px",
                     cursor: "pointer", outline: "none",
                     display: "flex", alignItems: "center",
-                    fontFamily: FONT_SANS, fontSize: "13px", fontWeight: 400,
-                    color: dark ? DARK_MUTED : "#9a9daa",
+                    fontFamily: FONT_SANS, fontSize: "15px", fontWeight: 400,
+                    color: dark ? DARK_TEXT : LIGHT_TEXT,
                     lineHeight: "normal", whiteSpace: "nowrap",
                     flexShrink: 0,
                   }}
@@ -2154,7 +2156,7 @@ export default function New() {
                             exit={{ opacity: 0, height: 0 }}
                             transition={{ duration: 0.18 }}
                             onClick={(e) => e.stopPropagation()}
-                            style={{ display: "flex", flexDirection: "column", gap: "10px", overflow: "hidden", cursor: "default" }}
+                            style={{ display: "flex", flexDirection: "column", gap: "10px", overflow: "visible", paddingBottom: "8px", cursor: "default" }}
                           >
                             <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT, marginTop: "4px" }}>{t.cursorSpeed}</span>
                             <DoubleSlider value={cursorSchnelligkeit} min={1} max={100} step={1} onChange={setCursorSchnelligkeit} dark={dark} />

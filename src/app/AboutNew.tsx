@@ -17,14 +17,14 @@ type AboutTheme = {
 function getAboutTheme(dark: boolean): AboutTheme {
   if (dark) {
     return {
-      bg: "#1f1e1c", panelBg: "#2d2b28", ink: "#f0e8dc", text: "#cdc6ba",
+      bg: "#484848", panelBg: "#3a3836", ink: "#f0e8dc", text: "#cdc6ba",
       muted: "rgba(240,232,220,0.5)", dash: "rgba(240,232,220,0.28)",
-      dotGrid: "radial-gradient(circle, rgba(240,232,220,0.14) 1px, transparent 1.2px)",
-      nodeBg: "rgba(240,232,220,0.05)", nodeHoverBg: "rgba(240,232,220,0.1)",
-      asideBg: "rgba(36,34,31,0.96)", bodyText: "#d8d1c5",
+      dotGrid: "radial-gradient(circle, rgba(240,232,220,0.18) 1px, transparent 1.2px)",
+      nodeBg: "rgba(240,232,220,0.07)", nodeHoverBg: "rgba(240,232,220,0.12)",
+      asideBg: "rgba(58,56,54,0.97)", bodyText: "#d8d1c5",
       scrollThumb: "rgba(240,232,220,0.22)",
-      headerGradient: "linear-gradient(180deg, rgba(31,30,28,0.96), rgba(31,30,28,0.74))",
-      titleBoxBg: "rgba(240,232,220,0.05)",
+      headerGradient: "linear-gradient(180deg, rgba(72,72,72,0.97), rgba(72,72,72,0.74))",
+      titleBoxBg: "rgba(240,232,220,0.06)",
     };
   }
   return {

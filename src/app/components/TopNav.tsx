@@ -78,7 +78,7 @@ function IconHalfCircle({ color, dark }: { color: string; dark: boolean }) {
 
 function btnStyle(dark: boolean): React.CSSProperties {
   return {
-    background: dark ? "#1e1d1b" : "#fcf6ef",
+    background: dark ? "#484848" : "#fcf6ef",
     border: `1px dashed ${BORDER_COL}`,
     borderRadius: "4px",
     cursor: "pointer", outline: "none",
@@ -91,18 +91,18 @@ function btnStyle(dark: boolean): React.CSSProperties {
 }
 
 function navItemStyle(dark: boolean, active: boolean): React.CSSProperties {
-  const activeDarkBg = "#1e1d1b";
+  const activeDarkBg = "#302e2c";
   const activeLightText = "#f5f0ea";
   return {
     background: active
       ? (dark ? "rgba(240,232,220,0.85)" : activeDarkBg)
-      : (dark ? "#1e1d1b" : "#fcf6ef"),
+      : (dark ? "#484848" : "#fcf6ef"),
     border: active
       ? (dark ? "1px solid rgba(240,232,220,0.85)" : `1px solid ${activeDarkBg}`)
       : `1px dashed ${BORDER_COL}`,
     borderRadius: "4px", cursor: "pointer", outline: "none",
     display: "flex", alignItems: "center", justifyContent: "flex-start",
-    color: active ? (dark ? "#1e1d1b" : activeLightText) : (dark ? DARK_TEXT : LIGHT_TEXT),
+    color: active ? (dark ? "#302e2c" : activeLightText) : (dark ? DARK_TEXT : LIGHT_TEXT),
     fontFamily: FONT_SANS, fontSize: "15px", fontWeight: active ? 500 : 400, lineHeight: "normal",
     height: "33px", padding: "0 12px", whiteSpace: "nowrap",
   };
@@ -137,7 +137,7 @@ export default function TopNav({
             style={{
               position: "fixed", top: "24px", left: "24px",
               width: "33px", height: "33px",
-              background: dark ? "#1e1d1b" : "#fcf6ef",
+              background: dark ? "#484848" : "#fcf6ef",
               border: `1px dashed ${BORDER_COL}`,
               borderRadius: "4px",
               cursor: "pointer", outline: "none",

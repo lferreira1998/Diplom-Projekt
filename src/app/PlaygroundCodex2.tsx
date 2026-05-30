@@ -52,9 +52,9 @@ const SHAPE_PRESETS: ShapePreset[] = [
 function getTheme(dark: boolean): Theme {
   if (dark) {
     return {
-      bg: "#1f1e1c",
-      panelBg: "#2d2b28",
-      toolBg: "#2d2b28",
+      bg: "#484848",
+      panelBg: "#3a3836",
+      toolBg: "#3a3836",
       border: "rgba(240,232,220,0.28)",
       text: "#f0e8dc",
       muted: "rgba(240,232,220,0.5)",
@@ -199,7 +199,7 @@ function ShapeTool({ tool, placement, owned, favorite, onOpen, onDelete, onToggl
 }) {
   const theme = useContext(ThemeContext);
   const [hovered, setHovered] = useState(false);
-  const isDark = theme.bg === "#1f1e1c";
+  const isDark = theme.bg === "#484848";
 
   return (
     <button
@@ -382,7 +382,7 @@ function ListToolCard({ tool, owned, favorite, onOpen, onDelete, onToggleFavorit
 }) {
   const theme = useContext(ThemeContext);
   const [hovered, setHovered] = useState(false);
-  const isDark = theme.bg === "#1f1e1c";
+  const isDark = theme.bg === "#484848";
 
   return (
     <div

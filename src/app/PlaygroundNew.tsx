@@ -250,11 +250,9 @@ function ToolCard({ tool, onClick, onDelete, isFavorite, onToggleFavorite }: {
         <span style={{ fontFamily: FONT_SERIF, fontSize: "19px", color: theme.text, lineHeight: "1.25", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
           {tool.name || "Unnamed Tool"}
         </span>
-        {tool.description && (
-          <span style={{ fontFamily: FONT_SANS, fontSize: "13px", color: theme.muted, lineHeight: "1.45", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as const, overflow: "hidden" }}>
-            {tool.description}
-          </span>
-        )}
+        <span style={{ fontFamily: FONT_SANS, fontSize: "13px", color: theme.muted, lineHeight: "1.45", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as const, overflow: "hidden", minHeight: "37px", visibility: tool.description ? "visible" : "hidden" }}>
+          {tool.description || " "}
+        </span>
       </div>
     </div>
   );

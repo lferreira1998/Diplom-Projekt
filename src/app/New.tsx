@@ -167,15 +167,15 @@ const TRANSLATIONS = {
     navLabels: { CreateTool: "Tool erstellen", ToolCollection: "Tool-Sammlung", About: "Über das Projekt" },
     // Identity panel
     identityHeading: "Identität.",
-    identitySubtitle: "Speichere dein Regelset als Tool. Füge Name, Beschreibung, Schreibanstoß und Vorschau-Aufnahme hinzu, damit andere es benutzen können.",
+    identitySubtitle: "Speichere dein Regelset als Tool. Nur Name und Vorschau sind nötig – Beschreibung und Schreibanstoß sind optional.",
     nameHeading: "Name",
     nameHint: 'Gib deinem Tool einen Namen.',
     namePlaceholder: "Name eingeben",
-    promptHeading: "Schreibanstoß oder Aufgabe",
-    promptHint: "Das hilft Menschen beim Schreiben. Du kannst mehrere anlegen.",
+    promptHeading: "Schreibanstoß oder Aufgabe (optional)",
+    promptHint: "Das hilft Menschen beim Schreiben. Wenn leer, werden die Standard-Würfel-Prompts verwendet.",
     promptPlaceholder: "Beispiel: Schreibe etwas über dich…",
     promptAdd: "+ Weiteren hinzufügen",
-    descHeading: "Beschreibung oder Regel",
+    descHeading: "Beschreibung oder Regel (optional)",
     descPlaceholder: "Beispiel: Dieses Tool hilft anonym zu schreiben",
     // Time
     timerLabel: "Timer",
@@ -299,15 +299,15 @@ const TRANSLATIONS = {
     navLabels: { CreateTool: "Create Tool", ToolCollection: "Tool Collection", About: "About" },
     // Identity panel
     identityHeading: "Identity.",
-    identitySubtitle: "Save your rule set as a tool. Add a name, description, prompt, and preview recording so others can use it.",
+    identitySubtitle: "Save your rule set as a tool. Only name and preview are required — description and writing prompt are optional.",
     nameHeading: "Name",
     nameHint: 'Give your tool a name.',
     namePlaceholder: "Enter name",
-    promptHeading: "Writing Prompt or Task",
-    promptHint: "This helps people start writing. You can add multiple.",
+    promptHeading: "Writing Prompt or Task (optional)",
+    promptHint: "This helps people start writing. If left empty, default dice prompts are used.",
     promptPlaceholder: "Example: Write something about yourself…",
     promptAdd: "+ Add another",
-    descHeading: "Description or Rule",
+    descHeading: "Description or Rule (optional)",
     descPlaceholder: "Example: This tool helps writing anonymously",
     // Time
     timerLabel: "Timer",
@@ -2120,6 +2120,27 @@ export default function New() {
                     />
                   </div>
 
+                  {/* Description */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                    <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.descHeading}</span>
+                    <textarea
+                      className="identity-textarea"
+                      placeholder={t.descPlaceholder}
+                      value={toolDescription}
+                      onChange={(e) => setToolDescription(e.target.value)}
+                      onClick={(e) => e.stopPropagation()}
+                      rows={3}
+                      style={{
+                        width: "100%", boxSizing: "border-box",
+                        border: `1px dashed ${innerBorder}`, borderRadius: "8px",
+                        padding: "10px 14px", background: settingsCardBg,
+                        fontFamily: FONT_SANS, fontSize: "15px",
+                        color: dark ? DARK_TEXT : LIGHT_TEXT,
+                        outline: "none", resize: "none", lineHeight: "1.5",
+                      }}
+                    />
+                  </div>
+
                   {/* Prompts */}
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                     <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.promptHeading}</span>
@@ -2154,27 +2175,6 @@ export default function New() {
                         color: dark ? "rgba(240,232,220,0.6)" : "rgba(85,85,85,0.6)",
                       }}
                     >{t.promptAdd}</button>
-                  </div>
-
-                  {/* Description */}
-                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                    <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.descHeading}</span>
-                    <textarea
-                      className="identity-textarea"
-                      placeholder={t.descPlaceholder}
-                      value={toolDescription}
-                      onChange={(e) => setToolDescription(e.target.value)}
-                      onClick={(e) => e.stopPropagation()}
-                      rows={4}
-                      style={{
-                        width: "100%", boxSizing: "border-box",
-                        border: `1px dashed ${innerBorder}`, borderRadius: "8px",
-                        padding: "10px 14px", background: settingsCardBg,
-                        fontFamily: FONT_SANS, fontSize: "15px",
-                        color: dark ? DARK_TEXT : LIGHT_TEXT,
-                        outline: "none", resize: "none", lineHeight: "1.5",
-                      }}
-                    />
                   </div>
                 </div>
                 <div style={{ padding: "16px 24px", flexShrink: 0, display: "flex", flexDirection: "column", gap: "8px", borderTop: `1px dashed ${innerBorder}` }}>

@@ -1007,7 +1007,7 @@ export default function New() {
   // Identity panel state
   const [toolName, setToolName]               = useState("");
   const [prompts, setPrompts]                 = useState<string[]>([""]);
-  const [diceIdx, setDiceIdx]                 = useState(0);
+  const [diceIdx, setDiceIdx]                 = useState(-1);
   const [diceSpinning, setDiceSpinning]       = useState(false);
   const [toolDescription, setToolDescription] = useState("");
 
@@ -1605,7 +1605,7 @@ export default function New() {
             customPathDark={dark}
             customPathDe={DE}
             randomMode={randomMode === "sentences" ? "sentences" : "words"}
-            writingPrompt={prompts[0] || (lang === "de" ? DICE_PROMPTS_DE[diceIdx] : DICE_PROMPTS_EN[diceIdx])}
+            writingPrompt={prompts[0] || (diceIdx < 0 ? t.writingPrompt : (lang === "de" ? DICE_PROMPTS_DE[diceIdx] : DICE_PROMPTS_EN[diceIdx]))}
             onDiceRoll={prompts[0] ? undefined : handleDiceRoll}
             diceSpinning={diceSpinning}
             fontSize={computedFontSize}

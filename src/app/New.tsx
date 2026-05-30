@@ -136,8 +136,8 @@ const DICE_FACES: string[][] = [
 ];
 
 const NAV_ROUTES: Record<string, string> = {
-  CreateTool:      "/new",
-  ToolCollection:  "/playground",
+  CreateTool:      "/create-tool",
+  ToolCollection:  "/tool-collection",
   About:           "/about-the-project",
 };
 
@@ -762,7 +762,7 @@ function SavedModal({ dark, savedId, lang, onClose, onPlayground, surfaceLight, 
             }}
           >{copied ? (DE ? "Kopiert ✓" : "Copied ✓") : (DE ? "Link kopieren" : "Copy link")}</button>
           <button
-            onClick={() => navigate(`/new?tool=${savedId}`)}
+            onClick={() => navigate(`/create-tool?tool=${savedId}`)}
             style={{
               fontFamily: FONT_SANS, fontSize: "14px", padding: "10px 18px",
               borderRadius: "8px", border: "none",
@@ -1172,7 +1172,7 @@ export default function New() {
               : "This tool is designed for larger screens and requires at least 1000px width."}
           </span>
           <button
-            onClick={() => navigate("/playground")}
+            onClick={() => navigate("/tool-collection")}
             style={{ marginTop: "8px", background: "transparent", border: `1px dashed ${BORDER_COL}`, borderRadius: "4px", cursor: "pointer", outline: "none", fontFamily: FONT_SANS, fontSize: "14px", color: LIGHT_TEXT, height: "36px", padding: "0 18px" }}
           >{DE_new ? "Tools entdecken" : "Explore tools"}</button>
         </div>
@@ -1756,7 +1756,7 @@ export default function New() {
               color: dark ? DARK_TEXT : LIGHT_TEXT,
               zIndex: 25,
             }}
-            onClick={(e) => { e.stopPropagation(); navigate("/playground"); }}
+            onClick={(e) => { e.stopPropagation(); navigate("/tool-collection"); }}
           >
             {t.backBtn}
           </motion.button>
@@ -1827,8 +1827,9 @@ export default function New() {
               </AnimatePresence>
             </button>
 
-            {/* Clear button — 16px right of Rules button (flex). When the panel is
-                open it nudges right so it clears the panel's right edge by 16px. */}
+            {/* Clear button — 10px right of Rules button to match the gap between
+                the dark-mode button and the Rules button (flex gap 8px + 2px).
+                When the panel is open it nudges right to clear the panel edge. */}
             <AnimatePresence>
               {positions.length > 0 && (
                 <motion.button
@@ -1838,7 +1839,7 @@ export default function New() {
                   exit={{ opacity: 0, transition: { duration: 0.12 } }}
                   transition={SPRING}
                   style={{
-                    height: "33px", padding: "0 13px", marginLeft: "8px",
+                    height: "33px", padding: "0 13px", marginLeft: "2px",
                     background: rulesBtnBg,
                     border: `1px dashed ${BORDER_COL}`,
                     borderRadius: "4px",
@@ -2773,17 +2774,17 @@ export default function New() {
         )}
       </AnimatePresence>
 
-      {/* ── Timer circle (bottom of writing area, 16px right of panel right edge) ── */}
+      {/* ── Timer circle (bottom-left, aligned to the top buttons' left edge) ── */}
       <AnimatePresence>
         {visible && timerEnabled && timerRunning && (
           <motion.div
             key="timer-circle"
             initial={{ opacity: 0, scale: 0.88 }}
-            animate={{ opacity: 1, scale: 1, x: rulesOpen ? 416 : 0 }}
+            animate={{ opacity: 1, scale: 1, x: rulesOpen ? 459 : 0 }}
             exit={{ opacity: 0, scale: 0.88, transition: { duration: 0.15 } }}
             transition={SPRING}
             style={{
-              position: "fixed", bottom: "16px", left: BTN_CLOSED.rules,
+              position: "fixed", bottom: "16px", left: BTN_CLOSED.dark,
               width: "84px", height: "84px",
               borderRadius: "100px",
               border: `1px dashed ${dark ? DARK_BORDER : BORDER_COL}`,
@@ -2985,7 +2986,7 @@ export default function New() {
             savedId={savedId}
             lang={lang}
             onClose={() => setSavedId(null)}
-            onPlayground={() => navigate("/playground")}
+            onPlayground={() => navigate("/tool-collection")}
             surfaceLight={surfaceLight}
             cardBg={settingsCardBg}
           />

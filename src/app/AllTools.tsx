@@ -87,7 +87,7 @@ export default function AllTools() {
                   {copiedId === tool.id ? "Kopiert ✓" : "Link kopieren"}
                 </button>
                 <button
-                  onClick={() => navigate(`/parametrisches-tool?tool=${tool.id}`)}
+                  onClick={() => navigate(`/write?tool=${tool.id}`)}
                   style={{ height: 36, padding: "0 16px", border: `1px dashed ${NAVY}`, backgroundColor: NAVY, fontFamily: FONT_EXT, fontSize: 11, color: BG, cursor: "pointer", letterSpacing: "-0.44px", whiteSpace: "nowrap" }}
                 >
                   Benutzen

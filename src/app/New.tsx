@@ -2006,7 +2006,7 @@ export default function New() {
                     />
                   </div>
                 </div>
-                <div style={{ padding: "16px 24px", flexShrink: 0, display: "flex", flexDirection: "column", gap: "8px" }}>
+                <div style={{ padding: "16px 24px", flexShrink: 0, display: "flex", flexDirection: "column", gap: "8px", borderTop: `1px dashed ${innerBorder}` }}>
                   {saveError && (
                     <span style={{ fontFamily: FONT_SANS, fontSize: "12px", color: "#e05252", textAlign: "center" }}>{saveError}</span>
                   )}

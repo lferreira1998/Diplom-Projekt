@@ -1657,39 +1657,13 @@ export default function New() {
             writingPrompt={prompts[0] || (diceIdx < 0 ? t.writingPrompt : (lang === "de" ? DICE_PROMPTS_DE[diceIdx] : DICE_PROMPTS_EN[diceIdx]))}
             onDiceRoll={prompts[0] ? undefined : handleDiceRoll}
             diceSpinning={diceSpinning}
+            dicePaths={[...DICE_FRAME, ...DICE_FACES[diceFace]]}
             fontSize={computedFontSize}
             fontFamily={FONT_SERIF}
             centeredPrompt={false}
             containerWidth="764px"
           />
       </motion.div>
-
-      {/* ── Floating dice button ─────────────────────────────────────────── */}
-      <AnimatePresence>
-        {visible && positions.length === 0 && !prompts[0] && (
-          <motion.button
-            key="float-dice"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1, left: rulesOpen ? 507 - 36 : 165 - 36 }}
-            exit={{ opacity: 0, transition: { duration: 0.12 } }}
-            transition={{ opacity: { duration: 0.2 }, left: SPRING }}
-            onClick={handleDiceRoll}
-            style={{
-              position: "fixed", top: "27px", zIndex: 2,
-              background: "none", border: "none", padding: 0, cursor: "pointer",
-              display: "flex", alignItems: "center",
-              animation: diceSpinning ? "_diceRoll 0.55s ease-in-out" : "none",
-              transformOrigin: "center",
-              color: "#AAAAAA",
-            }}
-          >
-            <svg width="26" height="26" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
-              {DICE_FRAME.map((d, i) => <path key={`f${i}`} d={d} fill="#AAAAAA" />)}
-              {DICE_FACES[diceFace].map((d, i) => <path key={`p${i}`} d={d} fill="#AAAAAA" />)}
-            </svg>
-          </motion.button>
-        )}
-      </AnimatePresence>
 
       {/* ── Floating ◑ button ─────────────────────────────────────────────── */}
       <AnimatePresence>

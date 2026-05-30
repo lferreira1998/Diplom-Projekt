@@ -56,6 +56,7 @@ interface WritingZoneProps {
   containerWidth?: string;
   onDiceRoll?: () => void;
   diceSpinning?: boolean;
+  dicePaths?: string[];
 }
 
 // ── Pure helpers ──────────────────────────────────────────────────────────────
@@ -1512,6 +1513,9 @@ export function WritingZone({
   fontFamily         = "'general-sans', sans-serif",
   centeredPrompt     = false,
   containerWidth     = "1010px",
+  onDiceRoll,
+  diceSpinning       = false,
+  dicePaths,
 }: WritingZoneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const cursorDomRef = useRef<HTMLSpanElement>(null);
@@ -2521,6 +2525,26 @@ export function WritingZone({
               className="select-none absolute top-0 left-0 pointer-events-none"
               style={{ color: "#AAAAAA", whiteSpace: "nowrap" }}
             >
+              {onDiceRoll && dicePaths && (
+                <button
+                  onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                  onClick={(e) => { e.stopPropagation(); onDiceRoll(); }}
+                  aria-label="Roll the dice"
+                  style={{
+                    position: "absolute", top: "0.18em", left: `-${fontSize * 1.05 + 16}px`,
+                    background: "none", border: "none", padding: 0, margin: 0,
+                    cursor: "pointer", pointerEvents: "auto", lineHeight: 0,
+                    color: "#AAAAAA",
+                    animation: diceSpinning ? "_diceRoll 0.55s ease-in-out" : "none",
+                    transformOrigin: "center",
+                  }}
+                >
+                  <svg width={fontSize * 1.05} height={fontSize * 1.05} viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <style>{`@keyframes _diceRoll{0%{transform:rotate(0)scale(1)}20%{transform:rotate(-20deg)scale(.85)}55%{transform:rotate(170deg)scale(.9)}80%{transform:rotate(340deg)scale(1.05)}100%{transform:rotate(360deg)scale(1)}}`}</style>
+                    {dicePaths.map((d, i) => <path key={i} d={d} fill="#AAAAAA" />)}
+                  </svg>
+                </button>
+              )}
               {writingPrompt || "Fang einfach an zu schreiben…"}
             </span>
           )}

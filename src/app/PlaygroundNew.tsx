@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { ToolPreview } from "./components/ToolPreview";
 import { ToolLaunchModal } from "./components/ToolLaunchModal";
 import type { CSSProperties, ReactNode } from "react";
@@ -358,17 +358,35 @@ function SkeletonCard({ hue, dark, delay }: { hue: number; dark: boolean; delay:
   );
 }
 
-function SkeletonGrid({ title, dark, count = 6 }: { title: string; dark: boolean; count?: number }) {
+function SkeletonGrid({ title, dark, rows = 3 }: { title: string; dark: boolean; rows?: number }) {
   const theme = useContext(ThemeContext);
-  const hues = useMemo(() => Array.from({ length: count }, () => Math.floor(Math.random() * 360)), [count]);
+  const gridRef = useRef<HTMLDivElement>(null);
+  const [cols, setCols] = useState(4);
+  useLayoutEffect(() => {
+    const el = gridRef.current;
+    if (!el) return;
+    const measure = () => {
+      const w = el.clientWidth;
+      setCols(Math.max(1, Math.floor((w + 20) / (300 + 20))));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  // Stable hue pool so colours don't reshuffle on resize
+  const huePool = useMemo(() => Array.from({ length: 60 }, () => Math.floor(Math.random() * 360)), []);
+  const count = cols * rows;
   return (
     <section style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
       <style>{`@keyframes _skelPulse { 0%,100%{opacity:1} 50%{opacity:0.72} } @keyframes _skelIn { from{opacity:0} to{opacity:1} }`}</style>
       <div style={{ display: "flex", alignItems: "baseline", gap: "12px", borderBottom: `1px dashed ${theme.border}`, paddingBottom: "12px" }}>
         <span style={{ fontFamily: FONT_SERIF, fontSize: "28px", color: theme.text }}>{title}</span>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "20px" }}>
-        {hues.map((h, i) => <SkeletonCard key={i} hue={h} dark={dark} delay={(i % 3) * 0.15} />)}
+      <div ref={gridRef} style={{ display: "grid", gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: "20px" }}>
+        {Array.from({ length: count }, (_, i) => (
+          <SkeletonCard key={i} hue={huePool[i % huePool.length]} dark={dark} delay={(i % cols) * 0.08} />
+        ))}
       </div>
     </section>
   );

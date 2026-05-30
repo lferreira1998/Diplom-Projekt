@@ -8,8 +8,8 @@ const DARK_TEXT  = "#f0e8dc";
 const FONT_SANS  = "'general-sans', sans-serif";
 
 const ROUTES: Record<string, string> = {
-  Create:     "/new",
-  Playground: "/playground",
+  Create:     "/create-tool",
+  Playground: "/tool-collection",
   About:      "/about-the-project",
 };
 

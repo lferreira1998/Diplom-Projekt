@@ -476,7 +476,7 @@ function usePlaygroundData() {
 
   const navigateToTool = (id: string, timerMinutes: number | null) => {
     const timerParam = timerMinutes != null ? `&timer=${timerMinutes}` : "&timer=0";
-    navigate(`/new?tool=${id}${timerParam}`);
+    navigate(`/create-tool?tool=${id}${timerParam}`);
   };
 
   const handleDelete = (id: string) => {
@@ -529,13 +529,13 @@ function PageNavFAB({ dark, myToolsAll, DE, theme, loading }: { dark: boolean; m
     : myToolsAll.length > 0;
   if (!hasOwnTools) return null;
 
-  const active = isMyPage ? "/my-tools" : "/playground";
+  const active = isMyPage ? "/my-tools" : "/tool-collection";
 
   return (
     <div style={{ position: "fixed", bottom: "40px", left: "50%", transform: "translateX(-50%)", zIndex: 50, display: "flex", gap: "4px", background: theme.toolBg, border: `1px dashed ${theme.border}`, borderRadius: "100px", padding: "4px" }}>
       {([
         { path: "/my-tools", label: DE ? "Meine Tools" : "My Tools" },
-        { path: "/playground", label: DE ? "Alle Tools" : "All Tools" },
+        { path: "/tool-collection", label: DE ? "Alle Tools" : "All Tools" },
       ]).map(({ path, label }) => (
         <button key={path} onClick={() => navigate(path)} style={{ border: "none", borderRadius: "100px", cursor: "pointer", outline: "none", padding: "9px 20px", fontFamily: FONT_SANS, fontSize: "14px", background: active === path ? (dark ? theme.text : theme.headline) : "transparent", color: active === path ? theme.bg : theme.muted, transition: "background 0.15s, color 0.15s" }}>
           {label}
@@ -577,11 +577,11 @@ export default function PlaygroundNew() {
         <section aria-label="Writing tools playground" style={{ position: "relative", minHeight: "100vh", overflow: "hidden", background: "transparent" }}>
           <div style={{ position: "absolute", left: "50%", top: "50%", width: 1680, height: 858, transform: "translate(-50%, -50%)" }}>
             <div style={{ position: "absolute", inset: 0, animation: "_toolIn 1.2s ease-out 0.8s both" }}>
-              <ToolShape label="...without stopping" href="/dont-stop-writing" video="without-stopping" videoFit="contain" style={{ left: 40, top: 197, width: 236, height: 233, transform: "rotate(5.1deg)", borderRadius: 200 }} textStyle={{ transform: "rotate(-5.1deg)" }} />
+              <ToolShape label="...without stopping" href="/without-stopping" video="without-stopping" videoFit="contain" style={{ left: 40, top: 197, width: 236, height: 233, transform: "rotate(5.1deg)", borderRadius: 200 }} textStyle={{ transform: "rotate(-5.1deg)" }} />
               <ToolShape label="...uninvited thoughts" href="/uninvited-thoughts" video="uninvited-thoughts" style={{ left: 420, top: 57, width: 241, height: 182, transform: "rotate(-9.25deg)", borderRadius: 4 }} textStyle={{ transform: "rotate(9.25deg)" }} />
               <ToolShape label="...off the grid" href="/off-the-grid" video="off-the-grid" style={{ left: 1220, top: 112, width: 251, height: 163, transform: "rotate(4.18deg)", borderRadius: 4, justifyContent: "flex-start", alignItems: "flex-end", padding: 12 }} textStyle={{ transform: "rotate(-4.18deg)", marginBottom: 0 }} />
-              <ToolShape label="...blind & then witness" href="/anonymously-in-public" video="blind-then-witness" style={{ left: 213, top: 579, width: 324, height: 163, transform: "rotate(6.45deg)", borderRadius: 100 }} textStyle={{ transform: "rotate(-6.45deg)" }} />
-              <ToolShape label="...with visible corrections" href="/loschen-korrigieren" video="visible-corrections" style={{ left: 774, top: 526, width: 363, height: 174, borderRadius: "40px 4px 40px 4px" }} />
+              <ToolShape label="...blind & then witness" href="/blind-then-witness" video="blind-then-witness" style={{ left: 213, top: 579, width: 324, height: 163, transform: "rotate(6.45deg)", borderRadius: 100 }} textStyle={{ transform: "rotate(-6.45deg)" }} />
+              <ToolShape label="...with visible corrections" href="/visible-corrections" video="visible-corrections" style={{ left: 774, top: 526, width: 363, height: 174, borderRadius: "40px 4px 40px 4px" }} />
               <ToolShape label="...in a spiral" href="/in-a-spiral" video="in-a-spiral" videoFit="cover" style={{ left: 1321, top: 414, width: 211, height: 309, transform: "rotate(12.11deg)", borderRadius: 200 }} textStyle={{ transform: "rotate(-12.11deg)" }} />
             </div>
             <div style={{ position: "absolute", left: 456, top: 300, width: 768 }}>

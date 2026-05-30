@@ -3,10 +3,10 @@ import PlaygroundNew from "./PlaygroundNew";
 
 const linkMap: Record<string, string> = {
   "/uninvited-thoughts": "/new-experiments/uninvited-thoughts",
-  "/dont-stop-writing": "/new-experiments/without-stopping",
-  "/anonymously-in-public": "/new-experiments/blind-then-witness",
+  "/without-stopping": "/new-experiments/without-stopping",
+  "/blind-then-witness": "/new-experiments/blind-then-witness",
   "/one-word-replay": "/new-experiments/blind-then-witness",
-  "/loschen-korrigieren": "/new-experiments/visible-corrections",
+  "/visible-corrections": "/new-experiments/visible-corrections",
   "/off-the-grid": "/new-experiments/off-the-grid",
   "/in-a-spiral": "/new-experiments/in-a-spiral",
 };

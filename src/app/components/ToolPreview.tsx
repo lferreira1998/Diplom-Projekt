@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MiniReplayPreview } from "./MiniReplayPreview";
 import type { NewToolData } from "../utils/storage";
 
@@ -14,16 +14,37 @@ export function ToolPreview({ tool, active, dark }: Props) {
 
   const videoUrl = tool.params.previewVideo;
 
+  // Lazy playback: only load + play the video while it's on (or near) screen,
+  // and pause it when it scrolls away. Avoids dozens of videos downloading and
+  // decoding at once, which is the main cause of the slow first paint.
+  useEffect(() => {
+    if (!videoUrl || videoError) return;
+    const el = videoRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          if (el.preload !== "auto") el.preload = "auto";
+          el.play().catch(() => undefined);
+        } else {
+          el.pause();
+        }
+      },
+      { rootMargin: "300px 0px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [videoUrl, videoError]);
+
   if (videoUrl && !videoError) {
     return (
       <video
         ref={videoRef}
         src={videoUrl}
-        autoPlay
         loop
         muted
         playsInline
-        preload="metadata"
+        preload="none"
         onError={() => setVideoError(true)}
         onCanPlay={() => {
           if (videoRef.current) videoRef.current.playbackRate = 1.75;

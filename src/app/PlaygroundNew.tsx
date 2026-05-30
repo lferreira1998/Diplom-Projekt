@@ -392,11 +392,44 @@ function SkeletonGrid({ title, dark, rows = 3 }: { title: string; dark: boolean;
   );
 }
 
+// ── Stale-while-revalidate cache for the tool list ────────────────────────────
+// Shared across All Tools / My Tools navigations (module scope) and persisted
+// to localStorage so repeat visits render instantly while we refresh in the bg.
+const TOOLS_CACHE_KEY = "playgroundToolsCacheV1";
+let toolsMemCache: NewToolData[] | null = null;
+
+function readToolsCache(): NewToolData[] | null {
+  if (toolsMemCache) return toolsMemCache;
+  try {
+    const raw = localStorage.getItem(TOOLS_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) { toolsMemCache = parsed as NewToolData[]; return toolsMemCache; }
+  } catch { /* ignore */ }
+  return null;
+}
+
+function writeToolsCache(tools: NewToolData[]) {
+  toolsMemCache = tools;
+  try { localStorage.setItem(TOOLS_CACHE_KEY, JSON.stringify(tools)); } catch { /* ignore */ }
+}
+
+function getDeletedIds(): string[] {
+  try { return JSON.parse(localStorage.getItem("deletedToolIds") ?? "[]") as string[]; }
+  catch { return []; }
+}
+
 function usePlaygroundData() {
   const navigate = useNavigate();
   const sessionId = useMemo(() => getSessionId(), []);
-  const [tools, setTools] = useState<NewToolData[]>([]);
-  const [loading, setLoading] = useState(true);
+  const cachedAll = useMemo(() => readToolsCache(), []);
+  const [tools, setTools] = useState<NewToolData[]>(() => {
+    if (!cachedAll) return [];
+    const del = getDeletedIds();
+    return cachedAll.filter((t) => !del.includes(t.id));
+  });
+  // Skeletons only on the very first visit (no cache yet)
+  const [loading, setLoading] = useState(cachedAll === null);
   const [lang, setLang] = useState<"de" | "en">(() => (localStorage.getItem("appLang") as "de" | "en") ?? "de");
   const [dark, setDark] = useState<boolean>(() => localStorage.getItem("appTheme") === "dark");
   const [favorites, setFavorites] = useState<string[]>(() => {
@@ -415,11 +448,12 @@ function usePlaygroundData() {
   useEffect(() => { localStorage.setItem("appTheme", dark ? "dark" : "light"); }, [dark]);
 
   useEffect(() => {
-    let deletedIds: string[] = [];
-    try { deletedIds = JSON.parse(localStorage.getItem("deletedToolIds") ?? "[]") as string[]; }
-    catch { /* ignore */ }
+    const deletedIds = getDeletedIds();
     getAllNewTools()
-      .then((all) => setTools(all.filter((t) => !deletedIds.includes(t.id))))
+      .then((all) => {
+        writeToolsCache(all);
+        setTools(all.filter((t) => !deletedIds.includes(t.id)));
+      })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);

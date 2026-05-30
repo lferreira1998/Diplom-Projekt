@@ -517,11 +517,11 @@ function DoubleSlider({ value, min, max, step = 1, onChange, dark }: {
 
 // ── Timer done overlay ────────────────────────────────────────────────────────
 function TimerDoneOverlay({
-  dark, isVisual, onDelete, onReveal, onCopy, copied, t, surfaceLight,
+  dark, isVisual, onDelete, onReveal, onCopy, copied, t, surfaceLight, cardBg,
 }: {
   dark: boolean; isVisual: boolean;
   onDelete: () => void; onReveal: () => void; onCopy: () => void; copied: boolean;
-  t: Tr; surfaceLight: string;
+  t: Tr; surfaceLight: string; cardBg: string;
 }) {
   return createPortal(
     <motion.div
@@ -530,7 +530,7 @@ function TimerDoneOverlay({
       style={{
         position: "fixed", inset: 0, zIndex: 300,
         display: "flex", alignItems: "center", justifyContent: "center",
-        backgroundColor: dark ? "rgba(30,29,26,0.88)" : "rgba(252,246,239,0.88)",
+        backgroundColor: `color-mix(in srgb, ${dark ? cardBg : surfaceLight} 88%, transparent)`,
         backdropFilter: "blur(6px)",
       }}
     >
@@ -541,7 +541,7 @@ function TimerDoneOverlay({
         transition={{ duration: 0.28, delay: 0.08 }}
         style={{
           display: "flex", flexDirection: "column", alignItems: "center", gap: "24px",
-          background: dark ? "#2d2b28" : surfaceLight,
+          background: cardBg,
           border: `1px dashed ${dark ? DARK_BORDER : BORDER_COL}`,
           borderRadius: "16px",
           padding: "36px 44px",
@@ -648,9 +648,9 @@ function getOrCreateSessionId(): string {
 }
 
 // ── Saved modal ───────────────────────────────────────────────────────────────
-function SavedModal({ dark, savedId, lang, onClose, onPlayground, surfaceLight }: {
+function SavedModal({ dark, savedId, lang, onClose, onPlayground, surfaceLight, cardBg }: {
   dark: boolean; savedId: string; lang: "de" | "en";
-  onClose: () => void; onPlayground: () => void; surfaceLight: string;
+  onClose: () => void; onPlayground: () => void; surfaceLight: string; cardBg: string;
 }) {
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
@@ -672,7 +672,7 @@ function SavedModal({ dark, savedId, lang, onClose, onPlayground, surfaceLight }
       style={{
         position: "fixed", inset: 0, zIndex: 400,
         display: "flex", alignItems: "center", justifyContent: "center",
-        backgroundColor: dark ? "rgba(30,29,26,0.9)" : "rgba(252,246,239,0.9)",
+        backgroundColor: `color-mix(in srgb, ${dark ? cardBg : surfaceLight} 90%, transparent)`,
         backdropFilter: "blur(6px)",
       }}
       onClick={onClose}
@@ -685,7 +685,7 @@ function SavedModal({ dark, savedId, lang, onClose, onPlayground, surfaceLight }
         onClick={e => e.stopPropagation()}
         style={{
           display: "flex", flexDirection: "column", alignItems: "center", gap: "24px",
-          background: dark ? "#2d2b28" : surfaceLight,
+          background: cardBg,
           border: `1px dashed ${dark ? DARK_BORDER : BORDER_COL}`,
           borderRadius: "16px", padding: "36px 44px",
           maxWidth: "340px", width: "90vw", boxSizing: "border-box",
@@ -1433,6 +1433,7 @@ export default function New() {
       <style>{`
         @keyframes cursorBlink { 0%,100%{opacity:1} 50%{opacity:0} }
         @keyframes bgDrift { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+        @keyframes _diceRoll{0%{transform:rotate(0)scale(1)}20%{transform:rotate(-20deg)scale(.85)}55%{transform:rotate(170deg)scale(.9)}80%{transform:rotate(340deg)scale(1.05)}100%{transform:rotate(360deg)scale(1)}}
         .dark-transition, .dark-transition * {
           transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, opacity 0.2s ease !important;
         }
@@ -1478,7 +1479,7 @@ export default function New() {
             style={{
               position: "fixed", inset: 0, zIndex: 500,
               display: "flex", alignItems: "center", justifyContent: "center",
-              backgroundColor: dark ? "rgba(30,29,26,0.85)" : "rgba(252,246,239,0.88)",
+              backgroundColor: `color-mix(in srgb, ${dark ? darkColors.darkCardBg : surfaceLight} 88%, transparent)`,
               backdropFilter: "blur(6px)",
             }}
             onClick={() => setInfoModalOpen(false)}
@@ -1614,6 +1615,46 @@ export default function New() {
             containerWidth="764px"
           />
       </motion.div>
+
+      {/* ── Floating dice button ─────────────────────────────────────────── */}
+      <AnimatePresence>
+        {visible && positions.length === 0 && !prompts[0] && (
+          <motion.button
+            key="float-dice"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, left: rulesOpen ? 507 - 36 : 165 - 36 }}
+            exit={{ opacity: 0, transition: { duration: 0.12 } }}
+            transition={{ opacity: { duration: 0.2 }, left: SPRING }}
+            onClick={handleDiceRoll}
+            style={{
+              position: "fixed", top: "27px", zIndex: 2,
+              background: "none", border: "none", padding: 0, cursor: "pointer",
+              display: "flex", alignItems: "center",
+              animation: diceSpinning ? "_diceRoll 0.55s ease-in-out" : "none",
+              transformOrigin: "center",
+              color: "#AAAAAA",
+            }}
+          >
+            <svg width="26" height="26" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M1 3.99988L1 16.9999L5.5011e-07 16.7924L0 4.20733L1 3.99988Z" fill="#AAAAAA"/>
+              <path d="M21 3.99988L21 16.9999L20 16.7924V4.20733L21 3.99988Z" fill="#AAAAAA"/>
+              <path d="M13.7348 0.460938L19.3489 2.57786L18.9065 3.47978L13.4715 1.43041L13.7348 0.460938Z" fill="#AAAAAA"/>
+              <path d="M3.35196 5L8.9661 7.11693L8.52369 8.01884L3.08872 5.96947L3.35196 5Z" fill="#AAAAAA"/>
+              <path d="M3.35196 17L8.9661 19.1169L8.52369 20.0188L3.08872 17.9695L3.35196 17Z" fill="#AAAAAA"/>
+              <path d="M8.61484 0L3.00069 2.11693L3.4431 3.01884L8.87807 0.969472L8.61484 0Z" fill="#AAAAAA"/>
+              <path d="M17.6148 5L12.0007 7.11693L12.4431 8.01884L17.8781 5.96947L17.6148 5Z" fill="#AAAAAA"/>
+              <path d="M10 9.73426V18.7343L11 18.5906L11 9.87788L10 9.73426Z" fill="#AAAAAA"/>
+              <path d="M17.6148 17L12.0007 19.1169L12.4431 20.0188L17.8781 17.9695L17.6148 17Z" fill="#AAAAAA"/>
+              <path d="M17 12.9999C17 13.5522 16.5523 13.9999 16 13.9999C15.4477 13.9999 15 13.5522 15 12.9999C15 12.4476 15.4477 11.9999 16 11.9999C16.5523 11.9999 17 12.4476 17 12.9999Z" fill="#AAAAAA"/>
+              <path d="M8 3.99988C8 4.55217 7.55229 4.99988 7 4.99988C6.44772 4.99988 6 4.55217 6 3.99988C6 3.4476 6.44772 2.99988 7 2.99988C7.55229 2.99988 8 3.4476 8 3.99988Z" fill="#AAAAAA"/>
+              <path d="M13 3.99988C13 4.55217 12.5523 4.99988 12 4.99988C11.4477 4.99988 11 4.55217 11 3.99988C11 3.4476 11.4477 2.99988 12 2.99988C12.5523 2.99988 13 3.4476 13 3.99988Z" fill="#AAAAAA"/>
+              <path d="M4 7.99988C4 8.55217 3.55229 8.99988 3 8.99988C2.44772 8.99988 2 8.55217 2 7.99988C2 7.4476 2.44772 6.99988 3 6.99988C3.55229 6.99988 4 7.4476 4 7.99988Z" fill="#AAAAAA"/>
+              <path d="M6 11.9999C6 12.5522 5.55229 12.9999 5 12.9999C4.44772 12.9999 4 12.5522 4 11.9999C4 11.4476 4.44772 10.9999 5 10.9999C5.55229 10.9999 6 11.4476 6 11.9999Z" fill="#AAAAAA"/>
+              <path d="M9 15.9999C9 16.5522 8.55229 16.9999 8 16.9999C7.44772 16.9999 7 16.5522 7 15.9999C7 15.4476 7.44772 14.9999 8 14.9999C8.55229 14.9999 9 15.4476 9 15.9999Z" fill="#AAAAAA"/>
+            </svg>
+          </motion.button>
+        )}
+      </AnimatePresence>
 
       {/* ── Floating ◑ button ─────────────────────────────────────────────── */}
       <AnimatePresence>
@@ -1804,7 +1845,7 @@ export default function New() {
               position: "fixed", top: 0, left: 0,
               width: "153px", height: "100vh",
               background: sidebarBg,
-              borderRight: `1px dashed ${BORDER_COL}`,
+              borderRight: `1px dashed ${innerBorder}`,
               borderRadius: "4px",
               padding: "24px",
               display: "flex", flexDirection: "column", justifyContent: "space-between",
@@ -1902,7 +1943,7 @@ export default function New() {
               position: "fixed", top: 0, left: "153px",
               width: "314px", height: "100vh",
               background: sidebarBg,
-              borderRight: `1px dashed ${BORDER_COL}`,
+              borderRight: `1px dashed ${innerBorder}`,
               borderRadius: "0 4px 4px 0",
               display: "flex", flexDirection: "column",
               boxSizing: "border-box", overflow: "hidden", zIndex: 20,
@@ -1914,7 +1955,7 @@ export default function New() {
               <div style={{
                 position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 10,
                 padding: "8px 16px",
-                background: dark ? "rgba(30,28,26,0.9)" : "rgba(252,246,239,0.9)",
+                background: `color-mix(in srgb, ${sidebarBg} 92%, transparent)`,
                 borderTop: `1px dashed ${dark ? DARK_BORDER : BORDER_COL}`,
                 display: "flex", alignItems: "center", justifyContent: "center",
                 backdropFilter: "blur(4px)",
@@ -2748,7 +2789,7 @@ export default function New() {
                     position: "absolute", bottom: "calc(100% + 8px)", right: 0,
                     width: "100%", boxSizing: "border-box",
                     display: "flex", flexDirection: "column", gap: "4px",
-                    background: dark ? "rgba(60,54,48,0.95)" : "rgba(252,246,239,0.96)",
+                    background: `color-mix(in srgb, ${settingsCardBg} 95%, transparent)`,
                     border: `1px dashed ${dark ? DARK_BORDER : BORDER_COL}`,
                     borderRadius: "12px",
                     backdropFilter: "blur(12px)",
@@ -2892,6 +2933,7 @@ export default function New() {
             onClose={() => setSavedId(null)}
             onPlayground={() => navigate("/playground")}
             surfaceLight={surfaceLight}
+            cardBg={settingsCardBg}
           />
         )}
       </AnimatePresence>
@@ -2908,6 +2950,7 @@ export default function New() {
             copied={copied}
             t={t}
             surfaceLight={surfaceLight}
+            cardBg={settingsCardBg}
           />
         )}
       </AnimatePresence>
@@ -2960,12 +3003,12 @@ export default function New() {
               position: "fixed", bottom: "28px", left: "50%",
               transform: "translateX(-50%)",
               zIndex: 200,
-              background: dark ? "rgba(40,38,34,0.96)" : "rgba(252,246,239,0.97)",
+              background: `color-mix(in srgb, ${settingsCardBg} 96%, transparent)`,
               border: `1px dashed ${dark ? "rgba(240,232,220,0.25)" : "#a4a4a4"}`,
               borderRadius: "8px",
               padding: "10px 18px",
               fontFamily: FONT_SANS, fontSize: "13px",
-              color: dark ? "rgba(240,232,220,0.85)" : "#555555",
+              color: dark ? DARK_TEXT : LIGHT_TEXT,
               boxShadow: "0 2px 12px rgba(0,0,0,0.12)",
               pointerEvents: "none",
               whiteSpace: "nowrap",

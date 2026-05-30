@@ -1512,8 +1512,6 @@ export function WritingZone({
   fontFamily         = "'general-sans', sans-serif",
   centeredPrompt     = false,
   containerWidth     = "1010px",
-  onDiceRoll,
-  diceSpinning       = false,
 }: WritingZoneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const cursorDomRef = useRef<HTMLSpanElement>(null);
@@ -2520,43 +2518,10 @@ export function WritingZone({
         >
           {positions.length === 0 && !centeredPrompt && (
             <span
-              className="select-none absolute top-0 left-0"
-              style={{ color: "#AAAAAA", display: "flex", alignItems: "flex-start", gap: "6px" }}
+              className="select-none absolute top-0 left-0 pointer-events-none"
+              style={{ color: "#AAAAAA", whiteSpace: "nowrap" }}
             >
-              {onDiceRoll && (
-                <button
-                  onMouseDown={(e) => e.stopPropagation()}
-                  onClick={(e) => { e.stopPropagation(); onDiceRoll(); }}
-                  style={{
-                    background: "none", border: "none", padding: 0, margin: 0,
-                    cursor: "pointer", color: "#AAAAAA",
-                    display: "inline-flex", alignItems: "center", flexShrink: 0,
-                    marginTop: "5px",
-                    animation: diceSpinning ? "_diceRoll 0.55s ease-in-out" : "none",
-                    transformOrigin: "center",
-                  }}
-                >
-                  <svg width={fontSize * 1.2} height={fontSize * 1.2} viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <style>{`@keyframes _diceRoll{0%{transform:rotate(0)scale(1)}20%{transform:rotate(-20deg)scale(.85)}55%{transform:rotate(170deg)scale(.9)}80%{transform:rotate(340deg)scale(1.05)}100%{transform:rotate(360deg)scale(1)}}`}</style>
-                    <path d="M1 3.99988L1 16.9999L5.5011e-07 16.7924L0 4.20733L1 3.99988Z" fill="#AAAAAA"/>
-                    <path d="M21 3.99988L21 16.9999L20 16.7924V4.20733L21 3.99988Z" fill="#AAAAAA"/>
-                    <path d="M13.7348 0.460938L19.3489 2.57786L18.9065 3.47978L13.4715 1.43041L13.7348 0.460938Z" fill="#AAAAAA"/>
-                    <path d="M3.35196 5L8.9661 7.11693L8.52369 8.01884L3.08872 5.96947L3.35196 5Z" fill="#AAAAAA"/>
-                    <path d="M3.35196 17L8.9661 19.1169L8.52369 20.0188L3.08872 17.9695L3.35196 17Z" fill="#AAAAAA"/>
-                    <path d="M8.61484 0L3.00069 2.11693L3.4431 3.01884L8.87807 0.969472L8.61484 0Z" fill="#AAAAAA"/>
-                    <path d="M17.6148 5L12.0007 7.11693L12.4431 8.01884L17.8781 5.96947L17.6148 5Z" fill="#AAAAAA"/>
-                    <path d="M10 9.73426V18.7343L11 18.5906L11 9.87788L10 9.73426Z" fill="#AAAAAA"/>
-                    <path d="M17.6148 17L12.0007 19.1169L12.4431 20.0188L17.8781 17.9695L17.6148 17Z" fill="#AAAAAA"/>
-                    <path d="M17 12.9999C17 13.5522 16.5523 13.9999 16 13.9999C15.4477 13.9999 15 13.5522 15 12.9999C15 12.4476 15.4477 11.9999 16 11.9999C16.5523 11.9999 17 12.4476 17 12.9999Z" fill="#AAAAAA"/>
-                    <path d="M8 3.99988C8 4.55217 7.55229 4.99988 7 4.99988C6.44772 4.99988 6 4.55217 6 3.99988C6 3.4476 6.44772 2.99988 7 2.99988C7.55229 2.99988 8 3.4476 8 3.99988Z" fill="#AAAAAA"/>
-                    <path d="M13 3.99988C13 4.55217 12.5523 4.99988 12 4.99988C11.4477 4.99988 11 4.55217 11 3.99988C11 3.4476 11.4477 2.99988 12 2.99988C12.5523 2.99988 13 3.4476 13 3.99988Z" fill="#AAAAAA"/>
-                    <path d="M4 7.99988C4 8.55217 3.55229 8.99988 3 8.99988C2.44772 8.99988 2 8.55217 2 7.99988C2 7.4476 2.44772 6.99988 3 6.99988C3.55229 6.99988 4 7.4476 4 7.99988Z" fill="#AAAAAA"/>
-                    <path d="M6 11.9999C6 12.5522 5.55229 12.9999 5 12.9999C4.44772 12.9999 4 12.5522 4 11.9999C4 11.4476 4.44772 10.9999 5 10.9999C5.55229 10.9999 6 11.4476 6 11.9999Z" fill="#AAAAAA"/>
-                    <path d="M9 15.9999C9 16.5522 8.55229 16.9999 8 16.9999C7.44772 16.9999 7 16.5522 7 15.9999C7 15.4476 7.44772 14.9999 8 14.9999C8.55229 14.9999 9 15.4476 9 15.9999Z" fill="#AAAAAA"/>
-                  </svg>
-                </button>
-              )}
-              <span className="pointer-events-none">{writingPrompt || "Fang einfach an zu schreiben…"}</span>
+              {writingPrompt || "Fang einfach an zu schreiben…"}
             </span>
           )}
           {nodes}

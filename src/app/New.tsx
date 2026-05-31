@@ -1746,32 +1746,77 @@ export default function New() {
         )}
       </AnimatePresence>
 
-      {/* ── Zurück button (viewer mode only) ────────────────────────────── */}
+      {/* ── Zurück + Erase/Redraw buttons (viewer mode only) ──────────────── */}
       <AnimatePresence>
         {visible && currentToolId && (
-          <motion.button
-            key="float-back"
+          <motion.div
+            key="float-back-group"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.12 } }}
             transition={{ duration: 0.15 }}
             style={{
               position: "fixed", top: "24px", left: BTN_CLOSED.dark + 33 + 8,
-              height: "33px",
-              background: dark ? darkColors.darkBg : surfaceLight,
-              border: `1px dashed ${BORDER_COL}`,
-              borderRadius: "4px",
-              cursor: "pointer", outline: "none",
-              display: "flex", alignItems: "center",
-              padding: "0 13px",
-              fontFamily: FONT_SANS, fontSize: "13px",
-              color: dark ? DARK_TEXT : LIGHT_TEXT,
+              display: "flex", alignItems: "center", gap: "8px",
               zIndex: 25,
             }}
-            onClick={(e) => { e.stopPropagation(); goBack(); }}
           >
-            {t.backBtn}
-          </motion.button>
+            <button
+              style={{
+                height: "33px",
+                background: dark ? darkColors.darkBg : surfaceLight,
+                border: `1px dashed ${BORDER_COL}`,
+                borderRadius: "4px",
+                cursor: "pointer", outline: "none",
+                display: "flex", alignItems: "center",
+                padding: "0 13px",
+                fontFamily: FONT_SANS, fontSize: "13px",
+                color: dark ? DARK_TEXT : LIGHT_TEXT,
+                flexShrink: 0,
+              }}
+              onClick={(e) => { e.stopPropagation(); goBack(); }}
+            >
+              {t.backBtn}
+            </button>
+
+            {/* Erase text — appears once there is text */}
+            {!canEdit && positions.length > 0 && (
+              <button
+                style={{
+                  height: "33px", padding: "0 13px",
+                  background: rulesBtnBg,
+                  border: `1px dashed ${BORDER_COL}`,
+                  borderRadius: "4px",
+                  cursor: "pointer", outline: "none",
+                  display: "flex", alignItems: "center",
+                  fontFamily: FONT_SANS, fontSize: "15px", fontWeight: 400,
+                  color: dark ? DARK_TEXT : LIGHT_TEXT,
+                  lineHeight: "normal", whiteSpace: "nowrap",
+                  flexShrink: 0,
+                }}
+                onClick={(e) => { e.stopPropagation(); handleDelete(); }}
+              >{lang === "de" ? "Text leeren" : "Erase text"}</button>
+            )}
+
+            {/* Redraw path — appears for custom-path tools */}
+            {!canEdit && positionMode === "custom" && drawnPath.length > 0 && (
+              <button
+                style={{
+                  height: "33px", padding: "0 13px",
+                  background: rulesBtnBg,
+                  border: `1px dashed ${BORDER_COL}`,
+                  borderRadius: "4px",
+                  cursor: "pointer", outline: "none",
+                  display: "flex", alignItems: "center",
+                  fontFamily: FONT_SANS, fontSize: "15px", fontWeight: 400,
+                  color: dark ? DARK_TEXT : LIGHT_TEXT,
+                  lineHeight: "normal", whiteSpace: "nowrap",
+                  flexShrink: 0,
+                }}
+                onClick={(e) => { e.stopPropagation(); setDrawnPath([]); }}
+              >{lang === "de" ? "Pfad neu zeichnen" : "Redraw path"}</button>
+            )}
+          </motion.div>
         )}
       </AnimatePresence>
 

@@ -287,7 +287,7 @@ function Reveal({ children, index = 0 }: { children: ReactNode; index?: number }
   );
 }
 
-function Section({ title, tools, onOpen, onDelete, emptyMsg, sessionId, favorites, onToggleFavorite }: {
+function Section({ title, tools, onOpen, onDelete, emptyMsg, sessionId, favorites, onToggleFavorite, showCreate }: {
   title: string;
   tools: NewToolData[];
   onOpen: (id: string) => void;
@@ -296,13 +296,34 @@ function Section({ title, tools, onOpen, onDelete, emptyMsg, sessionId, favorite
   sessionId: string;
   favorites?: string[];
   onToggleFavorite?: (id: string) => void;
+  showCreate?: boolean;
 }) {
   const theme = useContext(ThemeContext);
+  const navigate = useNavigate();
   return (
     <section style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
       <div style={{ display: "flex", alignItems: "baseline", gap: "12px", borderBottom: `1px dashed ${theme.border}`, paddingBottom: "12px" }}>
         <span style={{ fontFamily: FONT_SERIF, fontSize: "28px", color: theme.text }}>{title}</span>
         <span style={{ fontFamily: FONT_SANS, fontSize: "13px", color: theme.muted }}>{tools.length}</span>
+        {showCreate && (
+          <button
+            onClick={() => navigate("/create-tool")}
+            style={{
+              marginLeft: "auto",
+              alignSelf: "center",
+              padding: "6px 14px",
+              border: `1px dashed ${theme.border}`,
+              borderRadius: "4px",
+              background: "transparent",
+              fontFamily: FONT_SANS, fontSize: "13px",
+              color: theme.muted,
+              cursor: "pointer", outline: "none",
+              whiteSpace: "nowrap",
+            }}
+          >
+            + Create your own tool
+          </button>
+        )}
       </div>
       {tools.length === 0 ? (
         <p style={{ fontFamily: FONT_SANS, fontSize: "14px", color: theme.muted, margin: 0 }}>{emptyMsg}</p>
@@ -600,6 +621,7 @@ export default function PlaygroundNew() {
               sessionId={sessionId}
               favorites={favorites}
               onToggleFavorite={toggleFavorite}
+              showCreate
             />
           )}
         </div>

@@ -938,30 +938,47 @@ function buildGrainLayers(seed: number): GrainLayer[] {
 }
 
 // ── Texture & grain image overlay ─────────────────────────────────────────────
-// Two photographic layers (paper fibre + film grain) blended with "darken".
-// At full slider strength each layer sits at 20% opacity, stacked on top of one
-// another. A second "motion" slider makes both layers drift slowly & organically.
-const TEXTURE_IMAGES = [
-  `${import.meta.env.BASE_URL}paper.avif`,
-  `${import.meta.env.BASE_URL}premium_photo-1675802520884-45ad9a50c2c9.avif`,
+// Four photographic layers blended with "darken". Each has its own max opacity
+// and its own motion path — neighbouring layers drift in opposing directions
+// so they visibly interact when motion is enabled.
+const TEXTURE_LAYERS = [
+  { src: `${import.meta.env.BASE_URL}paper.avif`,                                      maxOpacity: 0.20 },
+  { src: `${import.meta.env.BASE_URL}premium_photo-1675802520884-45ad9a50c2c9.avif`,   maxOpacity: 0.10 },
+  { src: `${import.meta.env.BASE_URL}photo-1692230181097-1451d15f270b.avif`,            maxOpacity: 0.15 },
+  { src: `${import.meta.env.BASE_URL}Texturelabs_Wood_201S.jpg`,                        maxOpacity: 0.02 },
 ];
-const TEXTURE_MAX_OPACITY = 0.2; // each layer, when the slider is at maximum
 
 function TextureLayers({ level, motionLevel }: { level: number; motionLevel: number }) {
   if (level <= 0) return null;
-  const opacity = (level / 100) * TEXTURE_MAX_OPACITY;
-  // Drift amplitude grows with the motion slider (0 → static, 100 → ~26px / 4% scale).
-  const amp = (motionLevel / 100) * 26;
-  const scaleAmp = (motionLevel / 100) * 0.04;
+  // Amplitude scales with motion slider (max ~20px lateral / 3% scale).
+  const amp = (motionLevel / 100) * 20;
+  const sa  = (motionLevel / 100) * 0.03;
   const moving = motionLevel > 0;
-  // Each layer drifts on its own path & period so they never move in lockstep.
+
+  // Four distinct paths — each layer moves differently, adjacent ones in opposing
+  // directions so they create a subtle parallax / interaction effect.
   const paths = [
-    { x: [0, amp, -amp * 0.6, amp * 0.3, 0], y: [0, -amp * 0.5, amp, -amp * 0.4, 0], s: [1, 1 + scaleAmp, 1, 1 + scaleAmp * 0.5, 1], dur: 34 },
-    { x: [0, -amp * 0.8, amp * 0.5, -amp, 0], y: [0, amp * 0.7, -amp * 0.6, amp * 0.4, 0], s: [1, 1 + scaleAmp * 0.6, 1, 1 + scaleAmp, 1], dur: 41 },
+    // layer 0 (paper): drifts right-up, slow
+    { x: [0,  amp * 0.9, amp * 0.2, -amp * 0.4,        0],
+      y: [0, -amp * 0.6, amp * 0.1,  amp * 0.5,        0],
+      s: [1, 1 + sa * 0.7,       1, 1 + sa * 0.4,      1], dur: 38 },
+    // layer 1 (film grain): drifts left-down — opposite to layer 0
+    { x: [0, -amp * 0.7, -amp * 0.1,  amp * 0.5,       0],
+      y: [0,  amp * 0.5, -amp * 0.3, -amp * 0.6,       0],
+      s: [1, 1 + sa * 0.5,       1, 1 + sa * 0.8,      1], dur: 29 },
+    // layer 2 (photo): drifts diagonally up-left, slightly faster
+    { x: [0, -amp * 1.0,  amp * 0.4, -amp * 0.3,       0],
+      y: [0, -amp * 0.4, -amp * 0.8,  amp * 0.7,       0],
+      s: [1, 1 + sa,             1, 1 + sa * 0.6,      1], dur: 43 },
+    // layer 3 (wood): very gentle counter-drift, longest period
+    { x: [0,  amp * 0.4, -amp * 0.6,  amp * 0.2,       0],
+      y: [0,  amp * 0.3,  amp * 0.5, -amp * 0.4,       0],
+      s: [1, 1 + sa * 0.3,       1, 1 + sa * 0.5,      1], dur: 53 },
   ];
+
   return (
     <>
-      {TEXTURE_IMAGES.map((src, i) => (
+      {TEXTURE_LAYERS.map(({ src, maxOpacity }, i) => (
         <motion.div
           key={src}
           aria-hidden
@@ -969,7 +986,7 @@ function TextureLayers({ level, motionLevel }: { level: number; motionLevel: num
           transition={moving ? { duration: paths[i].dur, repeat: Infinity, ease: "easeInOut" } : { duration: 0.4 }}
           style={{
             position: "fixed", inset: "-6%", zIndex: 3, pointerEvents: "none",
-            opacity,
+            opacity: (level / 100) * maxOpacity,
             mixBlendMode: "darken",
             backgroundImage: `url("${src}")`,
             backgroundRepeat: "no-repeat",
@@ -1650,15 +1667,14 @@ export default function New() {
     ctx.fillRect(0, 0, out.width, out.height);
     ctx.drawImage(textCanvas, 0, 0, out.width, out.height);
     if (grainLevel > 0) {
-      const opacity = (grainLevel / 100) * TEXTURE_MAX_OPACITY;
-      for (const src of TEXTURE_IMAGES) {
+      for (const { src, maxOpacity } of TEXTURE_LAYERS) {
         const img = new Image();
         img.crossOrigin = "anonymous";
         await new Promise<void>((res) => { img.onload = () => res(); img.onerror = () => res(); img.src = src; });
         if (img.width > 0) {
           ctx.save();
           ctx.globalCompositeOperation = "darken";
-          ctx.globalAlpha = opacity;
+          ctx.globalAlpha = (grainLevel / 100) * maxOpacity;
           // cover-fit the image across the whole canvas
           const ir = img.width / img.height;
           const cr = out.width / out.height;

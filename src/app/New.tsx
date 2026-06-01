@@ -255,7 +255,7 @@ const TRANSLATIONS = {
     // Look & Feel
     lfGrain: "Körnung & Textur",
     lfTextSize: "Textgröße",
-    lfSerif: "Schrift: Sans-Serif ↔ Serif",
+    lfSerif: "Serifen",
     lfBgMotion: "Bewegung des Hintergrunds",
     lfBgColor: "Hintergrundfarbe anpassen",
     lfBgColorReset: "Farbe zurücksetzen",
@@ -388,7 +388,7 @@ const TRANSLATIONS = {
     // Look & Feel
     lfGrain: "Grain & Texture",
     lfTextSize: "Text Size",
-    lfSerif: "Type: Sans-Serif ↔ Serif",
+    lfSerif: "Serifs",
     lfBgMotion: "Background Motion",
     lfBgColor: "Adjust background color",
     lfBgColorReset: "Reset color",
@@ -2829,6 +2829,7 @@ export default function New() {
                         />
                         <span style={{ fontFamily: FONT_ARIZONA, fontVariationSettings: "'SRFF' 100, 'wdth' 92, 'wght' 327", fontSize: "22px", color: dark ? DARK_TEXT : LIGHT_TEXT, flexShrink: 0, lineHeight: 1 }}>A</span>
                       </div>
+                      <span style={{ fontFamily: FONT_SANS, fontSize: "11px", color: dark ? DARK_MUTED : "#9a9daa", marginTop: "-6px" }}>ABC Arizona by Dinamo Typefaces &lt;3</span>
                     </div>
 
                     <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>

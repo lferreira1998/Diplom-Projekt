@@ -14,8 +14,8 @@ const ROUTES: Record<string, string> = {
 };
 
 const LABELS = {
-  de: { Create: "Tool erstellen", Playground: "Tool-Sammlung", About: "Über das Projekt", menuClosed: "Menü", menuOpen: "Schließen", lang: "DE" },
-  en: { Create: "Create Tool", Playground: "Tool Collection", About: "About", menuClosed: "Menu", menuOpen: "Close", lang: "EN" },
+  de: { Create: "Tool erstellen", Playground: "Tool-Sammlung", About: "Über das Projekt", menuClosed: "Menü", menuOpen: "Schließen", langSwitch: "English" },
+  en: { Create: "Create Tool", Playground: "Tool Collection", About: "About", menuClosed: "Menu", menuOpen: "Close", langSwitch: "Deutsch" },
 };
 
 const NAV_CONTAINER = {
@@ -127,31 +127,7 @@ export default function TopNav({
 
   return (
     <>
-      {/* ── Theme toggle (top-left) ── */}
-      <AnimatePresence>
-        {visible && (
-          <motion.button
-            key="topnav-dark"
-            initial={false}
-            exit={{ opacity: 0, transition: { duration: 0.12 } }}
-            style={{
-              position: "fixed", top: "24px", left: "24px",
-              width: "33px", height: "33px",
-              background: dark ? "#484848" : "#fcf6ef",
-              border: `1px dashed ${BORDER_COL}`,
-              borderRadius: "4px",
-              cursor: "pointer", outline: "none",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              zIndex: 60,
-            }}
-            onClick={(e) => { e.stopPropagation(); setDark(d => !d); }}
-          >
-            <IconHalfCircle color={iconColor} dark={dark} />
-          </motion.button>
-        )}
-      </AnimatePresence>
-
-      {/* ── Right cluster: eye + lang + menu ── */}
+      {/* ── Right cluster: eye + dark + menu ── */}
       <AnimatePresence mode="wait">
         {visible ? (
           <motion.div
@@ -167,10 +143,10 @@ export default function TopNav({
               <IconEyeClosed color={iconColor} />
             </button>
             <button
-              style={btnStyle(dark)}
-              onClick={(e) => { e.stopPropagation(); setLang(l => { const next = l === "de" ? "en" : "de"; localStorage.setItem("appLang", next); return next; }); }}
+              style={{ ...btnStyle(dark), width: "33px", padding: 0 }}
+              onClick={(e) => { e.stopPropagation(); setDark(d => { const next = !d; localStorage.setItem("appTheme", next ? "dark" : "light"); return next; }); }}
             >
-              {L.lang}
+              <IconHalfCircle color={iconColor} dark={dark} />
             </button>
             <div
               style={{ position: "relative" }}
@@ -219,6 +195,16 @@ export default function TopNav({
                         }}
                       >{L[key]}</motion.button>
                     ))}
+                    <motion.button
+                      key="lang"
+                      variants={NAV_ITEM}
+                      style={navItemStyle(dark, false)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setMenuOpen(false);
+                        setLang(l => { const next = l === "de" ? "en" : "de"; localStorage.setItem("appLang", next); return next; });
+                      }}
+                    >{L.langSwitch}</motion.button>
                   </motion.div>
                 )}
               </AnimatePresence>

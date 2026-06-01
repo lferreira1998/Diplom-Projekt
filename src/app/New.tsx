@@ -1243,6 +1243,40 @@ export default function New() {
     }
   }, [positions.length, timerUserReset, timerEnabled, timerMinutes, timerRunning]);
 
+  // Apply preset from URL ?preset=<name> (experiment tool cards)
+  useEffect(() => {
+    const preset = searchParams.get("preset");
+    if (!preset) return;
+    switch (preset) {
+      case "without-stopping":
+        setDeleteMode("none");
+        setCursorRunning(true);
+        setCursorSchnelligkeit(35);
+        break;
+      case "uninvited-thoughts":
+        setTextFliegtEnabled(true);
+        setFliegtUnit("Wörter");
+        setFliegtZeitpunkt(0.3);
+        setFliegtSchnelligkeit(1.5);
+        break;
+      case "off-the-grid":
+        setPositionMode("random");
+        setRandomMode("words");
+        break;
+      case "blind-then-witness":
+        setVisibility("invisible");
+        break;
+      case "visible-corrections":
+        setCorrectionVisible(true);
+        setDeleteMode("all");
+        break;
+      case "in-a-spiral":
+        setPositionMode("spiral");
+        break;
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Load tool from URL ?tool=ID
   useEffect(() => {
     const toolId = searchParams.get("tool");

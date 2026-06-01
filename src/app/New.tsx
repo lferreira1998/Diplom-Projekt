@@ -163,6 +163,8 @@ const TRANSLATIONS = {
     saveBtn: "Mein Tool speichern",
     menuClosed: "Menü",
     menuOpen: "Schließen",
+    clearParams: "Parameter zurücksetzen",
+    langMenu: "English",
     word: "Wort",
     words: "Wörter",
     navLabels: { CreateTool: "Tool erstellen", ToolCollection: "Tool-Sammlung", About: "Über das Projekt" },
@@ -296,6 +298,8 @@ const TRANSLATIONS = {
     saveBtn: "Save my Tool",
     menuClosed: "Menu",
     menuOpen: "Close",
+    clearParams: "Clear Parameters",
+    langMenu: "Deutsch",
     word: "word",
     words: "words",
     navLabels: { CreateTool: "Create Tool", ToolCollection: "Tool Collection", About: "About" },
@@ -425,8 +429,8 @@ type Tr = typeof TRANSLATIONS["de"];
 const DELETE_OPTS_KEYS = ["all", "none", "sentence", "word"] as const;
 type DeleteMode = typeof DELETE_OPTS_KEYS[number];
 
-const BTN_CLOSED = { dark: 24, rules: 67, clear: 188 };
-const BTN_OPEN   = { dark: 371, rules: 414, clear: 535 };
+const BTN_CLOSED = { dark: 24, rules: 67, clear: 222 };
+const BTN_OPEN   = { dark: 371, rules: 414, clear: 569 };
 const SPRING = { type: "spring" as const, stiffness: 300, damping: 30 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -1491,9 +1495,32 @@ export default function New() {
     a.click();
   };
 
-  const darkBtnBg  = rulesOpen ? (dark ? "rgba(240,232,220,0.1)" : surfaceDark) : (dark ? "rgba(240,232,220,0.06)" : surfaceLight);
-
   const rulesBtnBg = rulesOpen ? (dark ? "rgba(240,232,220,0.1)" : surfaceDark) : (dark ? "rgba(240,232,220,0.06)" : surfaceLight);
+
+  // ── Parameter reset ────────────────────────────────────────────────────
+  // True when every rule parameter is at its default (nothing has been set).
+  const paramsAreDefault =
+    !timerEnabled && timerMode === "fixed" && timerMinutes === 10 && !visualTimer && !timerUserReset &&
+    !cursorRunning && cursorSchnelligkeit === 50 &&
+    visibility === "visible" && deleteMode === "all" && !correctionVisible &&
+    !textFliegtEnabled && fliegtUnit === "Sätze" && fliegtZeitpunkt === 0.5 && fliegtSchnelligkeit === 2.0 &&
+    textEditingEnabled &&
+    !textVerblassEnabled && verblassZeitpunkt === 0.5 && verblassSchnelligkeit === 2.0 &&
+    !textSchwerEnabled && schwerZeitpunkt === 0.5 && schwerSchnelligkeit === 50 &&
+    positionMode === "standard" && randomMode === "words" && drawnPath.length === 0 &&
+    grainLevel === 0 && textSizeLevel === 46 && bgHue === null && serifLevel === null;
+
+  const clearParameters = () => {
+    setTimerEnabled(false); setTimerMode("fixed"); setTimerMinutes(10); setVisualTimer(false); setTimerUserReset(false);
+    setCursorRunning(false); setCursorSchnelligkeit(50);
+    setVisibility("visible"); setDeleteMode("all"); setCorrectionVisible(false);
+    setTextFliegtEnabled(false); setFliegtUnit("Sätze"); setFliegtZeitpunkt(0.5); setFliegtSchnelligkeit(2.0);
+    setTextEditingEnabled(true);
+    setTextVerblassEnabled(false); setVerblassZeitpunkt(0.5); setVerblassSchnelligkeit(2.0);
+    setTextSchwerEnabled(false); setSchwerZeitpunkt(0.5); setSchwerSchnelligkeit(50);
+    setPositionMode("standard"); setRandomMode("words"); setDrawnPath([]);
+    setGrainLevel(0); setTextSizeLevel(46); setBgHue(null); setSerifLevel(null);
+  };
 
   // Re-focus writing area after panel close or category switch
   useEffect(() => {
@@ -1749,28 +1776,31 @@ export default function New() {
           />
       </motion.div>
 
-      {/* ── Floating ◑ button ─────────────────────────────────────────────── */}
+      {/* ── Clear Parameters button (only when params have been changed) ───── */}
       <AnimatePresence>
-        {visible && (
+        {visible && canEdit && !paramsAreDefault && (
           <motion.button
-            key="float-dark"
-            initial={false}
-            animate={{ x: rulesOpen ? BTN_OPEN.dark - BTN_CLOSED.dark : 0 }}
+            key="float-clear"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, x: rulesOpen ? BTN_OPEN.clear - BTN_CLOSED.clear : 0 }}
             exit={{ opacity: 0, transition: { duration: 0.12 } }}
             transition={SPRING}
             style={{
-              position: "fixed", top: "24px", left: BTN_CLOSED.dark,
-              width: "33px", height: "33px",
-              background: darkBtnBg,
+              position: "fixed", top: "24px", left: BTN_CLOSED.clear,
+              height: "33px", padding: "0 13px",
+              background: rulesBtnBg,
               border: `1px dashed ${BORDER_COL}`,
               borderRadius: "4px",
               cursor: "pointer", outline: "none",
-              display: "flex", alignItems: "center", justifyContent: "center",
+              display: "flex", alignItems: "center",
+              fontFamily: FONT_SANS, fontSize: "15px", fontWeight: 400,
+              color: dark ? DARK_TEXT : LIGHT_TEXT,
+              whiteSpace: "nowrap", lineHeight: "normal",
               zIndex: 25, transition: "background 0.2s",
             }}
-            onClick={(e) => { e.stopPropagation(); setDark(d => { const next = !d; localStorage.setItem("appTheme", next ? "dark" : "light"); return next; }); }}
+            onClick={(e) => { e.stopPropagation(); clearParameters(); }}
           >
-            <IconHalfCircle color={iconColor} dark={dark} />
+            {t.clearParams}
           </motion.button>
         )}
       </AnimatePresence>
@@ -2824,7 +2854,7 @@ export default function New() {
                           <button
                             onClick={() => setSerifLevel(null)}
                             style={{ background: "transparent", border: "none", padding: 0, cursor: "pointer", fontFamily: FONT_SANS, fontSize: "12px", color: dark ? DARK_MUTED : "#9a9daa", outline: "none" }}
-                          >↩ zurücksetzen</button>
+                          >Zurücksetzen</button>
                         )}
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
@@ -3010,15 +3040,13 @@ export default function New() {
             >
               <IconEyeClosed color={navIconColor} />
             </button>
-            {/* Language toggle — hidden in viewer mode */}
-            {!currentToolId && (
-              <button
-                style={btnStyle(dark, { background: dark ? darkColors.darkBg : surfaceLight, color: navIconColor }, surfaceLight)}
-                onClick={(e) => { e.stopPropagation(); setLang(l => { const next = l === "de" ? "en" : "de"; localStorage.setItem("appLang", next); return next; }); }}
-              >
-                {t.langBtn}
-              </button>
-            )}
+            {/* Dark mode toggle (moved here from the left) */}
+            <button
+              style={btnStyle(dark, { background: dark ? darkColors.darkBg : surfaceLight, color: navIconColor }, surfaceLight)}
+              onClick={(e) => { e.stopPropagation(); setDark(d => { const next = !d; localStorage.setItem("appTheme", next ? "dark" : "light"); return next; }); }}
+            >
+              <IconHalfCircle color={navIconColor} dark={dark} />
+            </button>
             {/* Menu button + dropdown — hidden in viewer mode */}
             {!currentToolId && <div
               style={{ position: "relative" }}
@@ -3067,6 +3095,16 @@ export default function New() {
                         }}
                       >{t.navLabels[key]}</motion.button>
                     ))}
+                    {/* Language switch — last item */}
+                    <motion.button
+                      key="lang"
+                      variants={NAV_ITEM}
+                      style={navItemStyle(dark, false, surfaceLight, bgHue)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setLang(l => { const next = l === "de" ? "en" : "de"; localStorage.setItem("appLang", next); return next; });
+                      }}
+                    >{t.langMenu}</motion.button>
                   </motion.div>
                 )}
               </AnimatePresence>

@@ -1123,7 +1123,20 @@ export default function New() {
   const [copied, setCopied]             = useState(false);
   const [exportOpen, setExportOpen]     = useState(false);
   const exportRef = useRef<HTMLDivElement>(null);
+  const topRightGroupRef = useRef<HTMLDivElement>(null);
+  const [topRightWidth, setTopRightWidth] = useState(200);
   const writingZoneRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const measure = () => {
+      if (topRightGroupRef.current) {
+        setTopRightWidth(topRightGroupRef.current.getBoundingClientRect().width);
+      }
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [currentToolId, lang]);
 
   useEffect(() => {
     if (!exportOpen) return;
@@ -2907,7 +2920,7 @@ export default function New() {
             exit={{ opacity: 0, scale: 0.88, transition: { duration: 0.15 } }}
             transition={SPRING}
             ref={exportRef}
-            style={{ position: "fixed", bottom: "24px", right: "24px", zIndex: 20, width: "200px" }}
+            style={{ position: "fixed", bottom: "24px", right: "24px", zIndex: 20, width: `${topRightWidth}px` }}
           >
             <button
               onClick={() => setExportOpen(o => !o)}
@@ -2984,6 +2997,7 @@ export default function New() {
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
             style={{ position: "fixed", top: "24px", right: "24px", display: "flex", flexDirection: "row", alignItems: "center", gap: "10px", zIndex: 20 }}
+            ref={topRightGroupRef}
           >
             {/* Eye toggle */}
             <button

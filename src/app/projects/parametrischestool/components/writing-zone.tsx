@@ -2723,7 +2723,7 @@ export function WritingZone({
           {positions.length === 0 && !centeredPrompt && (
             <span
               className="select-none absolute top-0 left-0 pointer-events-none"
-              style={{ color: "#AAAAAA", whiteSpace: "nowrap" }}
+              style={{ color: "#AAAAAA" }}
             >
               {onDiceRoll && dicePaths && (
                 <button

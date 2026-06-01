@@ -1559,6 +1559,11 @@ export default function New() {
           transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, opacity 0.2s ease !important;
         }
         .vis-btn:hover { border-color: ${dark ? "rgba(240,232,220,0.55)" : "#989898"} !important; }
+        .writing-scroll { scrollbar-width: thin; scrollbar-color: ${dark ? "rgba(240,232,220,0.18)" : "rgba(85,85,85,0.18)"} transparent; }
+        .writing-scroll::-webkit-scrollbar { width: 8px; }
+        .writing-scroll::-webkit-scrollbar-track { background: transparent; }
+        .writing-scroll::-webkit-scrollbar-thumb { background: ${dark ? "rgba(240,232,220,0.18)" : "rgba(85,85,85,0.18)"}; border-radius: 4px; border: 2px solid transparent; background-clip: padding-box; }
+        .writing-scroll::-webkit-scrollbar-thumb:hover { background: ${dark ? "rgba(240,232,220,0.32)" : "rgba(85,85,85,0.32)"}; background-clip: padding-box; }
       `}</style>
 
       {/* ── Tool name header (center top, when loaded from URL) ──────────── */}
@@ -1675,6 +1680,7 @@ export default function New() {
       {/* ── Writing zone ─────────────────────────────────────────────────── */}
       <motion.div
         ref={writingZoneRef}
+        className="writing-scroll"
         animate={{
           paddingLeft: rulesOpen ? "507px" : "165px",
           opacity: timerTextOpacity,
@@ -1688,6 +1694,8 @@ export default function New() {
           display: "flex", flexDirection: "column",
           paddingTop: "24px",
           paddingRight: "240px",
+          paddingBottom: "96px",
+          overflowY: "auto",
           zIndex: 1,
         }}
       >

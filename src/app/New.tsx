@@ -1907,6 +1907,7 @@ export default function New() {
             fontFamily={writingFont}
             fontVariationSettings={writingFontVariations}
             centeredPrompt={false}
+            promptWrap={textSizeLevel > 46}
             containerWidth="764px"
           />
       </motion.div>

@@ -55,6 +55,7 @@ interface WritingZoneProps {
   fontFamily?: string;
   fontVariationSettings?: string;
   centeredPrompt?: boolean;
+  promptWrap?: boolean;
   containerWidth?: string;
   onDiceRoll?: () => void;
   diceSpinning?: boolean;
@@ -1684,6 +1685,7 @@ export function WritingZone({
   fontFamily            = "'general-sans', sans-serif",
   fontVariationSettings,
   centeredPrompt        = false,
+  promptWrap            = false,
   containerWidth        = "1010px",
   onDiceRoll,
   diceSpinning          = false,
@@ -2746,7 +2748,7 @@ export function WritingZone({
           {positions.length === 0 && !centeredPrompt && (
             <span
               className="select-none absolute top-0 left-0 pointer-events-none"
-              style={{ color: "#AAAAAA", whiteSpace: "nowrap" }}
+              style={{ color: "#AAAAAA", whiteSpace: promptWrap ? "normal" : "nowrap" }}
             >
               {onDiceRoll && dicePaths && (
                 <button

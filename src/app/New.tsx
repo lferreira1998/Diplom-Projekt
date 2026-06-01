@@ -256,6 +256,7 @@ const TRANSLATIONS = {
     posRandomWords: "Einzelne Wörter",
     // Look & Feel
     lfGrain: "Körnung & Textur",
+    lfGrainMotion: "Bewegung",
     lfTextSize: "Textgröße",
     lfSerif: "Serifen",
     lfBgMotion: "Bewegung des Hintergrunds",
@@ -391,6 +392,7 @@ const TRANSLATIONS = {
     posRandomWords: "Individual words",
     // Look & Feel
     lfGrain: "Grain & Texture",
+    lfGrainMotion: "Motion",
     lfTextSize: "Text Size",
     lfSerif: "Serifs",
     lfBgMotion: "Background Motion",
@@ -901,6 +903,52 @@ function buildGrainLayers(seed: number): GrainLayer[] {
   ];
 }
 
+// ── Texture & grain image overlay ─────────────────────────────────────────────
+// Two photographic layers (paper fibre + film grain) blended with "darken".
+// At full slider strength each layer sits at 20% opacity, stacked on top of one
+// another. A second "motion" slider makes both layers drift slowly & organically.
+const TEXTURE_IMAGES = [
+  `${import.meta.env.BASE_URL}paper.avif`,
+  `${import.meta.env.BASE_URL}premium_photo-1675802520884-45ad9a50c2c9.avif`,
+];
+const TEXTURE_MAX_OPACITY = 0.2; // each layer, when the slider is at maximum
+
+function TextureLayers({ level, motionLevel }: { level: number; motionLevel: number }) {
+  if (level <= 0) return null;
+  const opacity = (level / 100) * TEXTURE_MAX_OPACITY;
+  // Drift amplitude grows with the motion slider (0 → static, 100 → ~26px / 4% scale).
+  const amp = (motionLevel / 100) * 26;
+  const scaleAmp = (motionLevel / 100) * 0.04;
+  const moving = motionLevel > 0;
+  // Each layer drifts on its own path & period so they never move in lockstep.
+  const paths = [
+    { x: [0, amp, -amp * 0.6, amp * 0.3, 0], y: [0, -amp * 0.5, amp, -amp * 0.4, 0], s: [1, 1 + scaleAmp, 1, 1 + scaleAmp * 0.5, 1], dur: 34 },
+    { x: [0, -amp * 0.8, amp * 0.5, -amp, 0], y: [0, amp * 0.7, -amp * 0.6, amp * 0.4, 0], s: [1, 1 + scaleAmp * 0.6, 1, 1 + scaleAmp, 1], dur: 41 },
+  ];
+  return (
+    <>
+      {TEXTURE_IMAGES.map((src, i) => (
+        <motion.div
+          key={src}
+          aria-hidden
+          animate={moving ? { x: paths[i].x, y: paths[i].y, scale: paths[i].s } : { x: 0, y: 0, scale: 1 }}
+          transition={moving ? { duration: paths[i].dur, repeat: Infinity, ease: "easeInOut" } : { duration: 0.4 }}
+          style={{
+            position: "fixed", inset: "-6%", zIndex: 3, pointerEvents: "none",
+            opacity,
+            mixBlendMode: "darken",
+            backgroundImage: `url("${src}")`,
+            backgroundRepeat: "no-repeat",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            willChange: moving ? "transform" : "auto",
+          }}
+        />
+      ))}
+    </>
+  );
+}
+
 // ── Paper grain canvas ────────────────────────────────────────────────────────
 const OG_W = 512, OG_H = 512;
 
@@ -1175,6 +1223,7 @@ export default function New() {
 
   // Look & Feel params
   const [grainLevel, setGrainLevel]       = useState(0);
+  const [grainMotion, setGrainMotion]     = useState(0); // 0-100: organic drift of the texture layers
   const [textSizeLevel, setTextSizeLevel] = useState(46);
   const [bgHue, setBgHue]                 = useState<number | null>(null);
   const [serifLevel, setSerifLevel]       = useState<number | null>(null); // null = az-serif; 0-100 = ABCArizona SRFF axis
@@ -1395,6 +1444,7 @@ export default function New() {
       }
       setTextEditingEnabled(p.textEditingEnabled !== false); // default true
       setGrainLevel(typeof p.grainLevel === "number" ? p.grainLevel : 0);
+      setGrainMotion(typeof p.grainMotion === "number" ? p.grainMotion : 0);
       setTextSizeLevel(typeof p.textSizeLevel === "number" ? p.textSizeLevel : 20);
       setBgHue(typeof p.bgHue === "number" ? p.bgHue : null);
       setSerifLevel(typeof p.serifLevel === "number" ? p.serifLevel : null);
@@ -1486,7 +1536,7 @@ export default function New() {
         textSchwerEnabled, schwerZeitpunkt, schwerSchnelligkeit,
         positionMode, randomMode,
         drawnPath: positionMode === "custom" ? drawnPath : [],
-        grainLevel, textSizeLevel, bgHue, serifLevel,
+        grainLevel, grainMotion, textSizeLevel, bgHue, serifLevel,
         ...(previewVideoUrl ? { previewVideo: previewVideoUrl, previewVideoPath: previewVideoPath ?? undefined } : {}),
         preview: {
           text: prompts[0]?.trim().slice(0, 40) || (lang === "de" ? "Ich schreibe anders." : "I write differently."),
@@ -1514,7 +1564,7 @@ export default function New() {
     textEditingEnabled,
     textVerblassEnabled, verblassZeitpunkt, verblassSchnelligkeit,
     textSchwerEnabled, schwerZeitpunkt, schwerSchnelligkeit,
-    positionMode, randomMode, drawnPath, grainLevel, textSizeLevel, bgHue, serifLevel,
+    positionMode, randomMode, drawnPath, grainLevel, grainMotion, textSizeLevel, bgHue, serifLevel,
   ]);
 
   // ── Computed values ──────────────────────────────────────────────────────
@@ -1566,22 +1616,23 @@ export default function New() {
     ctx.fillRect(0, 0, out.width, out.height);
     ctx.drawImage(textCanvas, 0, 0, out.width, out.height);
     if (grainLevel > 0) {
-      const blend = dark ? "screen" : "multiply";
-      for (const layer of grainLayers) {
+      const opacity = (grainLevel / 100) * TEXTURE_MAX_OPACITY;
+      for (const src of TEXTURE_IMAGES) {
         const img = new Image();
         img.crossOrigin = "anonymous";
-        await new Promise<void>((res) => { img.onload = () => res(); img.onerror = () => res(); img.src = layer.url; });
+        await new Promise<void>((res) => { img.onload = () => res(); img.onerror = () => res(); img.src = src; });
         if (img.width > 0) {
-          const pattern = ctx.createPattern(img, "repeat");
-          if (pattern) {
-            pattern.setTransform(new DOMMatrix().scaleSelf(scale * (layer.size / 256)));
-            ctx.save();
-            ctx.globalCompositeOperation = blend as GlobalCompositeOperation;
-            ctx.globalAlpha = (grainLevel / 100) * 0.92 * layer.alpha;
-            ctx.fillStyle = pattern;
-            ctx.fillRect(0, 0, out.width, out.height);
-            ctx.restore();
-          }
+          ctx.save();
+          ctx.globalCompositeOperation = "darken";
+          ctx.globalAlpha = opacity;
+          // cover-fit the image across the whole canvas
+          const ir = img.width / img.height;
+          const cr = out.width / out.height;
+          let dw = out.width, dh = out.height, dx = 0, dy = 0;
+          if (ir > cr) { dh = out.height; dw = dh * ir; dx = (out.width - dw) / 2; }
+          else { dw = out.width; dh = dw / ir; dy = (out.height - dh) / 2; }
+          ctx.drawImage(img, dx, dy, dw, dh);
+          ctx.restore();
         }
       }
     }
@@ -1604,7 +1655,7 @@ export default function New() {
     !textVerblassEnabled && verblassZeitpunkt === 0.5 && verblassSchnelligkeit === 2.0 &&
     !textSchwerEnabled && schwerZeitpunkt === 0.5 && schwerSchnelligkeit === 50 &&
     positionMode === "standard" && randomMode === "words" && drawnPath.length === 0 &&
-    grainLevel === 0 && textSizeLevel === 46 && bgHue === null && serifLevel === null;
+    grainLevel === 0 && grainMotion === 0 && textSizeLevel === 46 && bgHue === null && serifLevel === null;
 
   const clearParameters = () => {
     setTimerEnabled(false); setTimerMode("fixed"); setTimerMinutes(10); setVisualTimer(false); setTimerUserReset(false);
@@ -1615,7 +1666,7 @@ export default function New() {
     setTextVerblassEnabled(false); setVerblassZeitpunkt(0.5); setVerblassSchnelligkeit(2.0);
     setTextSchwerEnabled(false); setSchwerZeitpunkt(0.5); setSchwerSchnelligkeit(50);
     setPositionMode("standard"); setRandomMode("words"); setDrawnPath([]);
-    setGrainLevel(0); setTextSizeLevel(46); setBgHue(null); setSerifLevel(null);
+    setGrainLevel(0); setGrainMotion(0); setTextSizeLevel(46); setBgHue(null); setSerifLevel(null);
   };
 
   // Re-focus writing area after panel close or category switch
@@ -1785,20 +1836,8 @@ export default function New() {
         document.body
       )}
 
-      {/* ── Noise overlay (layered, organic) ──────────────────────────────── */}
-      {grainLevel > 0 && grainLayers.map((layer, i) => (
-        <div
-          key={i}
-          aria-hidden
-          style={{
-            position: "fixed", inset: 0, zIndex: 3, pointerEvents: "none",
-            opacity: (grainLevel / 100) * 0.92 * layer.alpha,
-            mixBlendMode: dark ? "screen" : "multiply",
-            backgroundImage: `url("${layer.url}")`,
-            backgroundRepeat: "repeat", backgroundSize: `${layer.size}px ${layer.size}px`,
-          }}
-        />
-      ))}
+      {/* ── Texture & grain overlay (two photographic layers, darken blend) ── */}
+      <TextureLayers level={grainLevel} motionLevel={grainMotion} />
 
       {/* ── Writing zone ─────────────────────────────────────────────────── */}
       <motion.div
@@ -1979,11 +2018,11 @@ export default function New() {
           <motion.div
             key="float-rules-group"
             initial={false}
-            animate={{ x: rulesOpen ? BTN_OPEN.rules - (paramsAreDefault ? BTN_CLOSED.dark : BTN_CLOSED.rules) : 0 }}
+            animate={{ x: rulesOpen ? BTN_OPEN.rules - BTN_CLOSED.rules : 0 }}
             exit={{ opacity: 0, transition: { duration: 0.12 } }}
             transition={SPRING}
             style={{
-              position: "fixed", top: "24px", left: paramsAreDefault ? BTN_CLOSED.dark : BTN_CLOSED.rules,
+              position: "fixed", top: "24px", left: (paramsAreDefault && !rulesOpen) ? BTN_CLOSED.dark : BTN_CLOSED.rules,
               display: "flex", alignItems: "center", gap: "8px",
               zIndex: 25,
             }}
@@ -2985,6 +3024,10 @@ export default function New() {
                           transition={{ duration: 0.22, ease: "easeInOut" }}
                           style={{ overflow: "hidden" }}
                         >
+                          <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
+                            <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.lfGrainMotion}</span>
+                            <input type="range" min={0} max={100} value={grainMotion} onChange={e => setGrainMotion(Number(e.target.value))} className="lf-slider" />
+                          </div>
                         </motion.div>
                       )}
                     </AnimatePresence>

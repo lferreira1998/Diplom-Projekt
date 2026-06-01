@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { nodes as allNodes } from "./projects/abouttheproject/components/mindmap-data";
 import TopNav from "./components/TopNav";
 
-const SERIF = "'freight-text-pro', serif";
+const SERIF = "'az-serif', serif";
 const SANS = "'general-sans', sans-serif";
 const MONO = "'general-sans', sans-serif";
 

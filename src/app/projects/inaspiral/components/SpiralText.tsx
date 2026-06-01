@@ -84,7 +84,7 @@ export function SpiralText() {
         ctx.save();
         ctx.translate(nx, ny);
         ctx.rotate(pr * Math.PI * 2);
-        ctx.font = `${fs}px freight-text-pro, serif`;
+        ctx.font = `${fs}px az-serif, serif`;
         ctx.fillStyle = `rgba(180, 175, 160, ${0.02 + pr * 0.04})`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
@@ -134,7 +134,7 @@ export function SpiralText() {
       const fontSize = minFont + (maxFont - minFont) * Math.pow(radiusProg, 0.55);
       const opacity = 0.04 + 0.96 * Math.pow(radiusProg, 0.35);
 
-      ctx.font = `${fontSize}px freight-text-pro, serif`;
+      ctx.font = `${fontSize}px az-serif, serif`;
       const cw = ctx.measureText(chars[i]).width;
       const arcStep = (cw * 0.78 + fontSize * 0.1) / Math.max(currentRadius, 4);
 
@@ -159,7 +159,7 @@ export function SpiralText() {
       ctx.save();
       ctx.translate(cp.x, cp.y);
       ctx.rotate(cp.rotation);
-      ctx.font = `${cp.fontSize}px freight-text-pro, serif`;
+      ctx.font = `${cp.fontSize}px az-serif, serif`;
       ctx.fillStyle = `rgba(225, 220, 205, ${cp.opacity})`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';

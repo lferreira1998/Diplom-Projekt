@@ -5,7 +5,7 @@ import TopNav from "./components/TopNav";
 import { MiniReplayPreview } from "./components/MiniReplayPreview";
 import { deleteNewTool, getAllNewTools, type NewToolData } from "./utils/storage";
 
-const FONT_SERIF = "'freight-text-pro', serif";
+const FONT_SERIF = "'az-serif', serif";
 const FONT_SANS = "'general-sans', sans-serif";
 
 const COLUMN_GAP = 650;

@@ -45,7 +45,7 @@ function getLookFeelDarkColors(bgHue: number | null): {
   };
 }
 
-const FONT_SERIF   = "'freight-text-pro', serif";
+const FONT_SERIF   = "'az-serif', serif";
 const FONT_SANS    = "'general-sans', sans-serif";
 const FONT_ARIZONA = "'ABCArizona', serif";
 
@@ -1096,7 +1096,7 @@ export default function New() {
   const [grainLevel, setGrainLevel]       = useState(0);
   const [textSizeLevel, setTextSizeLevel] = useState(46);
   const [bgHue, setBgHue]                 = useState<number | null>(null);
-  const [serifLevel, setSerifLevel]       = useState<number | null>(null); // null = freight-text-pro; 0-100 = ABCArizona SRFF axis
+  const [serifLevel, setSerifLevel]       = useState<number | null>(null); // null = az-serif; 0-100 = ABCArizona SRFF axis
 
   // Position sub-options
   const [randomMode, setRandomMode] = useState<"sentences" | "words">("words");
@@ -1986,7 +1986,7 @@ export default function New() {
           >
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                <span style={{ fontFamily: "'freight-text-heading', sans-serif", fontSize: "22px", color: dark ? DARK_TEXT : LIGHT_TEXT, lineHeight: "normal" }}>{t.rulesHeading}</span>
+                <span style={{ fontFamily: "'az-heading', sans-serif", fontSize: "22px", color: dark ? DARK_TEXT : LIGHT_TEXT, lineHeight: "normal" }}>{t.rulesHeading}</span>
                 <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: descColor, lineHeight: "normal" }}>{t.rulesSubtitle}</span>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
@@ -2110,7 +2110,7 @@ export default function New() {
                   .identity-scroll { scrollbar-color: ${dark ? "rgba(240,232,220,0.2)" : "rgba(85,85,85,0.2)"} ${sidebarBg}; }
                 `}</style>
                 <div className="identity-scroll" style={{ flex: 1, overflowY: "auto", padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
-                  <span style={{ fontFamily: "'freight-text-heading', sans-serif", fontSize: "22px", color: dark ? DARK_TEXT : LIGHT_TEXT, lineHeight: "normal" }}>{t.identityHeading}</span>
+                  <span style={{ fontFamily: "'az-heading', sans-serif", fontSize: "22px", color: dark ? DARK_TEXT : LIGHT_TEXT, lineHeight: "normal" }}>{t.identityHeading}</span>
                   <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: descColor, lineHeight: "1.45" }}>
                     {t.identitySubtitle}
                   </span>
@@ -2278,7 +2278,7 @@ export default function New() {
             ) : (
               /* ── Category detail ────────────────────────────────────────── */
               <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "16px", overflowY: "auto", flex: 1, pointerEvents: canEdit ? "auto" : "none", opacity: canEdit ? 1 : 0.75 }}>
-                <span style={{ fontFamily: "'freight-text-heading', serif", fontSize: "22px", color: dark ? DARK_TEXT : LIGHT_TEXT, lineHeight: "normal" }}>
+                <span style={{ fontFamily: "'az-heading', serif", fontSize: "22px", color: dark ? DARK_TEXT : LIGHT_TEXT, lineHeight: "normal" }}>
                   {t.catHeading(SIDEBAR_CATS.find(c => c.en === activeCategory) ?? { en: activeCategory, de: activeCategory })}
                 </span>
 

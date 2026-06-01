@@ -4,7 +4,7 @@ import html2canvas from "html2canvas-pro";
 import { uploadPreviewVideo } from "../utils/storage";
 
 const FONT_SANS  = "'general-sans', sans-serif";
-const FONT_SERIF = "'freight-text-pro', serif";
+const FONT_SERIF = "'az-serif', serif";
 const MAX_SECS   = 10;
 const FPS        = 8;
 const MIN_W      = 220;

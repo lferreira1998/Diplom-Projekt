@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import type { NewToolData } from "../utils/storage";
 
 const FONT_SANS  = "'general-sans', sans-serif";
-const FONT_SERIF = "'freight-text-pro', serif";
+const FONT_SERIF = "'az-serif', serif";
 
 const QUICK_MINS = [5, 10, 15, 20, 30];
 

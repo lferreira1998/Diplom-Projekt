@@ -1422,8 +1422,8 @@ export default function New() {
   // ── Computed values ──────────────────────────────────────────────────────
   const canEdit = currentToolId === null || editModeEnabledState;
   const computedFontSize       = 14 + Math.round(textSizeLevel / 100 * 22);
-  const writingFont            = serifLevel !== null ? FONT_ARIZONA : FONT_SERIF;
-  const writingFontVariations  = serifLevel !== null ? `'SRFF' ${serifLevel}` : undefined;
+  const writingFont            = FONT_ARIZONA;
+  const writingFontVariations  = `'SRFF' ${serifLevel ?? 0}, 'wdth' 70, 'wght' 327`;
   const timerTotalSecs   = (timerMinutes || 1) * 60;
   const timerProgress    = timerEnabled && timerTotalSecs > 0
     ? Math.max(0, 1 - timeLeft / timerTotalSecs) : 0;
@@ -2820,20 +2820,15 @@ export default function New() {
                         )}
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-                        <span style={{ fontFamily: FONT_ARIZONA, fontVariationSettings: "'SRFF' 0", fontSize: "22px", color: dark ? DARK_TEXT : LIGHT_TEXT, flexShrink: 0, lineHeight: 1 }}>A</span>
+                        <span style={{ fontFamily: FONT_ARIZONA, fontVariationSettings: "'SRFF' 0, 'wdth' 70, 'wght' 327", fontSize: "22px", color: dark ? DARK_TEXT : LIGHT_TEXT, flexShrink: 0, lineHeight: 1 }}>A</span>
                         <input
                           type="range" min={0} max={100}
-                          value={serifLevel ?? 50}
+                          value={serifLevel ?? 0}
                           onChange={e => setSerifLevel(Number(e.target.value))}
                           className="lf-slider" style={{ flex: 1 }}
                         />
-                        <span style={{ fontFamily: FONT_ARIZONA, fontVariationSettings: "'SRFF' 100", fontSize: "22px", color: dark ? DARK_TEXT : LIGHT_TEXT, flexShrink: 0, lineHeight: 1 }}>A</span>
+                        <span style={{ fontFamily: FONT_ARIZONA, fontVariationSettings: "'SRFF' 100, 'wdth' 70, 'wght' 327", fontSize: "22px", color: dark ? DARK_TEXT : LIGHT_TEXT, flexShrink: 0, lineHeight: 1 }}>A</span>
                       </div>
-                      {serifLevel === null && (
-                        <span style={{ fontFamily: FONT_SANS, fontSize: "12px", color: dark ? DARK_MUTED : "#9a9daa" }}>
-                          {lang === "de" ? "Regler bewegen um ABC Arizona zu aktivieren" : "Move slider to activate ABC Arizona"}
-                        </span>
-                      )}
                     </div>
 
                     <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>

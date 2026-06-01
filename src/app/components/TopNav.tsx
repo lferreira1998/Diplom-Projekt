@@ -137,7 +137,7 @@ export default function TopNav({
             style={{ position: "fixed", top: "24px", right: "24px", display: "flex", flexDirection: "row", alignItems: "center", gap: "10px", zIndex: 60 }}
           >
             <button
-              style={btnStyle(dark)}
+              style={{ ...btnStyle(dark), width: "33px", padding: 0 }}
               onClick={(e) => { e.stopPropagation(); setVisible(false); setMenuOpen(false); }}
             >
               <IconEyeClosed color={iconColor} />

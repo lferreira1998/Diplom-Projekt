@@ -3069,14 +3069,14 @@ export default function New() {
           >
             {/* Eye toggle */}
             <button
-              style={btnStyle(dark, { background: dark ? darkColors.darkBg : surfaceLight, color: navIconColor }, surfaceLight)}
+              style={btnStyle(dark, { background: dark ? darkColors.darkBg : surfaceLight, color: navIconColor, width: "33px", padding: 0 }, surfaceLight)}
               onClick={(e) => { e.stopPropagation(); setVisible(false); setMenuOpen(false); setExportOpen(false); }}
             >
               <IconEyeClosed color={navIconColor} />
             </button>
             {/* Dark mode toggle (moved here from the left) */}
             <button
-              style={btnStyle(dark, { background: dark ? darkColors.darkBg : surfaceLight, color: navIconColor }, surfaceLight)}
+              style={btnStyle(dark, { background: dark ? darkColors.darkBg : surfaceLight, color: navIconColor, width: "33px", padding: 0 }, surfaceLight)}
               onClick={(e) => { e.stopPropagation(); setDark(d => { const next = !d; localStorage.setItem("appTheme", next ? "dark" : "light"); return next; }); }}
             >
               <IconHalfCircle color={navIconColor} dark={dark} />

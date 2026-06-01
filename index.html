@@ -17,34 +17,34 @@
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
       <link href="https://fonts.googleapis.com/css2?family=Courier+Prime&family=EB+Garamond:wght@400&display=swap" rel="stylesheet" />
       <link rel="stylesheet" href="https://use.typekit.net/zmi4hea.css" />
-      <!-- Override freight fonts with ABCArizona AFTER Typekit so our @font-face wins -->
+      <!-- ABCArizona under unique family names (az-*) — no collision with Typekit's freight -->
       <style>
         @font-face {
-          font-family: 'freight-text-pro';
+          font-family: 'az-serif';
           src: url('/fonts/ABCArizona.woff') format('woff');
           font-weight: 200 700;
           font-style: normal oblique -14deg 0deg;
         }
         @font-face {
-          font-family: 'freighttextcmp-pro';
+          font-family: 'az-cond';
           src: url('/fonts/ABCArizona.woff') format('woff');
           font-weight: 200 700;
           font-style: normal;
         }
         @font-face {
-          font-family: 'freight-text-heading';
+          font-family: 'az-heading';
           src: url('/fonts/ABCArizona.woff') format('woff');
           font-weight: 200 700;
           font-style: normal;
         }
         /* Variation axes per role (Figma values) */
-        [style*="freight-text-heading"] {
+        [style*="az-heading"] {
           font-variation-settings: 'SRFF' 0, 'wdth' 75, 'wght' 327 !important;
         }
-        [style*="freight-text-pro"] {
+        [style*="az-serif"] {
           font-variation-settings: 'SRFF' 0, 'wdth' 100, 'wght' 300 !important;
         }
-        [style*="freighttextcmp-pro"] {
+        [style*="az-cond"] {
           font-variation-settings: 'SRFF' 0, 'wdth' 75, 'wght' 327 !important;
         }
       </style>
@@ -60,7 +60,7 @@
           }
         }(window.location));
       </script>
-      <script type="module" crossorigin src="/assets/index-Bb1nWCBD.js"></script>
+      <script type="module" crossorigin src="/assets/index-CMOt8gF_.js"></script>
       <link rel="stylesheet" crossorigin href="/assets/index-C2pWZYZp.css">
     </head>
 

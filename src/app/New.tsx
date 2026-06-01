@@ -433,6 +433,60 @@ const BTN_CLOSED = { dark: 24, rules: 67, clear: 222 };
 const BTN_OPEN   = { dark: 371, rules: 414, clear: 569 };
 const SPRING = { type: "spring" as const, stiffness: 300, damping: 30 };
 
+// ── Experiment presets (opened from the Playground hero shapes) ────────────────
+// Each preset behaves like a saved tool in viewer mode: name + description shown,
+// fixed rules applied, no editing sidebar.
+type PresetConfig = {
+  name: { de: string; en: string };
+  desc: { de: string; en: string };
+  apply: (s: PresetSetters) => void;
+};
+type PresetSetters = {
+  setDeleteMode: (v: DeleteMode) => void;
+  setCursorRunning: (v: boolean) => void;
+  setCursorSchnelligkeit: (v: number) => void;
+  setTextFliegtEnabled: (v: boolean) => void;
+  setFliegtUnit: (v: "Sätze" | "Wörter" | "Buchstabe") => void;
+  setFliegtZeitpunkt: (v: number) => void;
+  setFliegtSchnelligkeit: (v: number) => void;
+  setPositionMode: (v: "standard" | "spiral" | "random" | "running" | "custom" | "zigzag" | "followdot") => void;
+  setRandomMode: (v: "sentences" | "words") => void;
+  setVisibility: (v: "visible" | "invisible" | "sentence" | "word" | "char") => void;
+  setCorrectionVisible: (v: boolean) => void;
+};
+const PRESETS: Record<string, PresetConfig> = {
+  "without-stopping": {
+    name: { de: "...ohne anzuhalten", en: "...without stopping" },
+    desc: { de: "Schreib ohne anzuhalten. Der Cursor läuft weiter, Pausen werden sichtbar. Löschen ist nicht möglich.", en: "Write without stopping. The cursor keeps moving, making pauses visible. Deletion is impossible." },
+    apply: (s) => { s.setDeleteMode("none"); s.setCursorRunning(true); s.setCursorSchnelligkeit(35); },
+  },
+  "uninvited-thoughts": {
+    name: { de: "...ungebetene Gedanken", en: "...uninvited thoughts" },
+    desc: { de: "Deine Wörter verlieren ihre Form und fliegen davon – wie Gedanken, die du nicht festhalten kannst.", en: "Your words lose their form and drift away — like thoughts you cannot hold on to." },
+    apply: (s) => { s.setTextFliegtEnabled(true); s.setFliegtUnit("Wörter"); s.setFliegtZeitpunkt(0.3); s.setFliegtSchnelligkeit(1.5); },
+  },
+  "off-the-grid": {
+    name: { de: "...abseits des Rasters", en: "...off the grid" },
+    desc: { de: "Text erscheint nicht linear, sondern zufällig im Raum verteilt.", en: "Text doesn't appear linearly, but scattered randomly across the space." },
+    apply: (s) => { s.setPositionMode("random"); s.setRandomMode("words"); },
+  },
+  "blind-then-witness": {
+    name: { de: "...blind & dann sehen", en: "...blind & then witness" },
+    desc: { de: "Schreib blind – dein Text bleibt unsichtbar, während du schreibst.", en: "Write blind — your text stays invisible while you write." },
+    apply: (s) => { s.setVisibility("invisible"); },
+  },
+  "visible-corrections": {
+    name: { de: "...mit sichtbaren Korrekturen", en: "...with visible corrections" },
+    desc: { de: "Korrigieren hinterlässt Spuren. Gelöschter Text wird überdeckt, nicht entfernt.", en: "Correcting leaves traces. Deleted text is covered, not removed." },
+    apply: (s) => { s.setCorrectionVisible(true); s.setDeleteMode("all"); },
+  },
+  "in-a-spiral": {
+    name: { de: "...in einer Spirale", en: "...in a spiral" },
+    desc: { de: "Dein Text windet sich in einer Spirale nach innen.", en: "Your text winds inward in a spiral." },
+    apply: (s) => { s.setPositionMode("spiral"); },
+  },
+};
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function lerpColor(a: string, b: string, t: number): string {
@@ -973,6 +1027,8 @@ export default function New() {
   const [loadedToolIsOwn, setLoadedToolIsOwn]         = useState(false);
   const [editModeEnabledState, setEditModeEnabledState] = useState(false);
   const [infoModalOpen, setInfoModalOpen]               = useState(false);
+  // Preset experiments opened from the Playground hero behave like saved tools (viewer mode)
+  const [presetMode] = useState(() => !!searchParams.get("preset") && !!PRESETS[searchParams.get("preset") as string]);
 
   const windowWidth = useWindowWidth();
 
@@ -983,7 +1039,7 @@ export default function New() {
   const [menuOpen, setMenuOpen]       = useState(false);
   const [menuHovered, setMenuHovered] = useState(false);
   const [rulesHovered, setRulesHovered] = useState(false);
-  const [rulesOpen, setRulesOpen]     = useState(() => !searchParams.get("tool"));
+  const [rulesOpen, setRulesOpen]     = useState(() => !searchParams.get("tool") && !searchParams.get("preset"));
   const [activeCategory, setActiveCategory] = useState("Look & Feel");
   const [identityOpen, setIdentityOpen]     = useState(false);
   const writingFocusRef = useRef<(() => void) | null>(null);
@@ -1255,37 +1311,20 @@ export default function New() {
     }
   }, [positions.length, timerUserReset, timerEnabled, timerMinutes, timerRunning]);
 
-  // Apply preset from URL ?preset=<name> (experiment tool cards)
+  // Apply preset from URL ?preset=<name> (Playground experiment shapes).
+  // Behaves like opening a saved tool: viewer mode, name + description shown.
   useEffect(() => {
     const preset = searchParams.get("preset");
     if (!preset) return;
-    switch (preset) {
-      case "without-stopping":
-        setDeleteMode("none");
-        setCursorRunning(true);
-        setCursorSchnelligkeit(35);
-        break;
-      case "uninvited-thoughts":
-        setTextFliegtEnabled(true);
-        setFliegtUnit("Wörter");
-        setFliegtZeitpunkt(0.3);
-        setFliegtSchnelligkeit(1.5);
-        break;
-      case "off-the-grid":
-        setPositionMode("random");
-        setRandomMode("words");
-        break;
-      case "blind-then-witness":
-        setVisibility("invisible");
-        break;
-      case "visible-corrections":
-        setCorrectionVisible(true);
-        setDeleteMode("all");
-        break;
-      case "in-a-spiral":
-        setPositionMode("spiral");
-        break;
-    }
+    const cfg = PRESETS[preset];
+    if (!cfg) return;
+    setToolName(cfg.name[lang]);
+    setToolDescription(cfg.desc[lang]);
+    cfg.apply({
+      setDeleteMode, setCursorRunning, setCursorSchnelligkeit,
+      setTextFliegtEnabled, setFliegtUnit, setFliegtZeitpunkt, setFliegtSchnelligkeit,
+      setPositionMode, setRandomMode, setVisibility, setCorrectionVisible,
+    });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -1470,7 +1509,9 @@ export default function New() {
   ]);
 
   // ── Computed values ──────────────────────────────────────────────────────
-  const canEdit = currentToolId === null || editModeEnabledState;
+  const canEdit = (currentToolId === null && !presetMode) || editModeEnabledState;
+  // Viewer mode applies for both saved tools (currentToolId) and preset experiments
+  const inViewer = !!currentToolId || presetMode;
   const computedFontSize       = 14 + Math.round(textSizeLevel / 100 * 22);
   const writingFont            = FONT_ARIZONA;
   const writingFontVariations  = `'SRFF' ${serifLevel ?? 70}, 'wdth' 92, 'wght' 327`;
@@ -1640,7 +1681,7 @@ export default function New() {
       `}</style>
 
       {/* ── Tool name header (center top, when loaded from URL) ──────────── */}
-      {currentToolId && visible && (
+      {inViewer && visible && (
         <div style={{
           position: "fixed", top: "24px", left: "50%", transform: "translateX(-50%)",
           display: "flex", alignItems: "center", gap: "8px", zIndex: 21,
@@ -1851,7 +1892,7 @@ export default function New() {
 
       {/* ── Zurück + Erase/Redraw buttons (viewer mode only) ──────────────── */}
       <AnimatePresence>
-        {visible && currentToolId && (
+        {visible && inViewer && (
           <motion.div
             key="float-back-group"
             initial={{ opacity: 0 }}
@@ -1929,11 +1970,11 @@ export default function New() {
           <motion.div
             key="float-rules-group"
             initial={false}
-            animate={{ x: rulesOpen ? BTN_OPEN.rules - BTN_CLOSED.rules : 0 }}
+            animate={{ x: rulesOpen ? BTN_OPEN.rules - (paramsAreDefault ? BTN_CLOSED.dark : BTN_CLOSED.rules) : 0 }}
             exit={{ opacity: 0, transition: { duration: 0.12 } }}
             transition={SPRING}
             style={{
-              position: "fixed", top: "24px", left: BTN_CLOSED.rules,
+              position: "fixed", top: "24px", left: paramsAreDefault ? BTN_CLOSED.dark : BTN_CLOSED.rules,
               display: "flex", alignItems: "center", gap: "8px",
               zIndex: 25,
             }}
@@ -2410,17 +2451,6 @@ export default function New() {
                                 }}
                               />
                               <span style={{ position: "absolute", right: "20px", top: "50%", transform: "translateY(-50%)", fontFamily: FONT_SANS, fontSize: "15px", color: descColor, pointerEvents: "none" }}>min</span>
-                            </div>
-                            {/* User reset row */}
-                            <div
-                              style={{ display: "flex", flexDirection: "column", gap: "4px", cursor: "pointer" }}
-                              onClick={e => { e.stopPropagation(); setTimerUserReset(v => !v); }}
-                            >
-                              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                                <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.userReset}</span>
-                                <RadioCircle selected={timerUserReset} dark={dark} />
-                              </div>
-                              <span style={{ fontFamily: FONT_SANS, fontSize: "12px", color: descColor, lineHeight: 1.4 }}>{t.userResetDesc}</span>
                             </div>
                           </motion.div>
                         )}
@@ -3092,7 +3122,7 @@ export default function New() {
               <IconHalfCircle color={navIconColor} dark={dark} />
             </button>
             {/* Menu button + dropdown — hidden in viewer mode */}
-            {!currentToolId && <div
+            {!inViewer && <div
               style={{ position: "relative" }}
               onMouseEnter={() => { if (!menuOpen) setMenuHovered(true); }}
               onMouseLeave={() => setMenuHovered(false)}

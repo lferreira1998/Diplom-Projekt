@@ -7,7 +7,7 @@ import { deleteNewTool, getAllNewTools, type NewToolData } from "./utils/storage
 import TopNav from "./components/TopNav";
 
 const FONT_SERIF = "'az-serif', serif";
-const FONT_CMP_SERIF = "'az-cond', 'az-serif', serif";
+const FONT_CMP_SERIF = "'az-cond', serif";
 const FONT_SANS = "'general-sans', sans-serif";
 
 type Theme = {

@@ -5,12 +5,14 @@
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <link rel="icon" type="image/png" href="/favicon.png" />
       <title>Shaping Thoughts</title>
+      <link rel="preload" href="/fonts/ABCArizona.woff" as="font" type="font/woff" crossorigin />
       <style>
         @font-face {
           font-family: 'ABCArizona';
           src: url('/fonts/ABCArizona.woff') format('woff');
           font-weight: 200 700;
           font-style: normal oblique -14deg 0deg;
+          font-display: swap;
         }
       </style>
       <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -24,18 +26,21 @@
           src: url('/fonts/ABCArizona.woff') format('woff');
           font-weight: 200 700;
           font-style: normal oblique -14deg 0deg;
+          font-display: swap;
         }
         @font-face {
           font-family: 'az-cond';
           src: url('/fonts/ABCArizona.woff') format('woff');
           font-weight: 200 700;
           font-style: normal;
+          font-display: swap;
         }
         @font-face {
           font-family: 'az-heading';
           src: url('/fonts/ABCArizona.woff') format('woff');
           font-weight: 200 700;
           font-style: normal;
+          font-display: swap;
         }
         /* Variation axes per role (Figma values) */
         [style*="az-heading"] {

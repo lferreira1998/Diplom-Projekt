@@ -45,8 +45,9 @@ function getLookFeelDarkColors(bgHue: number | null): {
   };
 }
 
-const FONT_SERIF = "'freight-text-pro', serif";
-const FONT_SANS  = "'general-sans', sans-serif";
+const FONT_SERIF   = "'freight-text-pro', serif";
+const FONT_SANS    = "'general-sans', sans-serif";
+const FONT_ARIZONA = "'ABCArizona', serif";
 
 const DICE_PROMPTS_DE = [
   "Schreib einen Satz, den du niemandem zeigen würdest.",
@@ -254,6 +255,7 @@ const TRANSLATIONS = {
     // Look & Feel
     lfGrain: "Körnung & Textur",
     lfTextSize: "Textgröße",
+    lfSerif: "Schrift: Sans-Serif ↔ Serif",
     lfBgMotion: "Bewegung des Hintergrunds",
     lfBgColor: "Hintergrundfarbe anpassen",
     lfBgColorReset: "Farbe zurücksetzen",
@@ -386,6 +388,7 @@ const TRANSLATIONS = {
     // Look & Feel
     lfGrain: "Grain & Texture",
     lfTextSize: "Text Size",
+    lfSerif: "Type: Sans-Serif ↔ Serif",
     lfBgMotion: "Background Motion",
     lfBgColor: "Adjust background color",
     lfBgColorReset: "Reset color",
@@ -1093,6 +1096,7 @@ export default function New() {
   const [grainLevel, setGrainLevel]       = useState(0);
   const [textSizeLevel, setTextSizeLevel] = useState(46);
   const [bgHue, setBgHue]                 = useState<number | null>(null);
+  const [serifLevel, setSerifLevel]       = useState<number | null>(null); // null = freight-text-pro; 0-100 = ABCArizona SRFF axis
 
   // Position sub-options
   const [randomMode, setRandomMode] = useState<"sentences" | "words">("words");
@@ -1282,6 +1286,7 @@ export default function New() {
       setGrainLevel(typeof p.grainLevel === "number" ? p.grainLevel : 0);
       setTextSizeLevel(typeof p.textSizeLevel === "number" ? p.textSizeLevel : 20);
       setBgHue(typeof p.bgHue === "number" ? p.bgHue : null);
+      setSerifLevel(typeof p.serifLevel === "number" ? p.serifLevel : null);
       if (p.previewVideo) { setPreviewVideoUrl(p.previewVideo); setPreviewVideoPath(p.previewVideoPath ?? null); setRecordState("done"); }
     }).catch((err) => {
       console.error("[New] Failed to load tool:", err);
@@ -1370,7 +1375,7 @@ export default function New() {
         textSchwerEnabled, schwerZeitpunkt, schwerSchnelligkeit,
         positionMode, randomMode,
         drawnPath: positionMode === "custom" ? drawnPath : [],
-        grainLevel, textSizeLevel, bgHue,
+        grainLevel, textSizeLevel, bgHue, serifLevel,
         ...(previewVideoUrl ? { previewVideo: previewVideoUrl, previewVideoPath: previewVideoPath ?? undefined } : {}),
         preview: {
           text: prompts[0]?.trim().slice(0, 40) || (lang === "de" ? "Ich schreibe anders." : "I write differently."),
@@ -1398,12 +1403,14 @@ export default function New() {
     textEditingEnabled,
     textVerblassEnabled, verblassZeitpunkt, verblassSchnelligkeit,
     textSchwerEnabled, schwerZeitpunkt, schwerSchnelligkeit,
-    positionMode, randomMode, drawnPath, grainLevel, textSizeLevel, bgHue,
+    positionMode, randomMode, drawnPath, grainLevel, textSizeLevel, bgHue, serifLevel,
   ]);
 
   // ── Computed values ──────────────────────────────────────────────────────
   const canEdit = currentToolId === null || editModeEnabledState;
-  const computedFontSize = 14 + Math.round(textSizeLevel / 100 * 22);
+  const computedFontSize       = 14 + Math.round(textSizeLevel / 100 * 22);
+  const writingFont            = serifLevel !== null ? FONT_ARIZONA : FONT_SERIF;
+  const writingFontVariations  = serifLevel !== null ? `'SRFF' ${serifLevel}` : undefined;
   const timerTotalSecs   = (timerMinutes || 1) * 60;
   const timerProgress    = timerEnabled && timerTotalSecs > 0
     ? Math.max(0, 1 - timeLeft / timerTotalSecs) : 0;
@@ -1714,7 +1721,8 @@ export default function New() {
             diceSpinning={diceSpinning}
             dicePaths={[...DICE_FRAME, ...DICE_FACES[diceFace]]}
             fontSize={computedFontSize}
-            fontFamily={FONT_SERIF}
+            fontFamily={writingFont}
+            fontVariationSettings={writingFontVariations}
             centeredPrompt={false}
             containerWidth="764px"
           />
@@ -2785,6 +2793,34 @@ export default function New() {
                         </div>
                         <span style={{ fontFamily: FONT_SERIF, fontSize: "40px", color: dark ? DARK_TEXT : LIGHT_TEXT, flexShrink: 0, lineHeight: 1 }}>A</span>
                       </div>
+                    </div>
+
+                    {/* ── Serif slider ───────────────────────────────────── */}
+                    <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.lfSerif}</span>
+                        {serifLevel !== null && (
+                          <button
+                            onClick={() => setSerifLevel(null)}
+                            style={{ background: "transparent", border: "none", padding: 0, cursor: "pointer", fontFamily: FONT_SANS, fontSize: "12px", color: dark ? DARK_MUTED : "#9a9daa", outline: "none" }}
+                          >↩ zurücksetzen</button>
+                        )}
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                        <span style={{ fontFamily: FONT_ARIZONA, fontVariationSettings: "'SRFF' 0", fontSize: "22px", color: dark ? DARK_TEXT : LIGHT_TEXT, flexShrink: 0, lineHeight: 1 }}>A</span>
+                        <input
+                          type="range" min={0} max={100}
+                          value={serifLevel ?? 50}
+                          onChange={e => setSerifLevel(Number(e.target.value))}
+                          className="lf-slider" style={{ flex: 1 }}
+                        />
+                        <span style={{ fontFamily: FONT_ARIZONA, fontVariationSettings: "'SRFF' 100", fontSize: "22px", color: dark ? DARK_TEXT : LIGHT_TEXT, flexShrink: 0, lineHeight: 1 }}>A</span>
+                      </div>
+                      {serifLevel === null && (
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "12px", color: dark ? DARK_MUTED : "#9a9daa" }}>
+                          {lang === "de" ? "Regler bewegen um ABC Arizona zu aktivieren" : "Move slider to activate ABC Arizona"}
+                        </span>
+                      )}
                     </div>
 
                     <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>

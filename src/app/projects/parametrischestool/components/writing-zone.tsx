@@ -53,6 +53,7 @@ interface WritingZoneProps {
   customPathDe?: boolean;
   writingPrompt?: string;
   fontFamily?: string;
+  fontVariationSettings?: string;
   centeredPrompt?: boolean;
   containerWidth?: string;
   onDiceRoll?: () => void;
@@ -1679,12 +1680,13 @@ export function WritingZone({
   customPathDark     = false,
   customPathDe       = true,
   writingPrompt      = "",
-  fontSize           = 20,
-  fontFamily         = "'general-sans', sans-serif",
-  centeredPrompt     = false,
-  containerWidth     = "1010px",
+  fontSize              = 20,
+  fontFamily            = "'general-sans', sans-serif",
+  fontVariationSettings,
+  centeredPrompt        = false,
+  containerWidth        = "1010px",
   onDiceRoll,
-  diceSpinning       = false,
+  diceSpinning          = false,
   dicePaths,
 }: WritingZoneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -2707,6 +2709,7 @@ export function WritingZone({
             marginRight:  "auto",
             color:        textColor,
             fontFamily:   fontFamily,
+            fontVariationSettings: fontVariationSettings,
             fontSize:     `${fontSize}px`,
             lineHeight:   1.6,
             caretColor:   "transparent",

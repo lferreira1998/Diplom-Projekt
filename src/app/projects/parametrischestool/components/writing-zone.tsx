@@ -2329,9 +2329,24 @@ export function WritingZone({
     const els: React.ReactNode[] = [];
     const vW = typeof window !== "undefined" ? window.innerWidth : 1920;
 
+    // Group characters of a word into a nowrap inline-block so the browser only
+    // breaks lines at spaces — never in the middle of a word.
+    let currentWord: React.ReactNode[] = [];
+    let wkey = 0;
+    const flushWord = () => {
+      if (currentWord.length) {
+        els.push(
+          <span key={`w${wkey++}`} style={{ display: "inline-block", whiteSpace: "nowrap", verticalAlign: "text-bottom" }}>
+            {currentWord}
+          </span>
+        );
+        currentWord = [];
+      }
+    };
+
     for (let i = 0; i <= positions.length; i++) {
       if (i === cursor) {
-        els.push(
+        currentWord.push(
           <span
             key="csr"
             ref={cursorDomRef}
@@ -2398,11 +2413,13 @@ export function WritingZone({
 
       // Newlines
       if (topChar === "\n" && !topIsCov) {
+        flushWord();
         els.push(<br key={`b${i}`} />);
         continue;
       }
 
       if (firstChar === "\n" && topIsCov) {
+        flushWord();
         const inSel1 = selAnchorRef.current !== null && i >= Math.min(selAnchorRef.current, cursor) && i < Math.max(selAnchorRef.current, cursor);
         els.push(
           <span
@@ -2425,7 +2442,7 @@ export function WritingZone({
       }
 
       const inSel = selAnchorRef.current !== null && i >= Math.min(selAnchorRef.current, cursor) && i < Math.max(selAnchorRef.current, cursor);
-      els.push(
+      const charSpan = (
         <span
           key={`p${i}`}
           ref={el => { charElsRef.current[i] = el; }}
@@ -2442,6 +2459,11 @@ export function WritingZone({
           {renderLayers(pos, showTippex, coverBgColor)}
         </span>
       );
+      // Non-space chars accumulate into the current word. A space is kept at the
+      // end of the word and then flushes it — the line break happens between
+      // whole words, never inside one, and no leading space starts a new line.
+      currentWord.push(charSpan);
+      if (topChar === " ") flushWord();
 
       // Generate wrap-around clone if char drifted off-screen
       if (hasDrift) {
@@ -2476,6 +2498,7 @@ export function WritingZone({
       }
     }
 
+    flushWord();
     return els;
   };
 

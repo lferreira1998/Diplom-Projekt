@@ -31,7 +31,17 @@
           font-weight: 200 700;
           font-style: normal;
         }
+        /* Heading variant: slightly less serif, lighter weight */
+        @font-face {
+          font-family: 'freight-text-heading';
+          src: url('/fonts/ABCArizona.woff') format('woff');
+          font-weight: 200 700;
+          font-style: normal;
+        }
         /* Apply correct variation axes per font role via inline style attribute selectors */
+        [style*="freight-text-heading"] {
+          font-variation-settings: 'SRFF' 65, 'wdth' 100, 'wght' 300 !important;
+        }
         [style*="freight-text-pro"] {
           font-variation-settings: 'SRFF' 100, 'wdth' 100 !important;
         }
@@ -57,7 +67,7 @@
           }
         }(window.location));
       </script>
-      <script type="module" crossorigin src="/assets/index-DdeP6Zf1.js"></script>
+      <script type="module" crossorigin src="/assets/index-BfIo89z-.js"></script>
       <link rel="stylesheet" crossorigin href="/assets/index-C2pWZYZp.css">
     </head>
 

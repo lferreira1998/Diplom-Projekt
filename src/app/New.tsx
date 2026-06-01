@@ -70,6 +70,23 @@ const DICE_PROMPTS_DE = [
   "Beschreib das letzte Mal, als du dich geirrt hast.",
   "Was kannst du nicht aufhören zu wollen, obwohl du weißt, dass du es solltest?",
   "Schreib so, als ob niemand jemals lesen wird, was du schreibst.",
+  // Aufforderungen & Regeln
+  "Schreib einfach drauflos und hör nicht auf, bevor die Seite voll ist.",
+  "Schreib über deinen heutigen Tag – aber nur die Dinge, die niemand bemerkt hat.",
+  "Schreib über die letzte Person, mit der du dich gestritten hast. Worum ging es wirklich?",
+  "Schreib jetzt, ohne auf die Tastatur zu schauen.",
+  "Schreib einen ganzen Absatz, ohne den Buchstaben E zu benutzen.",
+  "Beschreib dein Zimmer so, als wärst du ein Einbrecher.",
+  "Schreib eine Entschuldigung, die du nie ausgesprochen hast.",
+  "Schreib nur in Fragen. Keine einzige Antwort.",
+  // Absurdes
+  "Wenn du ein Fisch wärst, in welchem Meer würdest du schwimmen – und warum?",
+  "Wärst du eine Landschaft, welche wärst du? Beschreib dein Wetter.",
+  "Erkläre dem Mond, was Montage sind.",
+  "Schreib das Rezept für einen Tag, den du nie wieder erleben willst.",
+  "Was flüstert dein linker Schuh, wenn niemand hinsieht?",
+  "Verkauf mir deine schlechteste Eigenschaft, als wäre sie ein Superkraft.",
+  "Schreib einen Liebesbrief an etwas, das du eigentlich hasst.",
 ];
 const DICE_PROMPTS_EN = [
   "Write a sentence you'd never show anyone.",
@@ -92,6 +109,23 @@ const DICE_PROMPTS_EN = [
   "Describe the last time you were wrong.",
   "What can't you stop wanting, even though you know you should?",
   "Write as if nobody will ever read what you're writing.",
+  // Commands & rules
+  "Just start writing and don't stop until the page is full.",
+  "Write about your day today — but only the things nobody noticed.",
+  "Write about the last person you argued with. What was it really about?",
+  "Write right now without looking at the keyboard.",
+  "Write a whole paragraph without using the letter E.",
+  "Describe your room as if you were a burglar.",
+  "Write an apology you never said out loud.",
+  "Write only in questions. Not a single answer.",
+  // Absurd
+  "If you were a fish, which sea would you swim in — and why?",
+  "If you were a landscape, which one would you be? Describe your weather.",
+  "Explain Mondays to the moon.",
+  "Write the recipe for a day you never want to live again.",
+  "What does your left shoe whisper when no one is looking?",
+  "Sell me your worst trait as if it were a superpower.",
+  "Write a love letter to something you actually hate.",
 ];
 
 // Isometric cube outline shared by every dice face
@@ -2088,7 +2122,7 @@ export default function New() {
                   transition={SPRING}
                   style={{
                     height: "33px", padding: "0 13px", marginLeft: "2px",
-                    background: rulesBtnBg,
+                    background: bg,
                     border: `1px dashed ${BORDER_COL}`,
                     borderRadius: "4px",
                     cursor: "pointer", outline: "none",

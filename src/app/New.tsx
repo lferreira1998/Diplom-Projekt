@@ -1877,12 +1877,12 @@ export default function New() {
         {visible && canEdit && !paramsAreDefault && (
           <motion.button
             key="float-reload"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            initial={{ opacity: 0, left: rulesOpen ? BTN_OPEN.rules - 33 - 8 : BTN_CLOSED.dark }}
+            animate={{ opacity: 1, left: rulesOpen ? BTN_OPEN.rules - 33 - 8 : BTN_CLOSED.dark }}
             exit={{ opacity: 0, transition: { duration: 0.12 } }}
             transition={SPRING}
             style={{
-              position: "fixed", top: "24px", left: BTN_CLOSED.dark,
+              position: "fixed", top: "24px",
               width: "33px", height: "33px", padding: 0,
               background: rulesBtnBg,
               border: `1px dashed ${BORDER_COL}`,

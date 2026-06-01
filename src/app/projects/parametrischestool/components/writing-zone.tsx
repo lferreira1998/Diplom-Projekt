@@ -1725,6 +1725,9 @@ export function WritingZone({
 
   // Per-char accumulated drift offset (sum of all layers)
   const charOffsets  = useRef<{ dx: number; dy: number }[]>([]);
+  // Natural (untransformed) viewport centre of each char — captured lazily so the
+  // drift can wrap around the screen edges (toroidal) instead of drifting away.
+  const charNat      = useRef<({ x: number; y: number } | null)[]>([]);
   // Refs to inline char spans for measuring their rects (for wrapping clones)
   const charElsRef   = useRef<(HTMLElement | null)[]>([]);
 
@@ -1745,6 +1748,7 @@ export function WritingZone({
       charDrift.current.push({ x: 0, y: 0, vx: 0, vy: 0 });
       charHeavy.current.push({ vy: 0, dy: 0, restDy: null, rot: 0, vr: 0 });
       charOffsets.current.push({ dx: 0, dy: 0 });
+      charNat.current.push(null);
       charElsRef.current.push(null);
     }
     if (positions.length < posTimesRef.current.length) {
@@ -1752,6 +1756,7 @@ export function WritingZone({
       charDrift.current.length   = positions.length;
       charHeavy.current.length   = positions.length;
       charOffsets.current.length = positions.length;
+      charNat.current.length     = positions.length;
       charElsRef.current.length  = positions.length;
     }
   }, [positions.length]);
@@ -1767,6 +1772,7 @@ export function WritingZone({
       wordDrift.current.clear();
       charDrift.current = charDrift.current.map(() => ({ x: 0, y: 0, vx: 0, vy: 0 }));
       charOffsets.current = charOffsets.current.map(() => ({ dx: 0, dy: 0 }));
+      charNat.current = charNat.current.map(() => null);
     }
   }, [driftet]);
 
@@ -1876,6 +1882,29 @@ export function WritingZone({
             if (cd) { dx += cd.x; dy += cd.y; }
           }
           if (charOffsets.current[i]) {
+            // Wrap-around: keep every char inside the viewport. Once a char leaves
+            // one edge it re-enters from the opposite one, so text is never lost.
+            const el = charElsRef.current[i];
+            if (el && (dx !== 0 || dy !== 0)) {
+              if (!charNat.current[i]) {
+                const r = el.getBoundingClientRect();
+                const prev = charOffsets.current[i];
+                charNat.current[i] = {
+                  x: r.left + r.width / 2 - prev.dx,
+                  y: r.top + r.height / 2 - prev.dy,
+                };
+              }
+              const nat = charNat.current[i]!;
+              const m = 48; // margin so a char fully exits before reappearing
+              const W = (typeof window !== "undefined" ? window.innerWidth : 1280) + 2 * m;
+              const H = (typeof window !== "undefined" ? window.innerHeight : 800) + 2 * m;
+              let ax = nat.x + dx;
+              let ay = nat.y + dy;
+              ax = (((ax + m) % W) + W) % W - m;
+              ay = (((ay + m) % H) + H) % H - m;
+              dx = ax - nat.x;
+              dy = ay - nat.y;
+            }
             charOffsets.current[i].dx = dx;
             charOffsets.current[i].dy = dy;
           }
@@ -1998,10 +2027,10 @@ export function WritingZone({
   const measSpanRef  = useRef<HTMLSpanElement>(null);
 
   // Speed kept in a ref so adjusting the slider doesn't restart the rAF loop
-  // (which would reset the cursor position). Maps 1–100 → ~0.4–3.2 chars/sec.
-  const cursorSpeedRef = useRef(0.4 + (cursorSchnelligkeit / 100) * 2.8);
+  // (which would reset the cursor position). Maps 1–100 → ~0.4–4.8 chars/sec.
+  const cursorSpeedRef = useRef(0.4 + (cursorSchnelligkeit / 100) * 4.4);
   useEffect(() => {
-    cursorSpeedRef.current = 0.4 + (cursorSchnelligkeit / 100) * 2.8;
+    cursorSpeedRef.current = 0.4 + (cursorSchnelligkeit / 100) * 4.4;
   }, [cursorSchnelligkeit]);
 
   useEffect(() => {
@@ -2467,8 +2496,9 @@ export function WritingZone({
       currentWord.push(charSpan);
       if (topChar === " ") flushWord();
 
-      // Generate wrap-around clone if char drifted off-screen
-      if (hasDrift) {
+      // Generate wrap-around clone if char drifted off-screen.
+      // (Skipped while drifting — the toroidal offset already keeps chars on-screen.)
+      if (hasDrift && !driftet) {
         const el = charElsRef.current[i];
         if (el) {
           const rect = el.getBoundingClientRect();

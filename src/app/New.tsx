@@ -207,8 +207,8 @@ const TRANSLATIONS = {
     correctionDescHighlight: "Mit Tipp-Ex-Schicht",
     correctionDescRest: " über alten Text. Das Korrigieren hinterlässt Spuren.",
     // Stability
-    driftLabel: "Text fliegt davon",
-    driftDesc: "Text verliert seine stabile Form und fliegt davon.",
+    driftLabel: "Text",
+    driftDesc: "Der Text verliert seine stabile Form und driftet umher – verlässt er eine Seite, erscheint er auf der gegenüberliegenden wieder. Er bleibt immer sichtbar.",
     driftSentences: "Sätze", driftWords: "Wörter", driftLetters: "Buchstabe",
     driftTiming: "Zeitpunkt des Fliegens",
     driftAfter: (n: number) => {
@@ -343,8 +343,8 @@ const TRANSLATIONS = {
     correctionDescHighlight: "With a Tipp-Ex layer",
     correctionDescRest: " over old text. Corrections leave traces.",
     // Stability
-    driftLabel: "Text drifts away",
-    driftDesc: "Text loses its stable form and drifts away.",
+    driftLabel: "Text",
+    driftDesc: "The text loses its stable form and drifts around – leaving one side, it reappears on the opposite. It always stays visible.",
     driftSentences: "Sentences", driftWords: "Words", driftLetters: "Letters",
     driftTiming: "Drift timing",
     driftAfter: (n: number) => {

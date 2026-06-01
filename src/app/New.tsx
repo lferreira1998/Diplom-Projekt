@@ -1423,7 +1423,7 @@ export default function New() {
   const canEdit = currentToolId === null || editModeEnabledState;
   const computedFontSize       = 14 + Math.round(textSizeLevel / 100 * 22);
   const writingFont            = FONT_ARIZONA;
-  const writingFontVariations  = `'SRFF' ${serifLevel ?? 0}, 'wdth' 80, 'wght' 360`;
+  const writingFontVariations  = `'SRFF' ${serifLevel ?? 70}, 'wdth' 80, 'wght' 360`;
   const timerTotalSecs   = (timerMinutes || 1) * 60;
   const timerProgress    = timerEnabled && timerTotalSecs > 0
     ? Math.max(0, 1 - timeLeft / timerTotalSecs) : 0;
@@ -2823,7 +2823,7 @@ export default function New() {
                         <span style={{ fontFamily: FONT_ARIZONA, fontVariationSettings: "'SRFF' 0, 'wdth' 80, 'wght' 360", fontSize: "22px", color: dark ? DARK_TEXT : LIGHT_TEXT, flexShrink: 0, lineHeight: 1 }}>A</span>
                         <input
                           type="range" min={0} max={100}
-                          value={serifLevel ?? 0}
+                          value={serifLevel ?? 70}
                           onChange={e => setSerifLevel(Number(e.target.value))}
                           className="lf-slider" style={{ flex: 1 }}
                         />

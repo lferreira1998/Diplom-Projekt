@@ -12,7 +12,13 @@
           font-weight: 200 700;
           font-style: normal oblique -14deg 0deg;
         }
-        /* Replace freight serif fonts with ABCArizona */
+      </style>
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+      <link href="https://fonts.googleapis.com/css2?family=Courier+Prime&family=EB+Garamond:wght@400&display=swap" rel="stylesheet" />
+      <link rel="stylesheet" href="https://use.typekit.net/zmi4hea.css" />
+      <!-- Override freight fonts with ABCArizona AFTER Typekit so our @font-face wins -->
+      <style>
         @font-face {
           font-family: 'freight-text-pro';
           src: url('/fonts/ABCArizona.woff') format('woff');
@@ -25,31 +31,23 @@
           font-weight: 200 700;
           font-style: normal;
         }
-        /* Heading variant: slightly less serif, lighter weight */
         @font-face {
           font-family: 'freight-text-heading';
           src: url('/fonts/ABCArizona.woff') format('woff');
           font-weight: 200 700;
           font-style: normal;
         }
-        /* Apply correct variation axes per freight font role — all ABCArizona Sans (SRFF 0) per Figma */
-        /* Headings → Sans Condensed Medium */
+        /* Variation axes per role (Figma values) */
         [style*="freight-text-heading"] {
           font-variation-settings: 'SRFF' 0, 'wdth' 75, 'wght' 327 !important;
         }
-        /* Body → Sans Light */
         [style*="freight-text-pro"] {
           font-variation-settings: 'SRFF' 0, 'wdth' 100, 'wght' 300 !important;
         }
-        /* Condensed display → Sans Condensed Medium */
         [style*="freighttextcmp-pro"] {
           font-variation-settings: 'SRFF' 0, 'wdth' 75, 'wght' 327 !important;
         }
       </style>
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-      <link href="https://fonts.googleapis.com/css2?family=Courier+Prime&family=EB+Garamond:wght@400&display=swap" rel="stylesheet" />
-      <link rel="stylesheet" href="https://use.typekit.net/zmi4hea.css" />
       <script>
         (function(l) {
           if (l.search[1] === '/') {
@@ -62,7 +60,7 @@
           }
         }(window.location));
       </script>
-      <script type="module" crossorigin src="/assets/index-BvWfXLr4.js"></script>
+      <script type="module" crossorigin src="/assets/index-Bb1nWCBD.js"></script>
       <link rel="stylesheet" crossorigin href="/assets/index-C2pWZYZp.css">
     </head>
 

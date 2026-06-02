@@ -1776,6 +1776,19 @@ export function WritingZone({
     }
   }, [driftet]);
 
+  // Reset drift positions when the delay changes — chars that already drifted
+  // return to their natural position and the new timing applies from scratch.
+  useEffect(() => {
+    if (!driftet) return;
+    sentDrift.current.clear();
+    wordDrift.current.clear();
+    charDrift.current = charDrift.current.map(() => ({ x: 0, y: 0, vx: 0, vy: 0 }));
+    charOffsets.current = charOffsets.current.map(() => ({ dx: 0, dy: 0 }));
+    charNat.current = charNat.current.map(() => null);
+    setDriftTick(t => t + 1);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [driftDelay]);
+
   // Reset gravity state when "heavy" is turned off
   useEffect(() => {
     if (!schwer) {

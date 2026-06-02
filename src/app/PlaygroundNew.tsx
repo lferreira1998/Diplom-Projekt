@@ -47,6 +47,7 @@ function getTheme(dark: boolean): Theme {
 }
 
 const ThemeContext = createContext<Theme>(getTheme(false));
+const DarkContext  = createContext(false);
 
 function getSessionId(): string {
   const key = "diplom_session_id";
@@ -58,15 +59,18 @@ function getSessionId(): string {
   return id;
 }
 
-function ToolShape({ label, style, textStyle, href, video, videoFit = "cover" }: {
+function ToolShape({ label, style, textStyle, href, videoLight, videoDark, videoFit = "cover" }: {
   label: string;
   style: CSSProperties;
   textStyle?: CSSProperties;
   href: string;
-  video: string;
+  videoLight: string;
+  videoDark: string;
   videoFit?: "cover" | "contain";
 }) {
   const theme = useContext(ThemeContext);
+  const dark  = useContext(DarkContext);
+  const video = dark ? videoDark : videoLight;
   const videoRef = useRef<HTMLVideoElement>(null);
   const [hovered, setHovered] = useState(false);
 
@@ -77,7 +81,6 @@ function ToolShape({ label, style, textStyle, href, video, videoFit = "cover" }:
     if (target.readyState === 0) target.load();
   }
 
-  // Autoplay the video by default, on mount
   useEffect(() => {
     const target = videoRef.current;
     if (!target) return;
@@ -85,7 +88,7 @@ function ToolShape({ label, style, textStyle, href, video, videoFit = "cover" }:
     const play = () => target.play().catch(() => undefined);
     play();
     if (target.readyState < 2) target.addEventListener("canplay", play, { once: true });
-  }, []);
+  }, [video]);
 
   return (
     <a
@@ -115,6 +118,7 @@ function ToolShape({ label, style, textStyle, href, video, videoFit = "cover" }:
       }}
     >
       <video
+        key={video}
         ref={videoRef}
         muted
         loop
@@ -134,7 +138,6 @@ function ToolShape({ label, style, textStyle, href, video, videoFit = "cover" }:
           zIndex: 0,
         }}
       >
-        <source src={`/videos/${video}.mp4`} type="video/mp4" />
         <source src={`/videos/${video}.webm`} type="video/webm" />
       </video>
       <span
@@ -589,6 +592,7 @@ export default function PlaygroundNew() {
 
   return (
     <ThemeContext.Provider value={theme}>
+    <DarkContext.Provider value={dark}>
       <TopNav current="Playground" dark={dark} setDark={setDark} lang={lang} setLang={setLang} />
       <main style={{ minHeight: "100vh", height: "100vh", width: "100vw", overflowX: "hidden", overflowY: "auto", position: "relative", backgroundColor: theme.bg, backgroundImage: theme.dotGrid, backgroundSize: "42px 42px", color: theme.text, fontFamily: FONT_SANS, WebkitOverflowScrolling: "touch" }}>
         <style>{`html, body, #root { height: 100%; overflow: hidden; }`}</style>
@@ -596,12 +600,12 @@ export default function PlaygroundNew() {
         <section aria-label="Writing tools playground" style={{ position: "relative", minHeight: "100vh", overflow: "hidden", background: "transparent" }}>
           <div style={{ position: "absolute", left: "50%", top: "50%", width: 1680, height: 858, transform: "translate(-50%, -50%)" }}>
             <div style={{ position: "absolute", inset: 0, animation: "_toolIn 1.2s ease-out 0.8s both" }}>
-              <ToolShape label="...without stopping" href="/create-tool?preset=without-stopping" video="without-stopping" videoFit="contain" style={{ left: 40, top: 197, width: 236, height: 233, transform: "rotate(5.1deg)", borderRadius: 200 }} textStyle={{ transform: "rotate(-5.1deg)" }} />
-              <ToolShape label="...uninvited thoughts" href="/create-tool?preset=uninvited-thoughts" video="uninvited-thoughts" style={{ left: 420, top: 57, width: 241, height: 182, transform: "rotate(-9.25deg)", borderRadius: 4 }} textStyle={{ transform: "rotate(9.25deg)" }} />
-              <ToolShape label="...off the grid" href="/create-tool?preset=off-the-grid" video="off-the-grid" style={{ left: 1220, top: 112, width: 251, height: 163, transform: "rotate(4.18deg)", borderRadius: 4, justifyContent: "flex-start", alignItems: "flex-end", padding: 12 }} textStyle={{ transform: "rotate(-4.18deg)", marginBottom: 0 }} />
-              <ToolShape label="...blind & then witness" href="/create-tool?preset=blind-then-witness" video="blind-then-witness" style={{ left: 213, top: 579, width: 324, height: 163, transform: "rotate(6.45deg)", borderRadius: 100 }} textStyle={{ transform: "rotate(-6.45deg)" }} />
-              <ToolShape label="...with visible corrections" href="/create-tool?preset=visible-corrections" video="visible-corrections" style={{ left: 774, top: 526, width: 363, height: 174, borderRadius: "40px 4px 40px 4px" }} />
-              <ToolShape label="...in a spiral" href="/create-tool?preset=in-a-spiral" video="in-a-spiral" videoFit="cover" style={{ left: 1321, top: 414, width: 211, height: 309, transform: "rotate(12.11deg)", borderRadius: 200 }} textStyle={{ transform: "rotate(-12.11deg)" }} />
+              <ToolShape label="...without stopping" href="/create-tool?preset=without-stopping" videoLight="without-stopping-light" videoDark="without-stopping-dark" videoFit="contain" style={{ left: 40, top: 197, width: 236, height: 233, transform: "rotate(5.1deg)", borderRadius: 200 }} textStyle={{ transform: "rotate(-5.1deg)" }} />
+              <ToolShape label="...uninvited thoughts" href="/create-tool?preset=uninvited-thoughts" videoLight="uninvited-thoughts-light" videoDark="uninvited-thoughts-dark" style={{ left: 420, top: 57, width: 241, height: 182, transform: "rotate(-9.25deg)", borderRadius: 4 }} textStyle={{ transform: "rotate(9.25deg)" }} />
+              <ToolShape label="...off the grid" href="/create-tool?preset=off-the-grid" videoLight="off-the-grid-light" videoDark="off-the-grid-dark" style={{ left: 1220, top: 112, width: 251, height: 163, transform: "rotate(4.18deg)", borderRadius: 4, justifyContent: "flex-start", alignItems: "flex-end", padding: 12 }} textStyle={{ transform: "rotate(-4.18deg)", marginBottom: 0 }} />
+              <ToolShape label="...blind & then witness" href="/create-tool?preset=blind-then-witness" videoLight="blind-then-witness-light" videoDark="blind-then-witness-dark" style={{ left: 213, top: 579, width: 324, height: 163, transform: "rotate(6.45deg)", borderRadius: 100 }} textStyle={{ transform: "rotate(-6.45deg)" }} />
+              <ToolShape label="...with visible corrections" href="/create-tool?preset=visible-corrections" videoLight="visible-corrections-light" videoDark="visible-corrections-dark" style={{ left: 774, top: 526, width: 363, height: 174, borderRadius: "40px 4px 40px 4px" }} />
+              <ToolShape label="...in a spiral" href="/create-tool?preset=in-a-spiral" videoLight="in-a-spiral-light" videoDark="in-a-spiral-dark" videoFit="cover" style={{ left: 1321, top: 414, width: 211, height: 309, transform: "rotate(12.11deg)", borderRadius: 200 }} textStyle={{ transform: "rotate(-12.11deg)" }} />
             </div>
             <div style={{ position: "absolute", left: 456, top: 300, width: 768 }}>
               <HeroHeading DE={DE} theme={theme} />
@@ -642,6 +646,7 @@ export default function PlaygroundNew() {
           onClose={() => setLaunchTool(null)}
         />
       </main>
+    </DarkContext.Provider>
     </ThemeContext.Provider>
   );
 }

@@ -2022,6 +2022,25 @@ export default function New() {
               {t.backBtn}
             </button>
 
+            {/* Reveal text — appears when visibility is invisible */}
+            {!canEdit && visibility === "invisible" && positions.length > 0 && (
+              <button
+                style={{
+                  height: "33px", padding: "0 13px",
+                  background: dark ? "rgba(240,232,220,0.12)" : "rgba(85,85,85,0.08)",
+                  border: `1px solid ${dark ? "rgba(240,232,220,0.5)" : BORDER_COL}`,
+                  borderRadius: "4px",
+                  cursor: "pointer", outline: "none",
+                  display: "flex", alignItems: "center",
+                  fontFamily: FONT_SANS, fontSize: "15px", fontWeight: 400,
+                  color: dark ? DARK_TEXT : LIGHT_TEXT,
+                  lineHeight: "normal", whiteSpace: "nowrap",
+                  flexShrink: 0,
+                }}
+                onClick={(e) => { e.stopPropagation(); setVisibility("visible"); }}
+              >{lang === "de" ? "Text sehen" : "Reveal text"}</button>
+            )}
+
             {/* Erase text — appears once there is text */}
             {!canEdit && positions.length > 0 && (
               <button

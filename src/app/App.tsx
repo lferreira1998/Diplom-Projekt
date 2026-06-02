@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate, useLocation } from "react-router";
+import MobileGate from "./components/MobileGate";
 import Overview from "./Overview";
 import OneWordReplay from "./OneWordReplay";
 import AboutNew from "./AboutNew";
@@ -35,6 +36,7 @@ function SearchRedirect({ to }: { to: string }) {
 
 export default function App() {
   return (
+    <MobileGate>
     <Routes>
       {/* ── Main routes ── */}
       <Route path="/" element={<Navigate to="/tool-collection" replace />} />
@@ -83,5 +85,6 @@ export default function App() {
       <Route path="/loschen-korrigieren" element={<Navigate to="/visible-corrections" replace />} />
       <Route path="/aboutnew" element={<Navigate to="/about-the-project" replace />} />
     </Routes>
+    </MobileGate>
   );
 }

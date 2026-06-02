@@ -194,7 +194,7 @@ const TRANSLATIONS = {
     rulesHeading: "Regeln",
     rulesSubtitle: "Ändere sie.",
     identityBtn: "Name,\nBeschreibung\n& mehr",
-    saveBtn: "Mein Tool speichern",
+    saveBtn: "Tool zur Sammlung hinzufügen",
     menuClosed: "Menü",
     menuOpen: "Schließen",
     clearParams: "Parameter zurücksetzen",
@@ -330,7 +330,7 @@ const TRANSLATIONS = {
     rulesHeading: "Rules",
     rulesSubtitle: "Change them.",
     identityBtn: "Name,\nDescription\n& more",
-    saveBtn: "Save my Tool",
+    saveBtn: "Save tool to collection",
     menuClosed: "Menu",
     menuOpen: "Close",
     clearParams: "Clear Parameters",
@@ -2479,7 +2479,7 @@ export default function New() {
                       color: dark ? DARK_TEXT : LIGHT_TEXT,
                       opacity: saving ? 0.6 : 1,
                     }}
-                  >{saving ? (lang === "de" ? "Speichert…" : "Saving…") : (lang === "de" ? "Mein Tool speichern" : "Save my Tool")}</button>
+                  >{saving ? (lang === "de" ? "Speichert…" : "Saving…") : (lang === "de" ? "Tool zur Sammlung hinzufügen" : "Save tool to collection")}</button>
                   <button
                     onClick={() => handleSave(false)}
                     disabled={saving}

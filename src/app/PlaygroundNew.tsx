@@ -24,14 +24,14 @@ type Theme = {
 function getTheme(dark: boolean): Theme {
   if (dark) {
     return {
-      bg: "#484848",
-      panelBg: "#3a3836",
-      toolBg: "#3a3836",
-      border: "rgba(240,232,220,0.28)",
+      bg: "#1a1918",
+      panelBg: "#252321",
+      toolBg: "#252321",
+      border: "rgba(240,232,220,0.18)",
       text: "#f0e8dc",
       muted: "rgba(240,232,220,0.5)",
       headline: "#f0e8dc",
-      dotGrid: "radial-gradient(circle, rgba(240,232,220,0.18) 1px, transparent 1.2px)",
+      dotGrid: "radial-gradient(circle, rgba(240,232,220,0.10) 1px, transparent 1.2px)",
     };
   }
   return {

@@ -247,19 +247,21 @@ function renderLayers(
         if (pos.layers[j].type === "cover") n++;
         else break;
       }
+      // Opacity builds with cover layers — use coverBgColor directly so it
+      // matches the page background in both light and dark mode.
       const alpha = n === 1 ? 0.91 : n === 2 ? 0.97 : 1.0;
-      const tippexWhite = `rgba(255, 255, 255, ${alpha})`;
       out.push(
         <span
           key={`v${idx}`}
           style={{
             position:        "absolute",
             inset:           "-1px -0.5px",
-            backgroundColor: tippexWhite,
+            backgroundColor: coverBgColor,
+            opacity:         alpha,
             borderRadius:    "1px",
             boxShadow:       n === 1
-              ? "0 1px 2px rgba(160,148,130,0.22), 0 0.5px 1px rgba(160,148,130,0.15)"
-              : "0 1px 3px rgba(140,128,110,0.28), 0 0.5px 1px rgba(140,128,110,0.18)",
+              ? `0 1px 2px color-mix(in srgb, ${coverBgColor} 60%, #000 40%), 0 0.5px 1px color-mix(in srgb, ${coverBgColor} 70%, #000 30%)`
+              : `0 1px 3px color-mix(in srgb, ${coverBgColor} 50%, #000 50%), 0 0.5px 1px color-mix(in srgb, ${coverBgColor} 60%, #000 40%)`,
             zIndex: idx,
           }}
         />

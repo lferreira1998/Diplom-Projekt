@@ -24,9 +24,9 @@ const NAV_CONTAINER = {
   exit:   { transition: { staggerChildren: 0.04, staggerDirection: -1 as const } },
 };
 const NAV_ITEM = {
-  hidden:  { opacity: 0, y: -10 },
+  hidden:  { opacity: 0, y: -13 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.18, ease: "easeOut" } },
-  exit:    { opacity: 0, y: -10, transition: { duration: 0.1 } },
+  exit:    { opacity: 0, y: -13, transition: { duration: 0.1 } },
 };
 
 function IconEyeClosed({ color }: { color: string }) {

@@ -20,13 +20,13 @@ const LABELS = {
 
 const NAV_CONTAINER = {
   hidden: {},
-  visible: { transition: { staggerChildren: 0.07 } },
-  exit:   { transition: { staggerChildren: 0.04, staggerDirection: -1 as const } },
+  visible: { transition: { staggerChildren: 0.08 } },
+  exit:   { transition: { staggerChildren: 0.05, staggerDirection: -1 as const } },
 };
 const NAV_ITEM = {
-  hidden:  { opacity: 0, y: -28 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.22, ease: [0.22, 1, 0.36, 1] } },
-  exit:    { opacity: 0, y: -18, transition: { duration: 0.12 } },
+  hidden:  { opacity: 0, y: -52, scale: 0.88 },
+  visible: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 380, damping: 24 } },
+  exit:    { opacity: 0, y: -24, scale: 0.92, transition: { duration: 0.14 } },
 };
 
 function IconEyeClosed({ color }: { color: string }) {

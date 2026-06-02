@@ -603,7 +603,7 @@ export default function PlaygroundNew() {
               <ToolShape label="...with visible corrections" href="/create-tool?preset=visible-corrections" video="visible-corrections" style={{ left: 774, top: 526, width: 363, height: 174, borderRadius: "40px 4px 40px 4px" }} />
               <ToolShape label="...in a spiral" href="/create-tool?preset=in-a-spiral" video="in-a-spiral" videoFit="cover" style={{ left: 1321, top: 414, width: 211, height: 309, transform: "rotate(12.11deg)", borderRadius: 200 }} textStyle={{ transform: "rotate(-12.11deg)" }} />
             </div>
-            <div style={{ position: "absolute", left: 456, top: 300, width: 768 }}>
+            <div style={{ position: "absolute", left: 456, top: 375, width: 768 }}>
               <HeroHeading DE={DE} theme={theme} />
             </div>
           </div>

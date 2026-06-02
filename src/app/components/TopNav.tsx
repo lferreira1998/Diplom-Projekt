@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "motion/react";
 const BORDER_COL = "#a4a4a4";
 const LIGHT_TEXT = "#555555";
 const DARK_TEXT  = "#f0e8dc";
-const FONT_SANS  = "'general-sans', sans-serif";
+const FONT_SANS  = "'az-sans', sans-serif";
 
 const ROUTES: Record<string, string> = {
   Create:     "/create-tool",

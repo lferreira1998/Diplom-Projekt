@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import html2canvas from "html2canvas-pro";
 import { uploadPreviewVideo } from "../utils/storage";
 
-const FONT_SANS  = "'general-sans', sans-serif";
+const FONT_SANS  = "'az-sans', sans-serif";
 const FONT_SERIF = "'az-serif', serif";
 const MAX_SECS   = 10;
 const FPS        = 8;

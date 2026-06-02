@@ -42,6 +42,13 @@
           font-style: normal;
           font-display: swap;
         }
+        @font-face {
+          font-family: 'az-sans';
+          src: url('/fonts/ABCArizona.woff') format('woff');
+          font-weight: 200 700;
+          font-style: normal;
+          font-display: swap;
+        }
         /* Variation axes per role (Figma values) */
         [style*="az-heading"] {
           font-variation-settings: 'SRFF' 70, 'wdth' 92, 'wght' 327 !important;
@@ -51,6 +58,10 @@
         }
         [style*="az-cond"] {
           font-variation-settings: 'SRFF' 70, 'wdth' 80, 'wght' 360 !important;
+        }
+        /* az-sans: pure geometric sans, normal width, regular weight — matches General Sans */
+        [style*="az-sans"] {
+          font-variation-settings: 'SRFF' 0, 'wdth' 100, 'wght' 360 !important;
         }
       </style>
       <script>

@@ -10,8 +10,8 @@ import {
 } from "./components/param-panel";
 import { getToolById } from "../../utils/storage";
 
-const FONT_UI = "'general-sans', sans-serif";
-const FONT_UI_EXT = "'general-sans', sans-serif";
+const FONT_UI = "'az-sans', sans-serif";
+const FONT_UI_EXT = "'az-sans', sans-serif";
 const BG_COLOR = "#F5F5F6";
 const TEXT_COLOR = "#313642";
 
@@ -88,7 +88,7 @@ function TimerDoneOverlay({ isVisual, onDelete, onReveal, onCopy, copied }: Time
             Zeit abgelaufen.
           </span>
           {isVisual && (
-            <span style={{ fontFamily: "'general-sans', sans-serif", fontSize: "0.68rem", color: subColor, lineHeight: 1.5, fontStyle: "italic" }}>
+            <span style={{ fontFamily: "'az-sans', sans-serif", fontSize: "0.68rem", color: subColor, lineHeight: 1.5, fontStyle: "italic" }}>
               Dein Text wartet hinter dem Dunkel.
             </span>
           )}

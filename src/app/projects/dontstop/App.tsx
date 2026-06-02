@@ -90,7 +90,7 @@ export default function App() {
                 >
                   <h1
                     style={{
-                      fontFamily: "'general-sans', sans-serif",
+                      fontFamily: "'az-sans', sans-serif",
                       fontSize: "clamp(2rem, 6vw, 3.5rem)",
                       color: "#313642",
                       letterSpacing: "-0.02em",
@@ -108,7 +108,7 @@ export default function App() {
                   transition={{ delay: 0.3, duration: 0.6 }}
                   className="text-center mb-12 max-w-sm"
                   style={{
-                    fontFamily: "'general-sans', sans-serif",
+                    fontFamily: "'az-sans', sans-serif",
                     fontSize: "0.95rem",
                     color: "#6B6F7B",
                     lineHeight: 1.7,
@@ -127,7 +127,7 @@ export default function App() {
                   <p
                     className="text-center mb-4"
                     style={{
-                      fontFamily: "'general-sans', sans-serif",
+                      fontFamily: "'az-sans', sans-serif",
                       fontSize: "0.7rem",
                       color: "#9A9DAA",
                       letterSpacing: "0.2em",
@@ -168,7 +168,7 @@ export default function App() {
   }}
   placeholder="3"
   style={{
-    fontFamily: "'general-sans', sans-serif",
+    fontFamily: "'az-sans', sans-serif",
     fontSize: "0.85rem",
     letterSpacing: "0.05em",
     border: "none",
@@ -181,7 +181,7 @@ export default function App() {
 />
                       <span
                         style={{
-                          fontFamily: "'general-sans', sans-serif",
+                          fontFamily: "'az-sans', sans-serif",
                           fontSize: "0.85rem",
                           letterSpacing: "0.05em",
                           color: "#6B6F7B",
@@ -201,7 +201,7 @@ export default function App() {
                   onClick={handleStart}
                   className="group cursor-pointer"
                   style={{
-                    fontFamily: "'general-sans', sans-serif",
+                    fontFamily: "'az-sans', sans-serif",
                     fontSize: "0.8rem",
                     letterSpacing: "0.2em",
                     textTransform: "uppercase",
@@ -243,7 +243,7 @@ export default function App() {
                 <div className="flex items-center justify-between w-full max-w-4xl mx-auto">
                   <span
                     style={{
-                      fontFamily: "'general-sans', sans-serif",
+                      fontFamily: "'az-sans', sans-serif",
                       fontSize: "0.7rem",
                       color: "#313642",
                       letterSpacing: "0.2em",
@@ -271,7 +271,7 @@ export default function App() {
                     <span
                       className="tabular-nums"
                       style={{
-                        fontFamily: "'general-sans', sans-serif",
+                        fontFamily: "'az-sans', sans-serif",
                         fontSize: "0.8rem",
                         color: timeLeft <= 10 ? "#E05252" : "#9A9DAA",
                         letterSpacing: "0.1em",
@@ -315,7 +315,7 @@ export default function App() {
                 <div className="flex items-center justify-between w-full max-w-4xl mx-auto">
                   <span
                     style={{
-                      fontFamily: "'general-sans', sans-serif",
+                      fontFamily: "'az-sans', sans-serif",
                       fontSize: "0.7rem",
                       color: "#313642",
                       letterSpacing: "0.2em",
@@ -328,7 +328,7 @@ export default function App() {
                     onClick={handleRestart}
                     className="cursor-pointer"
                     style={{
-                      fontFamily: "'general-sans', sans-serif",
+                      fontFamily: "'az-sans', sans-serif",
                       fontSize: "0.7rem",
                       letterSpacing: "0.15em",
                       textTransform: "uppercase",
@@ -361,7 +361,7 @@ export default function App() {
                   <div>
                     <p
                       style={{
-                        fontFamily: "'general-sans', sans-serif",
+                        fontFamily: "'az-sans', sans-serif",
                         fontSize: "0.6rem",
                         color: "#9A9DAA",
                         letterSpacing: "0.15em",
@@ -373,7 +373,7 @@ export default function App() {
                     </p>
                     <p
                       style={{
-                        fontFamily: "'general-sans', sans-serif",
+                        fontFamily: "'az-sans', sans-serif",
                         fontSize: "1.5rem",
                         color: "#313642",
                       }}
@@ -384,7 +384,7 @@ export default function App() {
                   <div>
                     <p
                       style={{
-                        fontFamily: "'general-sans', sans-serif",
+                        fontFamily: "'az-sans', sans-serif",
                         fontSize: "0.6rem",
                         color: "#9A9DAA",
                         letterSpacing: "0.15em",
@@ -396,7 +396,7 @@ export default function App() {
                     </p>
                     <p
                       style={{
-                        fontFamily: "'general-sans', sans-serif",
+                        fontFamily: "'az-sans', sans-serif",
                         fontSize: "1.5rem",
                         color: "#313642",
                       }}
@@ -413,7 +413,7 @@ export default function App() {
                   <div>
                     <p
                       style={{
-                        fontFamily: "'general-sans', sans-serif",
+                        fontFamily: "'az-sans', sans-serif",
                         fontSize: "0.6rem",
                         color: "#9A9DAA",
                         letterSpacing: "0.15em",
@@ -425,7 +425,7 @@ export default function App() {
                     </p>
                     <p
                       style={{
-                        fontFamily: "'general-sans', sans-serif",
+                        fontFamily: "'az-sans', sans-serif",
                         fontSize: "1.5rem",
                         color: "#313642",
                       }}
@@ -442,7 +442,7 @@ export default function App() {
                   <p
                     className="mb-4"
                     style={{
-                      fontFamily: "'general-sans', sans-serif",
+                      fontFamily: "'az-sans', sans-serif",
                       fontSize: "0.6rem",
                       color: "#9A9DAA",
                       letterSpacing: "0.15em",
@@ -453,7 +453,7 @@ export default function App() {
                   </p>
                   <div
                     style={{
-                      fontFamily: "'general-sans', sans-serif",
+                      fontFamily: "'az-sans', sans-serif",
                       fontSize: "clamp(1rem, 2.5vw, 1.35rem)",
                       lineHeight: 1.9,
                       color: "#313642",

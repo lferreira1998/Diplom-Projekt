@@ -293,7 +293,7 @@ export function MiniReplayPreview({
   const spanStyle: React.CSSProperties = {
     display: "inline-block",
     fontSize: `${fontSize}px`,
-    fontFamily: "'general-sans', sans-serif",
+    fontFamily: "'az-sans', sans-serif",
     color: textColor,
     opacity: 0,
     willChange: "transform, opacity",

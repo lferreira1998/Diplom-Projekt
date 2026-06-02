@@ -370,7 +370,7 @@ interface RandomTextZoneProps {
   fontSize?: number;
 }
 
-function RandomTextZone({ textColor, fontFamily = "'general-sans', sans-serif", positions, cursor, fontSize = 22 }: RandomTextZoneProps) {
+function RandomTextZone({ textColor, fontFamily = "'az-sans', sans-serif", positions, cursor, fontSize = 22 }: RandomTextZoneProps) {
   const wrapRef    = useRef<HTMLDivElement>(null);
   const rafRef     = useRef(0);
   const elMapRef   = useRef<Map<number, HTMLDivElement>>(new Map());
@@ -571,7 +571,7 @@ interface FollowDotZoneProps {
   fontSize?: number;
 }
 
-function FollowDotZone({ textColor, fontFamily = "'general-sans', sans-serif", positions, cursor, fontSize = 22 }: FollowDotZoneProps) {
+function FollowDotZone({ textColor, fontFamily = "'az-sans', sans-serif", positions, cursor, fontSize = 22 }: FollowDotZoneProps) {
   const wrapRef     = useRef<HTMLDivElement>(null);
   const canvasRef   = useRef<HTMLCanvasElement>(null);
   const activeElRef = useRef<HTMLDivElement>(null);
@@ -768,7 +768,7 @@ function SpiralCanvas({
   verblassenDelay,
   verblassenSpeed,
   driftTick,
-  fontFamily = "'general-sans', sans-serif",
+  fontFamily = "'az-sans', sans-serif",
   coverBgColor = "#f2f3f6",
   fontSize = 20,
 }: SpiralCanvasProps) {
@@ -987,7 +987,7 @@ function RunningLineCanvas({
   verblassenDelay,
   verblassenSpeed,
   driftTick,
-  fontFamily = "'general-sans', sans-serif",
+  fontFamily = "'az-sans', sans-serif",
   fontSize = 20,
 }: RunningLineCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -1191,7 +1191,7 @@ function CustomPathSvg({
   positions,
   cursor,
   textColor,
-  fontFamily = "'general-sans', sans-serif",
+  fontFamily = "'az-sans', sans-serif",
   fontSize = 20,
   customPath,
   onCustomPathChange,
@@ -1682,7 +1682,7 @@ export function WritingZone({
   customPathDe       = true,
   writingPrompt      = "",
   fontSize              = 20,
-  fontFamily            = "'general-sans', sans-serif",
+  fontFamily            = "'az-sans', sans-serif",
   fontVariationSettings,
   centeredPrompt        = false,
   promptWrap            = false,

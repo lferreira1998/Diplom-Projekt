@@ -16,8 +16,8 @@ const MUTED = "#8f8f89";
 const DASH = "#a4a4a4";
 const DOT_GRID = "radial-gradient(circle, rgba(164,164,164,0.66) 1px, transparent 1.2px)";
 const SERIF = "'az-serif', serif";
-const SANS = "'general-sans', sans-serif";
-const MONO = "'general-sans', sans-serif";
+const SANS = "'az-sans', sans-serif";
+const MONO = "'az-sans', sans-serif";
 
 type ExperimentInfo = {
   slug: string;

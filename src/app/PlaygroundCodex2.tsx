@@ -6,7 +6,7 @@ import { MiniReplayPreview } from "./components/MiniReplayPreview";
 import { deleteNewTool, getAllNewTools, type NewToolData } from "./utils/storage";
 
 const FONT_SERIF = "'az-serif', serif";
-const FONT_SANS = "'general-sans', sans-serif";
+const FONT_SANS = "'az-sans', sans-serif";
 
 const COLUMN_GAP = 650;
 const LANE_GAP = 520;

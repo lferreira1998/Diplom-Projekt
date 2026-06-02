@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "motion/react";
 
 const BG    = "#f8f7f4";
 const INK   = "#222222";
-const FONT  = "'general-sans', sans-serif";
+const FONT  = "'az-sans', sans-serif";
 const SERIF = "'az-serif', serif";
 
 function lerp(a: string, b: string, t: number): string {

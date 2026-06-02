@@ -46,7 +46,7 @@ function getLookFeelDarkColors(bgHue: number | null): {
 }
 
 const FONT_SERIF   = "'az-serif', serif";
-const FONT_SANS    = "'general-sans', sans-serif";
+const FONT_SANS    = "'az-sans', sans-serif";
 const FONT_ARIZONA = "'ABCArizona', serif";
 
 const DICE_PROMPTS_DE = [

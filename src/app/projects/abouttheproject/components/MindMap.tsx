@@ -3,9 +3,9 @@ import { useNavigate } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
 import { nodes as allNodes } from "./mindmap-data";
 
-const COURIER = "'general-sans', sans-serif";
-const MONO    = "'general-sans', sans-serif";
-const INKTRAP = "'general-sans', sans-serif";
+const COURIER = "'az-sans', sans-serif";
+const MONO    = "'az-sans', sans-serif";
+const INKTRAP = "'az-sans', sans-serif";
 
 const DASH       = "#b4b3b3";
 const NAVY       = "#11112d";

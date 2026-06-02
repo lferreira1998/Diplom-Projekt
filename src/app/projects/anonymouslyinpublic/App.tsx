@@ -131,7 +131,7 @@ export default function App() {
             fontSize: "11px",
             letterSpacing: "0.08em",
             color: revealed ? "#333" : "#aaa",
-            fontFamily: "'general-sans', sans-serif",
+            fontFamily: "'az-sans', sans-serif",
             border: `1px solid ${revealed ? "#333" : "#ccc"}`,
             padding: "5px 14px",
             background: "transparent",

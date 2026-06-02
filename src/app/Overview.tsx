@@ -8,8 +8,8 @@ import { motion, AnimatePresence } from "motion/react";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const FONT_UI      = "'general-sans', sans-serif";
-const FONT_UI_EXT  = "'general-sans', sans-serif";
+const FONT_UI      = "'az-sans', sans-serif";
+const FONT_UI_EXT  = "'az-sans', sans-serif";
 const NAVY         = "#11112d";
 const BORDER_NAVY  = "1px dashed #11112d";
 
@@ -273,7 +273,7 @@ const DriftingToolNames = memo(function DriftingToolNames({ onWordClick, uiHover
             onClick={e => { e.stopPropagation(); onWordClick({ label: c.label, path: c.path, video: c.video, description: c.description }); }}
             style={{
               position: "absolute", left: "50%", top: "50%",
-              fontFamily: "'general-sans', sans-serif",
+              fontFamily: "'az-sans', sans-serif",
               fontSize: `${c.baseFontSize}rem`,
               fontWeight: 400,
               letterSpacing: "0.02em",
@@ -343,7 +343,7 @@ function ToolPreviewPanel({ tool, onClose, uiHoveredRef }: { tool: Tool; onClose
         {/* Title + description — max 174px so button always fits below */}
         <div style={{ overflow: "hidden", maxHeight: "174px", display: "flex", flexDirection: "column", gap: "16px" }}>
           <p style={{
-            fontFamily: "'general-sans', sans-serif",
+            fontFamily: "'az-sans', sans-serif",
             fontSize: "26px", fontWeight: 400,
             color: NAVY, margin: 0,
             letterSpacing: "-1.3px",

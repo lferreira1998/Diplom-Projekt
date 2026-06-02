@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { getSavedTools, deleteTool, type SavedTool } from "./utils/storage";
 
-const FONT_EXT  = "'general-sans', sans-serif";
-const FONT_BODY = "'general-sans', sans-serif";
+const FONT_EXT  = "'az-sans', sans-serif";
+const FONT_BODY = "'az-sans', sans-serif";
 const NAVY      = "#11112d";
 const DASH      = "#b4b3b3";
 const BG        = "#f5f5f6";

@@ -64,11 +64,11 @@ interface ParamPanelProps {
   onToggle: () => void;
 }
 
-const FONT_SEMI   = "'general-sans', sans-serif";
-const FONT_EXT    = "'general-sans', sans-serif";
-const FONT_REG    = "'general-sans', sans-serif";
-const FONT_MONO   = "'general-sans', sans-serif";
-const FONT_COURIER = "'general-sans', sans-serif";
+const FONT_SEMI   = "'az-sans', sans-serif";
+const FONT_EXT    = "'az-sans', sans-serif";
+const FONT_REG    = "'az-sans', sans-serif";
+const FONT_MONO   = "'az-sans', sans-serif";
+const FONT_COURIER = "'az-sans', sans-serif";
 
 const sLabel: React.CSSProperties = {
   fontFamily: FONT_SEMI, fontSize: "11.52px", fontWeight: 600,

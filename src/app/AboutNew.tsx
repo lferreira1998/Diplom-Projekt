@@ -4,8 +4,8 @@ import { nodes as allNodes } from "./projects/abouttheproject/components/mindmap
 import TopNav from "./components/TopNav";
 
 const SERIF = "'az-serif', serif";
-const SANS = "'general-sans', sans-serif";
-const MONO = "'general-sans', sans-serif";
+const SANS = "'az-sans', sans-serif";
+const MONO = "'az-sans', sans-serif";
 
 type AboutTheme = {
   bg: string; panelBg: string; ink: string; text: string; muted: string;

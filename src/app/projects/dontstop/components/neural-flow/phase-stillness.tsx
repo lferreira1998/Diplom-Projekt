@@ -35,7 +35,7 @@ export function PhaseStillness({ timeLeft }: PhaseStillnessProps) {
         transition={{ delay: 0.8 }}
         className="text-center mb-2"
         style={{
-          fontFamily: "'general-sans', sans-serif",
+          fontFamily: "'az-sans', sans-serif",
           fontSize: "clamp(1.1rem, 2.5vw, 1.4rem)",
           color: "#313642",
           lineHeight: 1.6,
@@ -50,7 +50,7 @@ export function PhaseStillness({ timeLeft }: PhaseStillnessProps) {
         transition={{ delay: 1.5 }}
         className="text-center mb-16"
         style={{
-          fontFamily: "'general-sans', sans-serif",
+          fontFamily: "'az-sans', sans-serif",
           fontSize: "0.9rem",
           color: "#B0B3BC",
           lineHeight: 1.6,
@@ -66,7 +66,7 @@ export function PhaseStillness({ timeLeft }: PhaseStillnessProps) {
         transition={{ delay: 2 }}
         className="tabular-nums"
         style={{
-          fontFamily: "'general-sans', sans-serif",
+          fontFamily: "'az-sans', sans-serif",
           fontSize: "1.5rem",
           color: "#E0E1E6",
           letterSpacing: "0.2em",

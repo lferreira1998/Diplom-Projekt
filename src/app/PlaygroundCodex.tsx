@@ -7,7 +7,7 @@ import { ToolLaunchModal } from "./components/ToolLaunchModal";
 import { ToolPreview } from "./components/ToolPreview";
 
 const FONT_SERIF = "'az-serif', serif";
-const FONT_SANS = "'general-sans', sans-serif";
+const FONT_SANS = "'az-sans', sans-serif";
 
 const CARD_RADIUS = 14;
 const PREVIEW_RADIUS = 10;

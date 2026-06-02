@@ -17,7 +17,7 @@ export function ScaleInput({
     <div className="flex flex-col gap-3">
       <span
         style={{
-          fontFamily: "'general-sans', sans-serif",
+          fontFamily: "'az-sans', sans-serif",
           fontSize: "0.7rem",
           color: "#9A9DAA",
           letterSpacing: "0.15em",
@@ -38,7 +38,7 @@ export function ScaleInput({
                 backgroundColor: isSelected ? "#313642" : "transparent",
                 color: isSelected ? "#F2F3F6" : "#9A9DAA",
                 border: isSelected ? "2px solid #313642" : "1.5px solid #D0D1D6",
-                fontFamily: "'general-sans', sans-serif",
+                fontFamily: "'az-sans', sans-serif",
                 fontSize: "0.75rem",
               }}
             >
@@ -50,7 +50,7 @@ export function ScaleInput({
       <div className="flex justify-between">
         <span
           style={{
-            fontFamily: "'general-sans', sans-serif",
+            fontFamily: "'az-sans', sans-serif",
             fontSize: "0.65rem",
             color: "#B0B3BC",
           }}
@@ -59,7 +59,7 @@ export function ScaleInput({
         </span>
         <span
           style={{
-            fontFamily: "'general-sans', sans-serif",
+            fontFamily: "'az-sans', sans-serif",
             fontSize: "0.65rem",
             color: "#B0B3BC",
           }}

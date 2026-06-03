@@ -67,7 +67,7 @@ export default function MobileGate({ children }: { children: ReactNode }) {
             Write differently.
           </h1>
           <p style={{ fontFamily: SANS, fontSize: 15, lineHeight: 1.6, color: TEXT, margin: 0 }}>
-            A collection of experimental writing tools that change the rules of writing — the cursor, the text, the space, time itself. Each tool is a different constraint, a different invitation.
+            A collection of experimental writing tools that change the rules of writing: the cursor, the text, the space, time itself. Each tool is a different constraint, a different invitation.
           </p>
         </div>
 
@@ -104,7 +104,7 @@ export default function MobileGate({ children }: { children: ReactNode }) {
             This is a desktop experience.
           </span>
           <p style={{ fontFamily: SANS, fontSize: 14, lineHeight: 1.6, color: MUTED, margin: 0 }}>
-            Put down your phone. Find a computer. Give yourself a real moment to write — that's the whole point.
+            Put down your phone. Find a computer. Give yourself a real moment to write. That's the whole point.
           </p>
         </div>
       </motion.div>

@@ -72,7 +72,7 @@ const DICE_PROMPTS_DE = [
   "Schreib so, als ob niemand jemals lesen wird, was du schreibst.",
   // Aufforderungen & Regeln
   "Schreib einfach drauflos und hör nicht auf, bevor die Seite voll ist.",
-  "Schreib über deinen heutigen Tag – aber nur die Dinge, die niemand bemerkt hat.",
+  "Schreib über deinen heutigen Tag, aber nur die Dinge, die niemand bemerkt hat.",
   "Schreib über die letzte Person, mit der du dich gestritten hast. Worum ging es wirklich?",
   "Schreib jetzt, ohne auf die Tastatur zu schauen.",
   "Schreib einen ganzen Absatz, ohne den Buchstaben E zu benutzen.",
@@ -80,7 +80,7 @@ const DICE_PROMPTS_DE = [
   "Schreib eine Entschuldigung, die du nie ausgesprochen hast.",
   "Schreib nur in Fragen. Keine einzige Antwort.",
   // Absurdes
-  "Wenn du ein Fisch wärst, in welchem Meer würdest du schwimmen – und warum?",
+  "Wenn du ein Fisch wärst, in welchem Meer würdest du schwimmen? Und warum?",
   "Wärst du eine Landschaft, welche wärst du? Beschreib dein Wetter.",
   "Erkläre dem Mond, was Montage sind.",
   "Schreib das Rezept für einen Tag, den du nie wieder erleben willst.",
@@ -111,7 +111,7 @@ const DICE_PROMPTS_EN = [
   "Write as if nobody will ever read what you're writing.",
   // Commands & rules
   "Just start writing and don't stop until the page is full.",
-  "Write about your day today — but only the things nobody noticed.",
+  "Write about your day today, but only the things nobody noticed.",
   "Write about the last person you argued with. What was it really about?",
   "Write right now without looking at the keyboard.",
   "Write a whole paragraph without using the letter E.",
@@ -119,7 +119,7 @@ const DICE_PROMPTS_EN = [
   "Write an apology you never said out loud.",
   "Write only in questions. Not a single answer.",
   // Absurd
-  "If you were a fish, which sea would you swim in — and why?",
+  "If you were a fish, which sea would you swim in? And why?",
   "If you were a landscape, which one would you be? Describe your weather.",
   "Explain Mondays to the moon.",
   "Write the recipe for a day you never want to live again.",
@@ -204,7 +204,7 @@ const TRANSLATIONS = {
     navLabels: { CreateTool: "Tool erstellen", ToolCollection: "Tool-Sammlung", About: "Über das Projekt" },
     // Identity panel
     identityHeading: "Identität.",
-    identitySubtitle: "Speichere dein Regelset als Tool. Nur Name und Vorschau sind nötig – Beschreibung und Schreibanstoß sind optional.",
+    identitySubtitle: "Speichere dein Regelset als Tool. Nur Name und Vorschau sind nötig. Beschreibung und Schreibanstoß sind optional.",
     nameHeading: "Name",
     nameHint: 'Gib deinem Tool einen Namen.',
     namePlaceholder: "Name eingeben",
@@ -242,7 +242,7 @@ const TRANSLATIONS = {
     correctionDescRest: " über alten Text. Das Korrigieren hinterlässt Spuren.",
     // Stability
     driftLabel: "Text",
-    driftDesc: "Der Text verliert seine stabile Form und driftet umher – verlässt er eine Seite, erscheint er auf der gegenüberliegenden wieder. Er bleibt immer sichtbar.",
+    driftDesc: "Der Text verliert seine stabile Form und driftet umher. Verlässt er eine Seite, erscheint er auf der gegenüberliegenden wieder. Er bleibt immer sichtbar.",
     driftSentences: "Sätze", driftWords: "Wörter", driftLetters: "Buchstabe",
     driftTiming: "Zeitpunkt des Fliegens",
     driftAfter: (n: number) => {
@@ -340,7 +340,7 @@ const TRANSLATIONS = {
     navLabels: { CreateTool: "Create Tool", ToolCollection: "Tool Collection", About: "About" },
     // Identity panel
     identityHeading: "Identity.",
-    identitySubtitle: "Save your rule set as a tool. Only name and preview are required — description and writing prompt are optional.",
+    identitySubtitle: "Save your rule set as a tool. Only name and preview are required. Description and writing prompt are optional.",
     nameHeading: "Name",
     nameHint: 'Give your tool a name.',
     namePlaceholder: "Enter name",
@@ -378,7 +378,7 @@ const TRANSLATIONS = {
     correctionDescRest: " over old text. Corrections leave traces.",
     // Stability
     driftLabel: "Text",
-    driftDesc: "The text loses its stable form and drifts around – leaving one side, it reappears on the opposite. It always stays visible.",
+    driftDesc: "The text loses its stable form and drifts around. Leaving one side, it reappears on the opposite. It always stays visible.",
     driftSentences: "Sentences", driftWords: "Words", driftLetters: "Letters",
     driftTiming: "Drift timing",
     driftAfter: (n: number) => {
@@ -498,7 +498,7 @@ const PRESETS: Record<string, PresetConfig> = {
   },
   "uninvited-thoughts": {
     name: { de: "...ungebetene Gedanken", en: "...uninvited thoughts" },
-    desc: { de: "Deine Wörter verlieren ihre Form und fliegen davon – wie Gedanken, die du nicht festhalten kannst.", en: "Your words lose their form and drift away — like thoughts you cannot hold on to." },
+    desc: { de: "Deine Wörter verlieren ihre Form und fliegen davon, wie Gedanken, die du nicht festhalten kannst.", en: "Your words lose their form and drift away, like thoughts you cannot hold on to." },
     apply: (s) => { s.setTextFliegtEnabled(true); s.setFliegtUnit("Wörter"); s.setFliegtZeitpunkt(0.3); s.setFliegtSchnelligkeit(1.5); },
   },
   "off-the-grid": {
@@ -508,7 +508,7 @@ const PRESETS: Record<string, PresetConfig> = {
   },
   "blind-then-witness": {
     name: { de: "...blind & dann sehen", en: "...blind & then witness" },
-    desc: { de: "Schreib blind – dein Text bleibt unsichtbar, während du schreibst.", en: "Write blind — your text stays invisible while you write." },
+    desc: { de: "Schreib blind. Dein Text bleibt unsichtbar, während du schreibst.", en: "Write blind. Your text stays invisible while you write." },
     apply: (s) => { s.setVisibility("invisible"); },
   },
   "visible-corrections": {

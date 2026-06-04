@@ -3426,6 +3426,7 @@ export default function New() {
         <RecordPreviewOverlay
           zoneRef={writingZoneRef}
           bg={bg}
+          dark={dark}
           sessionId={sessionId}
           toolName={toolName}
           lang={lang}

@@ -45,7 +45,11 @@ export function RecordPreviewOverlay({
   const borderCol  = dark ? "rgba(240,232,220,0.22)" : "#a4a4a4";
   const textCol    = dark ? "#f0e8dc" : "#555555";
   const mutedCol   = dark ? "rgba(240,232,220,0.45)" : "#9a9daa";
-  const surfaceBg  = dark ? "rgba(28,27,25,0.93)" : "rgba(252,246,239,0.95)";
+  // Tint the control-strip surface with the actual writing background so the
+  // recording UI follows the chosen background colour instead of a fixed tone.
+  const surfaceBg  = dark
+    ? `color-mix(in srgb, ${bg} 72%, rgba(18,17,16,0.9))`
+    : `color-mix(in srgb, ${bg} 80%, rgba(255,255,255,0.9))`;
   const btnPrimary = { bg: dark ? "#f0e8dc" : "#555555", text: dark ? "#1e1d1b" : "#fcf6ef" };
 
   const [frame, setFrame]     = useState<Frame>(initFrame);
@@ -168,6 +172,12 @@ export function RecordPreviewOverlay({
     recCanvas.height  = ch;
     const ctx = recCanvas.getContext("2d");
     if (!ctx) { setError("Canvas unavailable."); setPhase("error"); return; }
+
+    // Prime the canvas with an opaque frame BEFORE capturing. captureStream on a
+    // never-drawn canvas can emit zero frames (seen when re-recording), producing
+    // an empty blob → "Recording empty". An initial paint guarantees frames.
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, cw, ch);
 
     const stream   = recCanvas.captureStream(FPS);
     const recorder = new MediaRecorder(stream, { mimeType });

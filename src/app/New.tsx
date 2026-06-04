@@ -49,7 +49,7 @@ const FONT_SERIF   = "'az-serif', serif";
 const FONT_SANS    = "'az-sans', sans-serif";
 const FONT_ARIZONA = "'ABCArizona', serif";
 
-const DICE_PROMPTS_DE = [
+export const DICE_PROMPTS_DE = [
   "Schreib einen Satz, den du niemandem zeigen würdest.",
   "Was würdest du sagen, wenn niemand zuhört?",
   "Beschreib eine Farbe, ohne ihren Namen zu nennen.",
@@ -88,7 +88,7 @@ const DICE_PROMPTS_DE = [
   "Verkauf mir deine schlechteste Eigenschaft, als wäre sie ein Superkraft.",
   "Schreib einen Liebesbrief an etwas, das du eigentlich hasst.",
 ];
-const DICE_PROMPTS_EN = [
+export const DICE_PROMPTS_EN = [
   "Write a sentence you'd never show anyone.",
   "What would you say if nobody was listening?",
   "Describe a color without naming it.",
@@ -129,7 +129,7 @@ const DICE_PROMPTS_EN = [
 ];
 
 // Isometric cube outline shared by every dice face
-const DICE_FRAME = [
+export const DICE_FRAME = [
   "M1 3.99988L1 16.9999L5.5011e-07 16.7924L0 4.20733L1 3.99988Z",
   "M21 3.99988L21 16.9999L20 16.7924V4.20733L21 3.99988Z",
   "M13.7348 0.460938L19.3489 2.57786L18.9065 3.47978L13.4715 1.43041L13.7348 0.460938Z",
@@ -141,7 +141,7 @@ const DICE_FRAME = [
   "M17.6148 17L12.0007 19.1169L12.4431 20.0188L17.8781 17.9695L17.6148 17Z",
 ];
 // Pip dots per face (würfel1 / würfel2 / würfel3) — drawn on top of the frame
-const DICE_FACES: string[][] = [
+export const DICE_FACES: string[][] = [
   [
     "M17 12.9999C17 13.5522 16.5523 13.9999 16 13.9999C15.4477 13.9999 15 13.5522 15 12.9999C15 12.4476 15.4477 11.9999 16 11.9999C16.5523 11.9999 17 12.4476 17 12.9999Z",
     "M8 3.99988C8 4.55217 7.55229 4.99988 7 4.99988C6.44772 4.99988 6 4.55217 6 3.99988C6 3.4476 6.44772 2.99988 7 2.99988C7.55229 2.99988 8 3.4476 8 3.99988Z",
@@ -3251,8 +3251,8 @@ export default function New() {
                 aria-hidden
                 animate={
                   menuOpen
-                    ? { y: 8, opacity: 0, transition: { y: { duration: 0.22, ease: "easeOut" }, opacity: { duration: 0.1 } } }
-                    : menuHovered ? { y: 0, opacity: 1 } : { y: -6, opacity: 0 }
+                    ? { y: 8, opacity: 0, scale: 1, transition: { y: { duration: 0.22, ease: "easeOut" }, opacity: { duration: 0.1 } } }
+                    : menuHovered ? { y: -3, opacity: 1, scale: 1.22 } : { y: -6, opacity: 0, scale: 1 }
                 }
                 transition={{ duration: 0.22, ease: "easeOut" }}
                 style={{

@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { useSearchParams } from "react-router";
@@ -9,6 +9,7 @@ import {
   type WritingParams,
 } from "./components/param-panel";
 import { getToolById } from "../../utils/storage";
+import { DICE_PROMPTS_DE, DICE_PROMPTS_EN, DICE_FRAME, DICE_FACES } from "../../New";
 
 const FONT_UI = "'az-sans', sans-serif";
 const FONT_UI_EXT = "'az-sans', sans-serif";
@@ -194,6 +195,57 @@ export default function App() {
   const [timerDone, setTimerDone] = useState(false);
   const [textRevealed, setTextRevealed] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  // ── Dice / writing prompts ────────────────────────────────────────────────
+  // Same dice as Create Tool. When the saved tool carries its own prompts we
+  // cycle through those; with none we fall back to the shared default prompts.
+  const [lang] = useState<"de" | "en">(() =>
+    typeof localStorage !== "undefined" && localStorage.getItem("appLang") === "en" ? "en" : "de"
+  );
+  const [diceIdx, setDiceIdx] = useState(0);
+  const [diceFace, setDiceFace] = useState(0);
+  const [diceSpinning, setDiceSpinning] = useState(false);
+
+  const customPrompts = useMemo(
+    () => (params.toolPrompts || []).filter((p) => p.trim()),
+    [params.toolPrompts]
+  );
+  // 0 custom prompts → fall back to the default dice prompts; otherwise the saved ones.
+  const dicePromptSet = useMemo(
+    () =>
+      customPrompts.length === 0
+        ? lang === "de" ? DICE_PROMPTS_DE : DICE_PROMPTS_EN
+        : customPrompts,
+    [customPrompts, lang]
+  );
+  // The dice only makes sense when there are at least two prompts to alternate between.
+  const showDice = dicePromptSet.length >= 2;
+  // Reset to the first prompt whenever the active set changes (e.g. a tool loads).
+  useEffect(() => { setDiceIdx(0); }, [dicePromptSet]);
+
+  const handleDiceRoll = useCallback(() => {
+    if (diceSpinning) return;
+    setDiceSpinning(true);
+    setTimeout(() => {
+      setDiceIdx((i) => {
+        const len = dicePromptSet.length;
+        if (len <= 1) return i;
+        let next = i;
+        while (next === i) next = Math.floor(Math.random() * len);
+        return next;
+      });
+      setDiceFace((f) => {
+        let next = f;
+        while (next === f) next = Math.floor(Math.random() * DICE_FACES.length);
+        return next;
+      });
+      setDiceSpinning(false);
+    }, 550);
+  }, [diceSpinning, dicePromptSet.length]);
+
+  const activePrompt = showDice
+    ? dicePromptSet[diceIdx] ?? dicePromptSet[0]
+    : customPrompts[0] || "";
 
   useEffect(() => {
     if (!params.timerOn) {
@@ -382,7 +434,10 @@ export default function App() {
             spiralModus={params.spiralModus}
             textAppearsRandom={params.textAppearsRandom}
             randomMode={params.randomMode}
-            writingPrompt={params.toolPrompts[0] || ""}
+            writingPrompt={activePrompt}
+            onDiceRoll={showDice ? handleDiceRoll : undefined}
+            diceSpinning={diceSpinning}
+            dicePaths={[...DICE_FRAME, ...DICE_FACES[diceFace]]}
           />
         </div>
 

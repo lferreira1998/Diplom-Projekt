@@ -1792,7 +1792,7 @@ export default function New() {
 
       {/* ── Tool name header (center top, when loaded from URL) ──────────── */}
       {inViewer && visible && (
-        <div style={{
+        <div data-html2canvas-ignore="true" style={{
           position: "fixed", top: "24px", left: "50%", transform: "translateX(-50%)",
           display: "flex", alignItems: "center", gap: "8px", zIndex: 21,
         }}>
@@ -1967,6 +1967,7 @@ export default function New() {
         {visible && canEdit && !paramsAreDefault && (
           <motion.button
             key="float-reload"
+            data-html2canvas-ignore="true"
             initial={{ opacity: 0, left: rulesOpen ? BTN_OPEN.rules - 33 - 8 : BTN_CLOSED.dark }}
             animate={{ opacity: 1, left: rulesOpen ? BTN_OPEN.rules - 33 - 8 : BTN_CLOSED.dark }}
             exit={{ opacity: 0, transition: { duration: 0.12 } }}
@@ -1994,6 +1995,7 @@ export default function New() {
         {visible && inViewer && (
           <motion.div
             key="float-back-group"
+            data-html2canvas-ignore="true"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.12 } }}
@@ -2087,6 +2089,7 @@ export default function New() {
         {visible && canEdit && (
           <motion.div
             key="float-rules-group"
+            data-html2canvas-ignore="true"
             initial={false}
             animate={{ x: rulesOpen ? BTN_OPEN.rules - BTN_CLOSED.rules : 0 }}
             exit={{ opacity: 0, transition: { duration: 0.12 } }}
@@ -2151,6 +2154,7 @@ export default function New() {
               {positions.length > 0 && (
                 <motion.button
                   key="float-clear"
+                  data-html2canvas-ignore="true"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1, x: rulesOpen ? 20 : 0 }}
                   exit={{ opacity: 0, transition: { duration: 0.12 } }}
@@ -2177,6 +2181,7 @@ export default function New() {
               {positionMode === "custom" && drawnPath.length > 0 && (
                 <motion.button
                   key="float-redraw"
+                  data-html2canvas-ignore="true"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1, x: rulesOpen ? 20 : 0 }}
                   exit={{ opacity: 0, transition: { duration: 0.12 } }}
@@ -2206,6 +2211,7 @@ export default function New() {
         {visible && rulesOpen && (
           <motion.div
             key="sidebar"
+            data-html2canvas-ignore="true"
             onPointerUp={handlePanelInteraction}
             initial={{ x: -153, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
@@ -2304,6 +2310,7 @@ export default function New() {
         {visible && rulesOpen && (
           <motion.div
             key="detail"
+            data-html2canvas-ignore="true"
             onPointerUp={handlePanelInteraction}
             initial={{ x: -314, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
@@ -3222,6 +3229,7 @@ export default function New() {
         {visible ? (
           <motion.div
             key="right-full"
+            data-html2canvas-ignore="true"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
             style={{ position: "fixed", top: "24px", right: "24px", display: "flex", flexDirection: "row", alignItems: "center", gap: "10px", zIndex: 20 }}
@@ -3307,6 +3315,7 @@ export default function New() {
         ) : (
           <motion.button
             key="right-mini"
+            data-html2canvas-ignore="true"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
             style={{

@@ -1,6 +1,31 @@
 import { useRef, useEffect, useLayoutEffect, useCallback, useState, useMemo } from "react";
 import { createPortal } from "react-dom";
 
+// ── Variable-font helper ────────────────────────────────────────────────────
+// Canvas 2D (ctx.font) and SVG/measurement renderers ignore inline
+// font-variation-settings, so the serif / weight / width axes chosen in
+// "Look & Feel" never reached the alternative writing modes (Running Line,
+// Spiral, …). We bake the requested axes into a dedicated @font-face (one per
+// unique settings string) and use that family, which both DOM and canvas honor.
+const _bakedVarFonts = new Set<string>();
+function bakedVariationFamily(baseFamily: string, variations?: string): string {
+  if (!variations || typeof document === "undefined") return baseFamily;
+  const key = variations.replace(/[^a-z0-9]/gi, "");
+  const family = `azvar-${key}`;
+  if (!_bakedVarFonts.has(key)) {
+    _bakedVarFonts.add(key);
+    const el = document.createElement("style");
+    el.textContent =
+      `@font-face{font-family:'${family}';src:url('/fonts/ABCArizona.woff') format('woff');` +
+      `font-weight:200 700;font-style:normal oblique -14deg 0deg;` +
+      `font-variation-settings:${variations};font-display:swap;}`;
+    document.head.appendChild(el);
+    // Warm it up so canvas paints pick it up promptly (same woff, already cached).
+    try { document.fonts.load(`16px '${family}'`).catch(() => {}); } catch { /* no FontFaceSet */ }
+  }
+  return `'${family}', ${baseFamily}`;
+}
+
 // ── Model ─────────────────────────────────────────────────────────────────────
 
 export type Layer    = { type: "char"; char: string } | { type: "cover" };
@@ -1696,6 +1721,13 @@ export function WritingZone({
   const containerRef = useRef<HTMLDivElement>(null);
   const cursorDomRef = useRef<HTMLSpanElement>(null);
 
+  // Bake the active variation axes into a font family so every writing mode
+  // (canvas, SVG and DOM) reflects the Look & Feel serif / size / weight choices.
+  const effectiveFamily = useMemo(
+    () => bakedVariationFamily(fontFamily, fontVariationSettings),
+    [fontFamily, fontVariationSettings]
+  );
+
   useLayoutEffect(() => {
     if (focusRef) focusRef.current = () => containerRef.current?.focus();
   });
@@ -2572,7 +2604,7 @@ export function WritingZone({
             positions={positions}
             cursor={cursor}
             textColor={textColor}
-            fontFamily={fontFamily}
+            fontFamily={effectiveFamily}
             fontSize={fontSize}
             coverBgColor={coverBgColor}
             showTippex={showTippex}
@@ -2601,7 +2633,7 @@ export function WritingZone({
         >
           <RandomTextZone
             textColor={textColor}
-            fontFamily={fontFamily}
+            fontFamily={effectiveFamily}
             positions={positions}
             cursor={cursor}
             fontSize={fontSize}
@@ -2628,7 +2660,7 @@ export function WritingZone({
         >
           <FollowDotZone
             textColor={textColor}
-            fontFamily={fontFamily}
+            fontFamily={effectiveFamily}
             positions={positions}
             cursor={cursor}
             fontSize={fontSize}
@@ -2665,7 +2697,7 @@ export function WritingZone({
             verblassenDelay={verblassenDelay}
             verblassenSpeed={verblassenSpeed}
             driftTick={driftTick}
-            fontFamily={fontFamily}
+            fontFamily={effectiveFamily}
             fontSize={fontSize}
           />
         </div>
@@ -2691,7 +2723,7 @@ export function WritingZone({
             positions={positions}
             cursor={cursor}
             textColor={textColor}
-            fontFamily={fontFamily}
+            fontFamily={effectiveFamily}
             fontSize={fontSize}
             customPath={customPath}
             onCustomPathChange={onCustomPathChange}
@@ -2731,7 +2763,7 @@ export function WritingZone({
             verblassenDelay={verblassenDelay}
             verblassenSpeed={verblassenSpeed}
             driftTick={driftTick}
-            fontFamily={fontFamily}
+            fontFamily={effectiveFamily}
             fontSize={fontSize}
           />
         </div>

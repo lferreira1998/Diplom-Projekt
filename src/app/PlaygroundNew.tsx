@@ -590,7 +590,7 @@ export default function PlaygroundNew() {
     <ThemeContext.Provider value={theme}>
     <DarkContext.Provider value={dark}>
       <TopNav current="Playground" dark={dark} setDark={setDark} lang={lang} setLang={setLang} />
-      <main style={{ minHeight: "100vh", height: "100vh", width: "100vw", overflowX: "hidden", overflowY: "auto", position: "relative", backgroundColor: theme.bg, backgroundImage: theme.dotGrid, backgroundSize: "42px 42px", color: theme.text, fontFamily: FONT_SANS, WebkitOverflowScrolling: "touch" }}>
+      <main style={{ minHeight: "100vh", height: "100vh", width: "100vw", overflowX: "hidden", overflowY: exploreMode ? "hidden" : "auto", position: "relative", backgroundColor: theme.bg, backgroundImage: theme.dotGrid, backgroundSize: "42px 42px", color: theme.text, fontFamily: FONT_SANS, WebkitOverflowScrolling: "touch" }}>
         <style>{`html, body, #root { height: 100%; overflow: hidden; }`}</style>
 
         <section aria-label="Writing tools playground" style={{ position: "relative", minHeight: "100vh", overflow: exploreMode ? "visible" : "hidden", background: "transparent" }}>

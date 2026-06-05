@@ -1644,7 +1644,7 @@ export default function New() {
   // Nav buttons always contrast with their own button background (not the writing area bg)
   const navIconColor   = dark ? DARK_TEXT : LIGHT_TEXT;
   const sidebarBg      = dark ? darkColors.darkSidebarBg : surfaceDark;
-  const catActiveBg    = dark ? darkColors.darkActiveCatBg : surfaceLight;
+  const catActiveBg    = dark ? darkColors.darkActiveCatBg : "#ffffff";
   const catInactiveBg  = dark ? darkColors.darkInactiveCatBg : surfaceDark;
   const settingsCardBg = dark ? darkColors.darkCardBg : surfaceLight;
   const descColor      = dark ? DARK_MUTED : "#7c7c7c";
@@ -2243,14 +2243,17 @@ export default function New() {
                       width: "105px", height: cat.h,
                       borderRadius: cat.br,
                       background: !identityOpen && cat.en === activeCategory ? catActiveBg : catInactiveBg,
-                      border: `1px dashed ${innerBorder}`,
+                      border: !identityOpen && cat.en === activeCategory
+                        ? `1.5px solid ${dark ? "rgba(240,232,220,0.45)" : "rgba(100,90,80,0.35)"}`
+                        : `1px dashed ${innerBorder}`,
                       cursor: "pointer", outline: "none",
                       display: "flex",
                       alignItems: cat.bottom ? "flex-end" : "center",
                       justifyContent: cat.bottom ? "flex-start" : "center",
                       padding: cat.bottom ? "12px" : "6px 12px",
                       boxSizing: "border-box",
-                      fontFamily: FONT_SANS, fontSize: "16px", fontWeight: 400,
+                      fontFamily: FONT_SANS, fontSize: "16px",
+                      fontWeight: !identityOpen && cat.en === activeCategory ? 500 : 400,
                       color: dark ? DARK_TEXT : LIGHT_TEXT,
                       whiteSpace: "nowrap", lineHeight: "normal",
                       flexShrink: 0, transition: "background 0.15s",

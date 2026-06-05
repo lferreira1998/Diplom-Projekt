@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { ToolPreview } from "./components/ToolPreview";
 import { ToolLaunchModal } from "./components/ToolLaunchModal";
-import type { CSSProperties, ReactNode } from "react";
+import type { CSSProperties, ReactNode, PointerEvent as ReactPointerEvent } from "react";
 import { useNavigate, useLocation } from "react-router";
 import { deleteNewTool, getAllNewTools, type NewToolData } from "./utils/storage";
 import TopNav from "./components/TopNav";
@@ -159,48 +159,149 @@ function ToolShape({ label, style, textStyle, href, videoLight, videoDark, bgLig
   );
 }
 
-// Slot definitions for explore mode — positions outside the 1680×858 hero box
-// plus two center slots that replace the heading
-const EXPLORE_SLOTS: { left: number; top: number; width: number; height: number; borderRadius: string | number; rotate: number }[] = [
-  // Center — replace the heading
-  { left: 535, top: 262, width: 220, height: 210, borderRadius: 200, rotate: -3.5 },
-  { left: 835, top: 272, width: 295, height: 163, borderRadius: 100, rotate: 4 },
-  // Left outer
-  { left: -292, top: 168, width: 236, height: 233, borderRadius: 200, rotate: 5.1 },
-  { left: -280, top: 438, width: 241, height: 182, borderRadius: 4, rotate: -9.25 },
-  { left: -268, top: 638, width: 251, height: 163, borderRadius: 4, rotate: 4.18 },
-  // Right outer
-  { left: 1718, top: 126, width: 251, height: 163, borderRadius: 4, rotate: 4.18 },
-  { left: 1710, top: 372, width: 324, height: 163, borderRadius: 100, rotate: 6.45 },
-  { left: 1706, top: 578, width: 211, height: 309, borderRadius: 200, rotate: 12.11 },
-  // Top outer
-  { left: 672, top: -196, width: 363, height: 174, borderRadius: "40px 4px 40px 4px", rotate: -2.4 },
-  { left: 240, top: -198, width: 241, height: 182, borderRadius: 4, rotate: -9.25 },
-  // Bottom outer
-  { left: 176, top: 900, width: 241, height: 182, borderRadius: 4, rotate: -9.25 },
-  { left: 952, top: 896, width: 236, height: 233, borderRadius: 200, rotate: 5.1 },
+// ── Explore field ─────────────────────────────────────────────────────────────
+// The same six demo shapes from the hero, replicated across an evenly-spaced
+// grid (with light jitter) so zooming out reveals more of them. The cell sizes
+// vs. the shape sizes guarantee a minimum gap — cards never touch.
+interface PresetShape {
+  label: string; href: string;
+  videoLight: string; videoDark: string;
+  bgLight: string; bgDark: string;
+  videoFit?: "cover" | "contain";
+  w: number; h: number; radius: string | number;
+}
+
+const PRESET_SHAPES: PresetShape[] = [
+  { label: "...without stopping",        href: "/create-tool?preset=without-stopping",    videoLight: "without-stopping-light",    videoDark: "without-stopping-dark",    bgLight: "#fbf5eb", bgDark: "#3e3e3e", videoFit: "cover", w: 236, h: 233, radius: 200 },
+  { label: "...uninvited thoughts",      href: "/create-tool?preset=uninvited-thoughts",  videoLight: "uninvited-thoughts-light",  videoDark: "uninvited-thoughts-dark",  bgLight: "#eaf8f5", bgDark: "#1f2f29", w: 241, h: 182, radius: 4 },
+  { label: "...off the grid",            href: "/create-tool?preset=off-the-grid",        videoLight: "off-the-grid-light",        videoDark: "off-the-grid-dark",        bgLight: "#fff0f4", bgDark: "#37262d", w: 251, h: 163, radius: 4 },
+  { label: "...blind & then witness",    href: "/create-tool?preset=blind-then-witness",  videoLight: "blind-then-witness-light",  videoDark: "blind-then-witness-dark",  bgLight: "#ecf7ee", bgDark: "#222d26", w: 324, h: 163, radius: 100 },
+  { label: "...with visible corrections", href: "/create-tool?preset=visible-corrections", videoLight: "visible-corrections-light", videoDark: "visible-corrections-dark", bgLight: "#f5f6ea", bgDark: "#2f2836", w: 363, h: 174, radius: "40px 4px 40px 4px" },
+  { label: "...in a spiral",             href: "/create-tool?preset=in-a-spiral",         videoLight: "in-a-spiral-light",         videoDark: "in-a-spiral-dark",         bgLight: "#ecf4fe", bgDark: "#242c38", videoFit: "cover", w: 211, h: 309, radius: 200 },
 ];
 
-function UserToolShape({ tool, style, textStyle, onClick, dark }: {
-  tool: NewToolData;
-  style: CSSProperties;
-  textStyle?: CSSProperties;
+const EXPLORE_SCALE = 0.9;
+const FIELD_W = 3000, FIELD_H = 2600; // pannable domain around the hero
+const POISSON_R = 420;                // min centre-to-centre distance (blue noise)
+
+// Where the six hero shapes already sit (centre-relative world coords). They're
+// seeded into the sampler so the originals stay put and new shapes keep clear.
+const HERO_POSITIONS: [number, number][] = [
+  [-682, -115.5], [-299.5, -281], [505.5, -235.5], [-465, 231.5], [115.5, 184], [586.5, 139.5],
+];
+function mulberry32(seed: number) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+interface FieldSlot {
+  key: string;
+  x: number; y: number; // offset from field centre
+  rot: number;
+  tpl: PresetShape;     // shape template (size/colour) + default preset content
+}
+
+// Poisson-disk (Bridson) sampling — places the extra shapes with a guaranteed
+// minimum spacing: evenly spread, no clumping, no gaps (blue noise). Only the
+// six hero shapes are seeded, so they stay exactly where they are and every new
+// shape keeps its distance from them and from each other.
+function buildField(): FieldSlot[] {
+  const rng = mulberry32(0x9e3779b1);
+  const R = POISSON_R, W = FIELD_W, H = FIELD_H, k = 30;
+  const cell = R / Math.SQRT2;
+  const gw = Math.ceil(W / cell), gh = Math.ceil(H / cell);
+  const grid = new Array<number>(gw * gh).fill(-1);
+  const pts: { x: number; y: number }[] = [];
+  const active: number[] = [];
+
+  const gi = (x: number, y: number) => Math.floor(x / cell) + Math.floor(y / cell) * gw;
+  const inDom = (x: number, y: number) => x >= 0 && x < W && y >= 0 && y < H;
+  const farEnough = (x: number, y: number) => {
+    const gx = Math.floor(x / cell), gy = Math.floor(y / cell);
+    for (let yy = Math.max(0, gy - 2); yy <= Math.min(gh - 1, gy + 2); yy++)
+      for (let xx = Math.max(0, gx - 2); xx <= Math.min(gw - 1, gx + 2); xx++) {
+        const id = grid[xx + yy * gw];
+        if (id >= 0) {
+          const dx = pts[id].x - x, dy = pts[id].y - y;
+          if (dx * dx + dy * dy < R * R) return false;
+        }
+      }
+    return true;
+  };
+  const add = (x: number, y: number) => {
+    const id = pts.length;
+    pts.push({ x, y });
+    grid[gi(x, y)] = id;
+    active.push(id);
+    return id;
+  };
+
+  // Seed only the six hero shapes (world -> domain coords) so they stay put.
+  HERO_POSITIONS.forEach(([wx, wy]) => {
+    const x = wx + W / 2, y = wy + H / 2;
+    if (inDom(x, y)) add(x, y);
+  });
+  const FIRST = HERO_POSITIONS.length; // skip the hero seeds when rendering
+
+  while (active.length > 0) {
+    const ai = Math.floor(rng() * active.length);
+    const p = pts[active[ai]];
+    let placed = false;
+    for (let t = 0; t < k; t++) {
+      const a = rng() * Math.PI * 2;
+      const rad = R * (1 + rng()); // annulus [R, 2R)
+      const nx = p.x + Math.cos(a) * rad, ny = p.y + Math.sin(a) * rad;
+      if (inDom(nx, ny) && farEnough(nx, ny)) { add(nx, ny); placed = true; break; }
+    }
+    if (!placed) active.splice(ai, 1);
+  }
+
+  const slots: FieldSlot[] = [];
+  for (let id = FIRST; id < pts.length; id++) {
+    slots.push({ key: `p-${id}`, x: pts[id].x - W / 2, y: pts[id].y - H / 2, rot: ((id * 73) % 15) - 7, tpl: PRESET_SHAPES[0] });
+  }
+  // Nearest the centre first, so created tools fill in from the middle outward.
+  slots.sort((a, b) => (a.x * a.x + a.y * a.y) - (b.x * b.x + b.y * b.y));
+  slots.forEach((s, i) => { s.tpl = PRESET_SHAPES[i % PRESET_SHAPES.length]; });
+  return slots;
+}
+
+// One field card: a preset placeholder, or a user's created tool that has taken
+// over that slot. Same shape template either way — only the content swaps.
+function FieldShape({
+  label, w, h, radius, bgLight, bgDark, videoFit = "cover",
+  videoLight, videoDark, tool, style, textStyle, onClick,
+}: {
+  label: string;
+  w: number; h: number; radius: string | number;
+  bgLight?: string; bgDark?: string;
+  videoFit?: "cover" | "contain";
+  videoLight?: string; videoDark?: string;
+  tool?: NewToolData;
+  style: CSSProperties; textStyle?: CSSProperties;
   onClick: () => void;
-  dark: boolean;
 }) {
   const theme = useContext(ThemeContext);
+  const dark = useContext(DarkContext);
   const [hovered, setHovered] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const videoUrl = tool.params.previewVideo;
+  const previewVideo = tool?.params.previewVideo;
+  const src = previewVideo ?? (tool ? null : `/videos/${dark ? videoDark : videoLight}.webm`);
+  const bg = dark ? (bgDark ?? theme.toolBg) : (bgLight ?? theme.toolBg);
 
   useEffect(() => {
     const v = videoRef.current;
-    if (!v || !videoUrl) return;
+    if (!v || !src) return;
     v.muted = true; v.playsInline = true;
     const play = () => v.play().catch(() => undefined);
     play();
     if (v.readyState < 2) v.addEventListener("canplay", play, { once: true });
-  }, [videoUrl]);
+  }, [src]);
 
   return (
     <div
@@ -208,45 +309,26 @@ function UserToolShape({ tool, style, textStyle, onClick, dark }: {
       onPointerEnter={() => setHovered(true)}
       onPointerLeave={() => setHovered(false)}
       style={{
-        position: "absolute",
-        border: `1px dashed ${theme.border}`,
-        overflow: "hidden",
-        cursor: "pointer",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
+        position: "absolute", boxSizing: "border-box",
+        width: w, height: h, borderRadius: radius,
+        border: `1px dashed ${theme.border}`, background: bg,
+        overflow: "hidden", cursor: "pointer",
+        display: "flex", alignItems: "center", justifyContent: "center",
         ...style,
       }}
     >
-      {videoUrl ? (
-        <video
-          key={videoUrl}
-          ref={videoRef}
-          muted loop playsInline preload="auto"
-          style={{
-            position: "absolute", inset: 0, width: "100%", height: "100%",
-            objectFit: "cover",
-            opacity: hovered ? 0 : 1,
-            transition: "opacity 120ms ease",
-            pointerEvents: "none",
-          }}
-        >
-          <source src={videoUrl} />
+      {src ? (
+        <video key={src} ref={videoRef} muted loop playsInline preload="auto"
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: videoFit, opacity: hovered ? 0 : 1, transition: "opacity 120ms ease", pointerEvents: "none" }}>
+          <source src={src} />
         </video>
-      ) : (
+      ) : tool ? (
         <div style={{ position: "absolute", inset: 0, opacity: hovered ? 0 : 1, transition: "opacity 120ms ease", pointerEvents: "none" }}>
-          <ToolPreview tool={tool} active dark={dark} />
+          <ToolPreview tool={tool} active={!hovered} dark={dark} />
         </div>
-      )}
-      <span style={{
-        position: "relative", zIndex: 1,
-        fontFamily: FONT_SANS, fontSize: 15, color: theme.text,
-        opacity: hovered ? 1 : 0,
-        transition: "opacity 120ms ease",
-        textAlign: "center", padding: "0 12px",
-        ...textStyle,
-      }}>
-        {tool.name || "Unnamed Tool"}
+      ) : null}
+      <span style={{ position: "relative", zIndex: 1, fontFamily: FONT_SANS, fontSize: 15, color: theme.text, opacity: hovered ? 1 : 0, transition: "opacity 120ms ease", textAlign: "center", padding: "0 12px", ...textStyle }}>
+        {label}
       </span>
     </div>
   );
@@ -665,10 +747,56 @@ function PageNavFAB({ dark, myToolsAll, DE, theme, loading, bottom = 40 }: { dar
 
 
 export default function PlaygroundNew() {
-  const { sessionId, loading, lang, setLang, dark, setDark, favorites, toggleFavorite, myToolsAll, tools, navigateToTool, handleDelete } = usePlaygroundData();
+  const { sessionId, loading, lang, setLang, dark, setDark, favorites, toggleFavorite, myToolsAll, publicTools, tools, navigateToTool, handleDelete } = usePlaygroundData();
   const navigate = useNavigate();
+  const sectionRef = useRef<HTMLElement>(null);
   const [exploreMode, setExploreMode] = useState(false);
   const [launchTool, setLaunchTool] = useState<NewToolData | null>(null);
+
+  // ── Pannable explore field ──────────────────────────────────────────────
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [grabbing, setGrabbing] = useState(false);
+  const panStart = useRef<{ x: number; y: number; px: number; py: number } | null>(null);
+  const movedRef = useRef(false);
+
+  const exploreCards = useMemo(() => buildField(), []);
+
+  const clampPan = (x: number, y: number) => {
+    const maxX = Math.max(0, (FIELD_W * EXPLORE_SCALE) / 2 - window.innerWidth / 2 + 200);
+    const maxY = Math.max(0, (FIELD_H * EXPLORE_SCALE) / 2 - window.innerHeight / 2 + 200);
+    return { x: Math.max(-maxX, Math.min(maxX, x)), y: Math.max(-maxY, Math.min(maxY, y)) };
+  };
+
+  const openExplore = () => { setPan({ x: 0, y: 0 }); setExploreMode(true); };
+  const closeExplore = () => { setExploreMode(false); setPan({ x: 0, y: 0 }); };
+
+  const onFieldPointerDown = (e: ReactPointerEvent) => {
+    if (!exploreMode) return;
+    panStart.current = { x: e.clientX, y: e.clientY, px: pan.x, py: pan.y };
+    movedRef.current = false;
+    setGrabbing(true);
+  };
+  const onFieldPointerMove = (e: ReactPointerEvent) => {
+    const s = panStart.current;
+    if (!s) return;
+    const dx = e.clientX - s.x, dy = e.clientY - s.y;
+    if (Math.abs(dx) > 4 || Math.abs(dy) > 4) movedRef.current = true;
+    setPan(clampPan(s.px + dx, s.py + dy));
+  };
+  const onFieldPointerUp = () => { panStart.current = null; setGrabbing(false); };
+
+  // Trackpad / wheel panning (non-passive so we can preventDefault)
+  useEffect(() => {
+    if (!exploreMode) return;
+    const el = sectionRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      setPan((p) => clampPan(p.x - e.deltaX, p.y - e.deltaY));
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, [exploreMode]);
 
   const openTool = (id: string) => {
     const t = tools.find(x => x.id === id) ?? null;
@@ -678,68 +806,100 @@ export default function PlaygroundNew() {
   const DE = lang === "de";
   const theme = getTheme(dark);
 
+  // Newest-created public tools take over the field slots first (centre-out),
+  // replacing the preset placeholders one after another.
+  const fieldTools = useMemo(
+    () => [...publicTools].sort((a, b) => (b.savedAt || "").localeCompare(a.savedAt || "")),
+    [publicTools],
+  );
+
   return (
     <ThemeContext.Provider value={theme}>
     <DarkContext.Provider value={dark}>
-      <TopNav current="Playground" dark={dark} setDark={setDark} lang={lang} setLang={setLang} />
-      <main style={{ minHeight: "100vh", height: "100vh", width: "100vw", overflowX: "hidden", overflowY: exploreMode ? "hidden" : "auto", position: "relative", backgroundColor: theme.bg, backgroundImage: theme.dotGrid, backgroundSize: "42px 42px", color: theme.text, fontFamily: FONT_SANS, WebkitOverflowScrolling: "touch" }}>
+      <main style={{ minHeight: "100vh", height: "100vh", width: "100vw", overflowX: "hidden", overflowY: exploreMode ? "hidden" : "auto", position: "relative", backgroundColor: theme.bg, backgroundImage: exploreMode ? "none" : theme.dotGrid, backgroundSize: "42px 42px", color: theme.text, fontFamily: FONT_SANS, WebkitOverflowScrolling: "touch" }}>
         <style>{`html, body, #root { height: 100%; overflow: hidden; }`}</style>
 
-        <section aria-label="Writing tools playground" style={{ position: "relative", minHeight: "100vh", overflow: exploreMode ? "visible" : "hidden", background: "transparent" }}>
-          <div style={{ position: "absolute", left: "50%", top: "50%", width: 1680, height: 858, transform: exploreMode ? "translate(-50%, -50%) scale(0.88)" : "translate(-50%, -50%)", transition: "transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94)" }}>
-            <div style={{ position: "absolute", inset: 0, animation: "_toolIn 1.2s ease-out 0.8s both" }}>
-              <ToolShape label="...without stopping"      href="/create-tool?preset=without-stopping"    videoLight="without-stopping-light"    videoDark="without-stopping-dark"    bgLight="#fbf5eb" bgDark="#3e3e3e" videoFit="cover" style={{ left: 40,   top: 197, width: 236, height: 233, transform: "rotate(5.1deg)",   borderRadius: 200 }} textStyle={{ transform: "rotate(-5.1deg)" }} />
-              <ToolShape label="...uninvited thoughts"    href="/create-tool?preset=uninvited-thoughts"  videoLight="uninvited-thoughts-light"  videoDark="uninvited-thoughts-dark"  bgLight="#eaf8f5" bgDark="#1f2f29" style={{ left: 420,  top: 57,  width: 241, height: 182, transform: "rotate(-9.25deg)", borderRadius: 4 }} textStyle={{ transform: "rotate(9.25deg)" }} />
-              <ToolShape label="...off the grid"          href="/create-tool?preset=off-the-grid"        videoLight="off-the-grid-light"        videoDark="off-the-grid-dark"        bgLight="#fff0f4" bgDark="#37262d" style={{ left: 1220, top: 112, width: 251, height: 163, transform: "rotate(4.18deg)",  borderRadius: 4, justifyContent: "flex-start", alignItems: "flex-end", padding: 12 }} textStyle={{ transform: "rotate(-4.18deg)", marginBottom: 0 }} />
-              <ToolShape label="...blind & then witness"  href="/create-tool?preset=blind-then-witness"  videoLight="blind-then-witness-light"  videoDark="blind-then-witness-dark"  bgLight="#ecf7ee" bgDark="#222d26" style={{ left: 213,  top: 579, width: 324, height: 163, transform: "rotate(6.45deg)",  borderRadius: 100 }} textStyle={{ transform: "rotate(-6.45deg)" }} />
-              <ToolShape label="...with visible corrections" href="/create-tool?preset=visible-corrections" videoLight="visible-corrections-light" videoDark="visible-corrections-dark" bgLight="#f5f6ea" bgDark="#2f2836" style={{ left: 774,  top: 526, width: 363, height: 174, borderRadius: "40px 4px 40px 4px" }} />
-              <ToolShape label="...in a spiral"           href="/create-tool?preset=in-a-spiral"         videoLight="in-a-spiral-light"         videoDark="in-a-spiral-dark"         bgLight="#ecf4fe" bgDark="#242c38" videoFit="cover" style={{ left: 1321, top: 414, width: 211, height: 309, transform: "rotate(12.11deg)", borderRadius: 200 }} textStyle={{ transform: "rotate(-12.11deg)" }} />
+        <section
+          ref={sectionRef}
+          aria-label="Writing tools playground"
+          onPointerDown={onFieldPointerDown}
+          onPointerMove={onFieldPointerMove}
+          onPointerUp={onFieldPointerUp}
+          onPointerLeave={onFieldPointerUp}
+          onClickCapture={(e) => { if (movedRef.current) { e.preventDefault(); e.stopPropagation(); } }}
+          style={{
+            position: "relative", minHeight: "100vh", overflow: "hidden", background: "transparent",
+            cursor: exploreMode ? (grabbing ? "grabbing" : "grab") : undefined,
+            touchAction: exploreMode ? "none" : undefined,
+            userSelect: exploreMode ? "none" : undefined,
+          }}
+        >
+          {/* Pannable plane — zoom, dot grid & field all move together */}
+          <div style={{ position: "absolute", inset: 0, transformOrigin: "center", transform: exploreMode ? `translate(${pan.x}px, ${pan.y}px) scale(${EXPLORE_SCALE})` : "none", transition: grabbing ? "none" : "transform 0.65s cubic-bezier(0.25, 0.46, 0.45, 0.94)" }}>
+            {exploreMode && (
+              <div style={{ position: "absolute", left: "50%", top: "50%", width: FIELD_W + 2400, height: FIELD_H + 2400, transform: "translate(-50%, -50%)", backgroundImage: theme.dotGrid, backgroundSize: "42px 42px", pointerEvents: "none" }} />
+            )}
+            <div style={{ position: "absolute", left: "50%", top: "50%", width: 1680, height: 858, transform: "translate(-50%, -50%)" }}>
+              <div style={{ position: "absolute", inset: 0, animation: "_toolIn 1.2s ease-out 0.8s both" }}>
+                <ToolShape label="...without stopping"      href="/create-tool?preset=without-stopping"    videoLight="without-stopping-light"    videoDark="without-stopping-dark"    bgLight="#fbf5eb" bgDark="#3e3e3e" videoFit="cover" style={{ left: 40,   top: 197, width: 236, height: 233, transform: "rotate(5.1deg)",   borderRadius: 200 }} textStyle={{ transform: "rotate(-5.1deg)" }} />
+                <ToolShape label="...uninvited thoughts"    href="/create-tool?preset=uninvited-thoughts"  videoLight="uninvited-thoughts-light"  videoDark="uninvited-thoughts-dark"  bgLight="#eaf8f5" bgDark="#1f2f29" style={{ left: 420,  top: 57,  width: 241, height: 182, transform: "rotate(-9.25deg)", borderRadius: 4 }} textStyle={{ transform: "rotate(9.25deg)" }} />
+                <ToolShape label="...off the grid"          href="/create-tool?preset=off-the-grid"        videoLight="off-the-grid-light"        videoDark="off-the-grid-dark"        bgLight="#fff0f4" bgDark="#37262d" style={{ left: 1220, top: 112, width: 251, height: 163, transform: "rotate(4.18deg)",  borderRadius: 4, justifyContent: "flex-start", alignItems: "flex-end", padding: 12 }} textStyle={{ transform: "rotate(-4.18deg)", marginBottom: 0 }} />
+                <ToolShape label="...blind & then witness"  href="/create-tool?preset=blind-then-witness"  videoLight="blind-then-witness-light"  videoDark="blind-then-witness-dark"  bgLight="#ecf7ee" bgDark="#222d26" style={{ left: 213,  top: 579, width: 324, height: 163, transform: "rotate(6.45deg)",  borderRadius: 100 }} textStyle={{ transform: "rotate(-6.45deg)" }} />
+                <ToolShape label="...with visible corrections" href="/create-tool?preset=visible-corrections" videoLight="visible-corrections-light" videoDark="visible-corrections-dark" bgLight="#f5f6ea" bgDark="#2f2836" style={{ left: 774,  top: 526, width: 363, height: 174, borderRadius: "40px 4px 40px 4px" }} />
+                <ToolShape label="...in a spiral"           href="/create-tool?preset=in-a-spiral"         videoLight="in-a-spiral-light"         videoDark="in-a-spiral-dark"         bgLight="#ecf4fe" bgDark="#242c38" videoFit="cover" style={{ left: 1321, top: 414, width: 211, height: 309, transform: "rotate(12.11deg)", borderRadius: 200 }} textStyle={{ transform: "rotate(-12.11deg)" }} />
+              </div>
+              <div style={{ position: "absolute", left: 456, top: 340, width: 768, opacity: exploreMode ? 0 : 1, transition: "opacity 0.35s ease", pointerEvents: exploreMode ? "none" : "auto" }}>
+                <HeroHeading DE={DE} theme={theme} />
+              </div>
+              {!exploreMode && (
+                <div style={{ position: "absolute", left: 456, top: 460, width: 768, display: "flex", justifyContent: "center", gap: "12px", animation: "_heroIn 1s ease-out 0.5s both" }}>
+                  <button
+                    onClick={openExplore}
+                    style={{ border: "none", borderRadius: "4px", cursor: "pointer", outline: "none", padding: "12px 24px", fontFamily: FONT_SANS, fontSize: "15px", background: dark ? theme.text : theme.headline, color: theme.bg }}
+                  >
+                    {DE ? "Alle Tools entdecken" : "Explore all tools"}
+                  </button>
+                  <button
+                    onClick={() => navigate("/create-tool")}
+                    style={{ background: theme.toolBg, border: `1px dashed ${theme.border}`, borderRadius: "4px", cursor: "pointer", outline: "none", padding: "12px 24px", fontFamily: FONT_SANS, fontSize: "15px", color: theme.text }}
+                  >
+                    {DE ? "Eigenes Tool erstellen" : "Create your tool"}
+                  </button>
+                </div>
+              )}
             </div>
-            <div style={{ position: "absolute", left: 456, top: 340, width: 768, opacity: exploreMode ? 0 : 1, transition: "opacity 0.35s ease", pointerEvents: exploreMode ? "none" : "auto" }}>
-              <HeroHeading DE={DE} theme={theme} />
-            </div>
-            {exploreMode && myToolsAll.slice(0, EXPLORE_SLOTS.length).map((tool, i) => {
-              const slot = EXPLORE_SLOTS[i];
+
+            {/* Extra shapes (blue-noise placed). User-created tools take over
+                these slots one by one; empty slots show a preset placeholder. */}
+            {exploreMode && exploreCards.map((slot, i) => {
+              const tool = fieldTools[i];
+              const t = slot.tpl;
               return (
-                <UserToolShape
-                  key={tool.id}
+                <FieldShape
+                  key={slot.key}
                   tool={tool}
-                  dark={dark}
-                  onClick={() => { setExploreMode(false); openTool(tool.id); }}
+                  label={tool ? (tool.name || "Unnamed Tool") : t.label}
+                  w={t.w} h={t.h} radius={t.radius}
+                  bgLight={t.bgLight} bgDark={t.bgDark} videoFit={t.videoFit ?? "cover"}
+                  videoLight={tool ? undefined : t.videoLight}
+                  videoDark={tool ? undefined : t.videoDark}
+                  onClick={() => { if (tool) { closeExplore(); openTool(tool.id); } else { navigate(t.href); } }}
                   style={{
-                    left: slot.left, top: slot.top,
-                    width: slot.width, height: slot.height,
-                    borderRadius: slot.borderRadius,
-                    transform: `rotate(${slot.rotate}deg)`,
-                    animation: `_toolIn 0.5s ease-out ${0.08 + i * 0.04}s both`,
+                    left: "50%", top: "50%",
+                    transform: `translate(-50%, -50%) translate(${slot.x}px, ${slot.y}px) rotate(${slot.rot}deg)`,
+                    animation: `_toolIn 0.5s ease-out ${0.3 + (i % 10) * 0.03}s both`,
                   }}
-                  textStyle={{ transform: `rotate(${-slot.rotate}deg)` }}
+                  textStyle={{ transform: `rotate(${-slot.rot}deg)` }}
                 />
               );
             })}
-            {!exploreMode && (
-              <div style={{ position: "absolute", left: 456, top: 460, width: 768, display: "flex", justifyContent: "center", gap: "12px", animation: "_heroIn 1s ease-out 0.5s both" }}>
-                <button
-                  onClick={() => setExploreMode(true)}
-                  style={{ border: "none", borderRadius: "4px", cursor: "pointer", outline: "none", padding: "12px 24px", fontFamily: FONT_SANS, fontSize: "15px", background: dark ? theme.text : theme.headline, color: theme.bg }}
-                >
-                  {DE ? "Alle Tools entdecken" : "Explore all tools"}
-                </button>
-                <button
-                  onClick={() => navigate("/create-tool")}
-                  style={{ background: theme.toolBg, border: `1px dashed ${theme.border}`, borderRadius: "4px", cursor: "pointer", outline: "none", padding: "12px 24px", fontFamily: FONT_SANS, fontSize: "15px", color: theme.text }}
-                >
-                  {DE ? "Tool erstellen" : "Create a tool"}
-                </button>
-              </div>
-            )}
           </div>
         </section>
 
-        <PageNavFAB dark={dark} myToolsAll={myToolsAll} DE={DE} theme={theme} loading={loading} />
+        {!exploreMode && <PageNavFAB dark={dark} myToolsAll={myToolsAll} DE={DE} theme={theme} loading={loading} />}
         {exploreMode && (
           <button
-            onClick={() => setExploreMode(false)}
+            onClick={closeExplore}
             style={{ position: "fixed", bottom: 40, left: "50%", transform: "translateX(-50%)", zIndex: 50, display: "flex", alignItems: "center", gap: 8, background: theme.toolBg, border: `1px dashed ${theme.border}`, borderRadius: 100, cursor: "pointer", outline: "none", padding: "9px 22px", fontFamily: FONT_SANS, fontSize: 14, color: theme.text, animation: "_heroIn 0.4s ease-out both" }}
           >
             ← {DE ? "Zurück" : "Back"}

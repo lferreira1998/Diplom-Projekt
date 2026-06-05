@@ -1632,7 +1632,7 @@ export default function New() {
   const { surfaceLight, surfaceDark } = getLookFeelColors(bgHue);
   const darkColors = getLookFeelDarkColors(bgHue);
 
-  const bg = floatBg;
+  const bg = dark ? (bgHue !== null ? `oklch(24% 0.02 ${bgHue})` : darkColors.darkBg) : surfaceLight;
 
   const textColor = dark ? DARK_TEXT : LIGHT_TEXT;
 

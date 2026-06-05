@@ -542,7 +542,7 @@ function HeroHeading({ DE, theme }: { DE: boolean; theme: Theme }) {
   );
 }
 
-function PageNavFAB({ dark, myToolsAll, DE, theme, loading }: { dark: boolean; myToolsAll: NewToolData[]; DE: boolean; theme: Theme; loading: boolean }) {
+function PageNavFAB({ dark, myToolsAll, DE, theme, loading, bottom = 40 }: { dark: boolean; myToolsAll: NewToolData[]; DE: boolean; theme: Theme; loading: boolean; bottom?: number }) {
   const navigate = useNavigate();
   const location = useLocation();
   const isMyPage = location.pathname.includes("my-tools");
@@ -557,7 +557,7 @@ function PageNavFAB({ dark, myToolsAll, DE, theme, loading }: { dark: boolean; m
   const active = isMyPage ? "/my-tools" : "/tool-collection";
 
   return (
-    <div style={{ position: "fixed", bottom: "40px", left: "50%", transform: "translateX(-50%)", zIndex: 50, display: "flex", gap: "4px", background: theme.toolBg, border: `1px dashed ${theme.border}`, borderRadius: "100px", padding: "4px" }}>
+    <div style={{ position: "fixed", bottom: `${bottom}px`, left: "50%", transform: "translateX(-50%)", zIndex: 50, display: "flex", gap: "4px", background: theme.toolBg, border: `1px dashed ${theme.border}`, borderRadius: "100px", padding: "4px" }}>
       {([
         { path: "/my-tools", label: DE ? "Meine Tools" : "My Tools" },
         { path: "/tool-collection", label: DE ? "Alle Tools" : "All Tools" },
@@ -570,10 +570,139 @@ function PageNavFAB({ dark, myToolsAll, DE, theme, loading }: { dark: boolean; m
   );
 }
 
+// ── Open 2D field you can pan across on both axes ─────────────────────────────
+function ExploreCanvas({ tools, sessionId, favorites, onToggleFavorite, onOpen, onClose, onCreate, theme, dark, DE }: {
+  tools: NewToolData[];
+  sessionId: string;
+  favorites: string[];
+  onToggleFavorite: (id: string) => void;
+  onOpen: (id: string) => void;
+  onClose: () => void;
+  onCreate: () => void;
+  theme: Theme;
+  dark: boolean;
+  DE: boolean;
+}) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const start = useRef({ x: 0, y: 0, sl: 0, st: 0 });
+  const moved = useRef(false);
+  const [grabbing, setGrabbing] = useState(false);
+
+  const CARD_W = 300;
+  const CELL_W = CARD_W + 48;
+  const CELL_H = 300 + 48;
+  const n = tools.length;
+  const cols = Math.max(3, Math.round(Math.sqrt(n * 1.3)) || 3);
+  const rows = Math.max(1, Math.ceil(n / cols));
+  const PAD = 260;
+  const gridW = cols * CELL_W;
+  const gridH = rows * CELL_H;
+  const vw = typeof window !== "undefined" ? window.innerWidth : 1440;
+  const vh = typeof window !== "undefined" ? window.innerHeight : 900;
+  const contentW = Math.max(gridW + PAD * 2, vw + 700);
+  const contentH = Math.max(gridH + PAD * 2, vh + 700);
+  const offX = (contentW - gridW) / 2;
+  const offY = (contentH - gridH) / 2;
+
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollLeft = (el.scrollWidth - el.clientWidth) / 2;
+    el.scrollTop = (el.scrollHeight - el.clientHeight) / 2;
+  }, []);
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    start.current = { x: e.clientX, y: e.clientY, sl: el.scrollLeft, st: el.scrollTop };
+    moved.current = false;
+    setGrabbing(true);
+  };
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (!grabbing) return;
+    const el = scrollRef.current;
+    if (!el) return;
+    const dx = e.clientX - start.current.x;
+    const dy = e.clientY - start.current.y;
+    if (Math.abs(dx) > 4 || Math.abs(dy) > 4) moved.current = true;
+    el.scrollLeft = start.current.sl - dx;
+    el.scrollTop = start.current.st - dy;
+  };
+  const endDrag = () => setGrabbing(false);
+
+  const handleCardClick = (id: string) => {
+    if (moved.current) return;
+    onOpen(id);
+  };
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 55, background: theme.bg, animation: "_expIn 0.4s ease-out both" }}>
+      <style>{`@keyframes _expIn { from { opacity: 0; } to { opacity: 1; } }`}</style>
+      <div
+        ref={scrollRef}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={endDrag}
+        onPointerLeave={endDrag}
+        onPointerCancel={endDrag}
+        style={{
+          position: "absolute", inset: 0, overflow: "auto",
+          backgroundColor: theme.bg, backgroundImage: theme.dotGrid, backgroundSize: "42px 42px",
+          cursor: grabbing ? "grabbing" : "grab",
+          userSelect: "none", WebkitOverflowScrolling: "touch", touchAction: "none",
+        }}
+      >
+        <div style={{ position: "relative", width: contentW, height: contentH }}>
+          {tools.map((tool, i) => {
+            const c = i % cols;
+            const r = Math.floor(i / cols);
+            const x = offX + c * CELL_W;
+            const y = offY + r * CELL_H;
+            return (
+              <div key={tool.id} style={{ position: "absolute", left: x, top: y, width: CARD_W }}>
+                <ToolCard
+                  tool={tool}
+                  onClick={() => handleCardClick(tool.id)}
+                  isFavorite={favorites.includes(tool.id)}
+                  onToggleFavorite={tool.params.sessionId !== sessionId ? () => onToggleFavorite(tool.id) : undefined}
+                />
+              </div>
+            );
+          })}
+          {n === 0 && (
+            <div style={{ position: "absolute", left: contentW / 2, top: contentH / 2, transform: "translate(-50%,-50%)", fontFamily: FONT_SERIF, fontSize: 22, color: theme.muted, whiteSpace: "nowrap" }}>
+              {DE ? "Noch keine Tools vorhanden." : "No tools yet."}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <button
+        onClick={onClose}
+        style={{ position: "fixed", top: 24, left: 24, zIndex: 57, display: "flex", alignItems: "center", gap: 8, background: theme.toolBg, border: `1px dashed ${theme.border}`, borderRadius: 100, cursor: "pointer", outline: "none", padding: "9px 18px", fontFamily: FONT_SANS, fontSize: 14, color: theme.text }}
+      >
+        ← {DE ? "Zurück" : "Back"}
+      </button>
+
+      <div style={{ position: "fixed", bottom: 46, left: 24, zIndex: 57, fontFamily: FONT_SANS, fontSize: 12, color: theme.muted, pointerEvents: "none" }}>
+        {DE ? "Ziehen oder scrollen zum Erkunden" : "Drag or scroll to explore"}
+      </div>
+
+      <button
+        onClick={onCreate}
+        style={{ position: "fixed", bottom: 40, left: "50%", transform: "translateX(-50%)", zIndex: 57, background: dark ? theme.text : theme.headline, color: theme.bg, border: "none", borderRadius: 4, cursor: "pointer", outline: "none", padding: "12px 24px", fontFamily: FONT_SANS, fontSize: 15 }}
+      >
+        + {DE ? "Tool erstellen" : "Create a tool"}
+      </button>
+    </div>
+  );
+}
+
 export default function PlaygroundNew() {
   const { sessionId, loading, lang, setLang, dark, setDark, favorites, toggleFavorite, myToolsAll, publicTools, tools, navigateToTool, handleDelete } = usePlaygroundData();
+  const navigate = useNavigate();
   const toolsRef = useRef<HTMLDivElement>(null);
-  const [exploreVisible, setExploreVisible] = useState(true);
+  const [exploreMode, setExploreMode] = useState(false);
   const [launchTool, setLaunchTool] = useState<NewToolData | null>(null);
 
   const openTool = (id: string) => {
@@ -583,15 +712,6 @@ export default function PlaygroundNew() {
 
   const DE = lang === "de";
   const theme = getTheme(dark);
-
-  useEffect(() => {
-    if (loading) return;
-    const target = toolsRef.current;
-    if (!target) return;
-    const observer = new IntersectionObserver(([entry]) => setExploreVisible(!entry.isIntersecting), { threshold: 0 });
-    observer.observe(target);
-    return () => observer.disconnect();
-  }, [loading]);
 
   return (
     <ThemeContext.Provider value={theme}>
@@ -633,14 +753,36 @@ export default function PlaygroundNew() {
           )}
         </div>
 
-        <PageNavFAB dark={dark} myToolsAll={myToolsAll} DE={DE} theme={theme} loading={loading} />
-        {!loading && myToolsAll.length === 0 && exploreVisible && (
-          <button
-            onClick={() => toolsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
-            style={{ position: "fixed", bottom: "40px", left: "50%", transform: "translateX(-50%)", zIndex: 50, background: theme.toolBg, border: `1px dashed ${theme.border}`, borderRadius: "4px", cursor: "pointer", outline: "none", padding: "11px 22px", fontFamily: FONT_SANS, fontSize: "15px", color: theme.text }}
-          >
-            {DE ? "Alle Tools entdecken" : "Explore all tools"}
-          </button>
+        {!exploreMode && <PageNavFAB dark={dark} myToolsAll={myToolsAll} DE={DE} theme={theme} loading={loading} bottom={104} />}
+        {!loading && !exploreMode && (
+          <div style={{ position: "fixed", bottom: "40px", left: "50%", transform: "translateX(-50%)", zIndex: 50, display: "flex", gap: "12px", animation: "_heroIn 1s ease-out 0.4s both" }}>
+            <button
+              onClick={() => setExploreMode(true)}
+              style={{ border: "none", borderRadius: "4px", cursor: "pointer", outline: "none", padding: "12px 24px", fontFamily: FONT_SANS, fontSize: "15px", background: dark ? theme.text : theme.headline, color: theme.bg }}
+            >
+              {DE ? "Alle Tools entdecken" : "Explore all tools"}
+            </button>
+            <button
+              onClick={() => navigate("/create-tool")}
+              style={{ background: theme.toolBg, border: `1px dashed ${theme.border}`, borderRadius: "4px", cursor: "pointer", outline: "none", padding: "12px 24px", fontFamily: FONT_SANS, fontSize: "15px", color: theme.text }}
+            >
+              {DE ? "Tool erstellen" : "Create a tool"}
+            </button>
+          </div>
+        )}
+        {exploreMode && (
+          <ExploreCanvas
+            tools={publicTools}
+            sessionId={sessionId}
+            favorites={favorites}
+            onToggleFavorite={toggleFavorite}
+            onOpen={openTool}
+            onClose={() => setExploreMode(false)}
+            onCreate={() => navigate("/create-tool")}
+            theme={theme}
+            dark={dark}
+            DE={DE}
+          />
         )}
         <ToolLaunchModal
           tool={launchTool}

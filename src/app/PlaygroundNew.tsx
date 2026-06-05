@@ -570,145 +570,6 @@ function PageNavFAB({ dark, myToolsAll, DE, theme, loading, bottom = 40 }: { dar
   );
 }
 
-// ── Preset demo shapes reused to populate the explore field ───────────────────
-interface PresetShape {
-  label: string; href: string;
-  videoLight: string; videoDark: string;
-  bgLight?: string; bgDark?: string;
-  videoFit?: "cover" | "contain";
-  w: number; h: number; radius: number; rot: number;
-}
-
-const PRESET_SHAPES: PresetShape[] = [
-  { label: "...without stopping",       href: "/create-tool?preset=without-stopping",   videoLight: "without-stopping-light",   videoDark: "without-stopping-dark",   bgLight: "#fbf5eb", bgDark: "#3e3e3e", w: 236, h: 233, radius: 200, rot: 5.1 },
-  { label: "...uninvited thoughts",     href: "/create-tool?preset=uninvited-thoughts", videoLight: "uninvited-thoughts-light", videoDark: "uninvited-thoughts-dark", bgLight: "#eaf8f5", bgDark: "#1f2f29", w: 241, h: 182, radius: 4,   rot: -9.25 },
-  { label: "...off the grid",           href: "/create-tool?preset=off-the-grid",       videoLight: "off-the-grid-light",       videoDark: "off-the-grid-dark",       bgLight: "#fff0f4", bgDark: "#37262d", w: 251, h: 163, radius: 4,   rot: 4.18 },
-  { label: "...blind & then witness",   href: "/create-tool?preset=blind-then-witness", videoLight: "blind-then-witness-light", videoDark: "blind-then-witness-dark", bgLight: "#ecf7ee", bgDark: "#222d26", w: 324, h: 163, radius: 100, rot: 6.45 },
-  { label: "...with visible corrections", href: "/create-tool?preset=visible-corrections", videoLight: "visible-corrections-light", videoDark: "visible-corrections-dark", bgLight: "#f5f6ea", bgDark: "#2f2836", w: 363, h: 174, radius: 36, rot: -2.4 },
-  { label: "...in a spiral",            href: "/create-tool?preset=in-a-spiral",        videoLight: "in-a-spiral-light",        videoDark: "in-a-spiral-dark",        bgLight: "#ecf4fe", bgDark: "#242c38", w: 211, h: 309, radius: 200, rot: 12.11 },
-];
-
-// ── Open 2D field you can pan across on both axes ─────────────────────────────
-// Populated by tiling the preset demo shapes so the field is never empty, even
-// before any real tools have been saved. Pulls back (zoom-out) on entry to
-// reveal more of the same shapes spread across the plane.
-function ExploreCanvas({ onClose, onCreate, theme, DE }: {
-  onClose: () => void;
-  onCreate: () => void;
-  theme: Theme;
-  DE: boolean;
-}) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const start = useRef({ x: 0, y: 0, sl: 0, st: 0 });
-  const moved = useRef(false);
-  const [grabbing, setGrabbing] = useState(false);
-
-  const COLS = 6, ROWS = 4;
-  const CELL_W = 430, CELL_H = 400;
-  const contentW = COLS * CELL_W;
-  const contentH = ROWS * CELL_H;
-
-  const placed = useMemo(() => {
-    const rand = (n: number) => { const s = Math.sin(n * 999.13) * 43758.5453; return s - Math.floor(s); };
-    const out: { key: string; preset: PresetShape; x: number; y: number; rot: number }[] = [];
-    let i = 0;
-    for (let r = 0; r < ROWS; r++) {
-      for (let c = 0; c < COLS; c++) {
-        const preset = PRESET_SHAPES[i % PRESET_SHAPES.length];
-        const jx = (rand(i + 1) - 0.5) * Math.max(0, CELL_W - preset.w - 56);
-        const jy = (rand(i + 7) - 0.5) * Math.max(0, CELL_H - preset.h - 56);
-        const x = c * CELL_W + (CELL_W - preset.w) / 2 + jx;
-        const y = r * CELL_H + (CELL_H - preset.h) / 2 + jy;
-        const rot = preset.rot + (rand(i + 13) - 0.5) * 7;
-        out.push({ key: `${r}-${c}`, preset, x, y, rot });
-        i++;
-      }
-    }
-    return out;
-  }, []);
-
-  useLayoutEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    el.scrollLeft = (el.scrollWidth - el.clientWidth) / 2;
-    el.scrollTop = (el.scrollHeight - el.clientHeight) / 2;
-  }, []);
-
-  const onPointerDown = (e: React.PointerEvent) => {
-    const el = scrollRef.current;
-    if (!el) return;
-    start.current = { x: e.clientX, y: e.clientY, sl: el.scrollLeft, st: el.scrollTop };
-    moved.current = false;
-    setGrabbing(true);
-  };
-  const onPointerMove = (e: React.PointerEvent) => {
-    if (!grabbing) return;
-    const el = scrollRef.current;
-    if (!el) return;
-    const dx = e.clientX - start.current.x;
-    const dy = e.clientY - start.current.y;
-    if (Math.abs(dx) > 4 || Math.abs(dy) > 4) moved.current = true;
-    el.scrollLeft = start.current.sl - dx;
-    el.scrollTop = start.current.st - dy;
-  };
-  const endDrag = () => setGrabbing(false);
-
-  return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 55, background: theme.bg, animation: "_expIn 0.4s ease-out both" }}>
-      <style>{`@keyframes _expIn { from { opacity: 0; } to { opacity: 1; } } @keyframes _expZoom { from { transform: scale(1.28); } to { transform: scale(1); } }`}</style>
-      <div
-        ref={scrollRef}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={endDrag}
-        onPointerLeave={endDrag}
-        onPointerCancel={endDrag}
-        onClickCapture={(e) => { if (moved.current) { e.preventDefault(); e.stopPropagation(); } }}
-        style={{
-          position: "absolute", inset: 0, overflow: "auto",
-          backgroundColor: theme.bg, backgroundImage: theme.dotGrid, backgroundSize: "42px 42px",
-          cursor: grabbing ? "grabbing" : "grab",
-          userSelect: "none", WebkitOverflowScrolling: "touch", touchAction: "none",
-        }}
-      >
-        <div style={{ position: "relative", width: contentW, height: contentH, transformOrigin: "center", animation: "_expZoom 0.7s ease-out both" }}>
-          {placed.map(({ key, preset, x, y, rot }) => (
-            <ToolShape
-              key={key}
-              label={preset.label}
-              href={preset.href}
-              videoLight={preset.videoLight}
-              videoDark={preset.videoDark}
-              bgLight={preset.bgLight}
-              bgDark={preset.bgDark}
-              videoFit={preset.videoFit ?? "cover"}
-              style={{ left: x, top: y, width: preset.w, height: preset.h, borderRadius: preset.radius, transform: `rotate(${rot}deg)` }}
-              textStyle={{ transform: `rotate(${-rot}deg)` }}
-            />
-          ))}
-        </div>
-      </div>
-
-      <button
-        onClick={onClose}
-        style={{ position: "fixed", top: 24, left: 24, zIndex: 57, display: "flex", alignItems: "center", gap: 8, background: theme.toolBg, border: `1px dashed ${theme.border}`, borderRadius: 100, cursor: "pointer", outline: "none", padding: "9px 18px", fontFamily: FONT_SANS, fontSize: 14, color: theme.text }}
-      >
-        ← {DE ? "Zurück" : "Back"}
-      </button>
-
-      <div style={{ position: "fixed", bottom: 46, left: 24, zIndex: 57, fontFamily: FONT_SANS, fontSize: 12, color: theme.muted, pointerEvents: "none" }}>
-        {DE ? "Ziehen oder scrollen zum Erkunden" : "Drag or scroll to explore"}
-      </div>
-
-      <button
-        onClick={onCreate}
-        style={{ position: "fixed", bottom: 40, left: "50%", transform: "translateX(-50%)", zIndex: 57, background: theme.headline, color: theme.bg, border: "none", borderRadius: 4, cursor: "pointer", outline: "none", padding: "12px 24px", fontFamily: FONT_SANS, fontSize: 15 }}
-      >
-        + {DE ? "Tool erstellen" : "Create a tool"}
-      </button>
-    </div>
-  );
-}
 
 export default function PlaygroundNew() {
   const { sessionId, loading, lang, setLang, dark, setDark, favorites, toggleFavorite, myToolsAll, publicTools, tools, navigateToTool, handleDelete } = usePlaygroundData();
@@ -732,8 +593,8 @@ export default function PlaygroundNew() {
       <main style={{ minHeight: "100vh", height: "100vh", width: "100vw", overflowX: "hidden", overflowY: "auto", position: "relative", backgroundColor: theme.bg, backgroundImage: theme.dotGrid, backgroundSize: "42px 42px", color: theme.text, fontFamily: FONT_SANS, WebkitOverflowScrolling: "touch" }}>
         <style>{`html, body, #root { height: 100%; overflow: hidden; }`}</style>
 
-        <section aria-label="Writing tools playground" style={{ position: "relative", minHeight: "100vh", overflow: "hidden", background: "transparent" }}>
-          <div style={{ position: "absolute", left: "50%", top: "50%", width: 1680, height: 858, transform: "translate(-50%, -50%)" }}>
+        <section aria-label="Writing tools playground" style={{ position: "relative", minHeight: "100vh", overflow: exploreMode ? "visible" : "hidden", background: "transparent" }}>
+          <div style={{ position: "absolute", left: "50%", top: "50%", width: 1680, height: 858, transform: exploreMode ? "translate(-50%, -50%) scale(0.6)" : "translate(-50%, -50%)", transition: "transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94)" }}>
             <div style={{ position: "absolute", inset: 0, animation: "_toolIn 1.2s ease-out 0.8s both" }}>
               <ToolShape label="...without stopping"      href="/create-tool?preset=without-stopping"    videoLight="without-stopping-light"    videoDark="without-stopping-dark"    bgLight="#fbf5eb" bgDark="#3e3e3e" videoFit="cover" style={{ left: 40,   top: 197, width: 236, height: 233, transform: "rotate(5.1deg)",   borderRadius: 200 }} textStyle={{ transform: "rotate(-5.1deg)" }} />
               <ToolShape label="...uninvited thoughts"    href="/create-tool?preset=uninvited-thoughts"  videoLight="uninvited-thoughts-light"  videoDark="uninvited-thoughts-dark"  bgLight="#eaf8f5" bgDark="#1f2f29" style={{ left: 420,  top: 57,  width: 241, height: 182, transform: "rotate(-9.25deg)", borderRadius: 4 }} textStyle={{ transform: "rotate(9.25deg)" }} />
@@ -781,14 +642,14 @@ export default function PlaygroundNew() {
           )}
         </div>
 
-        {!exploreMode && <PageNavFAB dark={dark} myToolsAll={myToolsAll} DE={DE} theme={theme} loading={loading} />}
+        <PageNavFAB dark={dark} myToolsAll={myToolsAll} DE={DE} theme={theme} loading={loading} />
         {exploreMode && (
-          <ExploreCanvas
-            onClose={() => setExploreMode(false)}
-            onCreate={() => navigate("/create-tool")}
-            theme={theme}
-            DE={DE}
-          />
+          <button
+            onClick={() => setExploreMode(false)}
+            style={{ position: "fixed", bottom: 40, left: "50%", transform: "translateX(-50%)", zIndex: 50, display: "flex", alignItems: "center", gap: 8, background: theme.toolBg, border: `1px dashed ${theme.border}`, borderRadius: 100, cursor: "pointer", outline: "none", padding: "9px 22px", fontFamily: FONT_SANS, fontSize: 14, color: theme.text, animation: "_heroIn 0.4s ease-out both" }}
+          >
+            ← {DE ? "Zurück" : "Back"}
+          </button>
         )}
         <ToolLaunchModal
           tool={launchTool}

@@ -570,17 +570,32 @@ function PageNavFAB({ dark, myToolsAll, DE, theme, loading, bottom = 40 }: { dar
   );
 }
 
+// ── Preset demo shapes reused to populate the explore field ───────────────────
+interface PresetShape {
+  label: string; href: string;
+  videoLight: string; videoDark: string;
+  bgLight?: string; bgDark?: string;
+  videoFit?: "cover" | "contain";
+  w: number; h: number; radius: number; rot: number;
+}
+
+const PRESET_SHAPES: PresetShape[] = [
+  { label: "...without stopping",       href: "/create-tool?preset=without-stopping",   videoLight: "without-stopping-light",   videoDark: "without-stopping-dark",   bgLight: "#fbf5eb", bgDark: "#3e3e3e", w: 236, h: 233, radius: 200, rot: 5.1 },
+  { label: "...uninvited thoughts",     href: "/create-tool?preset=uninvited-thoughts", videoLight: "uninvited-thoughts-light", videoDark: "uninvited-thoughts-dark", bgLight: "#eaf8f5", bgDark: "#1f2f29", w: 241, h: 182, radius: 4,   rot: -9.25 },
+  { label: "...off the grid",           href: "/create-tool?preset=off-the-grid",       videoLight: "off-the-grid-light",       videoDark: "off-the-grid-dark",       bgLight: "#fff0f4", bgDark: "#37262d", w: 251, h: 163, radius: 4,   rot: 4.18 },
+  { label: "...blind & then witness",   href: "/create-tool?preset=blind-then-witness", videoLight: "blind-then-witness-light", videoDark: "blind-then-witness-dark", bgLight: "#ecf7ee", bgDark: "#222d26", w: 324, h: 163, radius: 100, rot: 6.45 },
+  { label: "...with visible corrections", href: "/create-tool?preset=visible-corrections", videoLight: "visible-corrections-light", videoDark: "visible-corrections-dark", bgLight: "#f5f6ea", bgDark: "#2f2836", w: 363, h: 174, radius: 36, rot: -2.4 },
+  { label: "...in a spiral",            href: "/create-tool?preset=in-a-spiral",        videoLight: "in-a-spiral-light",        videoDark: "in-a-spiral-dark",        bgLight: "#ecf4fe", bgDark: "#242c38", w: 211, h: 309, radius: 200, rot: 12.11 },
+];
+
 // ── Open 2D field you can pan across on both axes ─────────────────────────────
-function ExploreCanvas({ tools, sessionId, favorites, onToggleFavorite, onOpen, onClose, onCreate, theme, dark, DE }: {
-  tools: NewToolData[];
-  sessionId: string;
-  favorites: string[];
-  onToggleFavorite: (id: string) => void;
-  onOpen: (id: string) => void;
+// Populated by tiling the preset demo shapes so the field is never empty, even
+// before any real tools have been saved. Pulls back (zoom-out) on entry to
+// reveal more of the same shapes spread across the plane.
+function ExploreCanvas({ onClose, onCreate, theme, DE }: {
   onClose: () => void;
   onCreate: () => void;
   theme: Theme;
-  dark: boolean;
   DE: boolean;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -588,21 +603,29 @@ function ExploreCanvas({ tools, sessionId, favorites, onToggleFavorite, onOpen, 
   const moved = useRef(false);
   const [grabbing, setGrabbing] = useState(false);
 
-  const CARD_W = 300;
-  const CELL_W = CARD_W + 48;
-  const CELL_H = 300 + 48;
-  const n = tools.length;
-  const cols = Math.max(3, Math.round(Math.sqrt(n * 1.3)) || 3);
-  const rows = Math.max(1, Math.ceil(n / cols));
-  const PAD = 260;
-  const gridW = cols * CELL_W;
-  const gridH = rows * CELL_H;
-  const vw = typeof window !== "undefined" ? window.innerWidth : 1440;
-  const vh = typeof window !== "undefined" ? window.innerHeight : 900;
-  const contentW = Math.max(gridW + PAD * 2, vw + 700);
-  const contentH = Math.max(gridH + PAD * 2, vh + 700);
-  const offX = (contentW - gridW) / 2;
-  const offY = (contentH - gridH) / 2;
+  const COLS = 6, ROWS = 4;
+  const CELL_W = 430, CELL_H = 400;
+  const contentW = COLS * CELL_W;
+  const contentH = ROWS * CELL_H;
+
+  const placed = useMemo(() => {
+    const rand = (n: number) => { const s = Math.sin(n * 999.13) * 43758.5453; return s - Math.floor(s); };
+    const out: { key: string; preset: PresetShape; x: number; y: number; rot: number }[] = [];
+    let i = 0;
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
+        const preset = PRESET_SHAPES[i % PRESET_SHAPES.length];
+        const jx = (rand(i + 1) - 0.5) * Math.max(0, CELL_W - preset.w - 56);
+        const jy = (rand(i + 7) - 0.5) * Math.max(0, CELL_H - preset.h - 56);
+        const x = c * CELL_W + (CELL_W - preset.w) / 2 + jx;
+        const y = r * CELL_H + (CELL_H - preset.h) / 2 + jy;
+        const rot = preset.rot + (rand(i + 13) - 0.5) * 7;
+        out.push({ key: `${r}-${c}`, preset, x, y, rot });
+        i++;
+      }
+    }
+    return out;
+  }, []);
 
   useLayoutEffect(() => {
     const el = scrollRef.current;
@@ -630,14 +653,9 @@ function ExploreCanvas({ tools, sessionId, favorites, onToggleFavorite, onOpen, 
   };
   const endDrag = () => setGrabbing(false);
 
-  const handleCardClick = (id: string) => {
-    if (moved.current) return;
-    onOpen(id);
-  };
-
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 55, background: theme.bg, animation: "_expIn 0.4s ease-out both" }}>
-      <style>{`@keyframes _expIn { from { opacity: 0; } to { opacity: 1; } }`}</style>
+      <style>{`@keyframes _expIn { from { opacity: 0; } to { opacity: 1; } } @keyframes _expZoom { from { transform: scale(1.28); } to { transform: scale(1); } }`}</style>
       <div
         ref={scrollRef}
         onPointerDown={onPointerDown}
@@ -645,6 +663,7 @@ function ExploreCanvas({ tools, sessionId, favorites, onToggleFavorite, onOpen, 
         onPointerUp={endDrag}
         onPointerLeave={endDrag}
         onPointerCancel={endDrag}
+        onClickCapture={(e) => { if (moved.current) { e.preventDefault(); e.stopPropagation(); } }}
         style={{
           position: "absolute", inset: 0, overflow: "auto",
           backgroundColor: theme.bg, backgroundImage: theme.dotGrid, backgroundSize: "42px 42px",
@@ -652,28 +671,21 @@ function ExploreCanvas({ tools, sessionId, favorites, onToggleFavorite, onOpen, 
           userSelect: "none", WebkitOverflowScrolling: "touch", touchAction: "none",
         }}
       >
-        <div style={{ position: "relative", width: contentW, height: contentH }}>
-          {tools.map((tool, i) => {
-            const c = i % cols;
-            const r = Math.floor(i / cols);
-            const x = offX + c * CELL_W;
-            const y = offY + r * CELL_H;
-            return (
-              <div key={tool.id} style={{ position: "absolute", left: x, top: y, width: CARD_W }}>
-                <ToolCard
-                  tool={tool}
-                  onClick={() => handleCardClick(tool.id)}
-                  isFavorite={favorites.includes(tool.id)}
-                  onToggleFavorite={tool.params.sessionId !== sessionId ? () => onToggleFavorite(tool.id) : undefined}
-                />
-              </div>
-            );
-          })}
-          {n === 0 && (
-            <div style={{ position: "absolute", left: contentW / 2, top: contentH / 2, transform: "translate(-50%,-50%)", fontFamily: FONT_SERIF, fontSize: 22, color: theme.muted, whiteSpace: "nowrap" }}>
-              {DE ? "Noch keine Tools vorhanden." : "No tools yet."}
-            </div>
-          )}
+        <div style={{ position: "relative", width: contentW, height: contentH, transformOrigin: "center", animation: "_expZoom 0.7s ease-out both" }}>
+          {placed.map(({ key, preset, x, y, rot }) => (
+            <ToolShape
+              key={key}
+              label={preset.label}
+              href={preset.href}
+              videoLight={preset.videoLight}
+              videoDark={preset.videoDark}
+              bgLight={preset.bgLight}
+              bgDark={preset.bgDark}
+              videoFit={preset.videoFit ?? "cover"}
+              style={{ left: x, top: y, width: preset.w, height: preset.h, borderRadius: preset.radius, transform: `rotate(${rot}deg)` }}
+              textStyle={{ transform: `rotate(${-rot}deg)` }}
+            />
+          ))}
         </div>
       </div>
 
@@ -690,7 +702,7 @@ function ExploreCanvas({ tools, sessionId, favorites, onToggleFavorite, onOpen, 
 
       <button
         onClick={onCreate}
-        style={{ position: "fixed", bottom: 40, left: "50%", transform: "translateX(-50%)", zIndex: 57, background: dark ? theme.text : theme.headline, color: theme.bg, border: "none", borderRadius: 4, cursor: "pointer", outline: "none", padding: "12px 24px", fontFamily: FONT_SANS, fontSize: 15 }}
+        style={{ position: "fixed", bottom: 40, left: "50%", transform: "translateX(-50%)", zIndex: 57, background: theme.headline, color: theme.bg, border: "none", borderRadius: 4, cursor: "pointer", outline: "none", padding: "12px 24px", fontFamily: FONT_SANS, fontSize: 15 }}
       >
         + {DE ? "Tool erstellen" : "Create a tool"}
       </button>
@@ -733,6 +745,22 @@ export default function PlaygroundNew() {
             <div style={{ position: "absolute", left: 456, top: 300, width: 768 }}>
               <HeroHeading DE={DE} theme={theme} />
             </div>
+            {!exploreMode && (
+              <div style={{ position: "absolute", left: 456, top: 418, width: 768, display: "flex", justifyContent: "center", gap: "12px", animation: "_heroIn 1s ease-out 0.5s both" }}>
+                <button
+                  onClick={() => setExploreMode(true)}
+                  style={{ border: "none", borderRadius: "4px", cursor: "pointer", outline: "none", padding: "12px 24px", fontFamily: FONT_SANS, fontSize: "15px", background: dark ? theme.text : theme.headline, color: theme.bg }}
+                >
+                  {DE ? "Alle Tools entdecken" : "Explore all tools"}
+                </button>
+                <button
+                  onClick={() => navigate("/create-tool")}
+                  style={{ background: theme.toolBg, border: `1px dashed ${theme.border}`, borderRadius: "4px", cursor: "pointer", outline: "none", padding: "12px 24px", fontFamily: FONT_SANS, fontSize: "15px", color: theme.text }}
+                >
+                  {DE ? "Tool erstellen" : "Create a tool"}
+                </button>
+              </div>
+            )}
           </div>
         </section>
 
@@ -753,34 +781,12 @@ export default function PlaygroundNew() {
           )}
         </div>
 
-        {!exploreMode && <PageNavFAB dark={dark} myToolsAll={myToolsAll} DE={DE} theme={theme} loading={loading} bottom={104} />}
-        {!loading && !exploreMode && (
-          <div style={{ position: "fixed", bottom: "40px", left: "50%", transform: "translateX(-50%)", zIndex: 50, display: "flex", gap: "12px", animation: "_heroIn 1s ease-out 0.4s both" }}>
-            <button
-              onClick={() => setExploreMode(true)}
-              style={{ border: "none", borderRadius: "4px", cursor: "pointer", outline: "none", padding: "12px 24px", fontFamily: FONT_SANS, fontSize: "15px", background: dark ? theme.text : theme.headline, color: theme.bg }}
-            >
-              {DE ? "Alle Tools entdecken" : "Explore all tools"}
-            </button>
-            <button
-              onClick={() => navigate("/create-tool")}
-              style={{ background: theme.toolBg, border: `1px dashed ${theme.border}`, borderRadius: "4px", cursor: "pointer", outline: "none", padding: "12px 24px", fontFamily: FONT_SANS, fontSize: "15px", color: theme.text }}
-            >
-              {DE ? "Tool erstellen" : "Create a tool"}
-            </button>
-          </div>
-        )}
+        {!exploreMode && <PageNavFAB dark={dark} myToolsAll={myToolsAll} DE={DE} theme={theme} loading={loading} />}
         {exploreMode && (
           <ExploreCanvas
-            tools={publicTools}
-            sessionId={sessionId}
-            favorites={favorites}
-            onToggleFavorite={toggleFavorite}
-            onOpen={openTool}
             onClose={() => setExploreMode(false)}
             onCreate={() => navigate("/create-tool")}
             theme={theme}
-            dark={dark}
             DE={DE}
           />
         )}

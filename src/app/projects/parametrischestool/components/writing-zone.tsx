@@ -395,9 +395,10 @@ interface RandomTextZoneProps {
   positions: Position[];
   cursor: number;
   fontSize?: number;
+  externalPlaceholder?: boolean;
 }
 
-function RandomTextZone({ textColor, fontFamily = "'az-sans', sans-serif", positions, cursor, fontSize = 22 }: RandomTextZoneProps) {
+function RandomTextZone({ textColor, fontFamily = "'az-sans', sans-serif", positions, cursor, fontSize = 22, externalPlaceholder }: RandomTextZoneProps) {
   const wrapRef    = useRef<HTMLDivElement>(null);
   const rafRef     = useRef(0);
   const elMapRef   = useRef<Map<number, HTMLDivElement>>(new Map());
@@ -568,7 +569,7 @@ function RandomTextZone({ textColor, fontFamily = "'az-sans', sans-serif", posit
           </div>
         ))}
       </div>
-      {positions.length === 0 && (
+      {positions.length === 0 && !externalPlaceholder && (
         <div style={{
           position: "absolute", left: "50%", top: "50%",
           transform: "translate(-50%, -50%)", pointerEvents: "none",
@@ -596,9 +597,10 @@ interface FollowDotZoneProps {
   positions: Position[];
   cursor: number;
   fontSize?: number;
+  externalPlaceholder?: boolean;
 }
 
-function FollowDotZone({ textColor, fontFamily = "'az-sans', sans-serif", positions, cursor, fontSize = 22 }: FollowDotZoneProps) {
+function FollowDotZone({ textColor, fontFamily = "'az-sans', sans-serif", positions, cursor, fontSize = 22, externalPlaceholder }: FollowDotZoneProps) {
   const wrapRef     = useRef<HTMLDivElement>(null);
   const canvasRef   = useRef<HTMLCanvasElement>(null);
   const activeElRef = useRef<HTMLDivElement>(null);
@@ -740,7 +742,7 @@ function FollowDotZone({ textColor, fontFamily = "'az-sans', sans-serif", positi
         )}
       </div>
 
-      {positions.length === 0 && (
+      {positions.length === 0 && !externalPlaceholder && (
         <div style={{
           position: "absolute", left: "50%", top: "8%", transform: "translateX(-50%)",
           pointerEvents: "none", fontFamily, fontSize: `${fontSize}px`,
@@ -1212,6 +1214,7 @@ interface CustomPathSvgProps {
   containerRef: React.RefObject<HTMLDivElement>;
   dark?: boolean;
   isDe?: boolean;
+  writingPrompt?: string;
 }
 
 function CustomPathSvg({
@@ -1225,6 +1228,7 @@ function CustomPathSvg({
   containerRef,
   dark = false,
   isDe = true,
+  writingPrompt = "",
 }: CustomPathSvgProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -1313,6 +1317,24 @@ function CustomPathSvg({
     if (cursorOff < 0) cursorOff = off;
     return { placed, cursorOffset: cursorOff, totalCharLen: off };
   }, [positions, cursor, totalLen, charW, fontSize, ptAtGlobal]);
+
+  // Placeholder chars along the path when no text has been typed yet
+  const placeholderCharsOnPath = useMemo(() => {
+    if (positions.length > 0 || !writingPrompt || totalLen === 0) return [];
+    const placed: Array<{ char: string; x: number; y: number; angle: number }> = [];
+    let off = 0;
+    for (const ch of writingPrompt) {
+      if (off >= totalLen) break;
+      const display = ch === "\n" ? " " : ch;
+      if (display === " ") { off += fontSize * 0.35; continue; }
+      const w = charW(display);
+      if (off + w > totalLen) break;
+      const pt = ptAtGlobal(off + w / 2);
+      if (pt) placed.push({ char: display, x: pt.x, y: pt.y, angle: pt.angle });
+      off += w;
+    }
+    return placed;
+  }, [positions.length, writingPrompt, totalLen, charW, ptAtGlobal, fontSize]);
 
   // Full-warn flash
   const prevLenRef = useRef(positions.length);
@@ -1463,6 +1485,23 @@ function CustomPathSvg({
           </text>
         ))}
 
+        {placeholderCharsOnPath.map((c, idx) => (
+          <text
+            key={`ph-${idx}`}
+            transform={`translate(${c.x.toFixed(2)},${c.y.toFixed(2)}) rotate(${((c.angle * 180) / Math.PI).toFixed(2)})`}
+            fontSize={fontSize}
+            fontFamily={fontFamily}
+            fill={textColor}
+            dominantBaseline="alphabetic"
+            textAnchor="middle"
+            opacity={0.28}
+            fontStyle="italic"
+            style={{ userSelect: "none", pointerEvents: "none" }}
+          >
+            {c.char}
+          </text>
+        ))}
+
         {cursorPt && !isFull && cursorOn && (
           <circle cx={cursorPt.x} cy={cursorPt.y} r={1.8} fill={textColor} opacity={0.85} />
         )}
@@ -1543,6 +1582,7 @@ interface BoustrophedonZoneProps {
   showTippex: boolean;
   cursorDomRef: React.RefObject<HTMLSpanElement>;
   writingPrompt?: string;
+  externalPlaceholder?: boolean;
 }
 
 function BoustrophedonZone({
@@ -1555,6 +1595,7 @@ function BoustrophedonZone({
   showTippex,
   cursorDomRef,
   writingPrompt,
+  externalPlaceholder,
 }: BoustrophedonZoneProps) {
   const containerRef  = useRef<HTMLDivElement>(null);
   const measCtxRef    = useRef<CanvasRenderingContext2D | null>(null);
@@ -1614,7 +1655,7 @@ function BoustrophedonZone({
       ref={containerRef}
       style={{ width: "100%", fontFamily, fontSize: `${fontSize}px`, color: textColor, lineHeight: 1.6, position: "relative" }}
     >
-      {positions.length === 0 && (
+      {positions.length === 0 && !externalPlaceholder && (
         <span style={{ position: "absolute", top: 0, left: 0, color: "#AAAAAA", pointerEvents: "none", userSelect: "none", whiteSpace: "nowrap" }}>
           {writingPrompt || "Fang einfach an zu schreiben…"}
         </span>
@@ -1727,6 +1768,51 @@ export function WritingZone({
     () => bakedVariationFamily(fontFamily, fontVariationSettings),
     [fontFamily, fontVariationSettings]
   );
+
+  // Unified placeholder overlay shared across all non-normal writing modes.
+  const renderPlaceholder = () => {
+    if (positions.length > 0) return null;
+    return (
+      <div style={{
+        position: "absolute", inset: 0,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        pointerEvents: "none", zIndex: 2,
+      }}>
+        <div style={{ position: "relative" }}>
+          {onDiceRoll && dicePaths && (
+            <button
+              onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+              onClick={(e) => { e.stopPropagation(); onDiceRoll(); }}
+              aria-label="Roll the dice"
+              style={{
+                position: "absolute", top: "0.42em", left: `-${fontSize * 1.26 + 16}px`,
+                background: "none", border: "none", padding: 0, margin: 0,
+                display: "block", cursor: "pointer", pointerEvents: "auto", lineHeight: 0,
+                color: "#AAAAAA",
+                animation: diceSpinning ? "_diceRoll 0.55s ease-in-out" : "none",
+                transformOrigin: "center",
+              }}
+            >
+              <svg width={fontSize * 1.26} height={fontSize * 1.26} viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <style>{`@keyframes _diceRoll{0%{transform:rotate(0)scale(1)}20%{transform:rotate(-20deg)scale(.85)}55%{transform:rotate(170deg)scale(.9)}80%{transform:rotate(340deg)scale(1.05)}100%{transform:rotate(360deg)scale(1)}}`}</style>
+                {dicePaths.map((d, i) => <path key={i} d={d} fill="#AAAAAA" />)}
+              </svg>
+            </button>
+          )}
+          <span style={{
+            fontFamily: effectiveFamily,
+            fontSize: `${fontSize}px`,
+            color: "#AAAAAA",
+            fontStyle: "italic",
+            userSelect: "none",
+            whiteSpace: "nowrap",
+          }}>
+            {writingPrompt || "Fang einfach an zu schreiben…"}
+          </span>
+        </div>
+      </div>
+    );
+  };
 
   useLayoutEffect(() => {
     if (focusRef) focusRef.current = () => containerRef.current?.focus();
@@ -2610,8 +2696,10 @@ export function WritingZone({
             showTippex={showTippex}
             cursorDomRef={cursorDomRef}
             writingPrompt={writingPrompt}
+            externalPlaceholder={true}
           />
         </div>
+        {renderPlaceholder()}
       </div>
     );
   }
@@ -2637,8 +2725,10 @@ export function WritingZone({
             positions={positions}
             cursor={cursor}
             fontSize={fontSize}
+            externalPlaceholder={true}
           />
         </div>
+        {renderPlaceholder()}
       </div>
     );
   }
@@ -2664,8 +2754,10 @@ export function WritingZone({
             positions={positions}
             cursor={cursor}
             fontSize={fontSize}
+            externalPlaceholder={true}
           />
         </div>
+        {renderPlaceholder()}
       </div>
     );
   }
@@ -2701,6 +2793,7 @@ export function WritingZone({
             fontSize={fontSize}
           />
         </div>
+        {renderPlaceholder()}
       </div>
     );
   }
@@ -2730,6 +2823,7 @@ export function WritingZone({
             containerRef={containerRef}
             dark={customPathDark}
             isDe={customPathDe}
+            writingPrompt={writingPrompt}
           />
         </div>
       </div>
@@ -2767,6 +2861,7 @@ export function WritingZone({
             fontSize={fontSize}
           />
         </div>
+        {renderPlaceholder()}
       </div>
     );
   }

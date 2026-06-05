@@ -3260,7 +3260,7 @@ export default function New() {
                 animate={
                   menuOpen
                     ? { y: 8, opacity: 0, scale: 1, transition: { y: { duration: 0.22, ease: "easeOut" }, opacity: { duration: 0.1 } } }
-                    : menuHovered ? { y: -3, opacity: 1, scale: 1.22 } : { y: -6, opacity: 0, scale: 1 }
+                    : menuHovered ? { y: 4, opacity: 1, scale: 1 } : { y: -6, opacity: 0, scale: 1 }
                 }
                 transition={{ duration: 0.22, ease: "easeOut" }}
                 style={{

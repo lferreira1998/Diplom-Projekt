@@ -594,7 +594,7 @@ export default function PlaygroundNew() {
         <style>{`html, body, #root { height: 100%; overflow: hidden; }`}</style>
 
         <section aria-label="Writing tools playground" style={{ position: "relative", minHeight: "100vh", overflow: exploreMode ? "visible" : "hidden", background: "transparent" }}>
-          <div style={{ position: "absolute", left: "50%", top: "50%", width: 1680, height: 858, transform: exploreMode ? "translate(-50%, -50%) scale(0.6)" : "translate(-50%, -50%)", transition: "transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94)" }}>
+          <div style={{ position: "absolute", left: "50%", top: "50%", width: 1680, height: 858, transform: exploreMode ? "translate(-50%, -50%) scale(0.75)" : "translate(-50%, -50%)", transition: "transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94)" }}>
             <div style={{ position: "absolute", inset: 0, animation: "_toolIn 1.2s ease-out 0.8s both" }}>
               <ToolShape label="...without stopping"      href="/create-tool?preset=without-stopping"    videoLight="without-stopping-light"    videoDark="without-stopping-dark"    bgLight="#fbf5eb" bgDark="#3e3e3e" videoFit="cover" style={{ left: 40,   top: 197, width: 236, height: 233, transform: "rotate(5.1deg)",   borderRadius: 200 }} textStyle={{ transform: "rotate(-5.1deg)" }} />
               <ToolShape label="...uninvited thoughts"    href="/create-tool?preset=uninvited-thoughts"  videoLight="uninvited-thoughts-light"  videoDark="uninvited-thoughts-dark"  bgLight="#eaf8f5" bgDark="#1f2f29" style={{ left: 420,  top: 57,  width: 241, height: 182, transform: "rotate(-9.25deg)", borderRadius: 4 }} textStyle={{ transform: "rotate(9.25deg)" }} />
@@ -606,6 +606,40 @@ export default function PlaygroundNew() {
             <div style={{ position: "absolute", left: 456, top: 300, width: 768 }}>
               <HeroHeading DE={DE} theme={theme} />
             </div>
+            {exploreMode && myToolsAll.slice(0, 12).map((tool, i) => {
+              const slots = [
+                { x: -310, y: 160 }, { x: -300, y: 400 }, { x: -290, y: 630 },
+                { x: 1720, y: 120 }, { x: 1710, y: 360 }, { x: 1700, y: 600 },
+                { x: 270,  y: -195 }, { x: 690,  y: -185 }, { x: 1110, y: -190 },
+                { x: 160,  y: 900  }, { x: 590,  y: 890  }, { x: 1040, y: 905  },
+              ];
+              const slot = slots[i % slots.length];
+              const rot = ((i * 43) % 22) - 11;
+              return (
+                <div
+                  key={tool.id}
+                  onClick={() => { setExploreMode(false); openTool(tool.id); }}
+                  style={{
+                    position: "absolute", left: slot.x, top: slot.y,
+                    width: 240, height: 150,
+                    border: `1px dashed ${theme.border}`,
+                    borderRadius: 8, background: theme.toolBg,
+                    display: "flex", flexDirection: "column",
+                    alignItems: "center", justifyContent: "center",
+                    gap: 6, boxSizing: "border-box", padding: "14px 18px",
+                    textAlign: "center", cursor: "pointer",
+                    transform: `rotate(${rot}deg)`,
+                    animation: `_toolIn 0.5s ease-out ${0.1 + i * 0.04}s both`,
+                    overflow: "hidden",
+                  }}
+                >
+                  <span style={{ fontFamily: FONT_SERIF, fontSize: 15, color: theme.text, lineHeight: 1.35 }}>{tool.name || "Unnamed Tool"}</span>
+                  {tool.description ? (
+                    <span style={{ fontFamily: FONT_SANS, fontSize: 11, color: theme.muted, lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as const, overflow: "hidden" }}>{tool.description}</span>
+                  ) : null}
+                </div>
+              );
+            })}
             {!exploreMode && (
               <div style={{ position: "absolute", left: 456, top: 418, width: 768, display: "flex", justifyContent: "center", gap: "12px", animation: "_heroIn 1s ease-out 0.5s both" }}>
                 <button

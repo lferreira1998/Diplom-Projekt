@@ -665,9 +665,8 @@ function PageNavFAB({ dark, myToolsAll, DE, theme, loading, bottom = 40 }: { dar
 
 
 export default function PlaygroundNew() {
-  const { sessionId, loading, lang, setLang, dark, setDark, favorites, toggleFavorite, myToolsAll, publicTools, tools, navigateToTool, handleDelete } = usePlaygroundData();
+  const { sessionId, loading, lang, setLang, dark, setDark, favorites, toggleFavorite, myToolsAll, tools, navigateToTool, handleDelete } = usePlaygroundData();
   const navigate = useNavigate();
-  const toolsRef = useRef<HTMLDivElement>(null);
   const [exploreMode, setExploreMode] = useState(false);
   const [launchTool, setLaunchTool] = useState<NewToolData | null>(null);
 
@@ -696,7 +695,7 @@ export default function PlaygroundNew() {
               <ToolShape label="...with visible corrections" href="/create-tool?preset=visible-corrections" videoLight="visible-corrections-light" videoDark="visible-corrections-dark" bgLight="#f5f6ea" bgDark="#2f2836" style={{ left: 774,  top: 526, width: 363, height: 174, borderRadius: "40px 4px 40px 4px" }} />
               <ToolShape label="...in a spiral"           href="/create-tool?preset=in-a-spiral"         videoLight="in-a-spiral-light"         videoDark="in-a-spiral-dark"         bgLight="#ecf4fe" bgDark="#242c38" videoFit="cover" style={{ left: 1321, top: 414, width: 211, height: 309, transform: "rotate(12.11deg)", borderRadius: 200 }} textStyle={{ transform: "rotate(-12.11deg)" }} />
             </div>
-            <div style={{ position: "absolute", left: 456, top: 300, width: 768, opacity: exploreMode ? 0 : 1, transition: "opacity 0.35s ease", pointerEvents: exploreMode ? "none" : "auto" }}>
+            <div style={{ position: "absolute", left: 456, top: 340, width: 768, opacity: exploreMode ? 0 : 1, transition: "opacity 0.35s ease", pointerEvents: exploreMode ? "none" : "auto" }}>
               <HeroHeading DE={DE} theme={theme} />
             </div>
             {exploreMode && myToolsAll.slice(0, EXPLORE_SLOTS.length).map((tool, i) => {
@@ -719,7 +718,7 @@ export default function PlaygroundNew() {
               );
             })}
             {!exploreMode && (
-              <div style={{ position: "absolute", left: 456, top: 418, width: 768, display: "flex", justifyContent: "center", gap: "12px", animation: "_heroIn 1s ease-out 0.5s both" }}>
+              <div style={{ position: "absolute", left: 456, top: 460, width: 768, display: "flex", justifyContent: "center", gap: "12px", animation: "_heroIn 1s ease-out 0.5s both" }}>
                 <button
                   onClick={() => setExploreMode(true)}
                   style={{ border: "none", borderRadius: "4px", cursor: "pointer", outline: "none", padding: "12px 24px", fontFamily: FONT_SANS, fontSize: "15px", background: dark ? theme.text : theme.headline, color: theme.bg }}
@@ -736,23 +735,6 @@ export default function PlaygroundNew() {
             )}
           </div>
         </section>
-
-        <div ref={toolsRef} style={{ width: "100%", boxSizing: "border-box", padding: "96px 100px 160px" }}>
-          {loading ? (
-            <SkeletonGrid title={DE ? "Alle Tools" : "All Tools"} dark={dark} />
-          ) : (
-            <Section
-              title={DE ? "Alle Tools" : "All Tools"}
-              tools={publicTools}
-              onOpen={openTool}
-              emptyMsg={DE ? "Noch keine öffentlichen Tools vorhanden." : "No public tools yet."}
-              sessionId={sessionId}
-              favorites={favorites}
-              onToggleFavorite={toggleFavorite}
-              showCreate
-            />
-          )}
-        </div>
 
         <PageNavFAB dark={dark} myToolsAll={myToolsAll} DE={DE} theme={theme} loading={loading} />
         {exploreMode && (

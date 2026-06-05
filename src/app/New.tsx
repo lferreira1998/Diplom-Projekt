@@ -1632,7 +1632,7 @@ export default function New() {
   const { surfaceLight, surfaceDark } = getLookFeelColors(bgHue);
   const darkColors = getLookFeelDarkColors(bgHue);
 
-  const bg = dark ? darkColors.darkBg : surfaceLight;
+  const bg = floatBg;
 
   const textColor = dark ? DARK_TEXT : LIGHT_TEXT;
 
@@ -1692,7 +1692,8 @@ export default function New() {
     a.click();
   };
 
-  const rulesBtnBg = rulesOpen ? (dark ? "rgba(240,232,220,0.1)" : surfaceDark) : (dark ? "rgba(240,232,220,0.06)" : surfaceLight);
+  const floatBg    = dark ? "rgba(240,232,220,0.08)" : surfaceLight;
+  const rulesBtnBg = rulesOpen ? (dark ? "rgba(240,232,220,0.1)" : surfaceDark) : floatBg;
 
   // ── Parameter reset ────────────────────────────────────────────────────
   // True when every rule parameter is at its default (nothing has been set).
@@ -2009,7 +2010,7 @@ export default function New() {
             <button
               style={{
                 height: "33px",
-                background: dark ? darkColors.darkBg : surfaceLight,
+                background: floatBg,
                 border: `1px dashed ${BORDER_COL}`,
                 borderRadius: "4px",
                 cursor: "pointer", outline: "none",
@@ -2161,7 +2162,7 @@ export default function New() {
                   transition={SPRING}
                   style={{
                     height: "33px", padding: "0 13px", marginLeft: "2px",
-                    background: bg,
+                    background: floatBg,
                     border: `1px dashed ${BORDER_COL}`,
                     borderRadius: "4px",
                     cursor: "pointer", outline: "none",
@@ -3119,21 +3120,21 @@ export default function New() {
         )}
       </AnimatePresence>
 
-      {/* ── Timer circle (bottom, x-aligned with Clear Text button) ── */}
+      {/* ── Timer circle (bottom, x-aligned with top-left buttons) ── */}
       <AnimatePresence>
         {visible && timerEnabled && timerRunning && (
           <motion.div
             key="timer-circle"
-            initial={{ opacity: 0, scale: 0.88 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0, scale: 0.88, left: rulesOpen ? BTN_OPEN.dark : BTN_CLOSED.dark }}
+            animate={{ opacity: 1, scale: 1, left: rulesOpen ? BTN_OPEN.dark : BTN_CLOSED.dark }}
             exit={{ opacity: 0, scale: 0.88, transition: { duration: 0.15 } }}
             transition={SPRING}
             style={{
-              position: "fixed", bottom: "16px", left: BTN_CLOSED.clear,
+              position: "fixed", bottom: "16px",
               width: "84px", height: "84px",
               borderRadius: "100px",
               border: `1px dashed ${dark ? DARK_BORDER : BORDER_COL}`,
-              background: dark ? darkColors.darkCardBg : surfaceLight,
+              background: floatBg,
               display: "flex", alignItems: "center", justifyContent: "center",
               fontFamily: FONT_SANS, fontSize: "17px",
               color: timeLeft <= 10 ? "#e05252" : (dark ? DARK_TEXT : LIGHT_TEXT),
@@ -3167,7 +3168,7 @@ export default function New() {
                 height: "44px", padding: "0 24px",
                 borderRadius: "8px",
                 border: `1px dashed ${dark ? DARK_BORDER : BORDER_COL}`,
-                background: dark ? darkColors.darkCardBg : surfaceLight,
+                background: floatBg,
                 display: "flex", alignItems: "center", justifyContent: "center",
                 fontFamily: FONT_SANS, fontSize: "15px",
                 color: dark ? DARK_TEXT : LIGHT_TEXT,
@@ -3240,14 +3241,14 @@ export default function New() {
           >
             {/* Eye toggle */}
             <button
-              style={btnStyle(dark, { background: dark ? darkColors.darkBg : surfaceLight, color: navIconColor, width: "33px", padding: 0 }, surfaceLight)}
+              style={btnStyle(dark, { background: floatBg, color: navIconColor, width: "33px", padding: 0 }, surfaceLight)}
               onClick={(e) => { e.stopPropagation(); setVisible(false); setMenuOpen(false); setExportOpen(false); }}
             >
               <IconEyeClosed color={navIconColor} />
             </button>
             {/* Dark mode toggle (moved here from the left) */}
             <button
-              style={btnStyle(dark, { background: dark ? darkColors.darkBg : surfaceLight, color: navIconColor, width: "33px", padding: 0 }, surfaceLight)}
+              style={btnStyle(dark, { background: floatBg, color: navIconColor, width: "33px", padding: 0 }, surfaceLight)}
               onClick={(e) => { e.stopPropagation(); setDark(d => { const next = !d; localStorage.setItem("appTheme", next ? "dark" : "light"); return next; }); }}
             >
               <IconHalfCircle color={navIconColor} dark={dark} />
@@ -3275,7 +3276,7 @@ export default function New() {
                 }}
               />
               <button
-                style={{ ...btnStyle(dark, { background: dark ? darkColors.darkBg : surfaceLight, color: navIconColor }), position: "relative", zIndex: 1 }}
+                style={{ ...btnStyle(dark, { background: floatBg, color: navIconColor }), position: "relative", zIndex: 1 }}
                 onClick={(e) => { e.stopPropagation(); setMenuOpen(o => !o); setMenuHovered(false); }}
               >
                 {menuOpen ? t.menuOpen : t.menuClosed}

@@ -3116,17 +3116,17 @@ export default function New() {
         )}
       </AnimatePresence>
 
-      {/* ── Timer circle (bottom-left, aligned to the top buttons' left edge) ── */}
+      {/* ── Timer circle (bottom, x-aligned with Clear Text button) ── */}
       <AnimatePresence>
         {visible && timerEnabled && timerRunning && (
           <motion.div
             key="timer-circle"
             initial={{ opacity: 0, scale: 0.88 }}
-            animate={{ opacity: 1, scale: 1 }}
+            animate={{ opacity: 1, scale: 1, x: rulesOpen ? BTN_OPEN.clear - BTN_CLOSED.clear : 0 }}
             exit={{ opacity: 0, scale: 0.88, transition: { duration: 0.15 } }}
             transition={SPRING}
             style={{
-              position: "fixed", bottom: "16px", left: BTN_CLOSED.dark,
+              position: "fixed", bottom: "16px", left: BTN_CLOSED.clear,
               width: "84px", height: "84px",
               borderRadius: "100px",
               border: `1px dashed ${dark ? DARK_BORDER : BORDER_COL}`,

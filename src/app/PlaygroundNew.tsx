@@ -159,6 +159,99 @@ function ToolShape({ label, style, textStyle, href, videoLight, videoDark, bgLig
   );
 }
 
+// Slot definitions for explore mode — positions outside the 1680×858 hero box
+// plus two center slots that replace the heading
+const EXPLORE_SLOTS: { left: number; top: number; width: number; height: number; borderRadius: string | number; rotate: number }[] = [
+  // Center — replace the heading
+  { left: 535, top: 262, width: 220, height: 210, borderRadius: 200, rotate: -3.5 },
+  { left: 835, top: 272, width: 295, height: 163, borderRadius: 100, rotate: 4 },
+  // Left outer
+  { left: -292, top: 168, width: 236, height: 233, borderRadius: 200, rotate: 5.1 },
+  { left: -280, top: 438, width: 241, height: 182, borderRadius: 4, rotate: -9.25 },
+  { left: -268, top: 638, width: 251, height: 163, borderRadius: 4, rotate: 4.18 },
+  // Right outer
+  { left: 1718, top: 126, width: 251, height: 163, borderRadius: 4, rotate: 4.18 },
+  { left: 1710, top: 372, width: 324, height: 163, borderRadius: 100, rotate: 6.45 },
+  { left: 1706, top: 578, width: 211, height: 309, borderRadius: 200, rotate: 12.11 },
+  // Top outer
+  { left: 672, top: -196, width: 363, height: 174, borderRadius: "40px 4px 40px 4px", rotate: -2.4 },
+  { left: 240, top: -198, width: 241, height: 182, borderRadius: 4, rotate: -9.25 },
+  // Bottom outer
+  { left: 176, top: 900, width: 241, height: 182, borderRadius: 4, rotate: -9.25 },
+  { left: 952, top: 896, width: 236, height: 233, borderRadius: 200, rotate: 5.1 },
+];
+
+function UserToolShape({ tool, style, textStyle, onClick, dark }: {
+  tool: NewToolData;
+  style: CSSProperties;
+  textStyle?: CSSProperties;
+  onClick: () => void;
+  dark: boolean;
+}) {
+  const theme = useContext(ThemeContext);
+  const [hovered, setHovered] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const videoUrl = tool.params.previewVideo;
+
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v || !videoUrl) return;
+    v.muted = true; v.playsInline = true;
+    const play = () => v.play().catch(() => undefined);
+    play();
+    if (v.readyState < 2) v.addEventListener("canplay", play, { once: true });
+  }, [videoUrl]);
+
+  return (
+    <div
+      onClick={onClick}
+      onPointerEnter={() => setHovered(true)}
+      onPointerLeave={() => setHovered(false)}
+      style={{
+        position: "absolute",
+        border: `1px dashed ${theme.border}`,
+        overflow: "hidden",
+        cursor: "pointer",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        ...style,
+      }}
+    >
+      {videoUrl ? (
+        <video
+          key={videoUrl}
+          ref={videoRef}
+          muted loop playsInline preload="auto"
+          style={{
+            position: "absolute", inset: 0, width: "100%", height: "100%",
+            objectFit: "cover",
+            opacity: hovered ? 0 : 1,
+            transition: "opacity 120ms ease",
+            pointerEvents: "none",
+          }}
+        >
+          <source src={videoUrl} />
+        </video>
+      ) : (
+        <div style={{ position: "absolute", inset: 0, opacity: hovered ? 0 : 1, transition: "opacity 120ms ease", pointerEvents: "none" }}>
+          <ToolPreview tool={tool} active dark={dark} />
+        </div>
+      )}
+      <span style={{
+        position: "relative", zIndex: 1,
+        fontFamily: FONT_SANS, fontSize: 15, color: theme.text,
+        opacity: hovered ? 1 : 0,
+        transition: "opacity 120ms ease",
+        textAlign: "center", padding: "0 12px",
+        ...textStyle,
+      }}>
+        {tool.name || "Unnamed Tool"}
+      </span>
+    </div>
+  );
+}
+
 function HeartIcon({ filled, color }: { filled: boolean; color: string }) {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill={filled ? color : "none"} stroke={color} strokeWidth="1.8" xmlns="http://www.w3.org/2000/svg">
@@ -594,7 +687,7 @@ export default function PlaygroundNew() {
         <style>{`html, body, #root { height: 100%; overflow: hidden; }`}</style>
 
         <section aria-label="Writing tools playground" style={{ position: "relative", minHeight: "100vh", overflow: exploreMode ? "visible" : "hidden", background: "transparent" }}>
-          <div style={{ position: "absolute", left: "50%", top: "50%", width: 1680, height: 858, transform: exploreMode ? "translate(-50%, -50%) scale(0.75)" : "translate(-50%, -50%)", transition: "transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94)" }}>
+          <div style={{ position: "absolute", left: "50%", top: "50%", width: 1680, height: 858, transform: exploreMode ? "translate(-50%, -50%) scale(0.88)" : "translate(-50%, -50%)", transition: "transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94)" }}>
             <div style={{ position: "absolute", inset: 0, animation: "_toolIn 1.2s ease-out 0.8s both" }}>
               <ToolShape label="...without stopping"      href="/create-tool?preset=without-stopping"    videoLight="without-stopping-light"    videoDark="without-stopping-dark"    bgLight="#fbf5eb" bgDark="#3e3e3e" videoFit="cover" style={{ left: 40,   top: 197, width: 236, height: 233, transform: "rotate(5.1deg)",   borderRadius: 200 }} textStyle={{ transform: "rotate(-5.1deg)" }} />
               <ToolShape label="...uninvited thoughts"    href="/create-tool?preset=uninvited-thoughts"  videoLight="uninvited-thoughts-light"  videoDark="uninvited-thoughts-dark"  bgLight="#eaf8f5" bgDark="#1f2f29" style={{ left: 420,  top: 57,  width: 241, height: 182, transform: "rotate(-9.25deg)", borderRadius: 4 }} textStyle={{ transform: "rotate(9.25deg)" }} />
@@ -603,41 +696,26 @@ export default function PlaygroundNew() {
               <ToolShape label="...with visible corrections" href="/create-tool?preset=visible-corrections" videoLight="visible-corrections-light" videoDark="visible-corrections-dark" bgLight="#f5f6ea" bgDark="#2f2836" style={{ left: 774,  top: 526, width: 363, height: 174, borderRadius: "40px 4px 40px 4px" }} />
               <ToolShape label="...in a spiral"           href="/create-tool?preset=in-a-spiral"         videoLight="in-a-spiral-light"         videoDark="in-a-spiral-dark"         bgLight="#ecf4fe" bgDark="#242c38" videoFit="cover" style={{ left: 1321, top: 414, width: 211, height: 309, transform: "rotate(12.11deg)", borderRadius: 200 }} textStyle={{ transform: "rotate(-12.11deg)" }} />
             </div>
-            <div style={{ position: "absolute", left: 456, top: 300, width: 768 }}>
+            <div style={{ position: "absolute", left: 456, top: 300, width: 768, opacity: exploreMode ? 0 : 1, transition: "opacity 0.35s ease", pointerEvents: exploreMode ? "none" : "auto" }}>
               <HeroHeading DE={DE} theme={theme} />
             </div>
-            {exploreMode && myToolsAll.slice(0, 12).map((tool, i) => {
-              const slots = [
-                { x: -310, y: 160 }, { x: -300, y: 400 }, { x: -290, y: 630 },
-                { x: 1720, y: 120 }, { x: 1710, y: 360 }, { x: 1700, y: 600 },
-                { x: 270,  y: -195 }, { x: 690,  y: -185 }, { x: 1110, y: -190 },
-                { x: 160,  y: 900  }, { x: 590,  y: 890  }, { x: 1040, y: 905  },
-              ];
-              const slot = slots[i % slots.length];
-              const rot = ((i * 43) % 22) - 11;
+            {exploreMode && myToolsAll.slice(0, EXPLORE_SLOTS.length).map((tool, i) => {
+              const slot = EXPLORE_SLOTS[i];
               return (
-                <div
+                <UserToolShape
                   key={tool.id}
+                  tool={tool}
+                  dark={dark}
                   onClick={() => { setExploreMode(false); openTool(tool.id); }}
                   style={{
-                    position: "absolute", left: slot.x, top: slot.y,
-                    width: 240, height: 150,
-                    border: `1px dashed ${theme.border}`,
-                    borderRadius: 8, background: theme.toolBg,
-                    display: "flex", flexDirection: "column",
-                    alignItems: "center", justifyContent: "center",
-                    gap: 6, boxSizing: "border-box", padding: "14px 18px",
-                    textAlign: "center", cursor: "pointer",
-                    transform: `rotate(${rot}deg)`,
-                    animation: `_toolIn 0.5s ease-out ${0.1 + i * 0.04}s both`,
-                    overflow: "hidden",
+                    left: slot.left, top: slot.top,
+                    width: slot.width, height: slot.height,
+                    borderRadius: slot.borderRadius,
+                    transform: `rotate(${slot.rotate}deg)`,
+                    animation: `_toolIn 0.5s ease-out ${0.08 + i * 0.04}s both`,
                   }}
-                >
-                  <span style={{ fontFamily: FONT_SERIF, fontSize: 15, color: theme.text, lineHeight: 1.35 }}>{tool.name || "Unnamed Tool"}</span>
-                  {tool.description ? (
-                    <span style={{ fontFamily: FONT_SANS, fontSize: 11, color: theme.muted, lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as const, overflow: "hidden" }}>{tool.description}</span>
-                  ) : null}
-                </div>
+                  textStyle={{ transform: `rotate(${-slot.rotate}deg)` }}
+                />
               );
             })}
             {!exploreMode && (

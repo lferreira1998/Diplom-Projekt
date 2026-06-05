@@ -12,7 +12,7 @@ const DEF_RATIO  = 2 / 3; // default card aspect ratio h/w
 const HANDLE_PX  = 10;
 
 // ── Shape definitions ─────────────────────────────────────────────────────────
-type ShapeId = "wide" | "standard" | "square" | "portrait" | "circle" | "rounded";
+type ShapeId = "round" | "portrait" | "landscape" | "wide-pill" | "fluid" | "tall-pill";
 
 interface ShapeDef {
   id: ShapeId;
@@ -22,36 +22,62 @@ interface ShapeDef {
   applyClip?: (ctx: CanvasRenderingContext2D, w: number, h: number) => void;
 }
 
+function rrPath(ctx: CanvasRenderingContext2D, w: number, h: number, r: number) {
+  const rr = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  if (typeof (ctx as unknown as { roundRect?: unknown }).roundRect === "function") {
+    (ctx as unknown as { roundRect: (x: number, y: number, w: number, h: number, r: number) => void }).roundRect(0, 0, w, h, rr);
+  } else {
+    ctx.moveTo(rr, 0); ctx.lineTo(w - rr, 0); ctx.arcTo(w, 0, w, rr, rr);
+    ctx.lineTo(w, h - rr); ctx.arcTo(w, h, w - rr, h, rr);
+    ctx.lineTo(rr, h); ctx.arcTo(0, h, 0, h - rr, rr);
+    ctx.lineTo(0, rr); ctx.arcTo(0, 0, rr, 0, rr);
+    ctx.closePath();
+  }
+}
+
 const SHAPES: ShapeDef[] = [
-  { id: "wide",     label: "Wide",     labelDe: "Breit",      ratio: 9/16 },
-  { id: "standard", label: "Standard", labelDe: "Standard",   ratio: 2/3  },
-  { id: "square",   label: "Square",   labelDe: "Quadrat",    ratio: 1    },
-  { id: "portrait", label: "Portrait", labelDe: "Hoch",       ratio: 4/3  },
   {
-    id: "circle", label: "Circle", labelDe: "Kreis", ratio: 1,
+    id: "round", label: "Round", labelDe: "Rund", ratio: 1,
     frameBorderRadius: "50%",
     applyClip: (ctx, w, h) => {
-      ctx.beginPath(); ctx.ellipse(w/2, h/2, w/2, h/2, 0, 0, Math.PI*2); ctx.clip();
+      ctx.beginPath(); ctx.ellipse(w / 2, h / 2, w / 2, h / 2, 0, 0, Math.PI * 2); ctx.clip();
     },
   },
   {
-    id: "rounded", label: "Rounded", labelDe: "Rund", ratio: 2/3,
-    frameBorderRadius: "12%",
+    id: "portrait", label: "Portrait", labelDe: "Hochkant", ratio: 182 / 241,
+    frameBorderRadius: "4px",
+    applyClip: (ctx, w, h) => { rrPath(ctx, w, h, 4); ctx.clip(); },
+  },
+  {
+    id: "landscape", label: "Landscape", labelDe: "Querformat", ratio: 163 / 251,
+    frameBorderRadius: "4px",
+    applyClip: (ctx, w, h) => { rrPath(ctx, w, h, 4); ctx.clip(); },
+  },
+  {
+    id: "wide-pill", label: "Wide", labelDe: "Breit", ratio: 163 / 324,
+    frameBorderRadius: "100px",
+    applyClip: (ctx, w, h) => { rrPath(ctx, w, h, h / 2); ctx.clip(); },
+  },
+  {
+    id: "fluid", label: "Fluid", labelDe: "Fließend", ratio: 174 / 363,
+    frameBorderRadius: "40px 4px 40px 4px",
     applyClip: (ctx, w, h) => {
-      const r = Math.round(Math.min(w, h) * 0.13);
+      const lg = Math.round(w * 40 / 363);
+      const sm = Math.max(2, Math.round(w * 4 / 363));
       ctx.beginPath();
-      // roundRect might not exist in older browsers; fall back to manual path
-      if (typeof (ctx as unknown as { roundRect?: unknown }).roundRect === "function") {
-        (ctx as unknown as { roundRect: (x:number,y:number,w:number,h:number,r:number)=>void })
-          .roundRect(0, 0, w, h, r);
-      } else {
-        ctx.moveTo(r, 0); ctx.lineTo(w-r, 0); ctx.arcTo(w,0,w,r,r);
-        ctx.lineTo(w, h-r); ctx.arcTo(w,h,w-r,h,r);
-        ctx.lineTo(r, h); ctx.arcTo(0,h,0,h-r,r);
-        ctx.lineTo(0, r); ctx.arcTo(0,0,r,0,r);
-      }
-      ctx.clip();
+      ctx.moveTo(lg, 0);
+      ctx.lineTo(w - sm, 0); ctx.arcTo(w, 0, w, sm, sm);
+      ctx.lineTo(w, h - lg); ctx.arcTo(w, h, w - lg, h, lg);
+      ctx.lineTo(sm, h); ctx.arcTo(0, h, 0, h - sm, sm);
+      ctx.lineTo(0, lg); ctx.arcTo(0, 0, lg, 0, lg);
+      ctx.closePath(); ctx.clip();
     },
+  },
+  {
+    id: "tall-pill", label: "Oval", labelDe: "Hochoval", ratio: 309 / 211,
+    frameBorderRadius: "200px",
+    applyClip: (ctx, w, h) => { rrPath(ctx, w, h, w / 2); ctx.clip(); },
   },
 ];
 
@@ -59,12 +85,12 @@ const SHAPES: ShapeDef[] = [
 function ShapeIcon({ id, fill }: { id: ShapeId; fill: string }) {
   return (
     <svg width={48} height={48} viewBox="0 0 56 56" fill="none">
-      {id === "wide"     && <rect x="1"  y="13" width="54" height="30" rx="3" fill={fill} />}
-      {id === "standard" && <rect x="9"  y="1"  width="38" height="54" rx="3" fill={fill} />}
-      {id === "square"   && <rect x="4"  y="4"  width="48" height="48" rx="3" fill={fill} />}
-      {id === "portrait" && <rect x="16" y="1"  width="24" height="54" rx="3" fill={fill} />}
-      {id === "circle"   && <ellipse cx="28" cy="28" rx="26" ry="26" fill={fill} />}
-      {id === "rounded"  && <rect x="9"  y="1"  width="38" height="54" rx="12" fill={fill} />}
+      {id === "round"     && <ellipse cx="28" cy="28" rx="26" ry="26" fill={fill} />}
+      {id === "portrait"  && <rect x="10" y="4" width="36" height="48" rx="2" fill={fill} />}
+      {id === "landscape" && <rect x="2" y="14" width="52" height="28" rx="2" fill={fill} />}
+      {id === "wide-pill" && <rect x="2" y="17" width="52" height="22" rx="11" fill={fill} />}
+      {id === "fluid"     && <path d="M 10 16 L 52 16 Q 54 16 54 18 L 54 38 Q 54 40 46 40 L 4 40 Q 2 40 2 38 L 2 24 Q 2 16 10 16 Z" fill={fill} />}
+      {id === "tall-pill" && <rect x="16" y="2" width="24" height="52" rx="12" fill={fill} />}
     </svg>
   );
 }

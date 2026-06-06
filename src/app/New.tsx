@@ -489,37 +489,38 @@ type PresetSetters = {
   setRandomMode: (v: "sentences" | "words") => void;
   setVisibility: (v: "visible" | "invisible" | "sentence" | "word" | "char") => void;
   setCorrectionVisible: (v: boolean) => void;
+  setBgHue: (v: number | null) => void;
 };
 const PRESETS: Record<string, PresetConfig> = {
   "without-stopping": {
     name: { de: "...ohne anzuhalten", en: "...without stopping" },
     desc: { de: "Schreib ohne anzuhalten. Der Cursor läuft weiter, Pausen werden sichtbar. Löschen ist nicht möglich.", en: "Write without stopping. The cursor keeps moving, making pauses visible. Deletion is impossible." },
-    apply: (s) => { s.setDeleteMode("none"); s.setCursorRunning(true); s.setCursorSchnelligkeit(35); },
+    apply: (s) => { s.setDeleteMode("none"); s.setCursorRunning(true); s.setCursorSchnelligkeit(35); s.setBgHue(null); },
   },
   "uninvited-thoughts": {
     name: { de: "...ungebetene Gedanken", en: "...uninvited thoughts" },
     desc: { de: "Deine Wörter verlieren ihre Form und fliegen davon, wie Gedanken, die du nicht festhalten kannst.", en: "Your words lose their form and drift away, like thoughts you cannot hold on to." },
-    apply: (s) => { s.setTextFliegtEnabled(true); s.setFliegtUnit("Wörter"); s.setFliegtZeitpunkt(0.3); s.setFliegtSchnelligkeit(1.5); },
+    apply: (s) => { s.setTextFliegtEnabled(true); s.setFliegtUnit("Wörter"); s.setFliegtZeitpunkt(0.3); s.setFliegtSchnelligkeit(1.5); s.setBgHue(195); },
   },
   "off-the-grid": {
     name: { de: "...abseits des Rasters", en: "...off the grid" },
     desc: { de: "Text erscheint nicht linear, sondern zufällig im Raum verteilt.", en: "Text doesn't appear linearly, but scattered randomly across the space." },
-    apply: (s) => { s.setPositionMode("random"); s.setRandomMode("words"); },
+    apply: (s) => { s.setPositionMode("random"); s.setRandomMode("words"); s.setBgHue(5); },
   },
   "blind-then-witness": {
     name: { de: "...blind & dann sehen", en: "...blind & then witness" },
     desc: { de: "Schreib blind. Dein Text bleibt unsichtbar, während du schreibst.", en: "Write blind. Your text stays invisible while you write." },
-    apply: (s) => { s.setVisibility("invisible"); },
+    apply: (s) => { s.setVisibility("invisible"); s.setBgHue(150); },
   },
   "visible-corrections": {
     name: { de: "...mit sichtbaren Korrekturen", en: "...with visible corrections" },
     desc: { de: "Korrigieren hinterlässt Spuren. Gelöschter Text wird überdeckt, nicht entfernt.", en: "Correcting leaves traces. Deleted text is covered, not removed." },
-    apply: (s) => { s.setCorrectionVisible(true); s.setDeleteMode("all"); },
+    apply: (s) => { s.setCorrectionVisible(true); s.setDeleteMode("all"); s.setBgHue(100); },
   },
   "in-a-spiral": {
     name: { de: "...in einer Spirale", en: "...in a spiral" },
     desc: { de: "Dein Text windet sich in einer Spirale nach innen.", en: "Your text winds inward in a spiral." },
-    apply: (s) => { s.setPositionMode("spiral"); },
+    apply: (s) => { s.setPositionMode("spiral"); s.setBgHue(255); },
   },
 };
 
@@ -1432,7 +1433,7 @@ export default function New() {
     cfg.apply({
       setDeleteMode, setCursorRunning, setCursorSchnelligkeit,
       setTextFliegtEnabled, setFliegtUnit, setFliegtZeitpunkt, setFliegtSchnelligkeit,
-      setPositionMode, setRandomMode, setVisibility, setCorrectionVisible,
+      setPositionMode, setRandomMode, setVisibility, setCorrectionVisible, setBgHue,
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

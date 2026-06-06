@@ -356,14 +356,21 @@ const R_MAX_Z = 200;
 function rnd(min: number, max: number) { return Math.random() * (max - min) + min; }
 function rDepthOpacity(z: number) { return 0.25 + ((z - R_MIN_Z) / (R_MAX_Z - R_MIN_Z)) * 0.75; }
 
-function extractWordGroups(positions: Position[], cursor: number): { ordinal: number; text: string; isActive: boolean }[] {
+function extractWordGroups(positions: Position[], cursor: number, mode: "words" | "sentences" = "words"): { ordinal: number; text: string; isActive: boolean }[] {
   const groups: { ordinal: number; text: string; isActive: boolean }[] = [];
   let wordStart = -1;
   let ordinal = 0;
 
   for (let i = 0; i <= positions.length; i++) {
     const ch = i < positions.length ? getVisibleChar(positions[i]) : null;
-    const isDelim = !ch || ch === " " || ch === "\n";
+    let isDelim: boolean;
+    if (mode === "sentences") {
+      const prevCh = i > 0 ? getVisibleChar(positions[i - 1]) : null;
+      const isSentEnd = prevCh === "." || prevCh === "!" || prevCh === "?";
+      isDelim = !ch || ((ch === " " || ch === "\n") && isSentEnd);
+    } else {
+      isDelim = !ch || ch === " " || ch === "\n";
+    }
 
     if (!isDelim && wordStart < 0) wordStart = i;
 
@@ -396,9 +403,10 @@ interface RandomTextZoneProps {
   cursor: number;
   fontSize?: number;
   externalPlaceholder?: boolean;
+  randomMode?: "words" | "sentences";
 }
 
-function RandomTextZone({ textColor, fontFamily = "'az-sans', sans-serif", positions, cursor, fontSize = 22, externalPlaceholder }: RandomTextZoneProps) {
+function RandomTextZone({ textColor, fontFamily = "'az-sans', sans-serif", positions, cursor, fontSize = 22, externalPlaceholder, randomMode = "words" }: RandomTextZoneProps) {
   const wrapRef    = useRef<HTMLDivElement>(null);
   const rafRef     = useRef(0);
   const elMapRef   = useRef<Map<number, HTMLDivElement>>(new Map());
@@ -406,7 +414,7 @@ function RandomTextZone({ textColor, fontFamily = "'az-sans', sans-serif", posit
   const physicsRef = useRef<Map<number, WordPhysics>>(new Map());
 
   // Derive word groups purely from positions (recomputed each render)
-  const wordGroups = extractWordGroups(positions, cursor);
+  const wordGroups = extractWordGroups(positions, cursor, randomMode);
 
   // Sync physics map after render (layout effect = after DOM mutations, before paint)
   useLayoutEffect(() => {
@@ -1578,9 +1586,8 @@ function CustomPathSvg({
             </circle>
           </svg>
           <span style={{
-            fontFamily, fontSize: 11,
-            letterSpacing: "0.3em", textTransform: "uppercase",
-            color: hintColor,
+            fontFamily, fontSize: 16,
+            color: dark ? "rgba(240,232,220,0.55)" : "#9a9daa",
           }}>
             {isDe ? "Linie zeichnen · dann tippen" : "draw a line · then type"}
           </span>
@@ -1809,14 +1816,19 @@ export function WritingZone({
   );
 
   // Unified placeholder overlay shared across all non-normal writing modes.
-  const renderPlaceholder = () => {
+  const renderPlaceholder = (layout: "center" | "top-left" | "mid-left" | "mid-center-wrap" = "center") => {
     if (positions.length > 0) return null;
+    const wrapStyle: React.CSSProperties =
+      layout === "top-left"
+        ? { position: "absolute", inset: 0, paddingTop: "40px", paddingLeft: "48px", pointerEvents: "none", zIndex: 2 }
+        : layout === "mid-left"
+        ? { position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "flex-start", pointerEvents: "none", zIndex: 2 }
+        : layout === "mid-center-wrap"
+        ? { position: "absolute", left: "50%", top: "50%", transform: "translate(-50%, -50%)", pointerEvents: "none", zIndex: 2, maxWidth: "44ch" }
+        : { position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none", zIndex: 2 };
+    const textWrap = layout === "mid-center-wrap" ? { whiteSpace: "normal" as const, textAlign: "center" as const } : {};
     return (
-      <div style={{
-        position: "absolute", inset: 0,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        pointerEvents: "none", zIndex: 2,
-      }}>
+      <div style={wrapStyle}>
         <div style={{ position: "relative" }}>
           {onDiceRoll && dicePaths && (
             <button
@@ -1845,6 +1857,7 @@ export function WritingZone({
             fontStyle: "italic",
             userSelect: "none",
             whiteSpace: "nowrap",
+            ...textWrap,
           }}>
             {writingPrompt || "Fang einfach an zu schreiben…"}
           </span>
@@ -2738,7 +2751,7 @@ export function WritingZone({
             externalPlaceholder={true}
           />
         </div>
-        {renderPlaceholder()}
+        {renderPlaceholder("top-left")}
       </div>
     );
   }
@@ -2765,9 +2778,10 @@ export function WritingZone({
             cursor={cursor}
             fontSize={fontSize}
             externalPlaceholder={true}
+            randomMode={randomMode}
           />
         </div>
-        {renderPlaceholder()}
+        {renderPlaceholder("mid-center-wrap")}
       </div>
     );
   }
@@ -2796,7 +2810,6 @@ export function WritingZone({
             externalPlaceholder={true}
           />
         </div>
-        {renderPlaceholder()}
       </div>
     );
   }
@@ -2832,7 +2845,7 @@ export function WritingZone({
             fontSize={fontSize}
           />
         </div>
-        {renderPlaceholder()}
+        {renderPlaceholder("mid-left")}
       </div>
     );
   }

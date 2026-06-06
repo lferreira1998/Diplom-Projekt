@@ -31,6 +31,9 @@
       --line: #a4a4a4;
       --shadow: 4px 4px 12px rgba(0, 0, 0, 0.06);
       --fit-scale: 1;
+      --field-zoom: 0.84833;
+      --zoom-left: -329px;
+      --zoom-top: -583px;
     }
 
     * { box-sizing: border-box; }
@@ -75,25 +78,35 @@
       transform-origin: center;
       overflow: hidden;
       background: var(--root-bg);
-      transition: width 520ms ease, height 520ms ease, left 520ms ease, top 520ms ease, transform 520ms ease;
     }
 
     .surface {
       position: absolute;
       left: -516px;
       top: -740px;
-      width: 2215px;
-      height: 1556px;
+      width: 2678px;
+      height: 1800px;
       background: var(--field-bg);
-      transition: left 520ms ease, top 520ms ease;
+      transform: scale(1);
+      transform-origin: left top;
+      transition:
+        left 900ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+        top 900ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+        transform 900ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    .viewport.zoomed .surface {
+      left: var(--zoom-left);
+      top: var(--zoom-top);
+      transform: scale(var(--field-zoom));
     }
 
     .viewport.exploring .frame {
       position: relative;
       left: 0;
       top: 0;
-      width: 2215px;
-      height: 1556px;
+      width: 2600px;
+      height: 1900px;
       transform: none;
       overflow: visible;
     }
@@ -101,6 +114,7 @@
     .viewport.exploring .surface {
       left: 0;
       top: 0;
+      transform: scale(var(--field-zoom));
     }
 
     .shape {
@@ -154,7 +168,7 @@
       width: 768px;
       color: var(--ink);
       text-align: center;
-      transition: opacity 260ms ease;
+      transition: opacity 320ms ease;
       z-index: 4;
     }
 
@@ -178,9 +192,11 @@
       gap: 12px;
       align-items: flex-start;
       z-index: 5;
-      transition: opacity 260ms ease;
+      transition: opacity 320ms ease;
     }
 
+    .viewport.zoomed .hero-copy,
+    .viewport.zoomed .actions,
     .viewport.exploring .hero-copy,
     .viewport.exploring .actions {
       opacity: 0;
@@ -305,13 +321,14 @@
       without: { label: "...without stopping", href: "/create-tool?preset=without-stopping", bg: colors.without, h: 359.05, r: "200px" }
     };
 
-    const col = [0, 463, 926, 1389, 1852];
+    const col = [0, 463, 926, 1389, 1852, 2315];
     const shapes = [
       [0, 0, "spiral"], [0, 220, "visible"], [0, 494, "blind"], [0, 784, "off"], [0, 1119, "without"],
-      [1, 0, "visible"], [1, 274, "off"], [1, 609, "spiral"], [1, 839.57, "blind", 3.39], [1, 1140.13, "without"],
-      [2, 0, "visible"], [2, 274, "blind"], [2, 564, "without"], [2, 1339.1, "blind", -4.37],
-      [3, 0, "visible"], [3, 274, "blind"], [3, 564, "blind"], [3, 830.77, "spiral", -3.91], [3, 1351.19, "visible", 2.17],
-      [4, 0, "off"], [4, 335, "blind"], [4, 625, "without"], [4, 1084.05, "visible", 4.75], [4, 1387.54, "spiral"]
+      [1, 0, "visible"], [1, 274, "off"], [1, 609, "spiral"], [1, 839.57, "blind", 3.39], [1, 1140.13, "without"], [1, 1480, "off", -4.65],
+      [2, 0, "visible"], [2, 274, "blind"], [2, 564, "without"], [2, 900, "blind"], [2, 1339.1, "blind", -4.37], [2, 1632, "blind"],
+      [3, 0, "visible"], [3, 274, "blind"], [3, 564, "blind"], [3, 830.77, "spiral", -3.91], [3, 1084, "off"], [3, 1351.19, "visible", 2.17], [3, 1632, "without"],
+      [4, 0, "off"], [4, 335, "blind"], [4, 625, "without"], [4, 1084.05, "visible", 4.75], [4, 1387.54, "spiral"], [4, 1632, "off"],
+      [5, 0, "off"], [5, 335, "blind"], [5, 625, "without"], [5, 1084.05, "visible", 4.75], [5, 1387.54, "spiral"], [5, 1632, "off"]
     ];
 
     function addShape(entry) {
@@ -341,22 +358,24 @@
     fitFrame();
     window.addEventListener("resize", fitFrame);
 
-    function centerField() {
-      viewport.scrollTo({
-        left: Math.max(0, (frame.offsetWidth - viewport.clientWidth) / 2),
-        top: Math.max(0, (frame.offsetHeight - viewport.clientHeight) / 2),
-        behavior: "smooth"
+    function enterScrollableField() {
+      viewport.classList.add("exploring");
+      requestAnimationFrame(() => {
+        viewport.scrollLeft = 329;
+        viewport.scrollTop = 583;
       });
     }
 
     exploreButton.addEventListener("click", () => {
-      viewport.classList.add("exploring");
-      window.setTimeout(centerField, 120);
+      if (viewport.classList.contains("zoomed")) return;
+      viewport.classList.add("zoomed");
+      window.setTimeout(enterScrollableField, 930);
     });
 
     backButton.addEventListener("click", () => {
       viewport.classList.remove("exploring", "dragging");
-      viewport.scrollTo({ left: 0, top: 0, behavior: "smooth" });
+      viewport.scrollTo({ left: 0, top: 0, behavior: "auto" });
+      requestAnimationFrame(() => viewport.classList.remove("zoomed"));
     });
 
     let dragging = false;

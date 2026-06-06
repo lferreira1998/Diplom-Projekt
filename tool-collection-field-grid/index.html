@@ -334,7 +334,7 @@
     shapes.forEach(addShape);
 
     function fitFrame() {
-      const scale = Math.min(window.innerWidth / 1680, window.innerHeight / 858);
+      const scale = Math.max(window.innerWidth / 1680, window.innerHeight / 858);
       document.documentElement.style.setProperty("--fit-scale", String(scale));
     }
 

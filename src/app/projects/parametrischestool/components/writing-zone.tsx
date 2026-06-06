@@ -281,7 +281,7 @@ function renderLayers(
           style={{
             position:        "absolute",
             inset:           "-1px -0.5px",
-            backgroundColor: coverBgColor,
+            backgroundColor: `color-mix(in srgb, white 12%, ${coverBgColor})`,
             opacity:         alpha,
             borderRadius:    "1px",
             boxShadow:       n === 1

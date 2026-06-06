@@ -302,7 +302,7 @@ function ToolCard({ tool, onClick, onDelete, isFavorite, onToggleFavorite }: {
             display: "flex",
             alignItems: "center",
             gap: "4px",
-            opacity: hovered ? 1 : 0,
+            opacity: hovered ? 1 : 0.3,
             transition: "opacity 0.15s",
             zIndex: 2,
           }}
@@ -314,7 +314,7 @@ function ToolCard({ tool, onClick, onDelete, isFavorite, onToggleFavorite }: {
               <button onClick={(event) => { event.stopPropagation(); setConfirming(false); }} style={{ height: "22px", padding: "0 9px", background: "transparent", border: `1px solid ${theme.border}`, borderRadius: "4px", cursor: "pointer", outline: "none", fontFamily: FONT_SANS, fontSize: "11px", color: theme.text }}>Nein</button>
             </div>
           ) : (
-            <button onClick={(event) => { event.stopPropagation(); setConfirming(true); }} title="Aus meinen Tools entfernen" style={{ width: "24px", height: "24px", background: theme.toolBg, border: `1px dashed ${theme.border}`, borderRadius: "50%", cursor: "pointer", outline: "none", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FONT_SANS, fontSize: "13px", color: theme.muted, lineHeight: 1 }}>x</button>
+            <button onClick={(event) => { event.stopPropagation(); setConfirming(true); }} title="Aus meinen Tools entfernen" style={{ width: "24px", height: "24px", background: theme.toolBg, border: `1px dashed ${theme.border}`, borderRadius: "50%", cursor: "pointer", outline: "none", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FONT_SANS, fontSize: "13px", color: theme.muted, lineHeight: 1 }}>×</button>
           )}
         </div>
       )}

@@ -346,7 +346,7 @@ function ToolCard({ tool, onClick, onDelete, isFavorite, onToggleFavorite }: {
         <ToolPreview tool={tool} active={hovered} dark={theme.bg === "#484848"} />
       </div>
       <div onClick={onClick} style={{ padding: "16px 18px", display: "flex", flexDirection: "column", gap: "5px", cursor: "pointer" }}>
-        <span style={{ fontFamily: FONT_SERIF, fontSize: "19px", color: theme.text, lineHeight: "1.25", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+        <span style={{ fontFamily: "'az-heading', sans-serif", fontSize: "22px", color: theme.text, lineHeight: "1.25", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
           {tool.name || "Unnamed Tool"}
         </span>
         <span style={{ fontFamily: FONT_SANS, fontSize: "13px", color: theme.muted, lineHeight: "1.45", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as const, overflow: "hidden", minHeight: "37px", visibility: tool.description ? "visible" : "hidden" }}>

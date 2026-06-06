@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useLayoutEffect, useMemo, useRef,
 import { ToolPreview } from "./components/ToolPreview";
 import { ToolLaunchModal } from "./components/ToolLaunchModal";
 import type { CSSProperties, ReactNode } from "react";
-import { useNavigate, useLocation } from "react-router";
+import { useNavigate } from "react-router";
 import { deleteNewTool, getAllNewTools, type NewToolData } from "./utils/storage";
 import TopNav from "./components/TopNav";
 
@@ -386,7 +386,7 @@ function Reveal({ children, index = 0 }: { children: ReactNode; index?: number }
   );
 }
 
-function Section({ title, tools, onOpen, onDelete, emptyMsg, sessionId, favorites, onToggleFavorite, showCreate }: {
+function Section({ title, tools, onOpen, onDelete, emptyMsg, sessionId, favorites, onToggleFavorite, showCreate, tab, onTabChange, DE }: {
   title: string;
   tools: NewToolData[];
   onOpen: (id: string) => void;
@@ -396,20 +396,53 @@ function Section({ title, tools, onOpen, onDelete, emptyMsg, sessionId, favorite
   favorites?: string[];
   onToggleFavorite?: (id: string) => void;
   showCreate?: boolean;
+  tab?: "all" | "my";
+  onTabChange?: (t: "all" | "my") => void;
+  DE?: boolean;
 }) {
   const theme = useContext(ThemeContext);
+  const dark = useContext(DarkContext);
   const navigate = useNavigate();
   return (
     <section style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-      <div style={{ display: "flex", alignItems: "baseline", gap: "12px", borderBottom: `1px dashed ${theme.border}`, paddingBottom: "12px" }}>
-        <span style={{ fontFamily: FONT_SERIF, fontSize: "28px", color: theme.text }}>{title}</span>
-        <span style={{ fontFamily: FONT_SANS, fontSize: "13px", color: theme.muted }}>{tools.length}</span>
+      <div style={{ display: "flex", alignItems: "center", gap: "16px", borderBottom: `1px dashed ${theme.border}`, paddingBottom: "12px" }}>
+        <span style={{ fontFamily: "'az-heading', sans-serif", fontSize: "34px", color: theme.headline, whiteSpace: "nowrap" }}>{title}</span>
+        {tab !== undefined && onTabChange && (
+          <div style={{ display: "flex", gap: "8px" }}>
+            {(["all", "my"] as const).map((t) => {
+              const isActive = tab === t;
+              const label = t === "all" ? (DE ? "Alle Tools" : "All Tools") : (DE ? "Meine Tools" : "My Tools");
+              return (
+                <button
+                  key={t}
+                  onClick={() => onTabChange(t)}
+                  style={{
+                    height: "31px",
+                    padding: "0 12px",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                    outline: "none",
+                    fontFamily: FONT_SANS,
+                    fontSize: "15px",
+                    letterSpacing: "-0.01em",
+                    whiteSpace: "nowrap",
+                    transition: "background 0.15s, color 0.15s, border-color 0.15s",
+                    background: isActive ? theme.headline : "transparent",
+                    color: isActive ? (dark ? theme.bg : "#fcf6ef") : theme.muted,
+                    border: isActive ? "none" : `1px dashed ${theme.border}`,
+                  }}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        )}
         {showCreate && (
           <button
             onClick={() => navigate("/create-tool")}
             style={{
               marginLeft: "auto",
-              alignSelf: "center",
               padding: "6px 14px",
               border: `1px dashed ${theme.border}`,
               borderRadius: "4px",
@@ -476,7 +509,7 @@ function SkeletonCard({ hue, dark, delay }: { hue: number; dark: boolean; delay:
   );
 }
 
-function SkeletonGrid({ title, dark, rows = 3 }: { title: string; dark: boolean; rows?: number }) {
+function SkeletonGrid({ title, dark, rows = 3, DE }: { title: string; dark: boolean; rows?: number; DE?: boolean }) {
   const theme = useContext(ThemeContext);
   const gridRef = useRef<HTMLDivElement>(null);
   const [cols, setCols] = useState(4);
@@ -498,8 +531,13 @@ function SkeletonGrid({ title, dark, rows = 3 }: { title: string; dark: boolean;
   return (
     <section style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
       <style>{`@keyframes _skelPulse { 0%,100%{opacity:1} 50%{opacity:0.72} } @keyframes _skelIn { from{opacity:0} to{opacity:1} }`}</style>
-      <div style={{ display: "flex", alignItems: "baseline", gap: "12px", borderBottom: `1px dashed ${theme.border}`, paddingBottom: "12px" }}>
-        <span style={{ fontFamily: FONT_SERIF, fontSize: "28px", color: theme.text }}>{title}</span>
+      <div style={{ display: "flex", alignItems: "center", gap: "16px", borderBottom: `1px dashed ${theme.border}`, paddingBottom: "12px" }}>
+        <span style={{ fontFamily: "'az-heading', sans-serif", fontSize: "34px", color: theme.headline, whiteSpace: "nowrap" }}>{title}</span>
+        <div style={{ display: "flex", gap: "8px", opacity: 0.4, pointerEvents: "none" }}>
+          {[DE ? "Alle Tools" : "All Tools", DE ? "Meine Tools" : "My Tools"].map((label, i) => (
+            <div key={label} style={{ height: "31px", padding: "0 12px", borderRadius: "4px", display: "flex", alignItems: "center", fontFamily: FONT_SANS, fontSize: "15px", letterSpacing: "-0.01em", background: i === 0 ? theme.headline : "transparent", color: i === 0 ? (dark ? theme.bg : "#fcf6ef") : theme.muted, border: i === 0 ? "none" : `1px dashed ${theme.border}` }}>{label}</div>
+          ))}
+        </div>
       </div>
       <div ref={gridRef} style={{ display: "grid", gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: "20px" }}>
         {Array.from({ length: count }, (_, i) => (
@@ -635,38 +673,10 @@ function HeroHeading({ DE, theme }: { DE: boolean; theme: Theme }) {
   );
 }
 
-function PageNavFAB({ dark, myToolsAll, DE, theme, loading, bottom = 40 }: { dark: boolean; myToolsAll: NewToolData[]; DE: boolean; theme: Theme; loading: boolean; bottom?: number }) {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const isMyPage = location.pathname.includes("my-tools");
-
-  // During loading, fall back to the cached flag so the FAB stays visible
-  // across page navigations instead of flickering off and back on.
-  const hasOwnTools = loading
-    ? localStorage.getItem("hasOwnTools") === "true"
-    : myToolsAll.length > 0;
-  if (!hasOwnTools) return null;
-
-  const active = isMyPage ? "/my-tools" : "/tool-collection";
-
-  return (
-    <div style={{ position: "fixed", bottom: `${bottom}px`, left: "50%", transform: "translateX(-50%)", zIndex: 50, display: "flex", gap: "4px", background: theme.toolBg, border: `1px dashed ${theme.border}`, borderRadius: "100px", padding: "4px" }}>
-      {([
-        { path: "/my-tools", label: DE ? "Meine Tools" : "My Tools" },
-        { path: "/tool-collection", label: DE ? "Alle Tools" : "All Tools" },
-      ]).map(({ path, label }) => (
-        <button key={path} onClick={() => navigate(path)} style={{ border: "none", borderRadius: "100px", cursor: "pointer", outline: "none", padding: "9px 20px", fontFamily: FONT_SANS, fontSize: "14px", background: active === path ? (dark ? theme.text : theme.headline) : "transparent", color: active === path ? theme.bg : theme.muted, transition: "background 0.15s, color 0.15s" }}>
-          {label}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-
 export default function PlaygroundNew() {
-  const { sessionId, loading, lang, setLang, dark, setDark, favorites, toggleFavorite, myToolsAll, publicTools, tools, navigateToTool } = usePlaygroundData();
+  const { sessionId, loading, lang, setLang, dark, setDark, favorites, toggleFavorite, myToolsAll, publicTools, tools, navigateToTool, handleDelete } = usePlaygroundData();
   const [launchTool, setLaunchTool] = useState<NewToolData | null>(null);
+  const [tab, setTab] = useState<"all" | "my">("all");
 
   const openTool = (id: string) => {
     const t = tools.find(x => x.id === id) ?? null;
@@ -675,6 +685,10 @@ export default function PlaygroundNew() {
 
   const DE = lang === "de";
   const theme = getTheme(dark);
+  const displayedTools = tab === "all" ? publicTools : myToolsAll;
+  const emptyMsg = tab === "all"
+    ? (DE ? "Noch keine öffentlichen Tools vorhanden." : "No public tools yet.")
+    : (DE ? "Erstelle ein Tool oder markiere eines als Favorit." : "Create a tool or mark one as favourite.");
 
   return (
     <ThemeContext.Provider value={theme}>
@@ -701,13 +715,17 @@ export default function PlaygroundNew() {
 
         <div style={{ width: "100%", boxSizing: "border-box", padding: "96px 100px 160px" }}>
           {loading ? (
-            <SkeletonGrid title={DE ? "Alle Tools" : "All Tools"} dark={dark} />
+            <SkeletonGrid title="Tool Collection" dark={dark} DE={DE} />
           ) : (
             <Section
-              title={DE ? "Alle Tools" : "All Tools"}
-              tools={publicTools}
+              title="Tool Collection"
+              tools={displayedTools}
+              tab={tab}
+              onTabChange={setTab}
+              DE={DE}
               onOpen={openTool}
-              emptyMsg={DE ? "Noch keine öffentlichen Tools vorhanden." : "No public tools yet."}
+              onDelete={tab === "my" ? handleDelete : undefined}
+              emptyMsg={emptyMsg}
               sessionId={sessionId}
               favorites={favorites}
               onToggleFavorite={toggleFavorite}
@@ -715,8 +733,6 @@ export default function PlaygroundNew() {
             />
           )}
         </div>
-
-        <PageNavFAB dark={dark} myToolsAll={myToolsAll} DE={DE} theme={theme} loading={loading} />
         <ToolLaunchModal
           tool={launchTool}
           dark={dark}
@@ -730,53 +746,7 @@ export default function PlaygroundNew() {
 }
 
 export function MyToolsPage() {
-  const { sessionId, loading, lang, setLang, dark, setDark, favorites, toggleFavorite, myToolsAll, tools, navigateToTool, handleDelete } = usePlaygroundData();
-  const [launchTool, setLaunchTool] = useState<NewToolData | null>(null);
-
-  const openTool = (id: string) => {
-    const t = tools.find(x => x.id === id) ?? null;
-    setLaunchTool(t);
-  };
-
-  const DE = lang === "de";
-  const theme = getTheme(dark);
-
-  return (
-    <ThemeContext.Provider value={theme}>
-      <TopNav current="Playground" dark={dark} setDark={setDark} lang={lang} setLang={setLang} />
-      <main style={{ minHeight: "100vh", height: "100vh", width: "100vw", overflowX: "hidden", overflowY: "auto", position: "relative", backgroundColor: theme.bg, backgroundImage: theme.dotGrid, backgroundSize: "42px 42px", color: theme.text, fontFamily: FONT_SANS, WebkitOverflowScrolling: "touch" }}>
-        <style>{`html, body, #root { height: 100%; overflow: hidden; }`}</style>
-
-        <div style={{ width: "100%", boxSizing: "border-box", padding: "96px 100px 160px" }}>
-          {loading ? (
-            <SkeletonGrid title={DE ? "Meine Tools" : "My Tools"} dark={dark} />
-          ) : myToolsAll.length === 0 ? (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60vh", gap: "16px" }}>
-              <span style={{ fontFamily: FONT_SERIF, fontSize: "28px", color: theme.muted }}>{DE ? "Noch keine eigenen Tools." : "No tools yet."}</span>
-              <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: theme.muted, textAlign: "center" }}>{DE ? "Erstelle ein Tool oder markiere eines als Favorit." : "Create a tool or mark one as favourite."}</span>
-            </div>
-          ) : (
-            <Section
-              title={DE ? "Meine Tools" : "My Tools"}
-              tools={myToolsAll}
-              onOpen={openTool}
-              onDelete={handleDelete}
-              emptyMsg=""
-              sessionId={sessionId}
-              favorites={favorites}
-              onToggleFavorite={toggleFavorite}
-            />
-          )}
-        </div>
-
-        <PageNavFAB dark={dark} myToolsAll={myToolsAll} DE={DE} theme={theme} loading={loading} />
-        <ToolLaunchModal
-          tool={launchTool}
-          dark={dark}
-          onConfirm={(id, mins) => { setLaunchTool(null); navigateToTool(id, mins); }}
-          onClose={() => setLaunchTool(null)}
-        />
-      </main>
-    </ThemeContext.Provider>
-  );
+  const navigate = useNavigate();
+  useEffect(() => { navigate("/tool-collection", { replace: true }); }, [navigate]);
+  return null;
 }

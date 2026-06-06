@@ -665,16 +665,7 @@ function PageNavFAB({ dark, myToolsAll, DE, theme, loading, bottom = 40 }: { dar
 
 
 export default function PlaygroundNew() {
-  const { sessionId, loading, lang, setLang, dark, setDark, favorites, toggleFavorite, myToolsAll, publicTools, tools, navigateToTool, handleDelete } = usePlaygroundData();
-  const navigate = useNavigate();
-  const toolsRef = useRef<HTMLDivElement>(null);
-  const [exploreMode, setExploreMode] = useState(false);
-  const [launchTool, setLaunchTool] = useState<NewToolData | null>(null);
-
-  const openTool = (id: string) => {
-    const t = tools.find(x => x.id === id) ?? null;
-    setLaunchTool(t);
-  };
+  const { loading, lang, setLang, dark, setDark, myToolsAll } = usePlaygroundData();
 
   const DE = lang === "de";
   const theme = getTheme(dark);
@@ -683,11 +674,11 @@ export default function PlaygroundNew() {
     <ThemeContext.Provider value={theme}>
     <DarkContext.Provider value={dark}>
       <TopNav current="Playground" dark={dark} setDark={setDark} lang={lang} setLang={setLang} />
-      <main style={{ minHeight: "100vh", height: "100vh", width: "100vw", overflowX: "hidden", overflowY: exploreMode ? "hidden" : "auto", position: "relative", backgroundColor: theme.bg, backgroundImage: theme.dotGrid, backgroundSize: "42px 42px", color: theme.text, fontFamily: FONT_SANS, WebkitOverflowScrolling: "touch" }}>
+      <main style={{ height: "100vh", width: "100vw", overflow: "hidden", position: "relative", backgroundColor: theme.bg, backgroundImage: theme.dotGrid, backgroundSize: "42px 42px", color: theme.text, fontFamily: FONT_SANS }}>
         <style>{`html, body, #root { height: 100%; overflow: hidden; }`}</style>
 
-        <section aria-label="Writing tools playground" style={{ position: "relative", minHeight: "100vh", overflow: exploreMode ? "visible" : "hidden", background: "transparent" }}>
-          <div style={{ position: "absolute", left: "50%", top: "50%", width: 1680, height: 858, transform: exploreMode ? "translate(-50%, -50%) scale(0.88)" : "translate(-50%, -50%)", transition: "transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94)" }}>
+        <section aria-label="Writing tools playground" style={{ position: "relative", minHeight: "100vh", overflow: "hidden", background: "transparent" }}>
+          <div style={{ position: "absolute", left: "50%", top: "50%", width: 1680, height: 858, transform: "translate(-50%, -50%)" }}>
             <div style={{ position: "absolute", inset: 0, animation: "_toolIn 1.2s ease-out 0.8s both" }}>
               <ToolShape label="...without stopping"      href="/create-tool?preset=without-stopping"    videoLight="without-stopping-light"    videoDark="without-stopping-dark"    bgLight="#fbf5eb" bgDark="#3e3e3e" videoFit="cover" style={{ left: 40,   top: 197, width: 236, height: 233, transform: "rotate(5.1deg)",   borderRadius: 200 }} textStyle={{ transform: "rotate(-5.1deg)" }} />
               <ToolShape label="...uninvited thoughts"    href="/create-tool?preset=uninvited-thoughts"  videoLight="uninvited-thoughts-light"  videoDark="uninvited-thoughts-dark"  bgLight="#eaf8f5" bgDark="#1f2f29" style={{ left: 420,  top: 57,  width: 241, height: 182, transform: "rotate(-9.25deg)", borderRadius: 4 }} textStyle={{ transform: "rotate(9.25deg)" }} />
@@ -696,79 +687,13 @@ export default function PlaygroundNew() {
               <ToolShape label="...with visible corrections" href="/create-tool?preset=visible-corrections" videoLight="visible-corrections-light" videoDark="visible-corrections-dark" bgLight="#f5f6ea" bgDark="#2f2836" style={{ left: 774,  top: 526, width: 363, height: 174, borderRadius: "40px 4px 40px 4px" }} />
               <ToolShape label="...in a spiral"           href="/create-tool?preset=in-a-spiral"         videoLight="in-a-spiral-light"         videoDark="in-a-spiral-dark"         bgLight="#ecf4fe" bgDark="#242c38" videoFit="cover" style={{ left: 1321, top: 414, width: 211, height: 309, transform: "rotate(12.11deg)", borderRadius: 200 }} textStyle={{ transform: "rotate(-12.11deg)" }} />
             </div>
-            <div style={{ position: "absolute", left: 456, top: 300, width: 768, opacity: exploreMode ? 0 : 1, transition: "opacity 0.35s ease", pointerEvents: exploreMode ? "none" : "auto" }}>
+            <div style={{ position: "absolute", left: 456, top: 300, width: 768 }}>
               <HeroHeading DE={DE} theme={theme} />
             </div>
-            {exploreMode && myToolsAll.slice(0, EXPLORE_SLOTS.length).map((tool, i) => {
-              const slot = EXPLORE_SLOTS[i];
-              return (
-                <UserToolShape
-                  key={tool.id}
-                  tool={tool}
-                  dark={dark}
-                  onClick={() => { setExploreMode(false); openTool(tool.id); }}
-                  style={{
-                    left: slot.left, top: slot.top,
-                    width: slot.width, height: slot.height,
-                    borderRadius: slot.borderRadius,
-                    transform: `rotate(${slot.rotate}deg)`,
-                    animation: `_toolIn 0.5s ease-out ${0.08 + i * 0.04}s both`,
-                  }}
-                  textStyle={{ transform: `rotate(${-slot.rotate}deg)` }}
-                />
-              );
-            })}
-            {!exploreMode && (
-              <div style={{ position: "absolute", left: 456, top: 418, width: 768, display: "flex", justifyContent: "center", gap: "12px", animation: "_heroIn 1s ease-out 0.5s both" }}>
-                <button
-                  onClick={() => setExploreMode(true)}
-                  style={{ border: "none", borderRadius: "4px", cursor: "pointer", outline: "none", padding: "12px 24px", fontFamily: FONT_SANS, fontSize: "15px", background: dark ? theme.text : theme.headline, color: theme.bg }}
-                >
-                  {DE ? "Alle Tools entdecken" : "Explore all tools"}
-                </button>
-                <button
-                  onClick={() => navigate("/create-tool")}
-                  style={{ background: theme.toolBg, border: `1px dashed ${theme.border}`, borderRadius: "4px", cursor: "pointer", outline: "none", padding: "12px 24px", fontFamily: FONT_SANS, fontSize: "15px", color: theme.text }}
-                >
-                  {DE ? "Tool erstellen" : "Create a tool"}
-                </button>
-              </div>
-            )}
           </div>
         </section>
 
-        <div ref={toolsRef} style={{ width: "100%", boxSizing: "border-box", padding: "96px 100px 160px" }}>
-          {loading ? (
-            <SkeletonGrid title={DE ? "Alle Tools" : "All Tools"} dark={dark} />
-          ) : (
-            <Section
-              title={DE ? "Alle Tools" : "All Tools"}
-              tools={publicTools}
-              onOpen={openTool}
-              emptyMsg={DE ? "Noch keine öffentlichen Tools vorhanden." : "No public tools yet."}
-              sessionId={sessionId}
-              favorites={favorites}
-              onToggleFavorite={toggleFavorite}
-              showCreate
-            />
-          )}
-        </div>
-
         <PageNavFAB dark={dark} myToolsAll={myToolsAll} DE={DE} theme={theme} loading={loading} />
-        {exploreMode && (
-          <button
-            onClick={() => setExploreMode(false)}
-            style={{ position: "fixed", bottom: 40, left: "50%", transform: "translateX(-50%)", zIndex: 50, display: "flex", alignItems: "center", gap: 8, background: theme.toolBg, border: `1px dashed ${theme.border}`, borderRadius: 100, cursor: "pointer", outline: "none", padding: "9px 22px", fontFamily: FONT_SANS, fontSize: 14, color: theme.text, animation: "_heroIn 0.4s ease-out both" }}
-          >
-            ← {DE ? "Zurück" : "Back"}
-          </button>
-        )}
-        <ToolLaunchModal
-          tool={launchTool}
-          dark={dark}
-          onConfirm={(id, mins) => { setLaunchTool(null); navigateToTool(id, mins); }}
-          onClose={() => setLaunchTool(null)}
-        />
       </main>
     </DarkContext.Provider>
     </ThemeContext.Provider>

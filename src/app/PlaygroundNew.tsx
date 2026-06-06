@@ -851,7 +851,6 @@ function PageNavFAB({ dark, myToolsAll, DE, theme, loading, bottom = 40 }: { dar
 export default function PlaygroundNew() {
   const { loading, lang, setLang, dark, setDark, myToolsAll, tools, navigateToTool } = usePlaygroundData();
   const navigate = useNavigate();
-  const [exploreMode, setExploreMode] = useState(false);
   const [launchTool, setLaunchTool] = useState<NewToolData | null>(null);
 
   const openTool = (id: string) => {
@@ -869,80 +868,64 @@ export default function PlaygroundNew() {
         <style>{`html, body, #root { height: 100%; overflow: hidden; }`}</style>
 
         <section aria-label="Writing tools playground" style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
-          {/* Full 2215×1544 grid — clipped to viewport, zoom-out on explore */}
+          {/* Grid fades out at bottom so lower shapes don't show below text */}
+          <div style={{
+            position: "absolute",
+            inset: 0,
+            maskImage: "linear-gradient(to bottom, black 0%, black 55%, transparent 85%)",
+            WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 55%, transparent 85%)",
+          }}>
+            <div style={{
+              position: "absolute",
+              left: "50%",
+              top: "50%",
+              width: GRID_W,
+              height: GRID_H,
+              transform: "translate(-50%, -50%)",
+            }}>
+              <div style={{ display: "flex", gap: COL_GAP, width: "100%", height: "100%" }}>
+                {GRID_COLS.map((col, ci) => (
+                  <div key={ci} style={{ display: "flex", flexDirection: "column", gap: ROW_GAP, width: COL_W, flexShrink: 0 }}>
+                    {col.map((slot, si) => (
+                      <GridToolShape key={`${ci}-${si}`} t={slot.t} rot={slot.rot} />
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Text + buttons — positioned with viewport-relative units, always centered */}
           <div style={{
             position: "absolute",
             left: "50%",
-            top: "50%",
-            width: GRID_W,
-            height: GRID_H,
-            transform: exploreMode
-              ? `translate(-50%, -50%) scale(${GRID_EXPLORE_SCALE})`
-              : "translate(-50%, -50%)",
-            transition: "transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
+            top: "38%",
+            transform: "translateX(-50%)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 28,
+            whiteSpace: "nowrap",
           }}>
-            {/* 5 flex columns */}
-            <div style={{ display: "flex", gap: COL_GAP, width: "100%", height: "100%" }}>
-              {GRID_COLS.map((col, ci) => (
-                <div key={ci} style={{ display: "flex", flexDirection: "column", gap: ROW_GAP, width: COL_W, flexShrink: 0 }}>
-                  {col.map((slot, si) => (
-                    <GridToolShape key={`${ci}-${si}`} t={slot.t} rot={slot.rot} />
-                  ))}
-                </div>
-              ))}
-            </div>
-
-            {/* Heading + buttons — top:665 puts text at viewport-center when scale=1 */}
-            <div style={{
-              position: "absolute",
-              top: 665,
-              left: 0,
-              right: 0,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 28,
-              pointerEvents: exploreMode ? "none" : "auto",
-              opacity: exploreMode ? 0 : 1,
-              transition: "opacity 0.35s ease",
-            }}>
-              <HeroHeading DE={DE} theme={theme} />
-              <div style={{ display: "flex", gap: 12 }}>
-                <button
-                  onClick={() => setExploreMode(true)}
-                  style={{ border: "none", borderRadius: 4, cursor: "pointer", outline: "none", padding: "12px 24px", fontFamily: FONT_SANS, fontSize: 17, letterSpacing: "-0.17px", background: dark ? theme.text : "#242424", color: dark ? theme.bg : "#fffbf7" }}
-                >
-                  {DE ? "Alle Tools entdecken" : "Explore All Tools"}
-                </button>
-                <button
-                  onClick={() => navigate("/create-tool")}
-                  style={{ borderRadius: 4, cursor: "pointer", outline: "none", padding: "12px 24px", fontFamily: FONT_SANS, fontSize: 17, letterSpacing: "-0.17px", background: dark ? theme.toolBg : "#fff", border: `1px dashed ${dark ? theme.border : "#a4a4a4"}`, color: dark ? theme.text : "#302e2c" }}
-                >
-                  {DE ? "Tool erstellen" : "Create Your Tool"}
-                </button>
-              </div>
+            <HeroHeading DE={DE} theme={theme} />
+            <div style={{ display: "flex", gap: 12 }}>
+              <button
+                onClick={() => navigate("/tool-collection/field")}
+                style={{ border: "none", borderRadius: 4, cursor: "pointer", outline: "none", padding: "12px 24px", fontFamily: FONT_SANS, fontSize: 17, letterSpacing: "-0.17px", background: dark ? theme.text : "#242424", color: dark ? theme.bg : "#fffbf7" }}
+              >
+                {DE ? "Alle Tools entdecken" : "Explore All Tools"}
+              </button>
+              <button
+                onClick={() => navigate("/create-tool")}
+                style={{ borderRadius: 4, cursor: "pointer", outline: "none", padding: "12px 24px", fontFamily: FONT_SANS, fontSize: 17, letterSpacing: "-0.17px", background: dark ? theme.toolBg : "#fff", border: `1px dashed ${dark ? theme.border : "#a4a4a4"}`, color: dark ? theme.text : "#302e2c" }}
+              >
+                {DE ? "Tool erstellen" : "Create Your Tool"}
+              </button>
             </div>
           </div>
         </section>
 
         <PageNavFAB dark={dark} myToolsAll={myToolsAll} DE={DE} theme={theme} loading={loading} />
-        {!exploreMode && (
-          <button
-            onClick={() => navigate("/tool-collection/field")}
-            style={{ position: "fixed", bottom: 40, right: 40, zIndex: 50, background: theme.toolBg, border: `1px dashed ${theme.border}`, borderRadius: 100, cursor: "pointer", outline: "none", padding: "9px 18px", fontFamily: FONT_SANS, fontSize: 13, color: theme.muted }}
-            title={DE ? "Zur Feld-Ansicht wechseln" : "Switch to field view"}
-          >
-            {DE ? "Feld-Ansicht" : "Field view"} →
-          </button>
-        )}
-        {exploreMode && (
-          <button
-            onClick={() => setExploreMode(false)}
-            style={{ position: "fixed", bottom: 40, left: "50%", transform: "translateX(-50%)", zIndex: 50, display: "flex", alignItems: "center", gap: 8, background: theme.toolBg, border: `1px dashed ${theme.border}`, borderRadius: 100, cursor: "pointer", outline: "none", padding: "9px 22px", fontFamily: FONT_SANS, fontSize: 14, color: theme.text }}
-          >
-            ← {DE ? "Zurück" : "Back"}
-          </button>
-        )}
         <ToolLaunchModal
           tool={launchTool}
           dark={dark}

@@ -1905,7 +1905,7 @@ export default function New() {
         style={{
           position: "fixed", inset: 0,
           display: "flex", flexDirection: "column",
-          paddingTop: "24px",
+          paddingTop: "72px",
           paddingRight: "240px",
           paddingBottom: "96px",
           overflowY: "auto",

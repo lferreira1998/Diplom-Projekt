@@ -784,6 +784,7 @@ interface SpiralCanvasProps {
   driftTick: number;
   fontFamily?: string;
   fontSize?: number;
+  placeholder?: string;
 }
 
 function SpiralCanvas({
@@ -800,6 +801,7 @@ function SpiralCanvas({
   fontFamily = "'az-sans', sans-serif",
   coverBgColor = "#f2f3f6",
   fontSize = 20,
+  placeholder,
 }: SpiralCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef   = useRef<HTMLDivElement>(null);
@@ -880,6 +882,43 @@ function SpiralCanvas({
     const curY = cy + maxR * Math.sin(cursorAngle);
 
     if (N === 0) {
+      if (placeholder && placeholder.length > 0) {
+        const plChars = placeholder.split("");
+        const plN = plChars.length;
+        // estimate tightness for placeholder chars
+        let estPl = 0; let tmpPl = maxR;
+        for (let i = plN - 1; i >= 0; i--) {
+          const prog = Math.max(0, (tmpPl - minR) / (maxR - minR));
+          const fs2 = minFs + (maxFs - minFs) * Math.pow(prog, 0.55);
+          const aStep = (fs2 * 0.6 + fs2 * 0.08) / Math.max(tmpPl, 4);
+          estPl += aStep;
+          tmpPl -= ((maxR - minR) / Math.max(estPl, Math.PI * 1.2)) * aStep;
+          tmpPl = Math.max(tmpPl, minR);
+        }
+        const plTight = (maxR - minR) / Math.max(estPl, Math.PI * 1.2);
+        let plAngle = cursorAngle; let plRad = maxR;
+        interface PlCP { x: number; y: number; char: string; fs: number; opacity: number; rot: number; }
+        const plCps: PlCP[] = [];
+        for (let i = plN - 1; i >= 0; i--) {
+          const rp = Math.max(0, (plRad - minR) / (maxR - minR));
+          const fs2 = minFs + (maxFs - minFs) * Math.pow(rp, 0.55);
+          const opacity = (0.1 + 0.9 * Math.pow(rp, 0.35)) * 0.45;
+          ctx.font = `italic ${fs2}px ${fontFamily}`;
+          const cw = ctx.measureText(plChars[i]).width;
+          const aStep = (cw * 0.78 + fs2 * 0.1) / Math.max(plRad, 4);
+          plAngle += aStep; plRad -= plTight * aStep; plRad = Math.max(plRad, 2);
+          plCps.unshift({ x: cx + plRad * Math.cos(plAngle), y: cy + plRad * Math.sin(plAngle), char: plChars[i], fs: fs2, opacity, rot: plAngle - Math.PI / 2 });
+        }
+        for (const cp of plCps) {
+          ctx.save();
+          ctx.translate(cp.x, cp.y); ctx.rotate(cp.rot);
+          ctx.font = `italic ${cp.fs}px ${fontFamily}`;
+          ctx.fillStyle = `rgba(${r},${g},${b},${Math.min(0.45, cp.opacity)})`;
+          ctx.textAlign = "center"; ctx.textBaseline = "middle";
+          ctx.fillText(cp.char, 0, 0);
+          ctx.restore();
+        }
+      }
       if (cursorOn) {
         ctx.save();
         ctx.translate(curX, curY);
@@ -2859,9 +2898,9 @@ export function WritingZone({
             driftTick={driftTick}
             fontFamily={effectiveFamily}
             fontSize={fontSize}
+            placeholder={writingPrompt || "Fang einfach an zu schreiben…"}
           />
         </div>
-        {renderPlaceholder()}
       </div>
     );
   }

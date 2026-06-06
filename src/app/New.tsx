@@ -241,8 +241,8 @@ const TRANSLATIONS = {
     correctionDescHighlight: "Mit Tipp-Ex-Schicht",
     correctionDescRest: " über alten Text. Das Korrigieren hinterlässt Spuren.",
     // Stability
-    driftLabel: "Text",
-    driftDesc: "Der Text verliert seine stabile Form und driftet umher. Verlässt er eine Seite, erscheint er auf der gegenüberliegenden wieder. Er bleibt immer sichtbar.",
+    driftLabel: "Fliegender Text",
+    driftDesc: "Der Text fliegt langsam davon und erscheint auf der gegenüberliegenden Seite wieder.",
     driftSentences: "Sätze", driftWords: "Wörter", driftLetters: "Buchstabe",
     driftTiming: "Zeitpunkt des Fliegens",
     driftAfter: (n: number) => {
@@ -377,8 +377,8 @@ const TRANSLATIONS = {
     correctionDescHighlight: "With a Tipp-Ex layer",
     correctionDescRest: " over old text. Corrections leave traces.",
     // Stability
-    driftLabel: "Text",
-    driftDesc: "The text loses its stable form and drifts around. Leaving one side, it reappears on the opposite. It always stays visible.",
+    driftLabel: "Drifting Text",
+    driftDesc: "Text drifts and wraps from side to side, always staying visible.",
     driftSentences: "Sentences", driftWords: "Words", driftLetters: "Letters",
     driftTiming: "Drift timing",
     driftAfter: (n: number) => {
@@ -489,38 +489,37 @@ type PresetSetters = {
   setRandomMode: (v: "sentences" | "words") => void;
   setVisibility: (v: "visible" | "invisible" | "sentence" | "word" | "char") => void;
   setCorrectionVisible: (v: boolean) => void;
-  setBgHue: (v: number | null) => void;
 };
 const PRESETS: Record<string, PresetConfig> = {
   "without-stopping": {
     name: { de: "...ohne anzuhalten", en: "...without stopping" },
     desc: { de: "Schreib ohne anzuhalten. Der Cursor läuft weiter, Pausen werden sichtbar. Löschen ist nicht möglich.", en: "Write without stopping. The cursor keeps moving, making pauses visible. Deletion is impossible." },
-    apply: (s) => { s.setDeleteMode("none"); s.setCursorRunning(true); s.setCursorSchnelligkeit(35); s.setBgHue(null); },
+    apply: (s) => { s.setDeleteMode("none"); s.setCursorRunning(true); s.setCursorSchnelligkeit(35); },
   },
   "uninvited-thoughts": {
     name: { de: "...ungebetene Gedanken", en: "...uninvited thoughts" },
     desc: { de: "Deine Wörter verlieren ihre Form und fliegen davon, wie Gedanken, die du nicht festhalten kannst.", en: "Your words lose their form and drift away, like thoughts you cannot hold on to." },
-    apply: (s) => { s.setTextFliegtEnabled(true); s.setFliegtUnit("Wörter"); s.setFliegtZeitpunkt(0.3); s.setFliegtSchnelligkeit(1.5); s.setBgHue(195); },
+    apply: (s) => { s.setTextFliegtEnabled(true); s.setFliegtUnit("Wörter"); s.setFliegtZeitpunkt(0.3); s.setFliegtSchnelligkeit(1.5); },
   },
   "off-the-grid": {
     name: { de: "...abseits des Rasters", en: "...off the grid" },
     desc: { de: "Text erscheint nicht linear, sondern zufällig im Raum verteilt.", en: "Text doesn't appear linearly, but scattered randomly across the space." },
-    apply: (s) => { s.setPositionMode("random"); s.setRandomMode("words"); s.setBgHue(5); },
+    apply: (s) => { s.setPositionMode("random"); s.setRandomMode("words"); },
   },
   "blind-then-witness": {
     name: { de: "...blind & dann sehen", en: "...blind & then witness" },
     desc: { de: "Schreib blind. Dein Text bleibt unsichtbar, während du schreibst.", en: "Write blind. Your text stays invisible while you write." },
-    apply: (s) => { s.setVisibility("invisible"); s.setBgHue(150); },
+    apply: (s) => { s.setVisibility("invisible"); },
   },
   "visible-corrections": {
     name: { de: "...mit sichtbaren Korrekturen", en: "...with visible corrections" },
     desc: { de: "Korrigieren hinterlässt Spuren. Gelöschter Text wird überdeckt, nicht entfernt.", en: "Correcting leaves traces. Deleted text is covered, not removed." },
-    apply: (s) => { s.setCorrectionVisible(true); s.setDeleteMode("all"); s.setBgHue(100); },
+    apply: (s) => { s.setCorrectionVisible(true); s.setDeleteMode("all"); },
   },
   "in-a-spiral": {
     name: { de: "...in einer Spirale", en: "...in a spiral" },
     desc: { de: "Dein Text windet sich in einer Spirale nach innen.", en: "Your text winds inward in a spiral." },
-    apply: (s) => { s.setPositionMode("spiral"); s.setBgHue(255); },
+    apply: (s) => { s.setPositionMode("spiral"); },
   },
 };
 
@@ -1433,7 +1432,7 @@ export default function New() {
     cfg.apply({
       setDeleteMode, setCursorRunning, setCursorSchnelligkeit,
       setTextFliegtEnabled, setFliegtUnit, setFliegtZeitpunkt, setFliegtSchnelligkeit,
-      setPositionMode, setRandomMode, setVisibility, setCorrectionVisible, setBgHue,
+      setPositionMode, setRandomMode, setVisibility, setCorrectionVisible,
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -1696,6 +1695,20 @@ export default function New() {
   const floatBg    = dark ? "rgba(240,232,220,0.08)" : surfaceLight;
   const rulesBtnBg = rulesOpen ? (dark ? "rgba(240,232,220,0.1)" : surfaceDark) : floatBg;
 
+  const currentPrompt = prompts[0] || (diceIdx < 0 ? t.writingPrompt : (lang === "de" ? DICE_PROMPTS_DE[diceIdx] : DICE_PROMPTS_EN[diceIdx]));
+  const PROMPT_BTN_MODES = ["spiral", "followdot", "running", "random", "custom"];
+  const showPromptBtn = inViewer && !!prompts[0]?.trim() && PROMPT_BTN_MODES.includes(positionMode);
+  const SHORT_PLACEHOLDER: Record<string, { de: string; en: string }> = {
+    spiral:    { de: "Tippe…",          en: "Type…" },
+    followdot: { de: "",                en: "" },
+    running:   { de: "→ Schreib…",      en: "→ Write…" },
+    random:    { de: "Lass los…",       en: "Let go…" },
+    custom:    { de: "Zeichne zuerst…", en: "Draw first…" },
+  };
+  const writingZonePrompt = showPromptBtn
+    ? (SHORT_PLACEHOLDER[positionMode]?.[lang] ?? "")
+    : currentPrompt;
+
   // ── Parameter reset ────────────────────────────────────────────────────
   // True when every rule parameter is at its default (nothing has been set).
   const paramsAreDefault =
@@ -1906,7 +1919,7 @@ export default function New() {
         style={{
           position: "fixed", inset: 0,
           display: "flex", flexDirection: "column",
-          paddingTop: inViewer ? "72px" : "24px",
+          paddingTop: inViewer ? (showPromptBtn ? "120px" : "72px") : "24px",
           paddingRight: "240px",
           paddingBottom: "96px",
           overflowY: "auto",
@@ -1951,7 +1964,7 @@ export default function New() {
             customPathDark={dark}
             customPathDe={DE}
             randomMode={randomMode === "sentences" ? "sentences" : "words"}
-            writingPrompt={prompts[0] || (diceIdx < 0 ? t.writingPrompt : (lang === "de" ? DICE_PROMPTS_DE[diceIdx] : DICE_PROMPTS_EN[diceIdx]))}
+            writingPrompt={writingZonePrompt}
             onDiceRoll={prompts[0] ? undefined : handleDiceRoll}
             diceSpinning={diceSpinning}
             dicePaths={[...DICE_FRAME, ...DICE_FACES[diceFace]]}
@@ -2017,7 +2030,7 @@ export default function New() {
                 cursor: "pointer", outline: "none",
                 display: "flex", alignItems: "center",
                 padding: "0 13px",
-                fontFamily: FONT_SANS, fontSize: "15px",
+                fontFamily: FONT_SANS, fontSize: "13px",
                 color: dark ? DARK_TEXT : LIGHT_TEXT,
                 flexShrink: 0,
               }}
@@ -2085,6 +2098,34 @@ export default function New() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* ── Writing prompt chip (viewer + special position modes only) ─── */}
+      {showPromptBtn && visible && (
+        <div
+          data-html2canvas-ignore="true"
+          style={{
+            position: "fixed", top: "70px",
+            left: "50%", transform: "translateX(-50%)",
+            zIndex: 24, pointerEvents: "none",
+            maxWidth: "min(56ch, calc(100vw - 420px))",
+            display: "flex", justifyContent: "center",
+          }}
+        >
+          <span style={{
+            display: "block",
+            padding: "6px 18px",
+            background: floatBg,
+            border: `1px dashed ${dark ? DARK_BORDER : BORDER_COL}`,
+            borderRadius: "100px",
+            fontFamily: FONT_SANS, fontSize: "13px",
+            color: dark ? DARK_MUTED : "#9a9daa",
+            textAlign: "center", lineHeight: "1.5",
+            whiteSpace: "normal",
+          }}>
+            {prompts[0]}
+          </span>
+        </div>
+      )}
 
       {/* ── Floating Rules/× button ──────────────────────────────────────── */}
       <AnimatePresence>
@@ -3126,8 +3167,8 @@ export default function New() {
         {visible && timerEnabled && timerRunning && (
           <motion.div
             key="timer-circle"
-            initial={{ opacity: 0, scale: 0.88, left: rulesOpen ? 483 : 16 }}
-            animate={{ opacity: 1, scale: 1, left: rulesOpen ? 483 : 16 }}
+            initial={{ opacity: 0, scale: 0.88, left: rulesOpen ? BTN_OPEN.dark : BTN_CLOSED.dark }}
+            animate={{ opacity: 1, scale: 1, left: rulesOpen ? BTN_OPEN.dark : BTN_CLOSED.dark }}
             exit={{ opacity: 0, scale: 0.88, transition: { duration: 0.15 } }}
             transition={SPRING}
             style={{
@@ -3189,7 +3230,7 @@ export default function New() {
                   transition={{ duration: 0.18 }}
                   style={{
                     position: "absolute", bottom: "calc(100% + 8px)", right: 0,
-                    minWidth: "100%", width: "max-content", boxSizing: "border-box",
+                    width: "100%", boxSizing: "border-box",
                     display: "flex", flexDirection: "column", gap: "4px",
                     background: `color-mix(in srgb, ${settingsCardBg} 95%, transparent)`,
                     border: `1px dashed ${dark ? DARK_BORDER : BORDER_COL}`,

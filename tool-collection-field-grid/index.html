@@ -8,13 +8,6 @@
   <link rel="preload" href="/fonts/ABCArizona.woff" as="font" type="font/woff" crossorigin />
   <style>
     @font-face {
-      font-family: "az-serif";
-      src: url("/fonts/ABCArizona.woff") format("woff");
-      font-weight: 200 700;
-      font-style: normal oblique -14deg 0deg;
-      font-display: swap;
-    }
-    @font-face {
       font-family: "az-cond";
       src: url("/fonts/ABCArizona.woff") format("woff");
       font-weight: 200 700;
@@ -30,21 +23,26 @@
     }
 
     :root {
-      --bg: #fcf6ef;
+      --root-bg: #fcf6ef;
+      --field-bg: #faf4ed;
       --ink: #302e2c;
       --text: #555555;
       --muted: #9a9daa;
       --line: #a4a4a4;
-      --dot: rgba(164, 164, 164, 0.7);
-      --shadow: 4px 4px 14px rgba(0, 0, 0, 0.075);
-      --shape-w: 430px;
+      --shadow: 4px 4px 12px rgba(0, 0, 0, 0.06);
+      --fit-scale: 1;
     }
 
     * { box-sizing: border-box; }
-    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; }
+
+    html,
     body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: var(--root-bg);
       color: var(--text);
-      background: var(--bg);
       font-family: "az-sans", system-ui, sans-serif;
       font-variation-settings: "SRFF" 0, "wdth" 100, "wght" 360;
     }
@@ -53,9 +51,7 @@
       position: fixed;
       inset: 0;
       overflow: hidden;
-      background-color: var(--bg);
-      background-image: radial-gradient(circle, var(--dot) 1px, transparent 1.2px);
-      background-size: 42px 42px;
+      background: var(--root-bg);
     }
 
     .viewport.exploring {
@@ -69,82 +65,142 @@
       user-select: none;
     }
 
-    .stage {
-      position: relative;
-      width: 100vw;
-      height: 100vh;
-      min-width: 100vw;
-      min-height: 100vh;
-      transition: width 700ms cubic-bezier(0.25, 0.46, 0.45, 0.94), height 700ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    }
-
-    .viewport.exploring .stage {
-      width: 3820px;
-      height: 3040px;
-    }
-
-    .hero-copy {
+    .frame {
       position: absolute;
       left: 50%;
       top: 50%;
-      width: min(760px, 86vw);
-      transform: translate(-50%, -50%);
+      width: 1680px;
+      height: 858px;
+      transform: translate(-50%, -50%) scale(var(--fit-scale));
+      transform-origin: center;
+      overflow: hidden;
+      background: var(--root-bg);
+      transition: width 520ms ease, height 520ms ease, left 520ms ease, top 520ms ease, transform 520ms ease;
+    }
+
+    .surface {
+      position: absolute;
+      left: -516px;
+      top: -740px;
+      width: 2215px;
+      height: 1556px;
+      background: var(--field-bg);
+      transition: left 520ms ease, top 520ms ease;
+    }
+
+    .viewport.exploring .frame {
+      position: relative;
+      left: 0;
+      top: 0;
+      width: 2215px;
+      height: 1556px;
+      transform: none;
+      overflow: visible;
+    }
+
+    .viewport.exploring .surface {
+      left: 0;
+      top: 0;
+    }
+
+    .shape {
+      position: absolute;
+      left: var(--x);
+      top: var(--y);
+      width: var(--w, 363px);
+      height: var(--h);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 12px;
+      color: var(--text);
+      background: var(--bg);
+      border: 1px dashed var(--line);
+      border-radius: var(--r);
+      box-shadow: var(--shadow);
+      text-decoration: none;
+      transform: rotate(var(--rot, 0deg));
+      transform-origin: center;
+      overflow: hidden;
+    }
+
+    .shape.off-grid {
+      align-items: flex-end;
+      justify-content: flex-start;
+      padding: 12px;
+    }
+
+    .shape span {
+      display: block;
+      max-width: 100%;
+      color: var(--text);
+      font-family: "az-sans", system-ui, sans-serif;
+      font-size: 17px;
+      line-height: normal;
+      font-weight: 400;
+      letter-spacing: 0;
       text-align: center;
+      white-space: nowrap;
+      word-break: break-word;
+      font-variation-settings: "SRFF" 0, "wdth" 100, "wght" 360;
+    }
+
+    .shape.off-grid span { text-align: left; }
+
+    .hero-copy {
+      position: absolute;
+      left: 971px;
+      top: 1062px;
+      width: 768px;
+      color: var(--ink);
+      text-align: center;
+      transition: opacity 260ms ease;
       z-index: 4;
-      transition: opacity 360ms ease, transform 540ms ease;
-      pointer-events: none;
     }
 
-    .viewport.exploring .hero-copy {
-      opacity: 0;
-      transform: translate(-50%, -50%) scale(0.96);
-    }
-
-    h1 {
+    .hero-copy h1 {
       margin: 0;
       color: var(--ink);
       font-family: "az-cond", Georgia, serif;
-      font-size: clamp(31px, 3vw, 43px);
-      line-height: 1.18;
+      font-size: 34px;
+      line-height: 42px;
       font-weight: 400;
       letter-spacing: 0;
+      white-space: nowrap;
       font-variation-settings: "SRFF" 70, "wdth" 80, "wght" 360;
     }
 
-    .cursor {
-      display: inline-block;
-      width: 1.5px;
-      height: 0.85em;
-      margin-left: 3px;
-      vertical-align: middle;
-      background: var(--ink);
-      animation: blink 1s steps(1) infinite;
-    }
-
     .actions {
+      position: absolute;
+      left: 1183.5px;
+      top: 1174px;
       display: flex;
-      justify-content: center;
       gap: 12px;
-      margin-top: 26px;
-      pointer-events: auto;
+      align-items: flex-start;
+      z-index: 5;
       transition: opacity 260ms ease;
     }
 
-    .viewport.exploring .actions { opacity: 0; pointer-events: none; }
-
-    button, a.button {
-      border-radius: 4px;
-      padding: 12px 24px;
-      font: inherit;
-      font-size: 17px;
-      line-height: 1;
-      letter-spacing: 0;
-      cursor: pointer;
-      text-decoration: none;
-      transition: transform 140ms ease, background 140ms ease;
+    .viewport.exploring .hero-copy,
+    .viewport.exploring .actions {
+      opacity: 0;
+      pointer-events: none;
     }
 
-    button:hover, a.button:hover { transform: translateY(-1px); }
+    button,
+    .button {
+      border-radius: 4px;
+      padding: 12px 24px;
+      font-family: "az-sans", system-ui, sans-serif;
+      font-size: 17px;
+      line-height: normal;
+      font-weight: 300;
+      letter-spacing: -0.17px;
+      white-space: nowrap;
+      cursor: pointer;
+      text-decoration: none;
+      font-variation-settings: "SRFF" 0, "wdth" 100, "wght" 300;
+    }
 
     .primary {
       border: 1px solid #242424;
@@ -158,152 +214,63 @@
       color: #242424;
     }
 
-    .top-ui {
-      position: fixed;
-      right: 28px;
-      top: 28px;
-      display: flex;
-      gap: 8px;
-      z-index: 20;
-    }
-
-    .top-ui a, .top-ui button, .back-field {
-      border: 1px dashed var(--line);
-      background: rgba(252, 246, 239, 0.72);
-      color: var(--text);
-      border-radius: 4px;
-      padding: 10px 14px;
-      font-size: 14px;
-      line-height: 1;
-      backdrop-filter: blur(6px);
-      text-decoration: none;
-    }
-
-    .back-field {
-      position: fixed;
-      left: 28px;
-      top: 28px;
-      z-index: 20;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 220ms ease;
-    }
-
-    .viewport.exploring + .back-field { opacity: 1; pointer-events: auto; }
-
+    .back-field,
     .hint {
       position: fixed;
-      left: 50%;
-      bottom: 28px;
-      transform: translateX(-50%);
       z-index: 20;
-      padding: 9px 15px;
-      color: var(--muted);
-      border: 1px dashed var(--line);
-      border-radius: 100px;
-      background: rgba(252, 246, 239, 0.72);
-      backdrop-filter: blur(6px);
-      font-size: 13px;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 260ms ease;
-    }
-
-    .viewport.exploring ~ .hint { opacity: 1; }
-
-    .shape {
-      position: absolute;
-      width: var(--shape-w);
-      height: var(--shape-h, 220px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 28px;
-      color: var(--text);
-      background: var(--shape-bg, #fef8ee);
-      border: 1px dashed var(--line);
-      border-radius: var(--radius, 8px);
-      box-shadow: var(--shadow);
-      text-decoration: none;
-      overflow: hidden;
-      transform-origin: center;
-      left: var(--hero-x);
-      top: var(--hero-y);
-      transform: rotate(var(--hero-rot, 0deg));
-      opacity: var(--hero-opacity, 1);
-      transition:
-        left 820ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
-        top 820ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
-        width 820ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
-        height 820ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
-        border-radius 820ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
-        transform 820ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
-        opacity 360ms ease;
-    }
-
-    .shape.is-hidden-start { opacity: 0; }
-
-    .viewport.exploring .shape {
-      left: var(--field-x);
-      top: var(--field-y);
-      height: var(--field-h);
-      border-radius: var(--field-radius);
-      transform: rotate(var(--field-rot));
-      opacity: 1;
-      transition-delay: var(--delay, 0ms);
-    }
-
-    .shape-label {
-      position: relative;
-      z-index: 2;
-      text-align: center;
-      font-size: 17px;
-      line-height: 1.25;
-      font-variation-settings: "SRFF" 0, "wdth" 100, "wght" 360;
-      transition: transform 180ms ease, opacity 160ms ease;
-    }
-
-    .align-bl { align-items: flex-end; justify-content: flex-start; }
-    .align-bl .shape-label { text-align: left; }
-
-    .preview {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
       opacity: 0;
       pointer-events: none;
       transition: opacity 180ms ease;
-      filter: saturate(0.85) contrast(0.95);
+      background: rgba(252, 246, 239, 0.74);
+      backdrop-filter: blur(6px);
+      color: var(--text);
+      border: 1px dashed var(--line);
     }
 
-    .shape:hover .preview { opacity: 0.72; }
-    .shape:hover .shape-label {
-      color: #302e2c;
-      transform: scale(1.02);
+    .back-field {
+      left: 28px;
+      top: 28px;
+      padding: 10px 14px;
+      font-size: 14px;
+      letter-spacing: 0;
     }
 
-    @keyframes blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+    .hint {
+      left: 50%;
+      bottom: 28px;
+      transform: translateX(-50%);
+      border-radius: 100px;
+      padding: 9px 15px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .viewport.exploring + .back-field,
+    .viewport.exploring ~ .hint {
+      opacity: 1;
+      pointer-events: auto;
+    }
 
     @media (max-width: 760px) {
-      :root { --shape-w: 290px; }
-      .viewport.exploring .stage { width: 2100px; height: 2500px; }
-      .shape { padding: 20px; }
-      .top-ui { right: 14px; top: 14px; }
+      .frame {
+        width: 1680px;
+        height: 858px;
+      }
       .back-field { left: 14px; top: 14px; }
-      .actions { flex-direction: column; align-items: center; }
+      .hint { bottom: 14px; }
     }
   </style>
 </head>
 <body>
   <main id="viewport" class="viewport" aria-label="Tool collection field grid prototype">
-    <section id="stage" class="stage">
-      <div class="hero-copy">
-        <h1>
-          Writing Tools shape how we think &amp; write.<br />
-          Explore Writing Tools that break their rules.<span class="cursor"></span>
-        </h1>
+    <section id="frame" class="frame" aria-label="Writing tools field">
+      <div id="surface" class="surface">
+        <div class="hero-copy">
+          <h1>
+            Writing Tools shape how we think &amp; write.<br />
+            Explore Writing Tools that break their rules.
+          </h1>
+        </div>
         <div class="actions">
           <button id="explore" class="primary" type="button">Explore All Tools</button>
           <a class="button secondary" href="/create-tool">Create Your Tool</a>
@@ -313,124 +280,73 @@
   </main>
 
   <button id="back" class="back-field" type="button">Back to start</button>
-  <div class="top-ui" aria-label="Prototype controls">
-    <a href="/tool-collection">Original</a>
-    <a href="/create-tool">Create Tool</a>
-    <button type="button">Menu</button>
-  </div>
   <div class="hint">drag or scroll the field in every direction</div>
 
   <script>
-    const stage = document.getElementById("stage");
     const viewport = document.getElementById("viewport");
+    const frame = document.getElementById("frame");
+    const surface = document.getElementById("surface");
     const exploreButton = document.getElementById("explore");
     const backButton = document.getElementById("back");
 
-    const tools = [
-      {
-        label: "...without stopping",
-        href: "/create-tool?preset=without-stopping",
-        video: "without-stopping-light",
-        bg: "#fef8ee",
-        radius: "999px",
-        hero: { x: "6vw", y: "28vh", h: "240px", rot: "5deg" },
-        field: { h: 430, radius: "999px" }
-      },
-      {
-        label: "...uninvited thoughts",
-        href: "/create-tool?preset=uninvited-thoughts",
-        video: "uninvited-thoughts-light",
-        bg: "#ebfaf7",
-        radius: "4px",
-        hero: { x: "30vw", y: "9vh", h: "185px", rot: "-7deg" },
-        field: { h: 230, radius: "6px" }
-      },
-      {
-        label: "...off the grid",
-        href: "/create-tool?preset=off-the-grid",
-        video: "off-the-grid-light",
-        bg: "#fff4f6",
-        radius: "4px",
-        align: "align-bl",
-        hero: { x: "72vw", y: "13vh", h: "170px", rot: "12deg" },
-        field: { h: 260, radius: "4px" }
-      },
-      {
-        label: "...blind & then witness",
-        href: "/create-tool?preset=blind-then-witness",
-        video: "blind-then-witness-light",
-        bg: "#ecfaf0",
-        radius: "999px",
-        hero: { x: "17vw", y: "67vh", h: "165px", rot: "6deg" },
-        field: { h: 240, radius: "999px" }
-      },
-      {
-        label: "...with visible corrections",
-        href: "/create-tool?preset=visible-corrections",
-        video: "visible-corrections-light",
-        bg: "#f6f8ed",
-        radius: "52px 6px 52px 6px",
-        hero: { x: "50vw", y: "66vh", h: "180px", rot: "0deg" },
-        field: { h: 220, radius: "52px 6px 52px 6px" }
-      },
-      {
-        label: "...in a spiral",
-        href: "/create-tool?preset=in-a-spiral",
-        video: "in-a-spiral-light",
-        bg: "#eef7ff",
-        radius: "999px",
-        hero: { x: "82vw", y: "41vh", h: "310px", rot: "12deg" },
-        field: { h: 168, radius: "999px" }
-      }
+    const colors = {
+      spiral: "#eef7ff",
+      visible: "#f6f8ed",
+      blind: "#ecfaf0",
+      off: "#fff4f6",
+      without: "#fef8ee"
+    };
+
+    const presets = {
+      spiral: { label: "...in a spiral", href: "/create-tool?preset=in-a-spiral", bg: colors.spiral, h: 120, r: "200px" },
+      visible: { label: "...with visible corrections", href: "/create-tool?preset=visible-corrections", bg: colors.visible, h: 174, r: "40px 4px 40px 4px" },
+      blind: { label: "...blind & then witness", href: "/create-tool?preset=blind-then-witness", bg: colors.blind, h: 190, r: "100px" },
+      off: { label: "...off the grid", href: "/create-tool?preset=off-the-grid", bg: colors.off, h: 235, r: "4px", cls: "off-grid" },
+      without: { label: "...without stopping", href: "/create-tool?preset=without-stopping", bg: colors.without, h: 359.05, r: "200px" }
+    };
+
+    const col = [0, 463, 926, 1389, 1852];
+    const shapes = [
+      [0, 0, "spiral"], [0, 220, "visible"], [0, 494, "blind"], [0, 784, "off"], [0, 1119, "without"],
+      [1, 0, "visible"], [1, 274, "off"], [1, 609, "spiral"], [1, 839.57, "blind", 3.39], [1, 1140.13, "without"],
+      [2, 0, "visible"], [2, 274, "blind"], [2, 564, "without"], [2, 1339.1, "blind", -4.37],
+      [3, 0, "visible"], [3, 274, "blind"], [3, 564, "blind"], [3, 830.77, "spiral", -3.91], [3, 1351.19, "visible", 2.17],
+      [4, 0, "off"], [4, 335, "blind"], [4, 625, "without"], [4, 1084.05, "visible", 4.75], [4, 1387.54, "spiral"]
     ];
 
-    const fieldSlots = [
-      [80, 90, 5], [660, 70, 0], [1240, 85, 0], [1810, 78, 0], [2480, 55, 0], [3060, 100, 0],
-      [120, 470, 0], [700, 520, -4], [1320, 490, 5], [1900, 460, 0], [2500, 520, 0], [3060, 500, 4],
-      [90, 900, -6], [720, 910, -4], [1340, 890, 0], [1900, 910, 0], [2510, 915, -5], [3060, 875, 0],
-      [75, 1410, 0], [700, 1450, 4], [1315, 1410, 0], [1900, 1430, -3], [2500, 1400, 5], [3060, 1420, 0],
-      [80, 1980, 0], [700, 2030, -4], [1310, 1990, 0], [1900, 2000, 0], [2500, 1980, 0], [3060, 2020, 0],
-      [120, 2520, -2], [710, 2500, 5], [1320, 2480, 0], [1900, 2500, 4], [2500, 2490, 0], [3060, 2480, -3]
-    ];
-
-    function addShape(slot, index) {
-      const base = tools[index % tools.length];
-      const [x, y, rot] = slot;
-      const h = base.field.h + ((index % 3) - 1) * 18;
+    function addShape(entry) {
+      const [column, y, type, rotate = 0] = entry;
+      const preset = presets[type];
       const shape = document.createElement("a");
-      shape.className = `shape ${index >= 6 ? "is-hidden-start" : ""} ${base.align || ""}`;
-      shape.href = base.href;
-      shape.style.setProperty("--shape-bg", base.bg);
-      shape.style.setProperty("--radius", base.radius);
-      shape.style.setProperty("--shape-h", base.hero.h);
-      shape.style.setProperty("--hero-x", index < 6 ? base.hero.x : "50vw");
-      shape.style.setProperty("--hero-y", index < 6 ? base.hero.y : "50vh");
-      shape.style.setProperty("--hero-rot", index < 6 ? base.hero.rot : "0deg");
-      shape.style.setProperty("--field-x", `${x}px`);
-      shape.style.setProperty("--field-y", `${y}px`);
-      shape.style.setProperty("--field-h", `${h}px`);
-      shape.style.setProperty("--field-radius", base.field.radius);
-      shape.style.setProperty("--field-rot", `${rot}deg`);
-      shape.style.setProperty("--delay", `${Math.min(index * 22, 460)}ms`);
-      shape.setAttribute("aria-label", base.label.replace("...", ""));
-      shape.innerHTML = `
-        <video class="preview" muted loop playsinline preload="metadata">
-          <source src="/videos/${base.video}.webm" type="video/webm" />
-        </video>
-        <span class="shape-label">${base.label}</span>
-      `;
-      stage.appendChild(shape);
-      const video = shape.querySelector("video");
-      shape.addEventListener("mouseenter", () => video.play().catch(() => {}));
-      shape.addEventListener("mouseleave", () => { video.pause(); video.currentTime = 0; });
+      shape.className = `shape ${preset.cls || ""}`;
+      shape.href = preset.href;
+      shape.style.setProperty("--x", `${col[column]}px`);
+      shape.style.setProperty("--y", `${y}px`);
+      shape.style.setProperty("--w", "363px");
+      shape.style.setProperty("--h", `${preset.h}px`);
+      shape.style.setProperty("--r", preset.r);
+      shape.style.setProperty("--bg", preset.bg);
+      shape.style.setProperty("--rot", `${rotate}deg`);
+      shape.innerHTML = `<span>${preset.label}</span>`;
+      surface.insertBefore(shape, surface.firstChild);
     }
 
-    fieldSlots.forEach(addShape);
+    shapes.forEach(addShape);
+
+    function fitFrame() {
+      const scale = Math.min(window.innerWidth / 1680, window.innerHeight / 858);
+      document.documentElement.style.setProperty("--fit-scale", String(scale));
+    }
+
+    fitFrame();
+    window.addEventListener("resize", fitFrame);
 
     function centerField() {
-      const cx = Math.max(0, (stage.offsetWidth - viewport.clientWidth) / 2);
-      const cy = Math.max(0, (stage.offsetHeight - viewport.clientHeight) / 2);
-      viewport.scrollTo({ left: cx, top: cy, behavior: "smooth" });
+      viewport.scrollTo({
+        left: Math.max(0, (frame.offsetWidth - viewport.clientWidth) / 2),
+        top: Math.max(0, (frame.offsetHeight - viewport.clientHeight) / 2),
+        behavior: "smooth"
+      });
     }
 
     exploreButton.addEventListener("click", () => {

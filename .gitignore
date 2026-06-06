@@ -3,3 +3,19 @@ dist/
 .env
 .env.local
 .vite/
+
+# Trial font dropped in project root — not for redistribution
+/ABCArizonaSuperfamilyVariable-Trial.woff
+
+# Raw video source / design assets — large binaries, not part of source
+New Videos for Diploma/
+New videos for tool collection preview/
+videos/
+*.aep
+*.mov
+
+# Loose design files dropped in project root
+Frame 298 (1).png
+S-Icon_Favicon.svg
+Vector (1).svg
+Hide : Show Icons/

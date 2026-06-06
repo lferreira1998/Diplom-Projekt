@@ -3,3 +3,16 @@ dist/
 .env
 .env.local
 .vite/
+
+# Trial fonts (not for distribution)
+ABCArizonaSuperfamilyVariable-Trial.woff
+
+# Raw design / source assets (not part of the build)
+*.png
+S-Icon_Favicon.svg
+Vector*.svg
+Hide*Icons/
+New*Videos*/
+New*videos*/
+videos/
+withoutstopping*.mp4

@@ -2016,7 +2016,7 @@ export default function New() {
                 cursor: "pointer", outline: "none",
                 display: "flex", alignItems: "center",
                 padding: "0 13px",
-                fontFamily: FONT_SANS, fontSize: "13px",
+                fontFamily: FONT_SANS, fontSize: "15px",
                 color: dark ? DARK_TEXT : LIGHT_TEXT,
                 flexShrink: 0,
               }}
@@ -3188,7 +3188,7 @@ export default function New() {
                   transition={{ duration: 0.18 }}
                   style={{
                     position: "absolute", bottom: "calc(100% + 8px)", right: 0,
-                    width: "100%", boxSizing: "border-box",
+                    minWidth: "100%", width: "max-content", boxSizing: "border-box",
                     display: "flex", flexDirection: "column", gap: "4px",
                     background: `color-mix(in srgb, ${settingsCardBg} 95%, transparent)`,
                     border: `1px dashed ${dark ? DARK_BORDER : BORDER_COL}`,

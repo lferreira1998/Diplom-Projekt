@@ -1905,7 +1905,7 @@ export default function New() {
         style={{
           position: "fixed", inset: 0,
           display: "flex", flexDirection: "column",
-          paddingTop: "72px",
+          paddingTop: inViewer ? "72px" : "24px",
           paddingRight: "240px",
           paddingBottom: "96px",
           overflowY: "auto",
@@ -3125,8 +3125,8 @@ export default function New() {
         {visible && timerEnabled && timerRunning && (
           <motion.div
             key="timer-circle"
-            initial={{ opacity: 0, scale: 0.88, left: rulesOpen ? BTN_OPEN.dark : BTN_CLOSED.dark }}
-            animate={{ opacity: 1, scale: 1, left: rulesOpen ? BTN_OPEN.dark : BTN_CLOSED.dark }}
+            initial={{ opacity: 0, scale: 0.88, left: rulesOpen ? 483 : 16 }}
+            animate={{ opacity: 1, scale: 1, left: rulesOpen ? 483 : 16 }}
             exit={{ opacity: 0, scale: 0.88, transition: { duration: 0.15 } }}
             transition={SPRING}
             style={{

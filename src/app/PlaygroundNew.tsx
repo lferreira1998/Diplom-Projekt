@@ -665,7 +665,13 @@ function PageNavFAB({ dark, myToolsAll, DE, theme, loading, bottom = 40 }: { dar
 
 
 export default function PlaygroundNew() {
-  const { loading, lang, setLang, dark, setDark, myToolsAll } = usePlaygroundData();
+  const { sessionId, loading, lang, setLang, dark, setDark, favorites, toggleFavorite, myToolsAll, publicTools, tools, navigateToTool } = usePlaygroundData();
+  const [launchTool, setLaunchTool] = useState<NewToolData | null>(null);
+
+  const openTool = (id: string) => {
+    const t = tools.find(x => x.id === id) ?? null;
+    setLaunchTool(t);
+  };
 
   const DE = lang === "de";
   const theme = getTheme(dark);
@@ -674,7 +680,7 @@ export default function PlaygroundNew() {
     <ThemeContext.Provider value={theme}>
     <DarkContext.Provider value={dark}>
       <TopNav current="Playground" dark={dark} setDark={setDark} lang={lang} setLang={setLang} />
-      <main style={{ height: "100vh", width: "100vw", overflow: "hidden", position: "relative", backgroundColor: theme.bg, backgroundImage: theme.dotGrid, backgroundSize: "42px 42px", color: theme.text, fontFamily: FONT_SANS }}>
+      <main style={{ minHeight: "100vh", height: "100vh", width: "100vw", overflowX: "hidden", overflowY: "auto", position: "relative", backgroundColor: theme.bg, backgroundImage: theme.dotGrid, backgroundSize: "42px 42px", color: theme.text, fontFamily: FONT_SANS, WebkitOverflowScrolling: "touch" }}>
         <style>{`html, body, #root { height: 100%; overflow: hidden; }`}</style>
 
         <section aria-label="Writing tools playground" style={{ position: "relative", minHeight: "100vh", overflow: "hidden", background: "transparent" }}>
@@ -693,7 +699,30 @@ export default function PlaygroundNew() {
           </div>
         </section>
 
+        <div style={{ width: "100%", boxSizing: "border-box", padding: "96px 100px 160px" }}>
+          {loading ? (
+            <SkeletonGrid title={DE ? "Alle Tools" : "All Tools"} dark={dark} />
+          ) : (
+            <Section
+              title={DE ? "Alle Tools" : "All Tools"}
+              tools={publicTools}
+              onOpen={openTool}
+              emptyMsg={DE ? "Noch keine öffentlichen Tools vorhanden." : "No public tools yet."}
+              sessionId={sessionId}
+              favorites={favorites}
+              onToggleFavorite={toggleFavorite}
+              showCreate
+            />
+          )}
+        </div>
+
         <PageNavFAB dark={dark} myToolsAll={myToolsAll} DE={DE} theme={theme} loading={loading} />
+        <ToolLaunchModal
+          tool={launchTool}
+          dark={dark}
+          onConfirm={(id, mins) => { setLaunchTool(null); navigateToTool(id, mins); }}
+          onClose={() => setLaunchTool(null)}
+        />
       </main>
     </DarkContext.Provider>
     </ThemeContext.Provider>

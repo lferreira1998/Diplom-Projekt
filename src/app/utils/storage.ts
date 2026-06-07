@@ -41,6 +41,11 @@ export interface NewToolParams {
   previewVideo?: string;
   previewVideoPath?: string;
   cardShape?: string | null;
+  magnetCursor?: boolean;
+  magnetCursorRepel?: boolean;
+  revealOnHover?: boolean;
+  rhythmSensitivity?: boolean;
+  inkEnabled?: boolean;
 }
 
 export interface NewToolData {

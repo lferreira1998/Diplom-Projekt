@@ -278,6 +278,16 @@ const TRANSLATIONS = {
       if (secs === 0) return `Nach ${mins} min`;
       return `Nach ${mins} min ${secs} Sek`;
     },
+    magnetLabel: "Magnet-Cursor",
+    magnetDesc: "Der Text wird vom Cursor leicht angezogen oder weggedrückt.",
+    magnetAttract: "Anziehend",
+    magnetRepel: "Abstoßend",
+    revealLabel: "Reveal on Hover",
+    revealDesc: "Text ist unsichtbar, bis man mit der Maus darübergeht. Gut für Playground & Ausstellungen.",
+    rhythmLabel: "Rhythmus-Sensitivität",
+    rhythmDesc: "Schnelles Tippen erzeugt kleinen, engen Text. Langsames Tippen erzeugt großen, ruhigen Text.",
+    inkLabel: "Tinte",
+    inkDesc: "Buchstaben wirken wie Tinte – sie werden blasser. Klick auf den Tintentropfen zum Nachfüllen.",
     // Position
     posStandard: "Standard",
     posSpiral: "Spiralförmiger Text",
@@ -414,6 +424,16 @@ const TRANSLATIONS = {
       if (secs === 0) return `After ${mins} min`;
       return `After ${mins} min ${secs} sec`;
     },
+    magnetLabel: "Magnet Cursor",
+    magnetDesc: "Text is slightly attracted or repelled by the cursor.",
+    magnetAttract: "Attract",
+    magnetRepel: "Repel",
+    revealLabel: "Reveal on Hover",
+    revealDesc: "Text is invisible until you hover over it with the mouse. Great for playground & exhibitions.",
+    rhythmLabel: "Rhythm Sensitivity",
+    rhythmDesc: "Fast typing produces small, tight text. Slow typing produces large, calm text.",
+    inkLabel: "Ink",
+    inkDesc: "Letters behave like ink — they fade over time. Click the ink drop button to refill.",
     // Position
     posStandard: "Standard",
     posSpiral: "Spiraling Text",
@@ -1284,6 +1304,11 @@ export default function New() {
   const [textSchwerEnabled, setTextSchwerEnabled]         = useState(false);
   const [schwerZeitpunkt, setSchwerZeitpunkt]             = useState(0.5);
   const [schwerSchnelligkeit, setSchwerSchnelligkeit]     = useState(50);
+  const [magnetCursor, setMagnetCursor]                   = useState(false);
+  const [magnetCursorRepel, setMagnetCursorRepel]         = useState(false);
+  const [revealOnHover, setRevealOnHover]                 = useState(false);
+  const [rhythmSensitivity, setRhythmSensitivity]         = useState(false);
+  const [inkEnabled, setInkEnabled]                       = useState(false);
 
   // Position params
   const [positionMode, setPositionMode] = useState<"standard" | "spiral" | "random" | "running" | "custom" | "zigzag" | "followdot">("standard");
@@ -1298,22 +1323,24 @@ export default function New() {
     compatTimerRef.current = setTimeout(() => setCompatMsg(null), 3000);
   }, []);
 
-  // Non-standard positions block: drift, cursor-running, correction-visible
+  // Non-standard positions
   const NON_STANDARD_POSITIONS = ["spiral", "random", "running", "custom", "zigzag", "followdot"] as const;
   type NonStdPos = typeof NON_STANDARD_POSITIONS[number];
   const isNonStandard = NON_STANDARD_POSITIONS.includes(positionMode as NonStdPos);
+  // Canvas-based modes where DOM char effects (drift, heavy) don't apply
+  const CANVAS_POSITIONS = ["spiral", "custom", "zigzag", "followdot"] as const;
+  const isDOMIncompatible = CANVAS_POSITIONS.includes(positionMode as typeof CANVAS_POSITIONS[number]);
 
-  // Smart position setter — auto-clears incompatible rules and shows toast
+  // Smart position setter — only blocks drift/heavy for canvas-based modes
+  const CANVAS_MODES = new Set(["spiral", "custom", "zigzag", "followdot"]);
   const applyPositionMode = useCallback((
     mode: "standard" | "spiral" | "random" | "running" | "custom" | "zigzag" | "followdot",
     opts: { setTextFliegtEnabled: (v: boolean) => void; setCursorRunning: (v: boolean) => void; setCorrectionVisible: (v: boolean) => void; setTextSchwerEnabled: (v: boolean) => void; textFliegtEnabled: boolean; cursorRunning: boolean; correctionVisible: boolean; textSchwerEnabled: boolean; de: boolean; posNames: Record<string, string> }
   ) => {
     setPositionMode(mode);
-    if (mode === "standard") return;
+    if (mode === "standard" || !CANVAS_MODES.has(mode)) return;
     const turned: string[] = [];
     if (opts.textFliegtEnabled) { opts.setTextFliegtEnabled(false); turned.push(opts.de ? "Text fliegt davon" : "Text drift"); }
-    if (opts.cursorRunning && mode !== "running") { opts.setCursorRunning(false); turned.push(opts.de ? "Cursor läuft weiter" : "Cursor keeps running"); }
-    if (opts.correctionVisible) { opts.setCorrectionVisible(false); turned.push(opts.de ? "Korrigieren sichtbar" : "Correction visible"); }
     if (opts.textSchwerEnabled) { opts.setTextSchwerEnabled(false); turned.push(opts.de ? "Text wird schwer" : "Text gets heavy"); }
     if (turned.length > 0) {
       const posLabel = opts.posNames[mode] ?? mode;
@@ -1324,10 +1351,10 @@ export default function New() {
     }
   }, [showCompatMsg]);
 
-  // Smart drift setter — resets position to standard if incompatible
+  // Smart drift setter — only resets position for canvas-based modes
   const applyDrift = useCallback((enabled: boolean, de: boolean, posLabel: string) => {
     setTextFliegtEnabled(enabled);
-    if (enabled && isNonStandard) {
+    if (enabled && isDOMIncompatible) {
       setPositionMode("standard");
       showCompatMsg(de
         ? `Text fliegt davon aktiv. Position zurück auf Standard.`
@@ -1335,12 +1362,12 @@ export default function New() {
       );
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isNonStandard, showCompatMsg]);
+  }, [isDOMIncompatible, showCompatMsg]);
 
-  // Smart heavy setter — resets position to standard if incompatible
+  // Smart heavy setter — only resets position for canvas-based modes
   const applyHeavy = useCallback((enabled: boolean, de: boolean) => {
     setTextSchwerEnabled(enabled);
-    if (enabled && isNonStandard) {
+    if (enabled && isDOMIncompatible) {
       setPositionMode("standard");
       showCompatMsg(de
         ? `Text wird schwer aktiv. Position zurück auf Standard.`
@@ -1348,33 +1375,17 @@ export default function New() {
       );
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isNonStandard, showCompatMsg]);
+  }, [isDOMIncompatible, showCompatMsg]);
 
-  // Smart cursorRunning setter
-  const applyCursorRunning = useCallback((enabled: boolean, de: boolean) => {
+  // cursorRunning works with all modes — no blocking
+  const applyCursorRunning = useCallback((enabled: boolean) => {
     setCursorRunning(enabled);
-    if (enabled && isNonStandard && positionMode !== "running") {
-      setPositionMode("standard");
-      showCompatMsg(de
-        ? `Cursor läuft weiter aktiv. Position zurück auf Standard.`
-        : `Cursor keeps running enabled. Position reset to Standard.`
-      );
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isNonStandard, positionMode, showCompatMsg]);
+  }, []);
 
-  // Smart correctionVisible setter
-  const applyCorrectionVisible = useCallback((enabled: boolean, de: boolean) => {
+  // correctionVisible works with all modes — no blocking
+  const applyCorrectionVisible = useCallback((enabled: boolean) => {
     setCorrectionVisible(enabled);
-    if (enabled && isNonStandard) {
-      setPositionMode("standard");
-      showCompatMsg(de
-        ? `Korrigieren sichtbar aktiv. Position zurück auf Standard.`
-        : `Correction visible enabled. Position reset to Standard.`
-      );
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isNonStandard, showCompatMsg]);
+  }, []);
 
   // Look & Feel params
   const [grainLevel, setGrainLevel]       = useState(0);
@@ -1606,6 +1617,11 @@ export default function New() {
       setSerifLevel(typeof p.serifLevel === "number" ? p.serifLevel : null);
       if (p.previewVideo) { setPreviewVideoUrl(p.previewVideo); setPreviewVideoPath(p.previewVideoPath ?? null); setRecordState("done"); }
       setCardShape(p.cardShape ?? null);
+      setMagnetCursor(p.magnetCursor === true);
+      setMagnetCursorRepel(p.magnetCursorRepel === true);
+      setRevealOnHover(p.revealOnHover === true);
+      setRhythmSensitivity(p.rhythmSensitivity === true);
+      setInkEnabled(p.inkEnabled === true);
     }).catch((err) => {
       console.error("[New] Failed to load tool:", err);
     });
@@ -1702,6 +1718,7 @@ export default function New() {
         textEditingEnabled,
         textVerblassEnabled, verblassZeitpunkt, verblassSchnelligkeit,
         textSchwerEnabled, schwerZeitpunkt, schwerSchnelligkeit,
+        magnetCursor, magnetCursorRepel, revealOnHover, rhythmSensitivity, inkEnabled,
         positionMode, randomMode,
         drawnPath: positionMode === "custom" ? drawnPath : [],
         grainLevel, grainMotion, textSizeLevel, bgHue, serifLevel,
@@ -1733,6 +1750,7 @@ export default function New() {
     textEditingEnabled,
     textVerblassEnabled, verblassZeitpunkt, verblassSchnelligkeit,
     textSchwerEnabled, schwerZeitpunkt, schwerSchnelligkeit,
+    magnetCursor, magnetCursorRepel, revealOnHover, rhythmSensitivity, inkEnabled,
     positionMode, randomMode, drawnPath, grainLevel, grainMotion, textSizeLevel, bgHue, serifLevel, cardShape,
   ]);
 
@@ -1837,6 +1855,7 @@ export default function New() {
     textEditingEnabled &&
     !textVerblassEnabled && verblassZeitpunkt === 0.5 && verblassSchnelligkeit === 2.0 &&
     !textSchwerEnabled && schwerZeitpunkt === 0.5 && schwerSchnelligkeit === 50 &&
+    !magnetCursor && !revealOnHover && !rhythmSensitivity && !inkEnabled &&
     positionMode === "standard" && randomMode === "words" && drawnPath.length === 0 &&
     grainLevel === 0 && grainMotion === 0 && textSizeLevel === 46 && bgHue === null && serifLevel === null;
 
@@ -1848,6 +1867,7 @@ export default function New() {
     setTextEditingEnabled(true);
     setTextVerblassEnabled(false); setVerblassZeitpunkt(0.5); setVerblassSchnelligkeit(2.0);
     setTextSchwerEnabled(false); setSchwerZeitpunkt(0.5); setSchwerSchnelligkeit(50);
+    setMagnetCursor(false); setMagnetCursorRepel(false); setRevealOnHover(false); setRhythmSensitivity(false); setInkEnabled(false);
     setPositionMode("standard"); setRandomMode("words"); setDrawnPath([]);
     setGrainLevel(0); setGrainMotion(0); setTextSizeLevel(46); setBgHue(null); setSerifLevel(null);
   };
@@ -2112,6 +2132,11 @@ export default function New() {
             centeredPrompt={false}
             promptWrap={textSizeLevel > 46}
             containerWidth="764px"
+            magnetCursor={magnetCursor}
+            magnetCursorRepel={magnetCursorRepel}
+            revealOnHover={revealOnHover}
+            rhythmSensitivity={rhythmSensitivity}
+            inkEnabled={inkEnabled}
           />
       </motion.div>
 
@@ -2805,17 +2830,15 @@ export default function New() {
 
                     {/* Cursor läuft weiter */}
                     <div
-                      style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px", display: "flex", flexDirection: "column", gap: "10px", cursor: "pointer", opacity: (isNonStandard && positionMode !== "running") ? 0.55 : 1, transition: "opacity 0.2s" }}
-                      onClick={() => applyCursorRunning(!cursorRunning, DE)}
+                      style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px", display: "flex", flexDirection: "column", gap: "10px", cursor: "pointer", transition: "opacity 0.2s" }}
+                      onClick={() => applyCursorRunning(!cursorRunning)}
                     >
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
                         <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.cursorRunning}</span>
                         <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: descColor }}>{cursorRunning ? t.on : t.off}</span>
                       </div>
                       <p style={{ fontFamily: FONT_SANS, fontSize: "13px", color: descColor, lineHeight: "1.45", margin: 0 }}>
-                        {(isNonStandard && positionMode !== "running")
-                          ? (DE ? "Aktivieren setzt Position auf Standard zurück" : "Enabling resets position to Standard")
-                          : t.cursorRunningDesc}
+                        {t.cursorRunningDesc}
                       </p>
                       <AnimatePresence initial={false}>
                         {cursorRunning && (
@@ -2934,18 +2957,15 @@ export default function New() {
 
                     {/* Korrigieren sichtbar card */}
                     <div
-                      onClick={() => applyCorrectionVisible(!correctionVisible, DE)}
-                      style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px 24px", display: "flex", flexDirection: "column", gap: "16px", cursor: "pointer", opacity: isNonStandard ? 0.55 : 1, transition: "opacity 0.2s" }}
+                      onClick={() => applyCorrectionVisible(!correctionVisible)}
+                      style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px 24px", display: "flex", flexDirection: "column", gap: "16px", cursor: "pointer", transition: "opacity 0.2s" }}
                     >
                       <div style={{ height: "36px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                         <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.correctionVisible}</span>
                         <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: descColor }}>{correctionVisible ? t.on : t.off}</span>
                       </div>
                       <p style={{ fontFamily: FONT_SANS, fontSize: "13px", lineHeight: "1.6", color: descColor, margin: 0 }}>
-                        {isNonStandard
-                          ? (DE ? "Aktivieren setzt Position auf Standard zurück" : "Enabling resets position to Standard")
-                          : <><span style={{ background: dark ? "rgba(240,232,220,0.16)" : "#ffffff", padding: "1px 4px", borderRadius: "2px", boxShadow: dark ? "0 1px 3px rgba(0,0,0,0.35)" : "0 1px 4px rgba(180,170,155,0.45), 0 0.5px 1px rgba(180,170,155,0.3)" }}>{t.correctionDescHighlight}</span>{t.correctionDescRest}</>
-                        }
+                        <><span style={{ background: dark ? "rgba(240,232,220,0.16)" : "#ffffff", padding: "1px 4px", borderRadius: "2px", boxShadow: dark ? "0 1px 3px rgba(0,0,0,0.35)" : "0 1px 4px rgba(180,170,155,0.45), 0 0.5px 1px rgba(180,170,155,0.3)" }}>{t.correctionDescHighlight}</span>{t.correctionDescRest}</>
                       </p>
                     </div>
 
@@ -2958,7 +2978,7 @@ export default function New() {
 
                     {/* Text fliegt davon card */}
                     <div style={{ position: "relative" }}>
-                      <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px 24px", display: "flex", flexDirection: "column", gap: "16px", opacity: isNonStandard ? 0.55 : 1, transition: "opacity 0.2s" }}>
+                      <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px 24px", display: "flex", flexDirection: "column", gap: "16px", opacity: isDOMIncompatible ? 0.55 : 1, transition: "opacity 0.2s" }}>
                         {/* Header row */}
                         <div style={{ height: "36px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                           <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.driftLabel}</span>
@@ -3019,7 +3039,7 @@ export default function New() {
                           )}
                         </AnimatePresence>
                       </div>
-                      {isNonStandard && (
+                      {isDOMIncompatible && (
                         <div style={{ position: "absolute", bottom: "10px", left: 0, right: 0, textAlign: "center", pointerEvents: "none" }}>
                           <span style={{ fontFamily: FONT_SANS, fontSize: "11px", color: descColor }}>
                             {DE ? "Aktivieren setzt Position auf Standard zurück" : "Enabling resets position to Standard"}
@@ -3056,7 +3076,7 @@ export default function New() {
 
                     {/* Text wird schwer card */}
                     <div style={{ position: "relative" }}>
-                      <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px 24px", display: "flex", flexDirection: "column", gap: "16px", opacity: isNonStandard ? 0.55 : 1, transition: "opacity 0.2s" }}>
+                      <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px 24px", display: "flex", flexDirection: "column", gap: "16px", opacity: isDOMIncompatible ? 0.55 : 1, transition: "opacity 0.2s" }}>
                         <div style={{ height: "36px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                           <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.heavyLabel}</span>
                           <span onClick={() => applyHeavy(!textSchwerEnabled, DE)} style={{ fontFamily: FONT_SANS, fontSize: "16px", color: descColor, cursor: "pointer" }}>{textSchwerEnabled ? t.on : t.off}</span>
@@ -3079,13 +3099,75 @@ export default function New() {
                           )}
                         </AnimatePresence>
                       </div>
-                      {isNonStandard && (
+                      {isDOMIncompatible && (
                         <div style={{ position: "absolute", bottom: "10px", left: 0, right: 0, textAlign: "center", pointerEvents: "none" }}>
                           <span style={{ fontFamily: FONT_SANS, fontSize: "11px", color: descColor }}>
                             {DE ? "Aktivieren setzt Position auf Standard zurück" : "Enabling resets position to Standard"}
                           </span>
                         </div>
                       )}
+                    </div>
+
+                    {/* Magnet Cursor card */}
+                    <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
+                      <div style={{ height: "36px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.magnetLabel}</span>
+                        <span onClick={() => setMagnetCursor(v => !v)} style={{ fontFamily: FONT_SANS, fontSize: "16px", color: descColor, cursor: "pointer" }}>{magnetCursor ? t.on : t.off}</span>
+                      </div>
+                      <AnimatePresence initial={false} mode="wait">
+                        {!magnetCursor ? (
+                          <motion.p key="mag-off" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} style={{ fontFamily: FONT_SANS, fontSize: "13px", color: descColor, lineHeight: "1.45", margin: 0 }}>
+                            {t.magnetDesc}
+                          </motion.p>
+                        ) : (
+                          <motion.div key="mag-on" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} style={{ display: "flex", gap: "8px" }}>
+                            {([{ val: false, label: t.magnetAttract }, { val: true, label: t.magnetRepel }] as const).map(({ val, label }) => (
+                              <button key={label} onClick={() => setMagnetCursorRepel(val)} style={{
+                                flex: 1, height: "32px",
+                                background: magnetCursorRepel === val ? (dark ? "rgba(240,232,220,0.2)" : "rgba(85,85,85,0.12)") : "transparent",
+                                border: `1px ${magnetCursorRepel === val ? "solid" : "dashed"} ${magnetCursorRepel === val ? (dark ? "rgba(240,232,220,0.85)" : LIGHT_TEXT) : innerBorder}`,
+                                borderRadius: "4px", cursor: "pointer", outline: "none",
+                                fontFamily: FONT_SANS, fontSize: "13px",
+                                color: dark ? DARK_TEXT : LIGHT_TEXT,
+                                fontWeight: magnetCursorRepel === val ? 600 : 400,
+                              }}>{label}</button>
+                            ))}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+
+                    {/* Reveal on Hover card */}
+                    <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
+                      <div style={{ height: "36px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.revealLabel}</span>
+                        <span onClick={() => setRevealOnHover(v => !v)} style={{ fontFamily: FONT_SANS, fontSize: "16px", color: descColor, cursor: "pointer" }}>{revealOnHover ? t.on : t.off}</span>
+                      </div>
+                      <motion.p key={revealOnHover ? "rev-on" : "rev-off"} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.18 }} style={{ fontFamily: FONT_SANS, fontSize: "13px", color: descColor, lineHeight: "1.45", margin: 0 }}>
+                        {t.revealDesc}
+                      </motion.p>
+                    </div>
+
+                    {/* Rhythm Sensitivity card */}
+                    <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
+                      <div style={{ height: "36px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.rhythmLabel}</span>
+                        <span onClick={() => setRhythmSensitivity(v => !v)} style={{ fontFamily: FONT_SANS, fontSize: "16px", color: descColor, cursor: "pointer" }}>{rhythmSensitivity ? t.on : t.off}</span>
+                      </div>
+                      <motion.p key={rhythmSensitivity ? "rhy-on" : "rhy-off"} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.18 }} style={{ fontFamily: FONT_SANS, fontSize: "13px", color: descColor, lineHeight: "1.45", margin: 0 }}>
+                        {t.rhythmDesc}
+                      </motion.p>
+                    </div>
+
+                    {/* Ink card */}
+                    <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
+                      <div style={{ height: "36px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.inkLabel}</span>
+                        <span onClick={() => setInkEnabled(v => !v)} style={{ fontFamily: FONT_SANS, fontSize: "16px", color: descColor, cursor: "pointer" }}>{inkEnabled ? t.on : t.off}</span>
+                      </div>
+                      <motion.p key={inkEnabled ? "ink-on" : "ink-off"} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.18 }} style={{ fontFamily: FONT_SANS, fontSize: "13px", color: descColor, lineHeight: "1.45", margin: 0 }}>
+                        {t.inkDesc}
+                      </motion.p>
                     </div>
 
                   </div>

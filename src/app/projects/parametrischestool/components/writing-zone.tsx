@@ -85,6 +85,11 @@ interface WritingZoneProps {
   onDiceRoll?: () => void;
   diceSpinning?: boolean;
   dicePaths?: string[];
+  magnetCursor?: boolean;
+  magnetCursorRepel?: boolean;
+  revealOnHover?: boolean;
+  rhythmSensitivity?: boolean;
+  inkEnabled?: boolean;
 }
 
 // ── Pure helpers ──────────────────────────────────────────────────────────────
@@ -1757,6 +1762,11 @@ export function WritingZone({
   onDiceRoll,
   diceSpinning          = false,
   dicePaths,
+  magnetCursor          = false,
+  magnetCursorRepel     = false,
+  revealOnHover         = false,
+  rhythmSensitivity     = false,
+  inkEnabled            = false,
 }: WritingZoneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const cursorDomRef = useRef<HTMLSpanElement>(null);
@@ -1852,6 +1862,26 @@ export function WritingZone({
 
   const [driftTick, setDriftTick] = useState(0);
 
+  // Magnet cursor
+  const magnetOffsetsRef = useRef<{ dx: number; dy: number }[]>([]);
+  const mousePosRef      = useRef<{ x: number; y: number } | null>(null);
+  const [magnetTick, setMagnetTick] = useState(0);
+
+  // Reveal on hover
+  const [revealedSet, setRevealedSet] = useState(() => new Set<number>());
+
+  // Rhythm sensitivity
+  const rhythmIntervals = useRef<number[]>([]);
+  const lastKeyTime     = useRef<number>(0);
+  const [rhythmMult, setRhythmMult] = useState(1);
+
+  // Ink opacity
+  const inkEnabledRef = useRef(inkEnabled);
+  inkEnabledRef.current = inkEnabled;
+  const inkLevelRef  = useRef(1.0);
+  const charInkRef   = useRef<number[]>([]);
+  const [inkLevel, setInkLevel] = useState(1.0);
+
   // Auto-focus when switching to spiral, random, or running line mode
   useEffect(() => {
     if (spiralModus || textAppearsRandom || runningLineModus || boustrophedonModus || followDotModus) {
@@ -1869,6 +1899,12 @@ export function WritingZone({
       charOffsets.current.push({ dx: 0, dy: 0 });
       charNat.current.push(null);
       charElsRef.current.push(null);
+      magnetOffsetsRef.current.push({ dx: 0, dy: 0 });
+      const inkVal = inkEnabledRef.current ? inkLevelRef.current : 1.0;
+      charInkRef.current.push(inkVal);
+      if (inkEnabledRef.current) {
+        inkLevelRef.current = Math.max(0, inkLevelRef.current - 0.003);
+      }
     }
     if (positions.length < posTimesRef.current.length) {
       posTimesRef.current.length = positions.length;
@@ -1877,7 +1913,10 @@ export function WritingZone({
       charOffsets.current.length = positions.length;
       charNat.current.length     = positions.length;
       charElsRef.current.length  = positions.length;
+      magnetOffsetsRef.current.length = positions.length;
+      charInkRef.current.length     = positions.length;
     }
+    if (inkEnabledRef.current) setInkLevel(inkLevelRef.current);
   }, [positions.length]);
 
   useEffect(() => {
@@ -1915,6 +1954,82 @@ export function WritingZone({
       charOffsets.current = charOffsets.current.map(() => ({ dx: 0, dy: 0 }));
     }
   }, [schwer]);
+
+  // Reset magnet offsets when turned off
+  useEffect(() => {
+    if (!magnetCursor) {
+      magnetOffsetsRef.current = magnetOffsetsRef.current.map(() => ({ dx: 0, dy: 0 }));
+      setMagnetTick(t => t + 1);
+    }
+  }, [magnetCursor]);
+
+  // Magnet cursor RAF loop
+  useEffect(() => {
+    if (!magnetCursor) return;
+    let animId: number;
+    const STRENGTH = 60;
+    const MAX_DIST  = 150;
+    const loop = () => {
+      const mouse = mousePosRef.current;
+      let dirty = false;
+      for (let i = 0; i < charElsRef.current.length; i++) {
+        const cur = magnetOffsetsRef.current[i] ?? { dx: 0, dy: 0 };
+        if (!magnetOffsetsRef.current[i]) magnetOffsetsRef.current[i] = cur;
+        const el = charElsRef.current[i];
+        if (!mouse || !el) {
+          if (Math.abs(cur.dx) > 0.01 || Math.abs(cur.dy) > 0.01) {
+            cur.dx *= 0.82; cur.dy *= 0.82; dirty = true;
+          } else { cur.dx = 0; cur.dy = 0; }
+          continue;
+        }
+        const rect = el.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top  + rect.height / 2;
+        const ddx = mouse.x - cx;
+        const ddy = mouse.y - cy;
+        const dist = Math.sqrt(ddx * ddx + ddy * ddy);
+        if (dist < MAX_DIST && dist > 0.5) {
+          const factor = (1 - dist / MAX_DIST) * STRENGTH / dist;
+          const targetDx = magnetCursorRepel ? -ddx * factor : ddx * factor;
+          const targetDy = magnetCursorRepel ? -ddy * factor : ddy * factor;
+          cur.dx += (targetDx - cur.dx) * 0.18;
+          cur.dy += (targetDy - cur.dy) * 0.18;
+          dirty = true;
+        } else {
+          if (Math.abs(cur.dx) > 0.01 || Math.abs(cur.dy) > 0.01) {
+            cur.dx *= 0.82; cur.dy *= 0.82; dirty = true;
+          } else { cur.dx = 0; cur.dy = 0; }
+        }
+      }
+      if (dirty) setMagnetTick(t => t + 1);
+      animId = requestAnimationFrame(loop);
+    };
+    animId = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(animId);
+  }, [magnetCursor, magnetCursorRepel]);
+
+  // Reset revealedSet when reveal-on-hover is turned off
+  useEffect(() => {
+    if (!revealOnHover) setRevealedSet(new Set());
+  }, [revealOnHover]);
+
+  // Reset rhythm when turned off
+  useEffect(() => {
+    if (!rhythmSensitivity) {
+      rhythmIntervals.current = [];
+      lastKeyTime.current = 0;
+      setRhythmMult(1);
+    }
+  }, [rhythmSensitivity]);
+
+  // Reset ink when turned off
+  useEffect(() => {
+    if (!inkEnabled) {
+      inkLevelRef.current = 1.0;
+      charInkRef.current = charInkRef.current.map(() => 1.0);
+      setInkLevel(1.0);
+    }
+  }, [inkEnabled]);
 
   // rAF physics loop
   useEffect(() => {
@@ -2434,9 +2549,21 @@ export function WritingZone({
         newPos = [...basePos, { layers: [{ type: "char", char: ch }] }];
       }
       lkpt.current = now;
+      if (rhythmSensitivity) {
+        if (lastKeyTime.current > 0) {
+          const interval = now - lastKeyTime.current;
+          rhythmIntervals.current.push(interval);
+          if (rhythmIntervals.current.length > 8) rhythmIntervals.current.shift();
+          const avg = rhythmIntervals.current.reduce((a, b) => a + b, 0) / rhythmIntervals.current.length;
+          const clamped = Math.max(80, Math.min(800, avg));
+          const t2 = (clamped - 80) / 720;
+          setRhythmMult(0.72 + t2 * 0.66);
+        }
+        lastKeyTime.current = now;
+      }
       onUpdate(newPos, baseCur + 1);
     },
-    [positions, cursor, applyBackspace, onUpdate, lkpt, textEditingEnabled, deleteMode, correctionMode]
+    [positions, cursor, applyBackspace, onUpdate, lkpt, textEditingEnabled, deleteMode, correctionMode, rhythmSensitivity]
   );
 
   // ── Click-to-cursor ───────────────────────────────────────────────────────
@@ -2483,7 +2610,9 @@ export function WritingZone({
   const isHidden   = visibility === "hidden";
   const nowMs      = Date.now();
 
-  void driftTick; // read tick so render re-runs on each anim frame
+  void driftTick;  // read tick so render re-runs on each anim frame
+  void magnetTick; // same for magnet cursor
+  void inkLevel;   // re-render when ink level changes
 
   // ── Build wrap-around clones (portal) ─────────────────────────────────────
   const wrapClones: React.ReactNode[] = [];
@@ -2570,8 +2699,22 @@ export function WritingZone({
         }
       }
 
-      const driftStyle: React.CSSProperties = hasDrift
-        ? { transform: `translate(${dx}px, ${dy}px) rotate(${rot}deg)`, zIndex: 10 }
+      // Ink opacity
+      if (inkEnabled) {
+        const charInk = charInkRef.current[i];
+        if (typeof charInk === "number") fadeOpacity *= charInk;
+      }
+
+      // Reveal on hover: invisible until mouse passes over
+      const revealOpacity = revealOnHover ? (revealedSet.has(i) ? 1 : 0) : 1;
+
+      // Magnet cursor offset
+      const mgX = magnetCursor ? (magnetOffsetsRef.current[i]?.dx ?? 0) : 0;
+      const mgY = magnetCursor ? (magnetOffsetsRef.current[i]?.dy ?? 0) : 0;
+
+      const hasDriftOrMagnet = hasDrift || Math.abs(mgX) > 0.01 || Math.abs(mgY) > 0.01;
+      const driftStyle: React.CSSProperties = hasDriftOrMagnet
+        ? { transform: `translate(${dx + mgX}px, ${dy + mgY}px) rotate(${rot}deg)`, zIndex: 10 }
         : {};
 
       // Newlines
@@ -2610,13 +2753,14 @@ export function WritingZone({
           key={`p${i}`}
           ref={el => { charElsRef.current[i] = el; }}
           className="relative inline-block"
+          onMouseEnter={revealOnHover ? () => setRevealedSet(prev => { const s = new Set(prev); s.add(i); return s; }) : undefined}
           style={{
             verticalAlign: "text-bottom",
             backgroundColor: inSel ? "rgba(100,130,200,0.28)" : undefined,
             borderRadius: inSel ? "2px" : undefined,
             ...visStyle,
             ...driftStyle,
-            opacity: (typeof visStyle.opacity === "number" ? visStyle.opacity : 1) * fadeOpacity,
+            opacity: (typeof visStyle.opacity === "number" ? visStyle.opacity : 1) * fadeOpacity * revealOpacity,
           }}
         >
           {renderLayers(pos, showTippex, coverBgColor)}
@@ -2897,6 +3041,8 @@ export function WritingZone({
           onClick={handleClick}
           onMouseDown={() => containerRef.current?.focus({ preventScroll: true })}
           onBlur={() => { selectAllRef.current = false; setSelectAll(false); selAnchorRef.current = null; setSelAnchor(null); }}
+          onMouseMove={magnetCursor ? (e: React.MouseEvent) => { mousePosRef.current = { x: e.clientX, y: e.clientY }; } : undefined}
+          onMouseLeave={magnetCursor ? () => { mousePosRef.current = null; } : undefined}
           className="outline-none cursor-text min-h-[60vh] relative"
           style={{
             width:        containerWidth,
@@ -2906,12 +3052,12 @@ export function WritingZone({
             color:        textColor,
             fontFamily:   fontFamily,
             fontVariationSettings: fontVariationSettings,
-            fontSize:     `${fontSize}px`,
+            fontSize:     `${fontSize * rhythmMult}px`,
             lineHeight:   1.6,
             caretColor:   "transparent",
             wordBreak:    "normal",
             overflowWrap: "break-word",
-            transition:   "color 1s linear",
+            transition:   "color 1s linear, font-size 0.18s ease-out",
             overflow:     "visible",
             boxShadow:    selectAll ? "inset 0 0 0 2px rgba(100,130,200,0.35)" : undefined,
           }}
@@ -2948,6 +3094,36 @@ export function WritingZone({
           {nodes}
         </div>
       </div>
+      {/* Ink refill button — only when inkEnabled */}
+      {inkEnabled && createPortal(
+        <div style={{ position: "fixed", bottom: "32px", right: "32px", zIndex: 50, display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", pointerEvents: "auto" }}>
+          <style>{`@keyframes _inkPulse{0%,100%{opacity:1}50%{opacity:0.35}}`}</style>
+          {/* Level bar */}
+          <div style={{ width: "4px", height: "36px", background: textColor.startsWith("rgb") ? textColor.replace(/,[^)]+\)/, ",0.15)") : "rgba(0,0,0,0.12)", borderRadius: "2px", overflow: "hidden", display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
+            <div style={{ width: "100%", height: `${inkLevel * 100}%`, background: textColor, borderRadius: "2px", transition: "height 0.4s ease" }} />
+          </div>
+          {/* Refill button */}
+          <button
+            onMouseDown={e => e.preventDefault()}
+            onClick={() => { inkLevelRef.current = 1.0; setInkLevel(1.0); containerRef.current?.focus(); }}
+            title={customPathDe ? "Tinte nachfüllen" : "Refill ink"}
+            style={{
+              width: "34px", height: "34px", background: "transparent",
+              border: `1px dashed ${textColor}`, borderRadius: "6px",
+              cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+              color: textColor, outline: "none", opacity: inkLevel < 0.15 ? 1 : 0.45,
+              animation: inkLevel < 0.05 ? "_inkPulse 1.2s ease-in-out infinite" : "none",
+              transition: "opacity 0.3s",
+            }}
+          >
+            <svg width="16" height="18" viewBox="0 0 16 18" fill="none">
+              <path d="M8 1.5L12 8C13.2 10.2 12.6 13 10.4 14.2C9.7 14.6 8.85 14.8 8 14.8C7.15 14.8 6.3 14.6 5.6 14.2C3.4 13 2.8 10.2 4 8L8 1.5Z" fill="currentColor"/>
+              <path d="M6 11.5 Q8 9.5 10 11.5" stroke="white" strokeWidth="1" fill="none" opacity="0.6"/>
+            </svg>
+          </button>
+        </div>,
+        document.body
+      )}
       {/* Wrap-around clones rendered as portal so they're not clipped */}
       {wrapClones.length > 0 && createPortal(
         <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 5 }}>

@@ -195,16 +195,6 @@ export default function TopNav({
                         }}
                       >{L[key]}</motion.button>
                     ))}
-                    <motion.button
-                      key="lang"
-                      variants={NAV_ITEM}
-                      style={navItemStyle(dark, false)}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setMenuOpen(false);
-                        setLang(l => { const next = l === "de" ? "en" : "de"; localStorage.setItem("appLang", next); return next; });
-                      }}
-                    >{L.langSwitch}</motion.button>
                   </motion.div>
                 )}
               </AnimatePresence>

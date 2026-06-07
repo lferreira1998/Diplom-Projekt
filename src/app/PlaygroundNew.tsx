@@ -733,22 +733,6 @@ export default function PlaygroundNew() {
                 />
               );
             })}
-            {!exploreMode && (
-              <div style={{ position: "absolute", left: 456, top: 418, width: 768, display: "flex", justifyContent: "center", gap: "12px", animation: "_heroIn 1s ease-out 0.5s both" }}>
-                <button
-                  onClick={() => setExploreMode(true)}
-                  style={{ border: "none", borderRadius: "4px", cursor: "pointer", outline: "none", padding: "12px 24px", fontFamily: FONT_SANS, fontSize: "15px", background: dark ? theme.text : theme.headline, color: theme.bg }}
-                >
-                  {DE ? "Alle Tools entdecken" : "Explore all tools"}
-                </button>
-                <button
-                  onClick={() => navigate("/create-tool")}
-                  style={{ background: theme.toolBg, border: `1px dashed ${theme.border}`, borderRadius: "4px", cursor: "pointer", outline: "none", padding: "12px 24px", fontFamily: FONT_SANS, fontSize: "15px", color: theme.text }}
-                >
-                  {DE ? "Tool erstellen" : "Create a tool"}
-                </button>
-              </div>
-            )}
           </div>
         </section>
 

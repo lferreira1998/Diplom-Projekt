@@ -40,6 +40,7 @@ export interface NewToolParams {
   preview?: { text: string; seed: number; version: number };
   previewVideo?: string;
   previewVideoPath?: string;
+  cardShape?: string | null;
 }
 
 export interface NewToolData {

@@ -260,32 +260,48 @@ function HeartIcon({ filled, color }: { filled: boolean; color: string }) {
   );
 }
 
-function getPresetShape(params: NewToolParams, dark: boolean, DE: boolean) {
+// Shape definitions for the 6 preset presets — used in cards and the shape picker
+export const CARD_SHAPE_DEFS: Record<string, {
+  bgLight: string; bgDark: string;
+  radius: string;
+  circle: boolean;
+  bottomLeft: boolean;
+  label: { de: string; en: string };
+  video: string;
+}> = {
+  "without-stopping":    { bgLight: "#fbf5eb", bgDark: "#3e3e3e",  radius: "200px",                 circle: true,  bottomLeft: false, label: { de: "...ohne anzuhalten",            en: "...without stopping" },          video: "without-stopping" },
+  "uninvited-thoughts":  { bgLight: "#eaf8f5", bgDark: "#1f2f29",  radius: "4px",                   circle: false, bottomLeft: false, label: { de: "...ungebetene Gedanken",        en: "...uninvited thoughts" },        video: "uninvited-thoughts" },
+  "off-the-grid":        { bgLight: "#fff4f6", bgDark: "#37262d",  radius: "4px",                   circle: false, bottomLeft: true,  label: { de: "...abseits des Rasters",        en: "...off the grid" },              video: "off-the-grid" },
+  "blind-then-witness":  { bgLight: "#ecf7ee", bgDark: "#222d26",  radius: "100px",                 circle: false, bottomLeft: false, label: { de: "...blind & dann sehen",          en: "...blind & then witness" },      video: "blind-then-witness" },
+  "visible-corrections": { bgLight: "#f6f8ed", bgDark: "#2f2836",  radius: "40px 4px 40px 4px",     circle: false, bottomLeft: false, label: { de: "...mit sichtbaren Korrekturen", en: "...with visible corrections" },  video: "visible-corrections" },
+  "in-a-spiral":         { bgLight: "#eef7ff", bgDark: "#242c38",  radius: "24px 200px 24px 200px", circle: false, bottomLeft: false, label: { de: "...in einer Spirale",            en: "...in a spiral" },               video: "in-a-spiral" },
+};
+
+function getPresetShape(params: NewToolParams, dark: boolean, DE: boolean): {
+  bg: string; radius: string; label: string; circle: boolean; bottomLeft: boolean; video: string | null;
+} {
+  // Explicit card shape override
+  let shapeId = (params.cardShape as string | null | undefined) ?? null;
+  // Infer from params if not set
+  if (!shapeId) {
+    if (params.positionMode === "spiral")       shapeId = "in-a-spiral";
+    else if (params.visibility === "invisible") shapeId = "blind-then-witness";
+    else if (params.correctionVisible)          shapeId = "visible-corrections";
+    else if (params.positionMode === "random")  shapeId = "off-the-grid";
+    else if (params.cursorRunning)              shapeId = "without-stopping";
+    else if (params.textFliegtEnabled)          shapeId = "uninvited-thoughts";
+  }
+  if (shapeId && CARD_SHAPE_DEFS[shapeId]) {
+    const d = CARD_SHAPE_DEFS[shapeId];
+    return { bg: dark ? d.bgDark : d.bgLight, radius: d.radius, label: DE ? d.label.de : d.label.en, circle: d.circle, bottomLeft: d.bottomLeft, video: d.video };
+  }
+  // Fallback: hue-based
   const hL = (h: number) => `oklch(97.5% 0.015 ${h})`;
   const hD = (h: number) => `oklch(26% 0.025 ${h})`;
-  const bg = (hue: number | null) =>
+  const bgFor = (hue: number | null) =>
     hue !== null ? (dark ? hD(hue) : hL(hue)) : (dark ? "#2b2926" : "#fef8ee");
-
-  if (params.positionMode === "spiral")
-    return { bg: bg(255), radius: "24px 200px 200px 24px", label: DE ? "...in einer Spirale" : "...in a spiral", circle: false, bottomLeft: false };
-  if (params.visibility === "invisible")
-    return { bg: bg(150), radius: "100px", label: DE ? "...blind & dann sehen" : "...blind & then witness", circle: false, bottomLeft: false };
-  if (params.correctionVisible)
-    return { bg: bg(100), radius: "40px 4px 40px 4px", label: DE ? "...mit sichtbaren Korrekturen" : "...with visible corrections", circle: false, bottomLeft: false };
-  if (params.positionMode === "random")
-    return { bg: bg(5), radius: "4px", label: DE ? "...abseits des Rasters" : "...off the grid", circle: false, bottomLeft: true };
-  if (params.cursorRunning)
-    return { bg: bg(null), radius: "200px", label: DE ? "...ohne anzuhalten" : "...without stopping", circle: true, bottomLeft: false };
-  if (params.textFliegtEnabled)
-    return { bg: bg(195), radius: "4px", label: DE ? "...ungebetene Gedanken" : "...uninvited thoughts", circle: false, bottomLeft: false };
-  if (params.positionMode === "followdot")
-    return { bg: bg(null), radius: "200px", label: DE ? "...folge dem Punkt" : "...follow the dot", circle: true, bottomLeft: false };
-  if (params.positionMode === "running")
-    return { bg: bg(null), radius: "100px", label: DE ? "...laufende Linie" : "...running line", circle: false, bottomLeft: false };
-  if (params.positionMode === "custom")
-    return { bg: bg(null), radius: "8px", label: DE ? "...eigener Pfad" : "...your path", circle: false, bottomLeft: false };
   const hue = params.bgHue;
-  return { bg: bg(hue), radius: "100px", label: "...", circle: hue === null, bottomLeft: false };
+  return { bg: bgFor(hue), radius: "100px", label: "...", circle: hue === null, bottomLeft: false, video: null };
 }
 
 function ToolCard({ tool, onClick, onDelete, isFavorite, onToggleFavorite, DE }: {
@@ -300,12 +316,24 @@ function ToolCard({ tool, onClick, onDelete, isFavorite, onToggleFavorite, DE }:
   const dark = useContext(DarkContext);
   const [hovered, setHovered] = useState(false);
   const [confirming, setConfirming] = useState(false);
+  const shapeVideoRef = useRef<HTMLVideoElement>(null);
 
   const shape = getPresetShape(tool.params, dark, DE ?? false);
+  const videoName = shape.video ? `${shape.video}-${dark ? "dark" : "light"}` : null;
+
+  useEffect(() => {
+    const v = shapeVideoRef.current;
+    if (!v || !videoName) return;
+    v.muted = true; v.playsInline = true;
+    const play = () => v.play().catch(() => undefined);
+    play();
+    if (v.readyState < 2) v.addEventListener("canplay", play, { once: true });
+  }, [videoName]);
+
   const cardBg = hovered ? (dark ? "#232120" : "#fffdfa") : (dark ? theme.toolBg : "#fdf9f3");
   const cardBorder = hovered ? (dark ? "rgba(240,232,220,0.22)" : "#a8a8a8") : (dark ? theme.border : "#b4b3b3");
   const descColor = dark ? "rgba(240,232,220,0.45)" : "#7a7d89";
-  const shapeTextColor = dark ? "rgba(240,232,220,0.55)" : "#555555";
+  const shapeTextColor = dark ? "rgba(240,232,220,0.6)" : "#555555";
   const shapeBorder = dark ? "rgba(240,232,220,0.2)" : "#a4a4a4";
 
   return (
@@ -347,27 +375,51 @@ function ToolCard({ tool, onClick, onDelete, isFavorite, onToggleFavorite, DE }:
         </span>
       </div>
 
-      {/* Preset shape */}
+      {/* Preset shape with video */}
       <div style={{
         flexShrink: 0,
-        width: shape.circle ? "min(47%, 160px)" : "calc(100% - 16px)",
-        height: "160px",
+        position: "relative",
+        width: shape.circle ? "min(44%, 163px)" : "calc(100% - 16px)",
+        height: "163px",
         background: shape.bg,
         border: `1px dashed ${shapeBorder}`,
         borderRadius: shape.radius,
+        overflow: "hidden",
         display: "flex",
         alignItems: shape.bottomLeft ? "flex-end" : "center",
         justifyContent: shape.bottomLeft ? "flex-start" : "center",
         padding: shape.bottomLeft ? "12px" : "6px 12px",
         boxSizing: "border-box",
       }}>
+        {videoName && (
+          <video
+            key={videoName}
+            ref={shapeVideoRef}
+            muted loop playsInline preload="auto"
+            style={{
+              position: "absolute", inset: 0, width: "100%", height: "100%",
+              objectFit: "cover",
+              opacity: hovered ? 0 : 1,
+              transition: "opacity 150ms ease",
+              pointerEvents: "none",
+              transform: "translateZ(0)",
+            }}
+          >
+            <source src={`/videos/${videoName}.webm`} type="video/webm" />
+          </video>
+        )}
         <span style={{
+          position: "relative",
+          zIndex: 1,
           fontFamily: FONT_SANS,
-          fontSize: "15px",
+          fontSize: "17px",
           color: shapeTextColor,
           letterSpacing: "-0.01em",
           textAlign: "center",
           lineHeight: "1.3",
+          whiteSpace: "nowrap",
+          opacity: videoName ? (hovered ? 1 : 0) : 1,
+          transition: videoName ? "opacity 150ms ease" : undefined,
         }}>
           {shape.label}
         </span>
@@ -381,7 +433,7 @@ function ToolCard({ tool, onClick, onDelete, isFavorite, onToggleFavorite, DE }:
           fontSize: "15px",
           color: descColor,
           letterSpacing: "-0.01em",
-          lineHeight: "1.4",
+          lineHeight: "normal",
           display: "-webkit-box",
           WebkitLineClamp: 3,
           WebkitBoxOrient: "vertical" as const,
@@ -469,7 +521,7 @@ function Section({ title, tools, onOpen, onDelete, emptyMsg, sessionId, favorite
   return (
     <section style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
       <div style={{ display: "flex", alignItems: "center", gap: "12px", borderBottom: `1px dashed ${theme.border}`, paddingBottom: "12px" }}>
-        <span style={{ fontFamily: "'az-heading', sans-serif", fontSize: "34px", color: theme.headline, lineHeight: 1 }}>{title}</span>
+        <span style={{ fontFamily: FONT_CMP_SERIF, fontSize: "32px", color: theme.headline, lineHeight: "normal" }}>{title}</span>
         {tab !== undefined && onTabChange && (
           <div style={{ display: "flex", gap: "8px" }}>
             {(["all", "my"] as const).map((t) => {
@@ -503,7 +555,7 @@ function Section({ title, tools, onOpen, onDelete, emptyMsg, sessionId, favorite
       {tools.length === 0 ? (
         <p style={{ fontFamily: FONT_SANS, fontSize: "14px", color: theme.muted, margin: 0 }}>{emptyMsg}</p>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "20px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "32px" }}>
           {tools.map((tool, i) => {
             const owned = tool.params.sessionId === sessionId;
             return (
@@ -761,7 +813,7 @@ export default function PlaygroundNew() {
     <ThemeContext.Provider value={theme}>
     <DarkContext.Provider value={dark}>
       <TopNav current="Playground" dark={dark} setDark={setDark} lang={lang} setLang={setLang} />
-      <main style={{ minHeight: "100vh", height: "100vh", width: "100vw", overflowX: "hidden", overflowY: exploreMode ? "hidden" : "auto", position: "relative", backgroundColor: theme.bg, backgroundImage: theme.dotGrid, backgroundSize: "42px 42px", color: theme.text, fontFamily: FONT_SANS, WebkitOverflowScrolling: "touch" }}>
+      <main style={{ minHeight: "100vh", height: "100vh", width: "100vw", overflowX: "hidden", overflowY: exploreMode ? "hidden" : "auto", position: "relative", backgroundColor: theme.bg, color: theme.text, fontFamily: FONT_SANS, WebkitOverflowScrolling: "touch" }}>
         <style>{`html, body, #root { height: 100%; overflow: hidden; }`}</style>
 
         <section aria-label="Writing tools playground" style={{ position: "relative", minHeight: "100vh", overflow: exploreMode ? "visible" : "hidden", background: "transparent" }}>

@@ -524,6 +524,109 @@ const PRESETS: Record<string, PresetConfig> = {
   },
 };
 
+// Card shape definitions (shared with PlaygroundNew.tsx)
+const CARD_SHAPE_DEFS: Record<string, {
+  bgLight: string; bgDark: string;
+  radius: string; circle: boolean; bottomLeft: boolean;
+  label: { de: string; en: string };
+  video: string;
+}> = {
+  "without-stopping":    { bgLight: "#fbf5eb", bgDark: "#3e3e3e",  radius: "200px",                 circle: true,  bottomLeft: false, label: { de: "...ohne anzuhalten",            en: "...without stopping" },          video: "without-stopping" },
+  "uninvited-thoughts":  { bgLight: "#eaf8f5", bgDark: "#1f2f29",  radius: "4px",                   circle: false, bottomLeft: false, label: { de: "...ungebetene Gedanken",        en: "...uninvited thoughts" },        video: "uninvited-thoughts" },
+  "off-the-grid":        { bgLight: "#fff4f6", bgDark: "#37262d",  radius: "4px",                   circle: false, bottomLeft: true,  label: { de: "...abseits des Rasters",        en: "...off the grid" },              video: "off-the-grid" },
+  "blind-then-witness":  { bgLight: "#ecf7ee", bgDark: "#222d26",  radius: "100px",                 circle: false, bottomLeft: false, label: { de: "...blind & dann sehen",          en: "...blind & then witness" },      video: "blind-then-witness" },
+  "visible-corrections": { bgLight: "#f6f8ed", bgDark: "#2f2836",  radius: "40px 4px 40px 4px",     circle: false, bottomLeft: false, label: { de: "...mit sichtbaren Korrekturen", en: "...with visible corrections" },  video: "visible-corrections" },
+  "in-a-spiral":         { bgLight: "#eef7ff", bgDark: "#242c38",  radius: "24px 200px 24px 200px", circle: false, bottomLeft: false, label: { de: "...in einer Spirale",            en: "...in a spiral" },               video: "in-a-spiral" },
+};
+
+function CardShapePickerItem({ id, dark, selected, onClick, lang }: {
+  id: string; dark: boolean; selected: boolean; onClick: () => void; lang: "de" | "en";
+}) {
+  const def = CARD_SHAPE_DEFS[id];
+  if (!def) return null;
+  const videoName = `${def.video}-${dark ? "dark" : "light"}`;
+  const bg = dark ? def.bgDark : def.bgLight;
+  const border = selected
+    ? `2px solid ${dark ? "#f0e8dc" : "#302e2c"}`
+    : `1px dashed ${dark ? "rgba(240,232,220,0.2)" : "#a4a4a4"}`;
+  const videoRef = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    v.muted = true; v.playsInline = true;
+    const play = () => v.play().catch(() => undefined);
+    play();
+    if (v.readyState < 2) v.addEventListener("canplay", play, { once: true });
+  }, [videoName]);
+  // For circle shapes render narrower
+  const shapeW = def.circle ? "50px" : "100%";
+  const shapeH = "50px";
+  return (
+    <div
+      onClick={onClick}
+      style={{
+        cursor: "pointer",
+        border,
+        borderRadius: "8px",
+        padding: "8px",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: "6px",
+        background: selected ? (dark ? "rgba(240,232,220,0.06)" : "rgba(48,46,44,0.04)") : "transparent",
+        transition: "border 0.12s",
+        boxSizing: "border-box",
+      }}
+    >
+      <div style={{
+        width: "100%",
+        height: "50px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}>
+        <div style={{
+          position: "relative",
+          width: shapeW,
+          height: shapeH,
+          background: bg,
+          borderRadius: def.radius,
+          overflow: "hidden",
+          border: `1px dashed ${dark ? "rgba(240,232,220,0.2)" : "#a4a4a4"}`,
+          alignSelf: "center",
+        }}>
+          <video
+            key={videoName}
+            ref={videoRef}
+            muted loop playsInline preload="auto"
+            style={{
+              position: "absolute", inset: 0, width: "100%", height: "100%",
+              objectFit: "cover",
+              pointerEvents: "none",
+              transform: "translateZ(0)",
+            }}
+          >
+            <source src={`/videos/${videoName}.webm`} type="video/webm" />
+          </video>
+        </div>
+      </div>
+      <span style={{
+        fontFamily: FONT_SANS,
+        fontSize: "10px",
+        color: selected ? (dark ? "#f0e8dc" : "#302e2c") : (dark ? "rgba(240,232,220,0.5)" : "#9a9daa"),
+        textAlign: "center",
+        lineHeight: "1.2",
+        display: "-webkit-box",
+        WebkitLineClamp: 2,
+        WebkitBoxOrient: "vertical" as const,
+        overflow: "hidden",
+      }}>
+        {lang === "de" ? def.label.de : def.label.en}
+      </span>
+    </div>
+  );
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function lerpColor(a: string, b: string, t: number): string {
@@ -1290,6 +1393,7 @@ export default function New() {
   const [diceFace, setDiceFace]               = useState(0);
   const [diceSpinning, setDiceSpinning]       = useState(false);
   const [toolDescription, setToolDescription] = useState("");
+  const [cardShape, setCardShape]             = useState<string | null>(null);
 
   // Writing engine state
   const [positions, setPositions] = useState<Position[]>([]);
@@ -1501,6 +1605,7 @@ export default function New() {
       setBgHue(typeof p.bgHue === "number" ? p.bgHue : null);
       setSerifLevel(typeof p.serifLevel === "number" ? p.serifLevel : null);
       if (p.previewVideo) { setPreviewVideoUrl(p.previewVideo); setPreviewVideoPath(p.previewVideoPath ?? null); setRecordState("done"); }
+      setCardShape(p.cardShape ?? null);
     }).catch((err) => {
       console.error("[New] Failed to load tool:", err);
     });
@@ -1589,6 +1694,7 @@ export default function New() {
         positionMode, randomMode,
         drawnPath: positionMode === "custom" ? drawnPath : [],
         grainLevel, grainMotion, textSizeLevel, bgHue, serifLevel,
+        cardShape: cardShape ?? null,
         ...(previewVideoUrl ? { previewVideo: previewVideoUrl, previewVideoPath: previewVideoPath ?? undefined } : {}),
         preview: {
           text: prompts[0]?.trim().slice(0, 40) || (lang === "de" ? "Ich schreibe anders." : "I write differently."),
@@ -1616,7 +1722,7 @@ export default function New() {
     textEditingEnabled,
     textVerblassEnabled, verblassZeitpunkt, verblassSchnelligkeit,
     textSchwerEnabled, schwerZeitpunkt, schwerSchnelligkeit,
-    positionMode, randomMode, drawnPath, grainLevel, grainMotion, textSizeLevel, bgHue, serifLevel,
+    positionMode, randomMode, drawnPath, grainLevel, grainMotion, textSizeLevel, bgHue, serifLevel, cardShape,
   ]);
 
   // ── Computed values ──────────────────────────────────────────────────────
@@ -2475,6 +2581,28 @@ export default function New() {
                         </span>
                       </div>
                     )}
+                  </div>
+
+                  {/* Card Shape picker */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                    <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>
+                      {lang === "de" ? "Karten-Form" : "Card Shape"}
+                    </span>
+                    <span style={{ fontFamily: FONT_SANS, fontSize: "13px", color: dark ? DARK_MUTED : "#9a9daa", lineHeight: "1.45" }}>
+                      {lang === "de" ? "Wähle eine Form für deine Karte." : "Choose a shape for your card."}
+                    </span>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
+                      {Object.keys(CARD_SHAPE_DEFS).map((id) => (
+                        <CardShapePickerItem
+                          key={id}
+                          id={id}
+                          dark={dark}
+                          selected={cardShape === id}
+                          lang={lang}
+                          onClick={() => setCardShape(cardShape === id ? null : id)}
+                        />
+                      ))}
+                    </div>
                   </div>
 
                   {/* Name */}

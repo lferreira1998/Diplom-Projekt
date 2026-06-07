@@ -3,7 +3,7 @@ import { ToolPreview } from "./components/ToolPreview";
 import { ToolLaunchModal } from "./components/ToolLaunchModal";
 import type { CSSProperties, ReactNode } from "react";
 import { useNavigate, useLocation } from "react-router";
-import { deleteNewTool, getAllNewTools, type NewToolData } from "./utils/storage";
+import { deleteNewTool, getAllNewTools, type NewToolData, type NewToolParams } from "./utils/storage";
 import TopNav from "./components/TopNav";
 
 const FONT_SERIF = "'az-serif', serif";
@@ -260,99 +260,162 @@ function HeartIcon({ filled, color }: { filled: boolean; color: string }) {
   );
 }
 
-function ToolCard({ tool, onClick, onDelete, isFavorite, onToggleFavorite }: {
+function getPresetShape(params: NewToolParams, dark: boolean, DE: boolean) {
+  const hL = (h: number) => `oklch(97.5% 0.015 ${h})`;
+  const hD = (h: number) => `oklch(26% 0.025 ${h})`;
+  const bg = (hue: number | null) =>
+    hue !== null ? (dark ? hD(hue) : hL(hue)) : (dark ? "#2b2926" : "#fef8ee");
+
+  if (params.positionMode === "spiral")
+    return { bg: bg(255), radius: "24px 200px 200px 24px", label: DE ? "...in einer Spirale" : "...in a spiral", circle: false, bottomLeft: false };
+  if (params.visibility === "invisible")
+    return { bg: bg(150), radius: "100px", label: DE ? "...blind & dann sehen" : "...blind & then witness", circle: false, bottomLeft: false };
+  if (params.correctionVisible)
+    return { bg: bg(100), radius: "40px 4px 40px 4px", label: DE ? "...mit sichtbaren Korrekturen" : "...with visible corrections", circle: false, bottomLeft: false };
+  if (params.positionMode === "random")
+    return { bg: bg(5), radius: "4px", label: DE ? "...abseits des Rasters" : "...off the grid", circle: false, bottomLeft: true };
+  if (params.cursorRunning)
+    return { bg: bg(null), radius: "200px", label: DE ? "...ohne anzuhalten" : "...without stopping", circle: true, bottomLeft: false };
+  if (params.textFliegtEnabled)
+    return { bg: bg(195), radius: "4px", label: DE ? "...ungebetene Gedanken" : "...uninvited thoughts", circle: false, bottomLeft: false };
+  if (params.positionMode === "followdot")
+    return { bg: bg(null), radius: "200px", label: DE ? "...folge dem Punkt" : "...follow the dot", circle: true, bottomLeft: false };
+  if (params.positionMode === "running")
+    return { bg: bg(null), radius: "100px", label: DE ? "...laufende Linie" : "...running line", circle: false, bottomLeft: false };
+  if (params.positionMode === "custom")
+    return { bg: bg(null), radius: "8px", label: DE ? "...eigener Pfad" : "...your path", circle: false, bottomLeft: false };
+  const hue = params.bgHue;
+  return { bg: bg(hue), radius: "100px", label: "...", circle: hue === null, bottomLeft: false };
+}
+
+function ToolCard({ tool, onClick, onDelete, isFavorite, onToggleFavorite, DE }: {
   tool: NewToolData;
   onClick: () => void;
   onDelete?: () => void;
   isFavorite?: boolean;
   onToggleFavorite?: () => void;
+  DE?: boolean;
 }) {
   const theme = useContext(ThemeContext);
+  const dark = useContext(DarkContext);
   const [hovered, setHovered] = useState(false);
   const [confirming, setConfirming] = useState(false);
 
-  const handleMouseLeave = () => {
-    setHovered(false);
-    setConfirming(false);
-  };
+  const shape = getPresetShape(tool.params, dark, DE ?? false);
+  const cardBg = hovered ? (dark ? "#232120" : "#fffdfa") : (dark ? theme.toolBg : "#fdf9f3");
+  const cardBorder = hovered ? (dark ? "rgba(240,232,220,0.22)" : "#a8a8a8") : (dark ? theme.border : "#b4b3b3");
+  const descColor = dark ? "rgba(240,232,220,0.45)" : "#7a7d89";
+  const shapeTextColor = dark ? "rgba(240,232,220,0.55)" : "#555555";
+  const shapeBorder = dark ? "rgba(240,232,220,0.2)" : "#a4a4a4";
 
   return (
     <div
       onMouseEnter={() => setHovered(true)}
-      onMouseLeave={handleMouseLeave}
+      onMouseLeave={() => { setHovered(false); setConfirming(false); }}
+      onClick={onClick}
       style={{
-        border: `1px dashed ${hovered ? theme.text : theme.border}`,
+        background: cardBg,
+        border: `1px dashed ${cardBorder}`,
         borderRadius: "8px",
         overflow: "hidden",
-        background: theme.bg,
+        aspectRatio: "1",
         display: "flex",
         flexDirection: "column",
-        transition: "border-color 0.15s, transform 0.15s",
-        transform: hovered ? "translateY(-2px)" : "none",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "16px",
         boxSizing: "border-box",
         position: "relative",
+        cursor: "pointer",
+        transition: "background 0.15s, border-color 0.15s",
       }}
     >
+      {/* Title */}
+      <div style={{ width: "100%", flexShrink: 0 }}>
+        <span style={{
+          fontFamily: FONT_CMP_SERIF,
+          fontSize: "18px",
+          color: dark ? theme.text : "#302e2c",
+          lineHeight: "normal",
+          display: "block",
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          paddingRight: (onDelete || onToggleFavorite) ? "36px" : "0",
+        }}>
+          {tool.name || "Unnamed Tool"}
+        </span>
+      </div>
+
+      {/* Preset shape */}
+      <div style={{
+        flexShrink: 0,
+        width: shape.circle ? "min(47%, 160px)" : "calc(100% - 16px)",
+        height: "160px",
+        background: shape.bg,
+        border: `1px dashed ${shapeBorder}`,
+        borderRadius: shape.radius,
+        display: "flex",
+        alignItems: shape.bottomLeft ? "flex-end" : "center",
+        justifyContent: shape.bottomLeft ? "flex-start" : "center",
+        padding: shape.bottomLeft ? "12px" : "6px 12px",
+        boxSizing: "border-box",
+      }}>
+        <span style={{
+          fontFamily: FONT_SANS,
+          fontSize: "15px",
+          color: shapeTextColor,
+          letterSpacing: "-0.01em",
+          textAlign: "center",
+          lineHeight: "1.3",
+        }}>
+          {shape.label}
+        </span>
+      </div>
+
+      {/* Description */}
+      <div style={{ width: "100%", flexShrink: 0 }}>
+        <p style={{
+          margin: 0,
+          fontFamily: FONT_SANS,
+          fontSize: "15px",
+          color: descColor,
+          letterSpacing: "-0.01em",
+          lineHeight: "1.4",
+          display: "-webkit-box",
+          WebkitLineClamp: 3,
+          WebkitBoxOrient: "vertical" as const,
+          overflow: "hidden",
+        }}>
+          {tool.description || "\u00a0"}
+        </p>
+      </div>
+
+      {/* Delete button (My Tools) */}
       {onDelete && (
-        <div
-          style={{
-            position: "absolute",
-            top: "8px",
-            right: "8px",
-            display: "flex",
-            alignItems: "center",
-            gap: "4px",
-            opacity: 1,
-            transition: "opacity 0.15s",
-            zIndex: 2,
-          }}
-        >
+        <div style={{ position: "absolute", top: "10px", right: "10px", display: "flex", alignItems: "center", gap: "4px", zIndex: 2 }}>
           {confirming ? (
-            <div style={{ display: "flex", alignItems: "center", gap: "5px", background: theme.toolBg, border: `1px solid ${theme.border}`, borderRadius: "6px", padding: "4px 6px", boxShadow: "0 2px 8px rgba(0,0,0,0.18)" }}>
+            <div onClick={(e) => e.stopPropagation()} style={{ display: "flex", alignItems: "center", gap: "5px", background: dark ? theme.panelBg : "#fff", border: `1px solid ${theme.border}`, borderRadius: "6px", padding: "4px 6px", boxShadow: "0 2px 8px rgba(0,0,0,0.18)" }}>
               <span style={{ fontFamily: FONT_SANS, fontSize: "11px", color: theme.text, whiteSpace: "nowrap" }}>Löschen?</span>
-              <button onClick={(event) => { event.stopPropagation(); onDelete(); }} style={{ height: "22px", padding: "0 9px", background: "#b43c3c", border: "none", borderRadius: "4px", cursor: "pointer", outline: "none", fontFamily: FONT_SANS, fontSize: "11px", color: "#fff" }}>Ja</button>
-              <button onClick={(event) => { event.stopPropagation(); setConfirming(false); }} style={{ height: "22px", padding: "0 9px", background: "transparent", border: `1px solid ${theme.border}`, borderRadius: "4px", cursor: "pointer", outline: "none", fontFamily: FONT_SANS, fontSize: "11px", color: theme.text }}>Nein</button>
+              <button onClick={(e) => { e.stopPropagation(); onDelete(); }} style={{ height: "22px", padding: "0 9px", background: "#b43c3c", border: "none", borderRadius: "4px", cursor: "pointer", outline: "none", fontFamily: FONT_SANS, fontSize: "11px", color: "#fff" }}>Ja</button>
+              <button onClick={(e) => { e.stopPropagation(); setConfirming(false); }} style={{ height: "22px", padding: "0 9px", background: "transparent", border: `1px solid ${theme.border}`, borderRadius: "4px", cursor: "pointer", outline: "none", fontFamily: FONT_SANS, fontSize: "11px", color: theme.text }}>Nein</button>
             </div>
           ) : (
-            <button onClick={(event) => { event.stopPropagation(); setConfirming(true); }} title="Aus meinen Tools entfernen" style={{ width: "24px", height: "24px", background: theme.toolBg, border: `1px dashed ${theme.border}`, borderRadius: "50%", cursor: "pointer", outline: "none", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FONT_SANS, fontSize: "16px", color: theme.muted, lineHeight: 1 }}>×</button>
+            <button onClick={(e) => { e.stopPropagation(); setConfirming(true); }} title="Aus meinen Tools entfernen" style={{ width: "24px", height: "24px", background: dark ? theme.panelBg : "#fef8ee", border: `1px dashed ${shapeBorder}`, borderRadius: "50%", cursor: "pointer", outline: "none", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FONT_SANS, fontSize: "16px", color: theme.muted, lineHeight: 1 }}>×</button>
           )}
         </div>
       )}
+
+      {/* Favorite button (All Tools) */}
       {onToggleFavorite && (
         <button
-          onClick={(event) => { event.stopPropagation(); onToggleFavorite(); }}
+          onClick={(e) => { e.stopPropagation(); onToggleFavorite(); }}
           title={isFavorite ? "Aus My Tools entfernen" : "Zu My Tools hinzufügen"}
-          style={{
-            position: "absolute",
-            top: "8px",
-            right: "8px",
-            zIndex: 2,
-            width: "28px",
-            height: "28px",
-            background: theme.toolBg,
-            border: `1px dashed ${theme.border}`,
-            borderRadius: "50%",
-            cursor: "pointer",
-            outline: "none",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+          style={{ position: "absolute", top: "10px", right: "10px", zIndex: 2, width: "26px", height: "26px", background: dark ? theme.panelBg : "#fef8ee", border: `1px dashed ${shapeBorder}`, borderRadius: "50%", cursor: "pointer", outline: "none", display: "flex", alignItems: "center", justifyContent: "center" }}
         >
           <HeartIcon filled={!!isFavorite} color={isFavorite ? "#d4607a" : theme.muted} />
         </button>
       )}
-      <div onClick={onClick} style={{ width: "100%", aspectRatio: "3 / 2", overflow: "hidden", flexShrink: 0, cursor: "pointer" }}>
-        <ToolPreview tool={tool} active={hovered} dark={theme.bg === "#484848"} />
-      </div>
-      <div onClick={onClick} style={{ padding: "16px 18px", display: "flex", flexDirection: "column", gap: "5px", cursor: "pointer" }}>
-        <span style={{ fontFamily: FONT_SERIF, fontSize: "19px", color: theme.text, lineHeight: "1.25", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-          {tool.name || "Unnamed Tool"}
-        </span>
-        <span style={{ fontFamily: FONT_SANS, fontSize: "13px", color: theme.muted, lineHeight: "1.45", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as const, overflow: "hidden", minHeight: "37px", visibility: tool.description ? "visible" : "hidden" }}>
-          {tool.description || " "}
-        </span>
-      </div>
     </div>
   );
 }

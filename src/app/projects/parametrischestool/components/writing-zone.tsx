@@ -1539,8 +1539,7 @@ function CustomPathSvg({
             </circle>
           </svg>
           <span style={{
-            fontFamily, fontSize: 11,
-            letterSpacing: "0.3em", textTransform: "uppercase",
+            fontFamily, fontSize: 16,
             color: hintColor,
           }}>
             {isDe ? "Linie zeichnen · dann tippen" : "draw a line · then type"}

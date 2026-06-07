@@ -302,7 +302,7 @@ function ToolCard({ tool, onClick, onDelete, isFavorite, onToggleFavorite }: {
             display: "flex",
             alignItems: "center",
             gap: "4px",
-            opacity: hovered ? 1 : 0.3,
+            opacity: 1,
             transition: "opacity 0.15s",
             zIndex: 2,
           }}
@@ -314,7 +314,7 @@ function ToolCard({ tool, onClick, onDelete, isFavorite, onToggleFavorite }: {
               <button onClick={(event) => { event.stopPropagation(); setConfirming(false); }} style={{ height: "22px", padding: "0 9px", background: "transparent", border: `1px solid ${theme.border}`, borderRadius: "4px", cursor: "pointer", outline: "none", fontFamily: FONT_SANS, fontSize: "11px", color: theme.text }}>Nein</button>
             </div>
           ) : (
-            <button onClick={(event) => { event.stopPropagation(); setConfirming(true); }} title="Aus meinen Tools entfernen" style={{ width: "24px", height: "24px", background: theme.toolBg, border: `1px dashed ${theme.border}`, borderRadius: "50%", cursor: "pointer", outline: "none", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FONT_SANS, fontSize: "13px", color: theme.muted, lineHeight: 1 }}>×</button>
+            <button onClick={(event) => { event.stopPropagation(); setConfirming(true); }} title="Aus meinen Tools entfernen" style={{ width: "24px", height: "24px", background: theme.toolBg, border: `1px dashed ${theme.border}`, borderRadius: "50%", cursor: "pointer", outline: "none", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FONT_SANS, fontSize: "16px", color: theme.muted, lineHeight: 1 }}>×</button>
           )}
         </div>
       )}
@@ -386,7 +386,7 @@ function Reveal({ children, index = 0 }: { children: ReactNode; index?: number }
   );
 }
 
-function Section({ title, tools, onOpen, onDelete, emptyMsg, sessionId, favorites, onToggleFavorite, showCreate }: {
+function Section({ title, tools, onOpen, onDelete, emptyMsg, sessionId, favorites, onToggleFavorite, showCreate, tab, onTabChange, DE }: {
   title: string;
   tools: NewToolData[];
   onOpen: (id: string) => void;
@@ -396,20 +396,33 @@ function Section({ title, tools, onOpen, onDelete, emptyMsg, sessionId, favorite
   favorites?: string[];
   onToggleFavorite?: (id: string) => void;
   showCreate?: boolean;
+  tab?: "all" | "my";
+  onTabChange?: (t: "all" | "my") => void;
+  DE?: boolean;
 }) {
   const theme = useContext(ThemeContext);
+  const dark = useContext(DarkContext);
   const navigate = useNavigate();
   return (
     <section style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-      <div style={{ display: "flex", alignItems: "baseline", gap: "12px", borderBottom: `1px dashed ${theme.border}`, paddingBottom: "12px" }}>
-        <span style={{ fontFamily: FONT_SERIF, fontSize: "28px", color: theme.text }}>{title}</span>
-        <span style={{ fontFamily: FONT_SANS, fontSize: "13px", color: theme.muted }}>{tools.length}</span>
+      <div style={{ display: "flex", alignItems: "center", gap: "12px", borderBottom: `1px dashed ${theme.border}`, paddingBottom: "12px" }}>
+        <span style={{ fontFamily: "'az-heading', sans-serif", fontSize: "34px", color: theme.headline, lineHeight: 1 }}>{title}</span>
+        {tab !== undefined && onTabChange && (
+          <div style={{ display: "flex", gap: "8px" }}>
+            {(["all", "my"] as const).map((t) => {
+              const isActive = tab === t;
+              const label = t === "all" ? (DE ? "Alle Tools" : "All Tools") : (DE ? "Meine Tools" : "My Tools");
+              return (
+                <button key={t} onClick={() => onTabChange(t)} style={{ height: "31px", padding: "0 12px", borderRadius: "4px", background: isActive ? theme.headline : "transparent", color: isActive ? (dark ? theme.bg : "#fcf6ef") : theme.muted, border: isActive ? "none" : `1px dashed ${theme.border}`, fontFamily: FONT_SANS, fontSize: "15px", letterSpacing: "-0.01em", cursor: "pointer", outline: "none" }}>{label}</button>
+              );
+            })}
+          </div>
+        )}
         {showCreate && (
           <button
             onClick={() => navigate("/create-tool")}
             style={{
               marginLeft: "auto",
-              alignSelf: "center",
               padding: "6px 14px",
               border: `1px dashed ${theme.border}`,
               borderRadius: "4px",
@@ -420,7 +433,7 @@ function Section({ title, tools, onOpen, onDelete, emptyMsg, sessionId, favorite
               whiteSpace: "nowrap",
             }}
           >
-            + Create your own tool
+            {DE ? "+ Eigenes Tool erstellen" : "+ Create your own tool"}
           </button>
         )}
       </div>
@@ -670,6 +683,7 @@ export default function PlaygroundNew() {
   const toolsRef = useRef<HTMLDivElement>(null);
   const [exploreMode, setExploreMode] = useState(false);
   const [launchTool, setLaunchTool] = useState<NewToolData | null>(null);
+  const [tab, setTab] = useState<"all" | "my">("all");
 
   const openTool = (id: string) => {
     const t = tools.find(x => x.id === id) ?? null;
@@ -678,6 +692,7 @@ export default function PlaygroundNew() {
 
   const DE = lang === "de";
   const theme = getTheme(dark);
+  const displayedTools = tab === "all" ? publicTools : myToolsAll;
 
   return (
     <ThemeContext.Provider value={theme}>
@@ -739,22 +754,24 @@ export default function PlaygroundNew() {
 
         <div ref={toolsRef} style={{ width: "100%", boxSizing: "border-box", padding: "96px 100px 160px" }}>
           {loading ? (
-            <SkeletonGrid title={DE ? "Alle Tools" : "All Tools"} dark={dark} />
+            <SkeletonGrid title={DE ? "Tool-Sammlung" : "Tool Collection"} dark={dark} />
           ) : (
             <Section
-              title={DE ? "Alle Tools" : "All Tools"}
-              tools={publicTools}
+              title={DE ? "Tool-Sammlung" : "Tool Collection"}
+              tools={displayedTools}
               onOpen={openTool}
-              emptyMsg={DE ? "Noch keine öffentlichen Tools vorhanden." : "No public tools yet."}
+              onDelete={tab === "my" ? handleDelete : undefined}
+              emptyMsg={tab === "all" ? (DE ? "Noch keine öffentlichen Tools vorhanden." : "No public tools yet.") : (DE ? "Noch keine eigenen Tools." : "No tools yet.")}
               sessionId={sessionId}
               favorites={favorites}
-              onToggleFavorite={toggleFavorite}
+              onToggleFavorite={tab === "all" ? toggleFavorite : undefined}
               showCreate
+              tab={tab}
+              onTabChange={setTab}
+              DE={DE}
             />
           )}
         </div>
-
-        <PageNavFAB dark={dark} myToolsAll={myToolsAll} DE={DE} theme={theme} loading={loading} />
         {exploreMode && (
           <button
             onClick={() => setExploreMode(false)}
@@ -776,53 +793,7 @@ export default function PlaygroundNew() {
 }
 
 export function MyToolsPage() {
-  const { sessionId, loading, lang, setLang, dark, setDark, favorites, toggleFavorite, myToolsAll, tools, navigateToTool, handleDelete } = usePlaygroundData();
-  const [launchTool, setLaunchTool] = useState<NewToolData | null>(null);
-
-  const openTool = (id: string) => {
-    const t = tools.find(x => x.id === id) ?? null;
-    setLaunchTool(t);
-  };
-
-  const DE = lang === "de";
-  const theme = getTheme(dark);
-
-  return (
-    <ThemeContext.Provider value={theme}>
-      <TopNav current="Playground" dark={dark} setDark={setDark} lang={lang} setLang={setLang} />
-      <main style={{ minHeight: "100vh", height: "100vh", width: "100vw", overflowX: "hidden", overflowY: "auto", position: "relative", backgroundColor: theme.bg, backgroundImage: theme.dotGrid, backgroundSize: "42px 42px", color: theme.text, fontFamily: FONT_SANS, WebkitOverflowScrolling: "touch" }}>
-        <style>{`html, body, #root { height: 100%; overflow: hidden; }`}</style>
-
-        <div style={{ width: "100%", boxSizing: "border-box", padding: "96px 100px 160px" }}>
-          {loading ? (
-            <SkeletonGrid title={DE ? "Meine Tools" : "My Tools"} dark={dark} />
-          ) : myToolsAll.length === 0 ? (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60vh", gap: "16px" }}>
-              <span style={{ fontFamily: FONT_SERIF, fontSize: "28px", color: theme.muted }}>{DE ? "Noch keine eigenen Tools." : "No tools yet."}</span>
-              <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: theme.muted, textAlign: "center" }}>{DE ? "Erstelle ein Tool oder markiere eines als Favorit." : "Create a tool or mark one as favourite."}</span>
-            </div>
-          ) : (
-            <Section
-              title={DE ? "Meine Tools" : "My Tools"}
-              tools={myToolsAll}
-              onOpen={openTool}
-              onDelete={handleDelete}
-              emptyMsg=""
-              sessionId={sessionId}
-              favorites={favorites}
-              onToggleFavorite={toggleFavorite}
-            />
-          )}
-        </div>
-
-        <PageNavFAB dark={dark} myToolsAll={myToolsAll} DE={DE} theme={theme} loading={loading} />
-        <ToolLaunchModal
-          tool={launchTool}
-          dark={dark}
-          onConfirm={(id, mins) => { setLaunchTool(null); navigateToTool(id, mins); }}
-          onClose={() => setLaunchTool(null)}
-        />
-      </main>
-    </ThemeContext.Provider>
-  );
+  const navigate = useNavigate();
+  useEffect(() => { navigate("/tool-collection", { replace: true }); }, [navigate]);
+  return null;
 }

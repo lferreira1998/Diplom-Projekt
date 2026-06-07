@@ -319,16 +319,18 @@ function ToolCard({ tool, onClick, onDelete, isFavorite, onToggleFavorite, DE }:
   const shapeVideoRef = useRef<HTMLVideoElement>(null);
 
   const shape = getPresetShape(tool.params, dark, DE ?? false);
-  const videoName = shape.video ? `${shape.video}-${dark ? "dark" : "light"}` : null;
+  const userVideoUrl = tool.params.previewVideo || null;
+  const presetVideoName = shape.video ? `${shape.video}-${dark ? "dark" : "light"}` : null;
+  const videoSrc = userVideoUrl || (presetVideoName ? `/videos/${presetVideoName}.webm` : null);
 
   useEffect(() => {
     const v = shapeVideoRef.current;
-    if (!v || !videoName) return;
+    if (!v || !videoSrc) return;
     v.muted = true; v.playsInline = true;
     const play = () => v.play().catch(() => undefined);
     play();
     if (v.readyState < 2) v.addEventListener("canplay", play, { once: true });
-  }, [videoName]);
+  }, [videoSrc]);
 
   const cardBg = hovered ? (dark ? "#232120" : "#fffdfa") : (dark ? theme.toolBg : "#fdf9f3");
   const cardBorder = hovered ? (dark ? "rgba(240,232,220,0.22)" : "#a8a8a8") : (dark ? theme.border : "#b4b3b3");
@@ -391,11 +393,12 @@ function ToolCard({ tool, onClick, onDelete, isFavorite, onToggleFavorite, DE }:
         padding: shape.bottomLeft ? "12px" : "6px 12px",
         boxSizing: "border-box",
       }}>
-        {videoName && (
+        {videoSrc && (
           <video
-            key={videoName}
+            key={videoSrc}
             ref={shapeVideoRef}
             muted loop playsInline preload="auto"
+            src={videoSrc}
             style={{
               position: "absolute", inset: 0, width: "100%", height: "100%",
               objectFit: "cover",
@@ -404,9 +407,7 @@ function ToolCard({ tool, onClick, onDelete, isFavorite, onToggleFavorite, DE }:
               pointerEvents: "none",
               transform: "translateZ(0)",
             }}
-          >
-            <source src={`/videos/${videoName}.webm`} type="video/webm" />
-          </video>
+          />
         )}
         <span style={{
           position: "relative",
@@ -418,8 +419,8 @@ function ToolCard({ tool, onClick, onDelete, isFavorite, onToggleFavorite, DE }:
           textAlign: "center",
           lineHeight: "1.3",
           whiteSpace: "nowrap",
-          opacity: videoName ? (hovered ? 1 : 0) : 1,
-          transition: videoName ? "opacity 150ms ease" : undefined,
+          opacity: videoSrc ? (hovered ? 1 : 0) : 1,
+          transition: videoSrc ? "opacity 150ms ease" : undefined,
         }}>
           {shape.label}
         </span>

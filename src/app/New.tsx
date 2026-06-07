@@ -1671,10 +1671,21 @@ export default function New() {
 
   const handleSave = useCallback(async (isPublic: boolean) => {
     if (!toolName.trim()) {
-      // Fix 1: Auto-open Identity panel so user sees the error + name field
       setRulesOpen(true);
       setIdentityOpen(true);
       setSaveError(lang === "de" ? "Bitte gib deinem Tool einen Namen." : "Please give your tool a name.");
+      return;
+    }
+    if (!toolDescription.trim()) {
+      setRulesOpen(true);
+      setIdentityOpen(true);
+      setSaveError(lang === "de" ? "Bitte füge eine Beschreibung hinzu." : "Please add a description.");
+      return;
+    }
+    if (!previewVideoUrl) {
+      setRulesOpen(true);
+      setIdentityOpen(true);
+      setSaveError(lang === "de" ? "Bitte nimm zuerst ein Vorschau-Video auf." : "Please record a preview video first.");
       return;
     }
     setSaving(true);
@@ -2539,7 +2550,7 @@ export default function New() {
                     onClick={() => { setVideoPreviewError(false); setShowRecordOverlay(true); }}
                     style={{
                       position: "relative", cursor: "pointer",
-                      border: `1px dashed ${recordState === "error" ? "#e05252" : innerBorder}`,
+                      border: `1px dashed ${recordState === "error" ? "#e05252" : (!previewVideoUrl && saveError?.toLowerCase().includes("video")) ? "#e05252" : innerBorder}`,
                       borderRadius: "8px", overflow: "hidden",
                       width: "100%", aspectRatio: "3 / 2", flexShrink: 0,
                       background: settingsCardBg,
@@ -2583,28 +2594,6 @@ export default function New() {
                     )}
                   </div>
 
-                  {/* Card Shape picker */}
-                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                    <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>
-                      {lang === "de" ? "Karten-Form" : "Card Shape"}
-                    </span>
-                    <span style={{ fontFamily: FONT_SANS, fontSize: "13px", color: dark ? DARK_MUTED : "#9a9daa", lineHeight: "1.45" }}>
-                      {lang === "de" ? "Wähle eine Form für deine Karte." : "Choose a shape for your card."}
-                    </span>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
-                      {Object.keys(CARD_SHAPE_DEFS).map((id) => (
-                        <CardShapePickerItem
-                          key={id}
-                          id={id}
-                          dark={dark}
-                          selected={cardShape === id}
-                          lang={lang}
-                          onClick={() => setCardShape(cardShape === id ? null : id)}
-                        />
-                      ))}
-                    </div>
-                  </div>
-
                   {/* Name */}
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                     <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.nameHeading}</span>
@@ -2634,12 +2623,12 @@ export default function New() {
                       className="identity-textarea"
                       placeholder={t.descPlaceholder}
                       value={toolDescription}
-                      onChange={(e) => setToolDescription(e.target.value)}
+                      onChange={(e) => { setToolDescription(e.target.value); if (e.target.value.trim()) setSaveError(null); }}
                       onClick={(e) => e.stopPropagation()}
                       rows={3}
                       style={{
                         width: "100%", boxSizing: "border-box",
-                        border: `1px dashed ${innerBorder}`, borderRadius: "8px",
+                        border: `1px dashed ${(!toolDescription.trim() && saveError?.toLowerCase().includes("beschreibung") || !toolDescription.trim() && saveError?.toLowerCase().includes("description")) ? "#e05252" : innerBorder}`, borderRadius: "8px",
                         padding: "10px 14px", background: settingsCardBg,
                         fontFamily: FONT_SANS, fontSize: "15px",
                         color: dark ? DARK_TEXT : LIGHT_TEXT,
@@ -2685,6 +2674,20 @@ export default function New() {
                   </div>
                 </div>
                 <div style={{ padding: "16px 24px", flexShrink: 0, display: "flex", flexDirection: "column", gap: "8px", borderTop: `1px dashed ${innerBorder}` }}>
+                  {/* Required fields checklist */}
+                  {(!toolName.trim() || !toolDescription.trim() || !previewVideoUrl) && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                      {[
+                        { ok: !!toolName.trim(),        label: lang === "de" ? "Name" : "Name" },
+                        { ok: !!toolDescription.trim(), label: lang === "de" ? "Beschreibung" : "Description" },
+                        { ok: !!previewVideoUrl,        label: lang === "de" ? "Vorschau-Video" : "Preview video" },
+                      ].map(({ ok, label }) => (
+                        <span key={label} style={{ fontFamily: FONT_SANS, fontSize: "12px", color: ok ? (dark ? "rgba(240,232,220,0.4)" : "#aaa") : "#e05252", display: "flex", alignItems: "center", gap: "5px" }}>
+                          <span style={{ fontSize: "10px" }}>{ok ? "✓" : "○"}</span> {label}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                   {saveError && (
                     <span style={{ fontFamily: FONT_SANS, fontSize: "12px", color: "#e05252", textAlign: "center" }}>{saveError}</span>
                   )}

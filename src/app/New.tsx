@@ -1836,7 +1836,11 @@ export default function New() {
 
   const currentPrompt = prompts[0] || (diceIdx < 0 ? t.writingPrompt : (lang === "de" ? DICE_PROMPTS_DE[diceIdx] : DICE_PROMPTS_EN[diceIdx]));
   const PROMPT_BTN_MODES = ["spiral", "followdot", "running", "random", "custom"];
-  const showPromptBtn = inViewer && !!prompts[0]?.trim() && PROMPT_BTN_MODES.includes(positionMode);
+  // Show the prompt in a top chip (instead of centered on the surface) for these
+  // special position modes. Now also during creation — not only when viewing a saved
+  // tool — because the centered surface prompt overflows these layouts.
+  const showPromptBtn = PROMPT_BTN_MODES.includes(positionMode) &&
+    (inViewer ? !!prompts[0]?.trim() : !!currentPrompt?.trim());
   const SHORT_PLACEHOLDER: Record<string, { de: string; en: string }> = {
     spiral:    { de: "Tippe…",          en: "Type…" },
     followdot: { de: "",                en: "" },
@@ -1991,7 +1995,7 @@ export default function New() {
             fontFamily: FONT_SANS, fontSize: "13px",
             color: dark ? DARK_MUTED : "#9a9daa",
             textAlign: "center", lineHeight: "1.5", whiteSpace: "normal",
-          }}>{prompts[0]}</span>
+          }}>{currentPrompt}</span>
         </div>
       )}
 
@@ -2080,7 +2084,7 @@ export default function New() {
         style={{
           position: "fixed", inset: 0,
           display: "flex", flexDirection: "column",
-          paddingTop: inViewer ? (showPromptBtn ? "120px" : "72px") : "24px",
+          paddingTop: showPromptBtn ? "120px" : (inViewer ? "72px" : "24px"),
           paddingRight: "240px",
           paddingBottom: "96px",
           overflowY: "auto",
@@ -2288,7 +2292,7 @@ export default function New() {
             textAlign: "center", lineHeight: "1.5",
             whiteSpace: "normal",
           }}>
-            {prompts[0]}
+            {currentPrompt}
           </span>
         </div>
       )}

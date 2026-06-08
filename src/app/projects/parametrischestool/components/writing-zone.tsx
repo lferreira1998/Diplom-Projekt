@@ -2695,6 +2695,7 @@ export function WritingZone({
     // breaks lines at spaces — never in the middle of a word.
     let currentWord: React.ReactNode[] = [];
     let currentWordTimes: number[] = []; // keystroke timestamps of this word's chars
+    let currentWordChars = 0;            // visible char count of the current word
     let wkey = 0;
     const flushWord = () => {
       if (currentWord.length) {
@@ -2709,13 +2710,24 @@ export function WritingZone({
           const scale = 1 + (base - 1) * Math.max(0, Math.min(1, rhythmIntensity));
           if (Math.abs(scale - 1) > 0.001) wordFontSize = `${scale}em`;
         }
+        // Normal words stay together (nowrap). A pathologically long word with no
+        // spaces is allowed to break so it can't widen the fixed-width text area.
+        const longWord = currentWordChars > 28;
         els.push(
-          <span key={`w${wkey++}`} style={{ display: "inline-block", whiteSpace: "nowrap", verticalAlign: "text-bottom", fontSize: wordFontSize }}>
+          <span key={`w${wkey++}`} style={{
+            display: "inline-block",
+            whiteSpace: longWord ? "normal" : "nowrap",
+            overflowWrap: longWord ? "anywhere" : undefined,
+            verticalAlign: "text-bottom",
+            maxWidth: "100%",
+            fontSize: wordFontSize,
+          }}>
             {currentWord}
           </span>
         );
         currentWord = [];
         currentWordTimes = [];
+        currentWordChars = 0;
       }
     };
 
@@ -2855,6 +2867,7 @@ export function WritingZone({
       // end of the word and then flushes it — the line break happens between
       // whole words, never inside one, and no leading space starts a new line.
       currentWord.push(charSpan);
+      currentWordChars++;
       if (rhythmSensitivity) currentWordTimes.push(posTimesRef.current[i] ?? nowMs);
       if (topChar === " ") flushWord();
 

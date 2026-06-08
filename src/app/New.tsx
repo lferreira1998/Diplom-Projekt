@@ -1992,21 +1992,38 @@ export default function New() {
 
       {showPromptBtn && visible && (
         <div data-html2canvas-ignore="true" style={{
-          position: "fixed", top: "70px",
+          position: "fixed", top: inViewer ? "70px" : "24px",
           left: "50%", transform: "translateX(-50%)",
-          zIndex: 24, pointerEvents: "none",
-          maxWidth: "min(56ch, calc(100vw - 420px))",
-          display: "flex", justifyContent: "center",
+          zIndex: 24, display: "flex", justifyContent: "center",
+          maxWidth: "min(620px, calc(100vw - 520px))",
         }}>
-          <span style={{
-            display: "block", padding: "6px 18px",
+          <div style={{
+            display: "flex", alignItems: "center", gap: "8px",
+            height: "33px", padding: prompts[0]?.trim() ? "0 13px" : "0 13px 0 9px",
             background: floatBg,
-            border: `1px dashed ${dark ? DARK_BORDER : BORDER_COL}`,
-            borderRadius: "100px",
-            fontFamily: FONT_SANS, fontSize: "13px",
-            color: dark ? DARK_MUTED : "#9a9daa",
-            textAlign: "center", lineHeight: "1.5", whiteSpace: "normal",
-          }}>{currentPrompt}</span>
+            border: `1px dashed ${BORDER_COL}`,
+            borderRadius: "4px",
+            maxWidth: "100%", boxSizing: "border-box",
+          }}>
+            {!prompts[0]?.trim() && (
+              <button
+                onClick={(e) => { e.stopPropagation(); handleDiceRoll(); }}
+                title={DE ? "Neuen Schreibanstoß würfeln" : "Roll a new writing prompt"}
+                style={{ background: "none", border: "none", padding: 0, margin: 0, display: "flex", alignItems: "center", cursor: "pointer", outline: "none", flexShrink: 0, lineHeight: 0 }}
+              >
+                <svg width="16" height="16" viewBox="0 0 21 21" style={{ transformOrigin: "center", animation: diceSpinning ? "_diceSpinTop 0.55s ease-in-out" : "none" }}>
+                  <style>{`@keyframes _diceSpinTop{0%{transform:rotate(0)scale(1)}55%{transform:rotate(170deg)scale(.9)}100%{transform:rotate(360deg)scale(1)}}`}</style>
+                  {[...DICE_FRAME, ...DICE_FACES[diceFace]].map((d, i) => <path key={i} d={d} fill={dark ? DARK_TEXT : LIGHT_TEXT} />)}
+                </svg>
+              </button>
+            )}
+            <span style={{
+              fontFamily: FONT_SANS, fontSize: "15px", fontWeight: 400,
+              color: dark ? DARK_TEXT : LIGHT_TEXT,
+              whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+              lineHeight: "normal",
+            }} title={currentPrompt}>{currentPrompt}</span>
+          </div>
         </div>
       )}
 
@@ -2285,34 +2302,6 @@ export default function New() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* ── Writing prompt chip (viewer + special position modes only) ─── */}
-      {showPromptBtn && visible && (
-        <div
-          data-html2canvas-ignore="true"
-          style={{
-            position: "fixed", top: "70px",
-            left: "50%", transform: "translateX(-50%)",
-            zIndex: 24, pointerEvents: "none",
-            maxWidth: "min(56ch, calc(100vw - 420px))",
-            display: "flex", justifyContent: "center",
-          }}
-        >
-          <span style={{
-            display: "block",
-            padding: "6px 18px",
-            background: floatBg,
-            border: `1px dashed ${dark ? DARK_BORDER : BORDER_COL}`,
-            borderRadius: "100px",
-            fontFamily: FONT_SANS, fontSize: "13px",
-            color: dark ? DARK_MUTED : "#9a9daa",
-            textAlign: "center", lineHeight: "1.5",
-            whiteSpace: "normal",
-          }}>
-            {currentPrompt}
-          </span>
-        </div>
-      )}
 
       {/* ── Floating Rules/× button ──────────────────────────────────────── */}
       <AnimatePresence>

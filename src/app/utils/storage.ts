@@ -46,7 +46,12 @@ export interface NewToolParams {
   magnetCursorRepel?: boolean;
   revealOnHover?: boolean;
   rhythmSensitivity?: boolean;
+  rhythmIntensity?: number;
   inkEnabled?: boolean;
+  magnetPoint?: boolean;
+  magnetPointX?: number;
+  magnetPointY?: number;
+  magnetPointStrength?: number;
 }
 
 export interface NewToolData {

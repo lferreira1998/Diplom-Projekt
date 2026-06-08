@@ -1309,7 +1309,12 @@ export default function New() {
   const [magnetCursorRepel, setMagnetCursorRepel]         = useState(false);
   const [revealOnHover, setRevealOnHover]                 = useState(false);
   const [rhythmSensitivity, setRhythmSensitivity]         = useState(false);
+  const [rhythmIntensity, setRhythmIntensity]             = useState(0.5);
   const [inkEnabled, setInkEnabled]                       = useState(false);
+  const [magnetPoint, setMagnetPoint]                     = useState(false);
+  const [magnetPointX, setMagnetPointX]                   = useState(0.5);
+  const [magnetPointY, setMagnetPointY]                   = useState(0.32);
+  const [magnetPointStrength, setMagnetPointStrength]     = useState(0.5);
 
   // Position params
   const [positionMode, setPositionMode] = useState<"standard" | "spiral" | "random" | "running" | "custom" | "zigzag" | "followdot">("standard");
@@ -1623,7 +1628,12 @@ export default function New() {
       setMagnetCursorRepel(p.magnetCursorRepel === true);
       setRevealOnHover(p.revealOnHover === true);
       setRhythmSensitivity(p.rhythmSensitivity === true);
+      setRhythmIntensity(typeof p.rhythmIntensity === "number" ? p.rhythmIntensity : 0.5);
       setInkEnabled(p.inkEnabled === true);
+      setMagnetPoint(p.magnetPoint === true);
+      setMagnetPointX(typeof p.magnetPointX === "number" ? p.magnetPointX : 0.5);
+      setMagnetPointY(typeof p.magnetPointY === "number" ? p.magnetPointY : 0.32);
+      setMagnetPointStrength(typeof p.magnetPointStrength === "number" ? p.magnetPointStrength : 0.5);
     }).catch((err) => {
       console.error("[New] Failed to load tool:", err);
     });
@@ -1720,7 +1730,8 @@ export default function New() {
         textEditingEnabled,
         textVerblassEnabled, verblassZeitpunkt, verblassSchnelligkeit,
         textSchwerEnabled, schwerZeitpunkt, schwerSchnelligkeit,
-        magnetCursor, magnetCursorRepel, revealOnHover, rhythmSensitivity, inkEnabled,
+        magnetCursor, magnetCursorRepel, revealOnHover, rhythmSensitivity, rhythmIntensity, inkEnabled,
+        magnetPoint, magnetPointX, magnetPointY, magnetPointStrength,
         positionMode, randomMode,
         drawnPath: positionMode === "custom" ? drawnPath : [],
         grainLevel, grainMotion, textSizeLevel, bgHue, serifLevel,
@@ -1862,7 +1873,7 @@ export default function New() {
     textEditingEnabled &&
     !textVerblassEnabled && verblassZeitpunkt === 0.5 && verblassSchnelligkeit === 2.0 &&
     !textSchwerEnabled && schwerZeitpunkt === 0.5 && schwerSchnelligkeit === 50 &&
-    !magnetCursor && !revealOnHover && !rhythmSensitivity && !inkEnabled &&
+    !magnetCursor && !revealOnHover && !rhythmSensitivity && !inkEnabled && !magnetPoint &&
     positionMode === "standard" && randomMode === "words" && drawnPath.length === 0 &&
     grainLevel === 0 && grainMotion === 0 && textSizeLevel === 46 && bgHue === null && serifLevel === null;
 
@@ -2143,7 +2154,13 @@ export default function New() {
             magnetCursorRepel={magnetCursorRepel}
             revealOnHover={revealOnHover}
             rhythmSensitivity={rhythmSensitivity}
+            rhythmIntensity={rhythmIntensity}
             inkEnabled={inkEnabled}
+            magnetPoint={magnetPoint}
+            magnetPointX={magnetPointX}
+            magnetPointY={magnetPointY}
+            magnetPointStrength={magnetPointStrength}
+            onMagnetPointMove={(x, y) => { setMagnetPointX(x); setMagnetPointY(y); }}
           />
       </motion.div>
 
@@ -3164,6 +3181,31 @@ export default function New() {
                       <motion.p key={rhythmSensitivity ? "rhy-on" : "rhy-off"} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.18 }} style={{ fontFamily: FONT_SANS, fontSize: "13px", color: descColor, lineHeight: "1.45", margin: 0 }}>
                         {t.rhythmDesc}
                       </motion.p>
+                      {rhythmSensitivity && (
+                        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                          <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{DE ? "Intensität" : "Intensity"}</span>
+                          <DoubleSlider value={Math.round(rhythmIntensity * 10)} min={1} max={10} step={1} onChange={v => setRhythmIntensity(v / 10)} dark={dark} />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Magnet Point card */}
+                    <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
+                      <div style={{ height: "36px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{DE ? "Magnet-Punkt" : "Magnet Point"}</span>
+                        <span onClick={() => setMagnetPoint(v => !v)} style={{ fontFamily: FONT_SANS, fontSize: "16px", color: descColor, cursor: "pointer" }}>{magnetPoint ? t.on : t.off}</span>
+                      </div>
+                      <motion.p key={magnetPoint ? "mp-on" : "mp-off"} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.18 }} style={{ fontFamily: FONT_SANS, fontSize: "13px", color: descColor, lineHeight: "1.45", margin: 0 }}>
+                        {DE
+                          ? "Ein ziehbarer Punkt im Schreibfeld zieht den Text langsam zu sich. Ziehe den Punkt, um ihn zu platzieren."
+                          : "A draggable point in the writing area slowly pulls the text toward it. Drag the dot to place it."}
+                      </motion.p>
+                      {magnetPoint && (
+                        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                          <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{DE ? "Anziehungskraft" : "Attraction Strength"}</span>
+                          <DoubleSlider value={Math.round(magnetPointStrength * 10)} min={1} max={10} step={1} onChange={v => setMagnetPointStrength(v / 10)} dark={dark} />
+                        </div>
+                      )}
                     </div>
 
                     {/* Ink card */}
@@ -3547,7 +3589,7 @@ export default function New() {
                 animate={
                   menuOpen
                     ? { y: 8, opacity: 0, scale: 1, transition: { y: { duration: 0.22, ease: "easeOut" }, opacity: { duration: 0.1 } } }
-                    : menuHovered ? { y: 4, opacity: 1, scale: 1 } : { y: -6, opacity: 0, scale: 1 }
+                    : menuHovered ? { y: -3, opacity: 1, scale: 1.22 } : { y: -6, opacity: 0, scale: 1 }
                 }
                 transition={{ duration: 0.22, ease: "easeOut" }}
                 style={{

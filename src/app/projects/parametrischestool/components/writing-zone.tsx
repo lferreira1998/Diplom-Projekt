@@ -89,7 +89,14 @@ interface WritingZoneProps {
   magnetCursorRepel?: boolean;
   revealOnHover?: boolean;
   rhythmSensitivity?: boolean;
+  rhythmIntensity?: number;     // 0–1, strength of the per-word size reaction
   inkEnabled?: boolean;
+  // ── Magnet Point (draggable fixed point, attraction only) ──────────────────
+  magnetPoint?: boolean;
+  magnetPointX?: number;        // 0–1 fraction of viewport width
+  magnetPointY?: number;        // 0–1 fraction of viewport height
+  magnetPointStrength?: number; // 0–1
+  onMagnetPointMove?: (x: number, y: number) => void;
 }
 
 // ── Pure helpers ──────────────────────────────────────────────────────────────
@@ -1766,7 +1773,13 @@ export function WritingZone({
   magnetCursorRepel     = false,
   revealOnHover         = false,
   rhythmSensitivity     = false,
+  rhythmIntensity       = 0.5,
   inkEnabled            = false,
+  magnetPoint           = false,
+  magnetPointX          = 0.5,
+  magnetPointY          = 0.32,
+  magnetPointStrength   = 0.5,
+  onMagnetPointMove,
 }: WritingZoneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const cursorDomRef = useRef<HTMLSpanElement>(null);
@@ -1867,13 +1880,22 @@ export function WritingZone({
   const mousePosRef      = useRef<{ x: number; y: number } | null>(null);
   const [magnetTick, setMagnetTick] = useState(0);
 
+  // Magnet point (draggable fixed point that attracts text)
+  const magnetPointOffsetsRef = useRef<{ dx: number; dy: number; vx: number; vy: number }[]>([]);
+  const [magnetPointDragging, setMagnetPointDragging] = useState(false);
+  const magnetPointDragStartRef = useRef<{ mx: number; my: number; px: number; py: number } | null>(null);
+  const magnetPointXRef  = useRef(magnetPointX);
+  const magnetPointYRef  = useRef(magnetPointY);
+  const magnetPointStrRef = useRef(magnetPointStrength);
+  magnetPointXRef.current  = magnetPointX;
+  magnetPointYRef.current  = magnetPointY;
+  magnetPointStrRef.current = magnetPointStrength;
+
   // Reveal on hover
   const [revealedSet, setRevealedSet] = useState(() => new Set<number>());
 
-  // Rhythm sensitivity
-  const rhythmIntervals = useRef<number[]>([]);
-  const lastKeyTime     = useRef<number>(0);
-  const [rhythmMult, setRhythmMult] = useState(1);
+  // Rhythm sensitivity is computed per word at render time (see buildNodes),
+  // using posTimesRef timestamps + the word groupings in groupsRef.
 
   // Ink opacity
   const inkEnabledRef = useRef(inkEnabled);
@@ -1900,6 +1922,7 @@ export function WritingZone({
       charNat.current.push(null);
       charElsRef.current.push(null);
       magnetOffsetsRef.current.push({ dx: 0, dy: 0 });
+      magnetPointOffsetsRef.current.push({ dx: 0, dy: 0, vx: 0, vy: 0 });
       const inkVal = inkEnabledRef.current ? inkLevelRef.current : 1.0;
       charInkRef.current.push(inkVal);
       if (inkEnabledRef.current) {
@@ -1914,6 +1937,7 @@ export function WritingZone({
       charNat.current.length     = positions.length;
       charElsRef.current.length  = positions.length;
       magnetOffsetsRef.current.length = positions.length;
+      magnetPointOffsetsRef.current.length = positions.length;
       charInkRef.current.length     = positions.length;
     }
     if (inkEnabledRef.current) setInkLevel(inkLevelRef.current);
@@ -2008,19 +2032,73 @@ export function WritingZone({
     return () => cancelAnimationFrame(animId);
   }, [magnetCursor, magnetCursorRepel]);
 
+  // Reset magnet-point offsets when turned off
+  useEffect(() => {
+    if (!magnetPoint) {
+      magnetPointOffsetsRef.current = magnetPointOffsetsRef.current.map(() => ({ dx: 0, dy: 0, vx: 0, vy: 0 }));
+      setMagnetTick(t => t + 1);
+    }
+  }, [magnetPoint]);
+
+  // Magnet point RAF loop: gentle, controlled attraction toward the fixed point.
+  useEffect(() => {
+    if (!magnetPoint) return;
+    let animId: number;
+    const loop = () => {
+      const px = magnetPointXRef.current * window.innerWidth;
+      const py = magnetPointYRef.current * window.innerHeight;
+      const str = Math.max(0, Math.min(1, magnetPointStrRef.current));
+      let dirty = false;
+      for (let i = 0; i < charElsRef.current.length; i++) {
+        const m = magnetPointOffsetsRef.current[i];
+        const el = charElsRef.current[i];
+        if (!m || !el) continue;
+        const rect = el.getBoundingClientRect();
+        // Current (already-offset) centre; subtract the offset to get the base centre.
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        const ddx = px - cx;
+        const ddy = py - cy;
+        const dist = Math.sqrt(ddx * ddx + ddy * ddy) + 1;
+        const force = Math.min(dist * 0.00012, 0.09) * str;
+        m.vx += (ddx / dist) * force;
+        m.vy += (ddy / dist) * force;
+        m.vx *= 0.90;
+        m.vy *= 0.90;
+        m.dx += m.vx;
+        m.dy += m.vy;
+        dirty = true;
+      }
+      if (dirty) setMagnetTick(t => t + 1);
+      animId = requestAnimationFrame(loop);
+    };
+    animId = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(animId);
+  }, [magnetPoint]);
+
+  // Drag the magnet point dot
+  useEffect(() => {
+    if (!magnetPointDragging) return;
+    const onMove = (e: MouseEvent) => {
+      const drag = magnetPointDragStartRef.current;
+      if (!drag || !onMagnetPointMove) return;
+      const nx = drag.px + (e.clientX - drag.mx) / window.innerWidth;
+      const ny = drag.py + (e.clientY - drag.my) / window.innerHeight;
+      onMagnetPointMove(Math.max(0, Math.min(1, nx)), Math.max(0, Math.min(1, ny)));
+    };
+    const onUp = () => { magnetPointDragStartRef.current = null; setMagnetPointDragging(false); };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+  }, [magnetPointDragging, onMagnetPointMove]);
+
   // Reset revealedSet when reveal-on-hover is turned off
   useEffect(() => {
     if (!revealOnHover) setRevealedSet(new Set());
   }, [revealOnHover]);
-
-  // Reset rhythm when turned off
-  useEffect(() => {
-    if (!rhythmSensitivity) {
-      rhythmIntervals.current = [];
-      lastKeyTime.current = 0;
-      setRhythmMult(1);
-    }
-  }, [rhythmSensitivity]);
 
   // Reset ink when turned off
   useEffect(() => {
@@ -2358,13 +2436,12 @@ export function WritingZone({
       let basePos = posRef.current;
       let baseCur = curRef.current;
       for (let pi = 0; pi < pending; pi++) {
-        if (baseCur < basePos.length) {
-          const upd = basePos.map((p: { layers: { type: string; char?: string }[] }) => ({ layers: [...p.layers] }));
-          upd[baseCur] = { layers: [...upd[baseCur].layers, { type: "char", char: " " }] };
-          basePos = upd;
-        } else {
-          basePos = [...basePos, { layers: [{ type: "char", char: " " }] }];
-        }
+        // Always insert spaces (push existing text forward), never layer on top.
+        basePos = [
+          ...basePos.slice(0, baseCur),
+          { layers: [{ type: "char" as const, char: " " }] },
+          ...basePos.slice(baseCur),
+        ];
         baseCur++;
       }
       onUpdateRef.current(basePos, baseCur);
@@ -2530,40 +2607,33 @@ export function WritingZone({
       spacesInsertedRef.current = 0;
       lastFrameRef.current      = 0;
       for (let pi = 0; pi < pending; pi++) {
-        if (baseCur < basePos.length) {
-          const upd = basePos.map(p => ({ layers: [...p.layers] }));
-          upd[baseCur] = { layers: [...upd[baseCur].layers, { type: "char", char: " " }] };
-          basePos = upd;
-        } else {
-          basePos = [...basePos, { layers: [{ type: "char", char: " " }] }];
-        }
+        // Always insert spaces (push existing text forward), never layer on top.
+        basePos = [
+          ...basePos.slice(0, baseCur),
+          { layers: [{ type: "char", char: " " }] },
+          ...basePos.slice(baseCur),
+        ];
         baseCur++;
       }
 
       let newPos: Position[];
-      if (baseCur < basePos.length) {
+      if (correctionMode === "tippex" && baseCur < basePos.length) {
+        // Tippex: layer the new char on top of the existing position (leaves a trace).
         const next    = basePos.map(p => ({ layers: [...p.layers] }));
         next[baseCur] = { layers: [...next[baseCur].layers, { type: "char", char: ch }] };
         newPos = next;
       } else {
-        newPos = [...basePos, { layers: [{ type: "char", char: ch }] }];
+        // Standard insert: splice in a new position so existing text is pushed forward.
+        newPos = [
+          ...basePos.slice(0, baseCur),
+          { layers: [{ type: "char", char: ch }] },
+          ...basePos.slice(baseCur),
+        ];
       }
       lkpt.current = now;
-      if (rhythmSensitivity) {
-        if (lastKeyTime.current > 0) {
-          const interval = now - lastKeyTime.current;
-          rhythmIntervals.current.push(interval);
-          if (rhythmIntervals.current.length > 8) rhythmIntervals.current.shift();
-          const avg = rhythmIntervals.current.reduce((a, b) => a + b, 0) / rhythmIntervals.current.length;
-          const clamped = Math.max(80, Math.min(800, avg));
-          const t2 = (clamped - 80) / 720;
-          setRhythmMult(0.72 + t2 * 0.66);
-        }
-        lastKeyTime.current = now;
-      }
       onUpdate(newPos, baseCur + 1);
     },
-    [positions, cursor, applyBackspace, onUpdate, lkpt, textEditingEnabled, deleteMode, correctionMode, rhythmSensitivity]
+    [positions, cursor, applyBackspace, onUpdate, lkpt, textEditingEnabled, deleteMode, correctionMode]
   );
 
   // ── Click-to-cursor ───────────────────────────────────────────────────────
@@ -2624,15 +2694,28 @@ export function WritingZone({
     // Group characters of a word into a nowrap inline-block so the browser only
     // breaks lines at spaces — never in the middle of a word.
     let currentWord: React.ReactNode[] = [];
+    let currentWordTimes: number[] = []; // keystroke timestamps of this word's chars
     let wkey = 0;
     const flushWord = () => {
       if (currentWord.length) {
+        // Rhythm sensitivity: size the whole word by how fast it was typed.
+        // Fast (low ms/char) → smaller & tighter; slow → larger & calmer.
+        let wordFontSize: string | undefined;
+        if (rhythmSensitivity && currentWordTimes.length >= 2) {
+          const dur   = Math.max(...currentWordTimes) - Math.min(...currentWordTimes);
+          const tpc   = dur / currentWordTimes.length;             // ms per char
+          const tNorm = Math.max(0, Math.min(1, (tpc - 50) / 250)); // 50ms→0 fast, 300ms→1 slow
+          const base  = 0.75 + tNorm * 0.70;                        // 0.75× … 1.45×
+          const scale = 1 + (base - 1) * Math.max(0, Math.min(1, rhythmIntensity));
+          if (Math.abs(scale - 1) > 0.001) wordFontSize = `${scale}em`;
+        }
         els.push(
-          <span key={`w${wkey++}`} style={{ display: "inline-block", whiteSpace: "nowrap", verticalAlign: "text-bottom" }}>
+          <span key={`w${wkey++}`} style={{ display: "inline-block", whiteSpace: "nowrap", verticalAlign: "text-bottom", fontSize: wordFontSize }}>
             {currentWord}
           </span>
         );
         currentWord = [];
+        currentWordTimes = [];
       }
     };
 
@@ -2708,9 +2791,11 @@ export function WritingZone({
       // Reveal on hover: invisible until mouse passes over
       const revealOpacity = revealOnHover ? (revealedSet.has(i) ? 1 : 0) : 1;
 
-      // Magnet cursor offset
-      const mgX = magnetCursor ? (magnetOffsetsRef.current[i]?.dx ?? 0) : 0;
-      const mgY = magnetCursor ? (magnetOffsetsRef.current[i]?.dy ?? 0) : 0;
+      // Magnet offset (cursor + draggable point, additive)
+      const mgX = (magnetCursor ? (magnetOffsetsRef.current[i]?.dx ?? 0) : 0)
+                + (magnetPoint  ? (magnetPointOffsetsRef.current[i]?.dx ?? 0) : 0);
+      const mgY = (magnetCursor ? (magnetOffsetsRef.current[i]?.dy ?? 0) : 0)
+                + (magnetPoint  ? (magnetPointOffsetsRef.current[i]?.dy ?? 0) : 0);
 
       const hasDriftOrMagnet = hasDrift || Math.abs(mgX) > 0.01 || Math.abs(mgY) > 0.01;
       const driftStyle: React.CSSProperties = hasDriftOrMagnet
@@ -2770,6 +2855,7 @@ export function WritingZone({
       // end of the word and then flushes it — the line break happens between
       // whole words, never inside one, and no leading space starts a new line.
       currentWord.push(charSpan);
+      if (rhythmSensitivity) currentWordTimes.push(posTimesRef.current[i] ?? nowMs);
       if (topChar === " ") flushWord();
 
       // Generate wrap-around clone if char drifted off-screen.
@@ -3052,7 +3138,7 @@ export function WritingZone({
             color:        textColor,
             fontFamily:   fontFamily,
             fontVariationSettings: fontVariationSettings,
-            fontSize:     `${fontSize * rhythmMult}px`,
+            fontSize:     `${fontSize}px`,
             lineHeight:   1.6,
             caretColor:   "transparent",
             wordBreak:    "normal",
@@ -3094,9 +3180,10 @@ export function WritingZone({
           {nodes}
         </div>
       </div>
-      {/* Ink refill button — only when inkEnabled */}
+      {/* Ink refill button — only when inkEnabled. Sits directly above the
+          Export button (which is fixed at bottom:24 right:24, 44px tall). */}
       {inkEnabled && createPortal(
-        <div style={{ position: "fixed", bottom: "32px", right: "32px", zIndex: 50, display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", pointerEvents: "auto" }}>
+        <div style={{ position: "fixed", bottom: "80px", right: "24px", zIndex: 50, display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", pointerEvents: "auto" }}>
           <style>{`@keyframes _inkPulse{0%,100%{opacity:1}50%{opacity:0.35}}`}</style>
           {/* Level bar */}
           <div style={{ width: "4px", height: "36px", background: textColor.startsWith("rgb") ? textColor.replace(/,[^)]+\)/, ",0.15)") : "rgba(0,0,0,0.12)", borderRadius: "2px", overflow: "hidden", display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
@@ -3122,6 +3209,28 @@ export function WritingZone({
             </svg>
           </button>
         </div>,
+        document.body
+      )}
+      {/* Draggable magnet point dot */}
+      {magnetPoint && createPortal(
+        <div
+          style={{
+            position: "fixed",
+            left: `${magnetPointX * (typeof window !== "undefined" ? window.innerWidth : 1920)}px`,
+            top:  `${magnetPointY * (typeof window !== "undefined" ? window.innerHeight : 1080)}px`,
+            width: 14, height: 14, borderRadius: "50%",
+            background: textColor,
+            transform: "translate(-50%, -50%)",
+            cursor: magnetPointDragging ? "grabbing" : "grab",
+            zIndex: 60, userSelect: "none",
+            boxShadow: "0 0 0 4px rgba(0,0,0,0.06)",
+          }}
+          onMouseDown={(e) => {
+            e.preventDefault();
+            magnetPointDragStartRef.current = { mx: e.clientX, my: e.clientY, px: magnetPointX, py: magnetPointY };
+            setMagnetPointDragging(true);
+          }}
+        />,
         document.body
       )}
       {/* Wrap-around clones rendered as portal so they're not clipped */}

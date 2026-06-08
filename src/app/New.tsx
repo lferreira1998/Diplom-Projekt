@@ -1245,6 +1245,7 @@ export default function New() {
   const [previewSeed]                     = useState(() => Math.floor(Math.random() * 999983));
   const grainLayers = useMemo(() => buildGrainLayers(previewSeed), [previewSeed]);
   const [saveError, setSaveError]         = useState<string | null>(null);
+  const [saveAttempted, setSaveAttempted] = useState(false);
   const [currentToolId, setCurrentToolId] = useState<string | null>(null);
   const [previewVideoUrl, setPreviewVideoUrl]   = useState<string | null>(null);
   const [previewVideoPath, setPreviewVideoPath] = useState<string | null>(null);
@@ -1728,18 +1729,21 @@ export default function New() {
 
   const handleSave = useCallback(async (isPublic: boolean) => {
     if (!toolName.trim()) {
+      setSaveAttempted(true);
       setRulesOpen(true);
       setIdentityOpen(true);
       setSaveError(lang === "de" ? "Bitte gib deinem Tool einen Namen." : "Please give your tool a name.");
       return;
     }
     if (!toolDescription.trim()) {
+      setSaveAttempted(true);
       setRulesOpen(true);
       setIdentityOpen(true);
       setSaveError(lang === "de" ? "Bitte füge eine Beschreibung hinzu." : "Please add a description.");
       return;
     }
     if (!previewVideoUrl) {
+      setSaveAttempted(true);
       setRulesOpen(true);
       setIdentityOpen(true);
       setSaveError(lang === "de" ? "Bitte nimm zuerst ein Vorschau-Video auf." : "Please record a preview video first.");
@@ -2743,8 +2747,8 @@ export default function New() {
                   </div>
                 </div>
                 <div style={{ padding: "16px 24px", flexShrink: 0, display: "flex", flexDirection: "column", gap: "8px", borderTop: `1px dashed ${innerBorder}` }}>
-                  {/* Required fields checklist */}
-                  {(!toolName.trim() || !toolDescription.trim() || !previewVideoUrl) && (
+                  {/* Required fields checklist — only after a failed save attempt */}
+                  {saveAttempted && (!toolName.trim() || !toolDescription.trim() || !previewVideoUrl) && (
                     <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                       {[
                         { ok: !!toolName.trim(),        label: lang === "de" ? "Name" : "Name" },

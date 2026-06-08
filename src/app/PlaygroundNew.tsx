@@ -767,14 +767,12 @@ function HeroHeading({ DE, theme }: { DE: boolean; theme: Theme }) {
     : "Explore Writing Tools that break their rules.";
 
   return (
-    <h1 style={{ margin: 0, fontFamily: FONT_CMP_SERIF, fontSize: 36, lineHeight: "45px", fontWeight: 400, color: theme.headline, textAlign: "center", whiteSpace: "nowrap", animation: "_heroIn 1s ease-out both" }}>
+    <h1 style={{ margin: 0, fontFamily: FONT_CMP_SERIF, fontSize: 36, lineHeight: "45px", fontWeight: 600, color: theme.headline, textAlign: "center", whiteSpace: "nowrap", animation: "_heroIn 1s ease-out both" }}>
       <style>{`
         @keyframes _heroIn { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: none; } }
         @keyframes _toolIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes _cursorBlink { 0%,49%{opacity:1} 50%,100%{opacity:0} }
       `}</style>
       {line1}<br />{line2}
-      <span style={{ display: "inline-block", width: "1.5px", height: "0.85em", background: theme.headline, marginLeft: "3px", verticalAlign: "middle", animation: "_cursorBlink 1s steps(1) infinite", animationDelay: "1s" }} />
     </h1>
   );
 }
@@ -839,7 +837,7 @@ export default function PlaygroundNew() {
               <ToolShape label="...uninvited thoughts"    href="/create-tool?preset=uninvited-thoughts"  videoLight="uninvited-thoughts-light"  videoDark="uninvited-thoughts-dark"  bgLight="#eaf8f5" bgDark="#1f2f29" style={{ left: 420,  top: 57,  width: 241, height: 182, transform: "rotate(-9.25deg)", borderRadius: 4 }} textStyle={{ transform: "rotate(9.25deg)" }} />
               <ToolShape label="...off the grid"          href="/create-tool?preset=off-the-grid"        videoLight="off-the-grid-light"        videoDark="off-the-grid-dark"        bgLight="#fff0f4" bgDark="#37262d" style={{ left: 1220, top: 112, width: 251, height: 163, transform: "rotate(4.18deg)",  borderRadius: 4, justifyContent: "flex-start", alignItems: "flex-end", padding: 12 }} textStyle={{ transform: "rotate(-4.18deg)", marginBottom: 0 }} />
               <ToolShape label="...blind & then witness"  href="/create-tool?preset=blind-then-witness"  videoLight="blind-then-witness-light"  videoDark="blind-then-witness-dark"  bgLight="#ecf7ee" bgDark="#222d26" style={{ left: 213,  top: 579, width: 324, height: 163, transform: "rotate(6.45deg)",  borderRadius: 100 }} textStyle={{ transform: "rotate(-6.45deg)" }} />
-              <ToolShape label="...with visible corrections" href="/create-tool?preset=visible-corrections" videoLight="visible-corrections-light" videoDark="visible-corrections-dark" bgLight="#f5f6ea" bgDark="#2f2836" style={{ left: 774,  top: 526, width: 363, height: 174, borderRadius: "40px 4px 40px 4px" }} />
+              <ToolShape label="...with visible corrections" href="/create-tool?preset=visible-corrections" videoLight="visible-corrections-light" videoDark="visible-corrections-dark" bgLight="#f5f6ea" bgDark="#2f2836" style={{ left: 774,  top: 550, width: 363, height: 174, borderRadius: "40px 4px 40px 4px" }} />
               <ToolShape label="...in a spiral"           href="/create-tool?preset=in-a-spiral"         videoLight="in-a-spiral-light"         videoDark="in-a-spiral-dark"         bgLight="#ecf4fe" bgDark="#242c38" videoFit="cover" style={{ left: 1321, top: 414, width: 211, height: 309, transform: "rotate(12.11deg)", borderRadius: 200 }} textStyle={{ transform: "rotate(-12.11deg)" }} />
             </div>
             <div style={{ position: "absolute", left: 456, top: 300, width: 768, opacity: exploreMode ? 0 : 1, transition: "opacity 0.35s ease", pointerEvents: exploreMode ? "none" : "auto" }}>
@@ -854,7 +852,7 @@ export default function PlaygroundNew() {
                 <button
                   key={label}
                   onClick={onClick}
-                  style={{ background: theme.toolBg, border: `1px dashed ${theme.border}`, borderRadius: "4px", cursor: "pointer", outline: "none", padding: "12px 24px", fontFamily: FONT_SANS, fontSize: "15px", color: theme.text }}
+                  style={{ background: theme.toolBg, border: `1px dashed ${theme.border}`, borderRadius: 0, cursor: "pointer", outline: "none", padding: "8px 16px", fontFamily: FONT_SANS, fontSize: "14px", color: theme.text }}
                 >
                   {label}
                 </button>
@@ -916,6 +914,36 @@ export default function PlaygroundNew() {
           onConfirm={(id, mins) => { setLaunchTool(null); navigateToTool(id, mins); }}
           onClose={() => setLaunchTool(null)}
         />
+        {!exploreMode && (
+          <button
+            onClick={() => navigate("/create-tool")}
+            style={{
+              position: "fixed",
+              bottom: "40px",
+              right: "48px",
+              zIndex: 50,
+              width: "96px",
+              height: "96px",
+              borderRadius: "50%",
+              border: `1px dashed ${theme.border}`,
+              background: theme.toolBg,
+              cursor: "pointer",
+              outline: "none",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              fontFamily: FONT_SANS,
+              fontSize: "11px",
+              color: theme.text,
+              textAlign: "center",
+              lineHeight: "1.4",
+            }}
+          >
+            <span style={{ fontSize: "20px", lineHeight: 1, marginBottom: "3px" }}>+</span>
+            <span style={{ whiteSpace: "pre-line" }}>{DE ? "Tool\nerstellen" : "Create\nTool"}</span>
+          </button>
+        )}
       </main>
     </DarkContext.Provider>
     </ThemeContext.Provider>

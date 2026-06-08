@@ -41,6 +41,7 @@ export interface NewToolParams {
   previewVideo?: string;
   previewVideoPath?: string;
   cardShape?: string | null;
+  recordShape?: string;
   magnetCursor?: boolean;
   magnetCursorRepel?: boolean;
   revealOnHover?: boolean;

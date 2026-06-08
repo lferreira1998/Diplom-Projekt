@@ -181,7 +181,18 @@ const EXPLORE_SLOTS: { left: number; top: number; width: number; height: number;
   { left: 952, top: 896, width: 236, height: 233, borderRadius: 200, rotate: 5.1 },
 ];
 
-function UserToolShape({ tool, style, textStyle, onClick, dark }: {
+// Maps a recorded shape id (from the record overlay) to its display silhouette
+// so the shape a tool was recorded with is the shape shown across the collection.
+const RECORD_SHAPE_DISPLAY: Record<string, { borderRadius: string | number; ratio: number; circle: boolean }> = {
+  "round":     { borderRadius: "50%",               ratio: 1,         circle: true },
+  "portrait":  { borderRadius: 4,                   ratio: 182 / 241, circle: false },
+  "landscape": { borderRadius: 4,                   ratio: 163 / 251, circle: false },
+  "wide-pill": { borderRadius: 999,                 ratio: 163 / 324, circle: false },
+  "fluid":     { borderRadius: "40px 4px 40px 4px", ratio: 174 / 363, circle: false },
+  "tall-pill": { borderRadius: 999,                 ratio: 309 / 211, circle: true },
+};
+
+function UserToolShape({ tool, style, onClick, dark }: {
   tool: NewToolData;
   style: CSSProperties;
   textStyle?: CSSProperties;
@@ -189,7 +200,6 @@ function UserToolShape({ tool, style, textStyle, onClick, dark }: {
   dark: boolean;
 }) {
   const theme = useContext(ThemeContext);
-  const [hovered, setHovered] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const videoUrl = tool.params.previewVideo;
 
@@ -202,11 +212,21 @@ function UserToolShape({ tool, style, textStyle, onClick, dark }: {
     if (v.readyState < 2) v.addEventListener("canplay", play, { once: true });
   }, [videoUrl]);
 
+  // Render in the shape the tool was actually recorded with: override the slot's
+  // default border-radius / height so the silhouette matches the recording.
+  const shapeDef = tool.params.recordShape ? RECORD_SHAPE_DISPLAY[tool.params.recordShape] : undefined;
+  const baseW = typeof style.width === "number" ? style.width : undefined;
+  const shapedStyle: CSSProperties = shapeDef
+    ? {
+        ...style,
+        borderRadius: shapeDef.borderRadius,
+        ...(baseW ? { height: Math.round(baseW * shapeDef.ratio) } : {}),
+      }
+    : style;
+
   return (
     <div
       onClick={onClick}
-      onPointerEnter={() => setHovered(true)}
-      onPointerLeave={() => setHovered(false)}
       style={{
         position: "absolute",
         border: `1px dashed ${theme.border}`,
@@ -215,7 +235,7 @@ function UserToolShape({ tool, style, textStyle, onClick, dark }: {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        ...style,
+        ...shapedStyle,
       }}
     >
       {videoUrl ? (
@@ -226,28 +246,16 @@ function UserToolShape({ tool, style, textStyle, onClick, dark }: {
           style={{
             position: "absolute", inset: 0, width: "100%", height: "100%",
             objectFit: "cover",
-            opacity: hovered ? 0 : 1,
-            transition: "opacity 120ms ease",
             pointerEvents: "none",
           }}
         >
           <source src={videoUrl} />
         </video>
       ) : (
-        <div style={{ position: "absolute", inset: 0, opacity: hovered ? 0 : 1, transition: "opacity 120ms ease", pointerEvents: "none" }}>
+        <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
           <ToolPreview tool={tool} active dark={dark} />
         </div>
       )}
-      <span style={{
-        position: "relative", zIndex: 1,
-        fontFamily: FONT_SANS, fontSize: 15, color: theme.text,
-        opacity: hovered ? 1 : 0,
-        transition: "opacity 120ms ease",
-        textAlign: "center", padding: "0 12px",
-        ...textStyle,
-      }}>
-        {tool.name || "Unnamed Tool"}
-      </span>
     </div>
   );
 }
@@ -323,6 +331,14 @@ function ToolCard({ tool, onClick, onDelete, isFavorite, onToggleFavorite, DE }:
   const presetVideoName = shape.video ? `${shape.video}-${dark ? "dark" : "light"}` : null;
   const videoSrc = userVideoUrl || (presetVideoName ? `/videos/${presetVideoName}.webm` : null);
 
+  // If the user recorded their own clip in a chosen shape, present the card in
+  // that exact shape (border-radius + aspect ratio) instead of the preset shape.
+  const recShape = tool.params.recordShape ? RECORD_SHAPE_DISPLAY[tool.params.recordShape] : undefined;
+  const useRec = !!(userVideoUrl && recShape);
+  const shapeRadius = useRec ? recShape!.borderRadius : shape.radius;
+  const shapeWidth = useRec ? `${Math.round(163 / recShape!.ratio)}px`
+    : (shape.circle ? "min(44%, 163px)" : "calc(100% - 16px)");
+
   useEffect(() => {
     const v = shapeVideoRef.current;
     if (!v || !videoSrc) return;
@@ -381,11 +397,12 @@ function ToolCard({ tool, onClick, onDelete, isFavorite, onToggleFavorite, DE }:
       <div style={{
         flexShrink: 0,
         position: "relative",
-        width: shape.circle ? "min(44%, 163px)" : "calc(100% - 16px)",
+        width: shapeWidth,
+        maxWidth: "calc(100% - 16px)",
         height: "163px",
         background: shape.bg,
         border: `1px dashed ${shapeBorder}`,
-        borderRadius: shape.radius,
+        borderRadius: shapeRadius,
         overflow: "hidden",
         display: "flex",
         alignItems: shape.bottomLeft ? "flex-end" : "center",
@@ -402,8 +419,7 @@ function ToolCard({ tool, onClick, onDelete, isFavorite, onToggleFavorite, DE }:
             style={{
               position: "absolute", inset: 0, width: "100%", height: "100%",
               objectFit: "cover",
-              opacity: hovered ? 0 : 1,
-              transition: "opacity 150ms ease",
+              opacity: 1,
               pointerEvents: "none",
               transform: "translateZ(0)",
             }}
@@ -419,8 +435,7 @@ function ToolCard({ tool, onClick, onDelete, isFavorite, onToggleFavorite, DE }:
           textAlign: "center",
           lineHeight: "1.3",
           whiteSpace: "nowrap",
-          opacity: videoSrc ? (hovered ? 1 : 0) : 1,
-          transition: videoSrc ? "opacity 150ms ease" : undefined,
+          opacity: videoSrc ? 0 : 1,
         }}>
           {shape.label}
         </span>
@@ -829,6 +844,21 @@ export default function PlaygroundNew() {
             </div>
             <div style={{ position: "absolute", left: 456, top: 300, width: 768, opacity: exploreMode ? 0 : 1, transition: "opacity 0.35s ease", pointerEvents: exploreMode ? "none" : "auto" }}>
               <HeroHeading DE={DE} theme={theme} />
+            </div>
+            <div style={{ position: "absolute", left: 456, top: 408, width: 768, display: "flex", justifyContent: "center", gap: "12px", opacity: exploreMode ? 0 : 1, transition: "opacity 0.35s ease", pointerEvents: exploreMode ? "none" : "auto", animation: "_heroIn 1s ease-out 0.4s both" }}>
+              {([
+                { label: DE ? "Tool-Sammlung" : "Tool Collection",     onClick: () => setExploreMode(true) },
+                { label: DE ? "Tool erstellen" : "Create Tool",         onClick: () => navigate("/create-tool") },
+                { label: DE ? "Über das Projekt" : "About the Project", onClick: () => navigate("/about-the-project") },
+              ]).map(({ label, onClick }) => (
+                <button
+                  key={label}
+                  onClick={onClick}
+                  style={{ background: theme.toolBg, border: `1px dashed ${theme.border}`, borderRadius: "4px", cursor: "pointer", outline: "none", padding: "12px 24px", fontFamily: FONT_SANS, fontSize: "15px", color: theme.text }}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
             {exploreMode && myToolsAll.slice(0, EXPLORE_SLOTS.length).map((tool, i) => {
               const slot = EXPLORE_SLOTS[i];

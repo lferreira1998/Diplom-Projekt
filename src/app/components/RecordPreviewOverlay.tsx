@@ -115,7 +115,7 @@ interface Props {
   sessionId: string;
   toolName: string;
   lang: "de" | "en";
-  onDone: (url: string, path: string) => void;
+  onDone: (url: string, path: string, shapeId: string) => void;
   onClose: () => void;
 }
 
@@ -307,7 +307,7 @@ export function RecordPreviewOverlay({
     try {
       const ext = mimeType.includes("mp4") ? "mp4" : "webm";
       const { url, path } = await uploadPreviewVideo(blob, sessionId, toolName, ext);
-      if (!cancelledRef.current) onDone(url, path);
+      if (!cancelledRef.current) onDone(url, path, shape.id);
     } catch (err) {
       if (!cancelledRef.current) { setError(String(err)); setPhase("error"); }
     }

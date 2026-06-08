@@ -1252,6 +1252,7 @@ export default function New() {
   const [currentToolId, setCurrentToolId] = useState<string | null>(null);
   const [previewVideoUrl, setPreviewVideoUrl]   = useState<string | null>(null);
   const [previewVideoPath, setPreviewVideoPath] = useState<string | null>(null);
+  const [recordShape, setRecordShape]           = useState<string | null>(null);
   const [showRecordOverlay, setShowRecordOverlay] = useState(false);
   const [recordState, setRecordState]             = useState<"idle" | "done" | "error">("idle");
   const [videoPreviewError, setVideoPreviewError] = useState(false);
@@ -1617,6 +1618,7 @@ export default function New() {
       setSerifLevel(typeof p.serifLevel === "number" ? p.serifLevel : null);
       if (p.previewVideo) { setPreviewVideoUrl(p.previewVideo); setPreviewVideoPath(p.previewVideoPath ?? null); setRecordState("done"); }
       setCardShape(p.cardShape ?? null);
+      if (p.recordShape) setRecordShape(p.recordShape);
       setMagnetCursor(p.magnetCursor === true);
       setMagnetCursorRepel(p.magnetCursorRepel === true);
       setRevealOnHover(p.revealOnHover === true);
@@ -1724,6 +1726,7 @@ export default function New() {
         grainLevel, grainMotion, textSizeLevel, bgHue, serifLevel,
         cardShape: cardShape ?? null,
         ...(previewVideoUrl ? { previewVideo: previewVideoUrl, previewVideoPath: previewVideoPath ?? undefined } : {}),
+        ...(recordShape ? { recordShape } : {}),
         preview: {
           text: prompts[0]?.trim().slice(0, 40) || (lang === "de" ? "Ich schreibe anders." : "I write differently."),
           seed: previewSeed,
@@ -1751,7 +1754,7 @@ export default function New() {
     textVerblassEnabled, verblassZeitpunkt, verblassSchnelligkeit,
     textSchwerEnabled, schwerZeitpunkt, schwerSchnelligkeit,
     magnetCursor, magnetCursorRepel, revealOnHover, rhythmSensitivity, inkEnabled,
-    positionMode, randomMode, drawnPath, grainLevel, grainMotion, textSizeLevel, bgHue, serifLevel, cardShape,
+    positionMode, randomMode, drawnPath, grainLevel, grainMotion, textSizeLevel, bgHue, serifLevel, cardShape, recordShape,
   ]);
 
   // ── Computed values ──────────────────────────────────────────────────────
@@ -2179,7 +2182,7 @@ export default function New() {
             exit={{ opacity: 0, transition: { duration: 0.12 } }}
             transition={{ duration: 0.15 }}
             style={{
-              position: "fixed", top: "24px", left: BTN_CLOSED.dark + 33 + 8,
+              position: "fixed", top: "24px", left: BTN_CLOSED.dark,
               display: "flex", alignItems: "center", gap: "8px",
               zIndex: 25,
             }}
@@ -2193,7 +2196,7 @@ export default function New() {
                 cursor: "pointer", outline: "none",
                 display: "flex", alignItems: "center",
                 padding: "0 13px",
-                fontFamily: FONT_SANS, fontSize: "13px",
+                fontFamily: FONT_SANS, fontSize: "15px",
                 color: dark ? DARK_TEXT : LIGHT_TEXT,
                 flexShrink: 0,
               }}
@@ -3435,7 +3438,7 @@ export default function New() {
             exit={{ opacity: 0, scale: 0.88, transition: { duration: 0.15 } }}
             transition={SPRING}
             ref={exportRef}
-            style={{ position: "fixed", bottom: "24px", right: "24px", zIndex: 20, width: `${topRightWidth}px` }}
+            style={{ position: "fixed", bottom: "24px", right: "24px", zIndex: 20, width: `${Math.max(topRightWidth, 168)}px` }}
           >
             <button
               onClick={() => setExportOpen(o => !o)}
@@ -3577,16 +3580,6 @@ export default function New() {
                         }}
                       >{t.navLabels[key]}</motion.button>
                     ))}
-                    {/* Language switch — last item */}
-                    <motion.button
-                      key="lang"
-                      variants={NAV_ITEM}
-                      style={navItemStyle(dark, false, surfaceLight, bgHue)}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setLang(l => { const next = l === "de" ? "en" : "de"; localStorage.setItem("appLang", next); return next; });
-                      }}
-                    >{t.langMenu}</motion.button>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -3719,9 +3712,10 @@ export default function New() {
           sessionId={sessionId}
           toolName={toolName}
           lang={lang}
-          onDone={(url, path) => {
+          onDone={(url, path, shapeId) => {
             setPreviewVideoUrl(url);
             setPreviewVideoPath(path);
+            setRecordShape(shapeId);
             setRecordState("done");
             setShowRecordOverlay(false);
           }}

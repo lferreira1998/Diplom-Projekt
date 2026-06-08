@@ -53,7 +53,6 @@ export interface NewToolParams {
   magnetPointY?: number;
   magnetPointStrength?: number;
   blindWritingEnabled?: boolean;
-  versionHistoryEnabled?: boolean;
 }
 
 export interface NewToolData {

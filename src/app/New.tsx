@@ -227,16 +227,11 @@ const TRANSLATIONS = {
     cursorRunningDesc: "Der Cursor läuft automatisch weiter, egal ob man schreibt oder nicht. Damit werden Pausen sichtbar.",
     cursorSpeed: "Geschwindigkeit",
     // Blind writing
-    blindLabel: "Unsichtbares Schreiben",
+    blindLabel: "Replay",
     blindDesc: "Der Text bleibt unsichtbar während des Schreibens. Danach kann man ihn in genau dem Tempo abspielen, in dem er getippt wurde – ein Beichtstuhl-Effekt: Man begegnet dem eigenen Text, als wäre er von jemand anderem.",
     blindPlay: "Abspielen",
     blindPlaying: "Läuft …",
     blindNoText: "Noch nichts geschrieben.",
-    // Version history
-    versionLabel: "Versionsverlauf mit Uhr",
-    versionDesc: "Schreib normal. Eine kleine Uhr zeichnet den Verlauf auf. Dreh den Zeiger zurück, um frühere Zustände deines Textes zu sehen – oder lass sie abspielen.",
-    versionPlay: "Abspielen",
-    versionLive: "Jetzt",
     // Visibility
     visVisible: "Sichtbar", visInvisible: "Unsichtbar",
     visSentence: "Nur aktueller Satz sichtbar",
@@ -289,14 +284,6 @@ const TRANSLATIONS = {
       if (secs === 0) return `Nach ${mins} min`;
       return `Nach ${mins} min ${secs} Sek`;
     },
-    magnetLabel: "Magnet-Cursor",
-    magnetDesc: "Der Text wird vom Cursor leicht angezogen oder weggedrückt.",
-    magnetAttract: "Anziehend",
-    magnetRepel: "Abstoßend",
-    revealLabel: "Reveal on Hover",
-    revealDesc: "Text ist unsichtbar, bis man mit der Maus darübergeht. Gut für Playground & Ausstellungen.",
-    rhythmLabel: "Rhythmus-Sensitivität",
-    rhythmDesc: "Schnelles Tippen erzeugt kleinen, engen Text. Langsames Tippen erzeugt großen, ruhigen Text.",
     inkLabel: "Tinte",
     inkDesc: "Buchstaben wirken wie Tinte – sie werden blasser. Klick auf den Tintentropfen zum Nachfüllen.",
     // Position
@@ -384,16 +371,11 @@ const TRANSLATIONS = {
     cursorRunningDesc: "The cursor moves automatically whether you type or not. This makes pauses visible.",
     cursorSpeed: "Speed",
     // Blind writing
-    blindLabel: "Invisible Writing",
+    blindLabel: "Replay",
     blindDesc: "Text stays hidden while writing. Afterwards you can play it back at the exact pace it was typed — a confessional effect: you encounter your own text as if written by someone else.",
     blindPlay: "Play back",
     blindPlaying: "Playing …",
     blindNoText: "Nothing written yet.",
-    // Version history
-    versionLabel: "Version history with clock",
-    versionDesc: "Write normally. A small clock records your progress. Turn the hand back to revisit earlier states — or play them forward.",
-    versionPlay: "Play",
-    versionLive: "Now",
     // Visibility
     visVisible: "Visible", visInvisible: "Invisible",
     visSentence: "Current sentence only",
@@ -446,14 +428,6 @@ const TRANSLATIONS = {
       if (secs === 0) return `After ${mins} min`;
       return `After ${mins} min ${secs} sec`;
     },
-    magnetLabel: "Magnet Cursor",
-    magnetDesc: "Text is slightly attracted or repelled by the cursor.",
-    magnetAttract: "Attract",
-    magnetRepel: "Repel",
-    revealLabel: "Reveal on Hover",
-    revealDesc: "Text is invisible until you hover over it with the mouse. Great for playground & exhibitions.",
-    rhythmLabel: "Rhythm Sensitivity",
-    rhythmDesc: "Fast typing produces small, tight text. Slow typing produces large, calm text.",
     inkLabel: "Ink",
     inkDesc: "Letters behave like ink — they fade over time. Click the ink drop button to refill.",
     // Position
@@ -819,119 +793,6 @@ function DoubleSlider({ value, min, max, step = 1, onChange, dark }: {
         onChange={(e) => onChange(Number(e.target.value))}
         style={{ position: "absolute", width: "100%", opacity: 0, cursor: "pointer", height: "100%", margin: 0, padding: 0 }}
       />
-    </div>
-  );
-}
-
-// ── Version clock ─────────────────────────────────────────────────────────────
-function VersionClock({
-  snapshotCount, scrubIdx, dark, textColor, onScrub, onLive,
-}: {
-  snapshotCount: number;
-  scrubIdx: number;
-  dark: boolean;
-  textColor: string;
-  onScrub: (idx: number) => void;
-  onLive: () => void;
-}) {
-  const svgRef = useRef<SVGSVGElement>(null);
-  const dragging = useRef(false);
-  const CX = 28, CY = 28, R_HAND = 18;
-
-  const norm = scrubIdx === -1
-    ? 0
-    : (snapshotCount - 1 - scrubIdx) / Math.max(1, snapshotCount - 1);
-  const handAngleDeg = -90 - norm * 180;
-  const rad = (handAngleDeg * Math.PI) / 180;
-  const tipX = CX + R_HAND * Math.cos(rad);
-  const tipY = CY + R_HAND * Math.sin(rad);
-
-  const getAngleFromEvent = (e: MouseEvent): number => {
-    const rect = svgRef.current?.getBoundingClientRect();
-    if (!rect) return -90;
-    const cx = rect.left + rect.width / 2;
-    const cy = rect.top + rect.height / 2;
-    return Math.atan2(e.clientY - cy, e.clientX - cx) * 180 / Math.PI;
-  };
-
-  const angleToNorm = (angleDeg: number): number => {
-    if (angleDeg >= -90 && angleDeg <= 0) return 0;
-    if (angleDeg > 0 && angleDeg < 90) return 1;
-    if (angleDeg >= 90 && angleDeg <= 180) return 1 - (angleDeg - 90) / 90 * 0.5;
-    // angleDeg in [-180, -90]
-    return (-90 - angleDeg) / 90 * 0.5;
-  };
-
-  useEffect(() => {
-    const onMove = (e: MouseEvent) => {
-      if (!dragging.current || snapshotCount < 2) return;
-      const angleDeg = getAngleFromEvent(e);
-      const n = angleToNorm(angleDeg);
-      const idx = Math.round((1 - n) * (snapshotCount - 1));
-      onScrub(Math.max(0, Math.min(snapshotCount - 1, idx)));
-    };
-    const onUp = () => { dragging.current = false; };
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onUp);
-    return () => {
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseup", onUp);
-    };
-  }, [snapshotCount, onScrub]);
-
-  const faceColor = dark ? "rgba(240,232,220,0.08)" : "rgba(85,85,85,0.06)";
-  const strokeCol = dark ? "rgba(240,232,220,0.25)" : "rgba(85,85,85,0.25)";
-  const handCol   = scrubIdx !== -1 ? textColor : (dark ? "rgba(240,232,220,0.5)" : "rgba(85,85,85,0.4)");
-
-  const ticks = Array.from({ length: 12 }, (_, i) => {
-    const a = (i / 12) * 2 * Math.PI - Math.PI / 2;
-    const isLeft = a < -Math.PI / 6 || a > Math.PI * 5 / 6;
-    const r1 = isLeft ? 21 : 23, r2 = 26;
-    return { x1: CX + r1 * Math.cos(a), y1: CY + r1 * Math.sin(a), x2: CX + r2 * Math.cos(a), y2: CY + r2 * Math.sin(a), isLeft };
-  });
-
-  return (
-    <div style={{ position: "relative", display: "inline-block" }}>
-      <svg
-        ref={svgRef}
-        width={56} height={56}
-        style={{ display: "block", cursor: snapshotCount >= 2 ? "grab" : "default", userSelect: "none" }}
-        onMouseDown={e => { e.preventDefault(); dragging.current = true; }}
-        onDoubleClick={onLive}
-      >
-        <circle cx={CX} cy={CY} r={26} fill={faceColor} stroke={strokeCol} strokeWidth={1} />
-        {ticks.map((t, i) => (
-          <line key={i} x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2}
-            stroke={strokeCol} strokeWidth={t.isLeft ? 1.5 : 1} />
-        ))}
-        <line x1={CX} y1={CY} x2={tipX} y2={tipY} stroke={handCol} strokeWidth={1.5} strokeLinecap="round" />
-        <circle cx={tipX} cy={tipY} r={3.5} fill={handCol} />
-        <circle cx={CX} cy={CY} r={2.5} fill={handCol} />
-        {scrubIdx === -1 && (
-          <circle cx={CX + 0} cy={CY - 16} r={3} fill={dark ? "rgba(240,232,220,0.35)" : "rgba(85,85,85,0.25)"} />
-        )}
-      </svg>
-      {scrubIdx !== -1 && (
-        <div
-          style={{ position: "absolute", top: "100%", left: "50%", transform: "translateX(-50%)", marginTop: "6px", whiteSpace: "nowrap" }}
-          onMouseDown={e => e.stopPropagation()}
-        >
-          <button
-            onClick={onLive}
-            style={{
-              height: "24px", padding: "0 10px",
-              background: "transparent",
-              border: `1px dashed ${strokeCol}`,
-              borderRadius: "4px", cursor: "pointer",
-              fontFamily: "'az-sans', sans-serif", fontSize: "11px",
-              color: dark ? "rgba(240,232,220,0.6)" : "rgba(85,85,85,0.7)",
-              outline: "none",
-            }}
-          >
-            {dark ? "→ Jetzt" : "→ Now"}
-          </button>
-        </div>
-      )}
     </div>
   );
 }
@@ -1430,16 +1291,6 @@ export default function New() {
   const blindLogRef          = useRef<{pos: Position[]; cur: number; ts: number}[]>([]);
   const blindPlaybackTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
-  // Version history
-  const [versionHistoryEnabled, setVersionHistoryEnabled] = useState(false);
-  const [versionScrubIdx, setVersionScrubIdx]             = useState(-1);
-  const [versionSnapshotCount, setVersionSnapshotCount]   = useState(0);
-  const [versionPlayback, setVersionPlayback]             = useState(false);
-  const versionSnapshotsRef    = useRef<{pos: Position[]; cur: number; ts: number}[]>([]);
-  const versionLastPosLenRef   = useRef(-1);
-  const versionScrubIdxRef     = useRef(-1);
-  const versionPlaybackTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
-
   // Visibility params
   const [visibility, setVisibility] = useState<"visible" | "invisible" | "sentence" | "word" | "char">("visible");
 
@@ -1459,11 +1310,6 @@ export default function New() {
   const [textSchwerEnabled, setTextSchwerEnabled]         = useState(false);
   const [schwerZeitpunkt, setSchwerZeitpunkt]             = useState(0.5);
   const [schwerSchnelligkeit, setSchwerSchnelligkeit]     = useState(50);
-  const [magnetCursor, setMagnetCursor]                   = useState(false);
-  const [magnetCursorRepel, setMagnetCursorRepel]         = useState(false);
-  const [revealOnHover, setRevealOnHover]                 = useState(false);
-  const [rhythmSensitivity, setRhythmSensitivity]         = useState(false);
-  const [rhythmIntensity, setRhythmIntensity]             = useState(0.5);
   const [inkEnabled, setInkEnabled]                       = useState(false);
   const [magnetPoint, setMagnetPoint]                     = useState(false);
   const [magnetPointX, setMagnetPointX]                   = useState(0.5);
@@ -1776,15 +1622,9 @@ export default function New() {
       setBgHue(typeof p.bgHue === "number" ? p.bgHue : null);
       setSerifLevel(typeof p.serifLevel === "number" ? p.serifLevel : null);
       setBlindWritingEnabled(p.blindWritingEnabled === true);
-      setVersionHistoryEnabled(p.versionHistoryEnabled === true);
       if (p.previewVideo) { setPreviewVideoUrl(p.previewVideo); setPreviewVideoPath(p.previewVideoPath ?? null); setRecordState("done"); }
       setCardShape(p.cardShape ?? null);
       if (p.recordShape) setRecordShape(p.recordShape);
-      setMagnetCursor(p.magnetCursor === true);
-      setMagnetCursorRepel(p.magnetCursorRepel === true);
-      setRevealOnHover(p.revealOnHover === true);
-      setRhythmSensitivity(p.rhythmSensitivity === true);
-      setRhythmIntensity(typeof p.rhythmIntensity === "number" ? p.rhythmIntensity : 0.5);
       setInkEnabled(p.inkEnabled === true);
       setMagnetPoint(p.magnetPoint === true);
       setMagnetPointX(typeof p.magnetPointX === "number" ? p.magnetPointX : 0.5);
@@ -1805,32 +1645,9 @@ export default function New() {
     }
   }, []);
 
-  // Keep blind/version refs in sync
+  // Keep blind refs in sync
   useEffect(() => { blindWritingRef.current = blindWritingEnabled; }, [blindWritingEnabled]);
   useEffect(() => { blindPlaybackRef.current = blindPlaybackActive; }, [blindPlaybackActive]);
-  useEffect(() => { versionScrubIdxRef.current = versionScrubIdx; }, [versionScrubIdx]);
-
-  // Stable refs for interval-safe position access
-  const positionsRef = useRef<Position[]>([]);
-  const cursorRef    = useRef(0);
-  useEffect(() => { positionsRef.current = positions; }, [positions]);
-  useEffect(() => { cursorRef.current = cursor; }, [cursor]);
-
-  // Version snapshot interval — records every 2 s when length changes
-  useEffect(() => {
-    if (!versionHistoryEnabled) return;
-    const id = setInterval(() => {
-      const pos = positionsRef.current;
-      const cur = cursorRef.current;
-      if (pos.length !== versionLastPosLenRef.current) {
-        versionLastPosLenRef.current = pos.length;
-        versionSnapshotsRef.current.push({ pos: pos.slice(), cur, ts: Date.now() });
-        if (versionSnapshotsRef.current.length > 180) versionSnapshotsRef.current.shift();
-        setVersionSnapshotCount(c => c + 1);
-      }
-    }, 2000);
-    return () => clearInterval(id);
-  }, [versionHistoryEnabled]);
 
   // ── Blind playback ───────────────────────────────────────────────────────
   const startBlindPlayback = useCallback(() => {
@@ -1856,31 +1673,6 @@ export default function New() {
       blindPlaybackRef.current = false;
     }, totalDuration + 300);
     blindPlaybackTimersRef.current.push(endTid);
-  }, []);
-
-  // ── Version playback ─────────────────────────────────────────────────────
-  const startVersionPlayback = useCallback((fromIdx: number) => {
-    const snaps = versionSnapshotsRef.current;
-    if (!snaps.length) return;
-    versionPlaybackTimersRef.current.forEach(clearTimeout);
-    versionPlaybackTimersRef.current = [];
-    setVersionPlayback(true);
-    const start = Math.max(0, fromIdx);
-    const startTs = snaps[start].ts;
-    for (let i = start; i < snaps.length; i++) {
-      const snap = snaps[i];
-      const tid = setTimeout(() => {
-        setPositions(snap.pos);
-        setCursor(snap.cur);
-        setVersionScrubIdx(i);
-      }, snap.ts - startTs);
-      versionPlaybackTimersRef.current.push(tid);
-    }
-    const endTid = setTimeout(() => {
-      setVersionPlayback(false);
-      setVersionScrubIdx(-1);
-    }, snaps[snaps.length - 1].ts - startTs + 400);
-    versionPlaybackTimersRef.current.push(endTid);
   }, []);
 
   const handleCopy = useCallback(() => {
@@ -1967,13 +1759,13 @@ export default function New() {
         textEditingEnabled,
         textVerblassEnabled, verblassZeitpunkt, verblassSchnelligkeit,
         textSchwerEnabled, schwerZeitpunkt, schwerSchnelligkeit,
-        magnetCursor, magnetCursorRepel, revealOnHover, rhythmSensitivity, rhythmIntensity, inkEnabled,
+        inkEnabled,
         magnetPoint, magnetPointX, magnetPointY, magnetPointStrength,
         positionMode, randomMode,
         drawnPath: positionMode === "custom" ? drawnPath : [],
         grainLevel, grainMotion, textSizeLevel, bgHue, serifLevel,
         cardShape: cardShape ?? null,
-        blindWritingEnabled, versionHistoryEnabled,
+        blindWritingEnabled,
         ...(previewVideoUrl ? { previewVideo: previewVideoUrl, previewVideoPath: previewVideoPath ?? undefined } : {}),
         ...(recordShape ? { recordShape } : {}),
         preview: {
@@ -2002,9 +1794,9 @@ export default function New() {
     textEditingEnabled,
     textVerblassEnabled, verblassZeitpunkt, verblassSchnelligkeit,
     textSchwerEnabled, schwerZeitpunkt, schwerSchnelligkeit,
-    magnetCursor, magnetCursorRepel, revealOnHover, rhythmSensitivity, inkEnabled,
+    inkEnabled,
     positionMode, randomMode, drawnPath, grainLevel, grainMotion, textSizeLevel, bgHue, serifLevel, cardShape, recordShape,
-    blindWritingEnabled, versionHistoryEnabled,
+    blindWritingEnabled,
   ]);
 
   // ── Computed values ──────────────────────────────────────────────────────
@@ -2112,10 +1904,10 @@ export default function New() {
     textEditingEnabled &&
     !textVerblassEnabled && verblassZeitpunkt === 0.5 && verblassSchnelligkeit === 2.0 &&
     !textSchwerEnabled && schwerZeitpunkt === 0.5 && schwerSchnelligkeit === 50 &&
-    !magnetCursor && !revealOnHover && !rhythmSensitivity && !inkEnabled && !magnetPoint &&
+    !inkEnabled && !magnetPoint &&
     positionMode === "standard" && randomMode === "words" && drawnPath.length === 0 &&
     grainLevel === 0 && grainMotion === 0 && textSizeLevel === 46 && bgHue === null && serifLevel === null &&
-    !blindWritingEnabled && !versionHistoryEnabled;
+    !blindWritingEnabled;
 
   const clearParameters = () => {
     setTimerEnabled(false); setTimerMode("fixed"); setTimerMinutes(10); setVisualTimer(false); setTimerUserReset(false);
@@ -2125,10 +1917,10 @@ export default function New() {
     setTextEditingEnabled(true);
     setTextVerblassEnabled(false); setVerblassZeitpunkt(0.5); setVerblassSchnelligkeit(2.0);
     setTextSchwerEnabled(false); setSchwerZeitpunkt(0.5); setSchwerSchnelligkeit(50);
-    setMagnetCursor(false); setMagnetCursorRepel(false); setRevealOnHover(false); setRhythmSensitivity(false); setInkEnabled(false);
+    setInkEnabled(false);
     setPositionMode("standard"); setRandomMode("words"); setDrawnPath([]);
     setGrainLevel(0); setGrainMotion(0); setTextSizeLevel(46); setBgHue(null); setSerifLevel(null);
-    setBlindWritingEnabled(false); setVersionHistoryEnabled(false);
+    setBlindWritingEnabled(false);
   };
 
   // Re-focus writing area after panel close or category switch
@@ -2234,9 +2026,9 @@ export default function New() {
       {showPromptBtn && visible && (
         <div data-html2canvas-ignore="true" style={{
           position: "fixed", top: inViewer ? "70px" : "24px",
-          left: "50%", transform: "translateX(-50%)",
+          left: 0, right: 0,
           zIndex: 24, display: "flex", justifyContent: "center",
-          maxWidth: "min(620px, calc(100vw - 520px))",
+          pointerEvents: "none",
         }}>
           <div style={{
             display: "flex", alignItems: "center", gap: "8px",
@@ -2244,7 +2036,8 @@ export default function New() {
             background: floatBg,
             border: `1px dashed ${BORDER_COL}`,
             borderRadius: "4px",
-            maxWidth: "100%", boxSizing: "border-box",
+            maxWidth: "min(620px, calc(100vw - 520px))", boxSizing: "border-box",
+            pointerEvents: "auto",
           }}>
             {!prompts[0]?.trim() && (
               <button
@@ -2408,11 +2201,6 @@ export default function New() {
             centeredPrompt={false}
             promptWrap={textSizeLevel > 46}
             containerWidth="764px"
-            magnetCursor={magnetCursor}
-            magnetCursorRepel={magnetCursorRepel}
-            revealOnHover={revealOnHover}
-            rhythmSensitivity={rhythmSensitivity}
-            rhythmIntensity={rhythmIntensity}
             inkEnabled={inkEnabled}
             magnetPoint={magnetPoint}
             magnetPointX={magnetPointX}
@@ -2420,36 +2208,9 @@ export default function New() {
             magnetPointStrength={magnetPointStrength}
             onMagnetPointMove={(x, y) => { setMagnetPointX(x); setMagnetPointY(y); }}
             blindMode={blindWritingEnabled && !blindPlaybackActive}
-            readOnly={blindPlaybackActive || (versionScrubIdx !== -1 && !versionPlayback)}
+            readOnly={blindPlaybackActive}
           />
       </motion.div>
-
-      {/* ── Version clock overlay ─────────────────────────────────────────── */}
-      {versionHistoryEnabled && versionSnapshotCount > 0 && (
-        <div
-          data-html2canvas-ignore="true"
-          style={{ position: "fixed", bottom: "80px", left: "520px", zIndex: 18 }}
-        >
-          <VersionClock
-            snapshotCount={versionSnapshotCount}
-            scrubIdx={versionScrubIdx}
-            dark={dark}
-            textColor={dark ? DARK_TEXT : LIGHT_TEXT}
-            onScrub={(idx) => {
-              setVersionScrubIdx(idx);
-              const snap = versionSnapshotsRef.current[idx];
-              if (snap) { setPositions(snap.pos); setCursor(snap.cur); }
-            }}
-            onLive={() => {
-              versionPlaybackTimersRef.current.forEach(clearTimeout);
-              setVersionPlayback(false);
-              setVersionScrubIdx(-1);
-              const last = versionSnapshotsRef.current[versionSnapshotsRef.current.length - 1];
-              if (last) { setPositions(last.pos); setCursor(last.cur); }
-            }}
-          />
-        </div>
-      )}
 
       {/* ── Reload Parameters icon button (only when params differ from defaults) */}
       <AnimatePresence>
@@ -3141,7 +2902,7 @@ export default function New() {
                       </AnimatePresence>
                     </div>
 
-                    {/* ── Unsichtbares Schreiben ─────────────────────────── */}
+                    {/* ── Replay (blind writing + playback) ──────────────── */}
                     <div
                       style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px", display: "flex", flexDirection: "column", gap: "10px", cursor: "pointer" }}
                       onClick={() => {
@@ -3184,83 +2945,6 @@ export default function New() {
                             >
                               {blindPlaybackActive ? t.blindPlaying : blindPlaybackReady ? t.blindPlay : t.blindNoText}
                             </button>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-
-                    {/* ── Versionsverlauf ───────────────────────────────── */}
-                    <div
-                      style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px", display: "flex", flexDirection: "column", gap: "10px", cursor: "pointer" }}
-                      onClick={() => {
-                        if (versionHistoryEnabled) {
-                          versionSnapshotsRef.current = [];
-                          versionLastPosLenRef.current = -1;
-                          setVersionSnapshotCount(0);
-                          setVersionScrubIdx(-1);
-                          setVersionPlayback(false);
-                          versionPlaybackTimersRef.current.forEach(clearTimeout);
-                        }
-                        setVersionHistoryEnabled(v => !v);
-                      }}
-                    >
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "36px" }}>
-                        <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.versionLabel}</span>
-                        <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: descColor }}>{versionHistoryEnabled ? t.on : t.off}</span>
-                      </div>
-                      <p style={{ fontFamily: FONT_SANS, fontSize: "13px", color: descColor, lineHeight: "1.45", margin: 0 }}>{t.versionDesc}</p>
-                      <AnimatePresence initial={false}>
-                        {versionHistoryEnabled && versionSnapshotCount > 0 && (
-                          <motion.div
-                            key="version-controls"
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: "auto" }}
-                            exit={{ opacity: 0, height: 0 }}
-                            transition={{ duration: 0.18 }}
-                            onClick={e => e.stopPropagation()}
-                            style={{ display: "flex", gap: "8px", paddingBottom: "4px" }}
-                          >
-                            <button
-                              disabled={versionPlayback}
-                              onClick={() => {
-                                const fromIdx = versionScrubIdx === -1 ? 0 : versionScrubIdx;
-                                startVersionPlayback(fromIdx);
-                              }}
-                              style={{
-                                height: "33px", padding: "0 16px",
-                                background: "transparent",
-                                border: `1px dashed ${innerBorder}`,
-                                borderRadius: "4px", cursor: versionPlayback ? "default" : "pointer",
-                                fontFamily: FONT_SANS, fontSize: "14px",
-                                color: versionPlayback ? descColor : (dark ? DARK_TEXT : LIGHT_TEXT),
-                                outline: "none",
-                              }}
-                            >
-                              {versionPlayback ? "▶ …" : `▶ ${t.versionPlay}`}
-                            </button>
-                            {versionScrubIdx !== -1 && (
-                              <button
-                                onClick={() => {
-                                  setVersionScrubIdx(-1);
-                                  const last = versionSnapshotsRef.current[versionSnapshotsRef.current.length - 1];
-                                  if (last) { setPositions(last.pos); setCursor(last.cur); }
-                                }}
-                                style={{
-                                  height: "33px", padding: "0 16px",
-                                  background: "transparent",
-                                  border: `1px dashed ${innerBorder}`,
-                                  borderRadius: "4px", cursor: "pointer",
-                                  fontFamily: FONT_SANS, fontSize: "14px",
-                                  color: dark ? DARK_TEXT : LIGHT_TEXT,
-                                  outline: "none",
-                                }}
-                              >
-                                {t.versionLive}
-                              </button>
-                            )}
-                            <span style={{ fontFamily: FONT_SANS, fontSize: "13px", color: descColor, lineHeight: "33px" }}>
-                              {versionSnapshotCount} {DE ? "Zustände" : "states"}
-                            </span>
                           </motion.div>
                         )}
                       </AnimatePresence>
@@ -3512,63 +3196,6 @@ export default function New() {
                           <span style={{ fontFamily: FONT_SANS, fontSize: "11px", color: descColor }}>
                             {DE ? "Aktivieren setzt Position auf Standard zurück" : "Enabling resets position to Standard"}
                           </span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Magnet Cursor card */}
-                    <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
-                      <div style={{ height: "36px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.magnetLabel}</span>
-                        <span onClick={() => setMagnetCursor(v => !v)} style={{ fontFamily: FONT_SANS, fontSize: "16px", color: descColor, cursor: "pointer" }}>{magnetCursor ? t.on : t.off}</span>
-                      </div>
-                      <AnimatePresence initial={false} mode="wait">
-                        {!magnetCursor ? (
-                          <motion.p key="mag-off" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} style={{ fontFamily: FONT_SANS, fontSize: "13px", color: descColor, lineHeight: "1.45", margin: 0 }}>
-                            {t.magnetDesc}
-                          </motion.p>
-                        ) : (
-                          <motion.div key="mag-on" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} style={{ display: "flex", gap: "8px" }}>
-                            {([{ val: false, label: t.magnetAttract }, { val: true, label: t.magnetRepel }] as const).map(({ val, label }) => (
-                              <button key={label} onClick={() => setMagnetCursorRepel(val)} style={{
-                                flex: 1, height: "32px",
-                                background: magnetCursorRepel === val ? (dark ? "rgba(240,232,220,0.2)" : "rgba(85,85,85,0.12)") : "transparent",
-                                border: `1px ${magnetCursorRepel === val ? "solid" : "dashed"} ${magnetCursorRepel === val ? (dark ? "rgba(240,232,220,0.85)" : LIGHT_TEXT) : innerBorder}`,
-                                borderRadius: "4px", cursor: "pointer", outline: "none",
-                                fontFamily: FONT_SANS, fontSize: "13px",
-                                color: dark ? DARK_TEXT : LIGHT_TEXT,
-                                fontWeight: magnetCursorRepel === val ? 600 : 400,
-                              }}>{label}</button>
-                            ))}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-
-                    {/* Reveal on Hover card */}
-                    <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
-                      <div style={{ height: "36px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.revealLabel}</span>
-                        <span onClick={() => setRevealOnHover(v => !v)} style={{ fontFamily: FONT_SANS, fontSize: "16px", color: descColor, cursor: "pointer" }}>{revealOnHover ? t.on : t.off}</span>
-                      </div>
-                      <motion.p key={revealOnHover ? "rev-on" : "rev-off"} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.18 }} style={{ fontFamily: FONT_SANS, fontSize: "13px", color: descColor, lineHeight: "1.45", margin: 0 }}>
-                        {t.revealDesc}
-                      </motion.p>
-                    </div>
-
-                    {/* Rhythm Sensitivity card */}
-                    <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
-                      <div style={{ height: "36px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.rhythmLabel}</span>
-                        <span onClick={() => setRhythmSensitivity(v => !v)} style={{ fontFamily: FONT_SANS, fontSize: "16px", color: descColor, cursor: "pointer" }}>{rhythmSensitivity ? t.on : t.off}</span>
-                      </div>
-                      <motion.p key={rhythmSensitivity ? "rhy-on" : "rhy-off"} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.18 }} style={{ fontFamily: FONT_SANS, fontSize: "13px", color: descColor, lineHeight: "1.45", margin: 0 }}>
-                        {t.rhythmDesc}
-                      </motion.p>
-                      {rhythmSensitivity && (
-                        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                          <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{DE ? "Intensität" : "Intensity"}</span>
-                          <DoubleSlider value={Math.round(rhythmIntensity * 10)} min={1} max={10} step={1} onChange={v => setRhythmIntensity(v / 10)} dark={dark} />
                         </div>
                       )}
                     </div>

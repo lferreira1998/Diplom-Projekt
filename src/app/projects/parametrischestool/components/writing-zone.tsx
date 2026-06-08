@@ -1027,14 +1027,11 @@ export function WritingZone({
         spacesInsertedRef.current++;
         const pos = posRef.current;   // always current thanks to useLayoutEffect
         const cur = curRef.current;
-        let next: Position[];
-        if (cur < pos.length) {
-          const updated = pos.map(p => ({ layers: [...p.layers] }));
-          updated[cur]  = { layers: [...updated[cur].layers, { type: "char", char: " " }] };
-          next = updated;
-        } else {
-          next = [...pos, { layers: [{ type: "char", char: " " }] }];
-        }
+        const next: Position[] = [
+          ...pos.slice(0, cur),
+          { layers: [{ type: "char", char: " " }] },
+          ...pos.slice(cur),
+        ];
         onUpdateRef.current(next, cur + 1);
       }
 
@@ -1103,12 +1100,18 @@ export function WritingZone({
       }
 
       let newPos: Position[];
-      if (cursor < positions.length) {
+      if (correctionMode === "tippex" && cursor < positions.length) {
+        // Tippex: layer new char on top of existing position
         const next   = positions.map(p => ({ layers: [...p.layers] }));
         next[cursor] = { layers: [...next[cursor].layers, { type: "char", char: ch }] };
         newPos = next;
       } else {
-        newPos = [...positions, { layers: [{ type: "char", char: ch }] }];
+        // Standard insert: splice new position, text pushes forward
+        newPos = [
+          ...positions.slice(0, cursor),
+          { layers: [{ type: "char", char: ch }] },
+          ...positions.slice(cursor),
+        ];
       }
       lkpt.current = now;
       onUpdate(newPos, cursor + 1);

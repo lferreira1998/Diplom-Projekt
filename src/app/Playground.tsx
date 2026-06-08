@@ -151,6 +151,7 @@ export default function Playground() {
   const [tools, setTools]   = useState<NewToolData[]>([]);
   const [loading, setLoading] = useState(true);
   const [lang, setLang]     = useState<"de" | "en">("de");
+  const [tab, setTab]       = useState<"all" | "my">("all");
 
   const DE = lang === "de";
 
@@ -179,6 +180,13 @@ export default function Playground() {
       .catch(console.error);
   };
 
+  const hasMyTools = myTools.length > 0;
+  const activeTools = tab === "my" ? myTools : allTools;
+  const activeTitle = tab === "my" ? (DE ? "Meine Tools" : "My Tools") : (DE ? "Alle Tools" : "All Tools");
+  const activeEmpty = tab === "my"
+    ? (DE ? "Noch keine Tools gespeichert. Erstelle eines unter /new." : "No tools saved yet. Create one at /new.")
+    : (DE ? "Noch keine Tools vorhanden." : "No tools yet.");
+
   return (
     <div style={{
       minHeight: "100vh",
@@ -206,7 +214,9 @@ export default function Playground() {
           }}
         >← {DE ? "Zurück" : "Back"}</button>
 
-        <span style={{ fontFamily: FONT_SERIF, fontSize: "20px", color: LIGHT_TEXT }}>Playground</span>
+        <span style={{ fontFamily: FONT_SERIF, fontSize: "20px", color: LIGHT_TEXT }}>
+          {DE ? "Tool-Sammlung" : "Tool Collection"}
+        </span>
 
         <button
           onClick={() => setLang(l => l === "de" ? "en" : "de")}
@@ -220,7 +230,7 @@ export default function Playground() {
       </div>
 
       {/* Content */}
-      <div style={{ paddingTop: "96px", paddingBottom: "64px", maxWidth: "1100px", margin: "0 auto", padding: "96px 24px 64px" }}>
+      <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "96px 24px 120px" }}>
         {loading ? (
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "200px" }}>
             <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: MUTED }}>
@@ -228,25 +238,47 @@ export default function Playground() {
             </span>
           </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "56px" }}>
-            <Section
-              title={DE ? "Meine Tools" : "My Tools"}
-              tools={myTools}
-              onOpen={openTool}
-              onDelete={handleDelete}
-              emptyMsg={DE
-                ? "Noch keine Tools gespeichert. Erstelle eines unter /new."
-                : "No tools saved yet. Create one at /new."}
-            />
-            <Section
-              title={DE ? "Alle Tools" : "All Tools"}
-              tools={allTools}
-              onOpen={openTool}
-              emptyMsg={DE ? "Noch keine Tools vorhanden." : "No tools yet."}
-            />
-          </div>
+          <Section
+            title={activeTitle}
+            tools={activeTools}
+            onOpen={openTool}
+            onDelete={tab === "my" ? handleDelete : undefined}
+            emptyMsg={activeEmpty}
+          />
         )}
       </div>
+
+      {/* Tab FAB — only shown when the user has their own tools */}
+      {hasMyTools && (
+        <div style={{
+          position: "fixed", bottom: "40px", left: "50%", transform: "translateX(-50%)",
+          zIndex: 50, display: "flex", alignItems: "center", gap: "24px",
+          background: LIGHT_BG, border: `1px dashed ${BORDER_COL}`,
+          borderRadius: "100px", padding: "4px 4px 4px 20px",
+        }}>
+          <span style={{ fontFamily: FONT_SERIF, fontSize: "15px", color: LIGHT_TEXT, whiteSpace: "nowrap" }}>
+            {DE ? "Tool-Sammlung" : "Tool Collection"}
+          </span>
+          <div style={{ display: "flex", gap: "4px" }}>
+            {([
+              { key: "all" as const, label: DE ? "Alle Tools" : "All Tools" },
+              { key: "my"  as const, label: DE ? "Meine Tools" : "My Tools" },
+            ]).map(({ key, label }) => (
+              <button
+                key={key}
+                onClick={() => setTab(key)}
+                style={{
+                  border: "none", borderRadius: "100px", cursor: "pointer", outline: "none",
+                  padding: "9px 20px", fontFamily: FONT_SANS, fontSize: "14px",
+                  background: tab === key ? LIGHT_TEXT : "transparent",
+                  color: tab === key ? LIGHT_BG : MUTED,
+                  transition: "background 0.15s, color 0.15s",
+                }}
+              >{label}</button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -28,6 +28,14 @@ export interface NewToolParams {
   grainLevel: number;
   textSizeLevel: number;
   bgHue: number | null;
+  magnetPointEnabled?: boolean;
+  magnetPointX?: number;
+  magnetPointY?: number;
+  magnetStrength?: number;
+  rhythmSensitivityEnabled?: boolean;
+  rhythmSensitivityIntensity?: number;
+  inkTextEnabled?: boolean;
+  inkDecayRate?: number;
 }
 
 export interface NewToolData {

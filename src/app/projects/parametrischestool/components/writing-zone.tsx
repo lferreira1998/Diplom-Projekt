@@ -40,6 +40,15 @@ interface WritingZoneProps {
   writingPrompt?: string;
   fontFamily?: string;
   centeredPrompt?: boolean;
+  // ── New effects ───────────────────────────────────────────────────────────
+  magnetPointEnabled?: boolean;
+  magnetPointX?: number;       // 0–1 fraction of viewport width
+  magnetPointY?: number;       // 0–1 fraction of viewport height
+  magnetStrength?: number;     // 0–1
+  onMagnetMove?: (x: number, y: number) => void;
+  rhythmEnabled?: boolean;
+  rhythmIntensity?: number;    // 0–1
+  inkLevel?: number;           // 0–1, applied as text container opacity
 }
 
 // ── Pure helpers ──────────────────────────────────────────────────────────────
@@ -775,6 +784,14 @@ export function WritingZone({
   fontSize           = 20,
   fontFamily         = "'IBM Plex Mono', 'Courier New', monospace",
   centeredPrompt     = false,
+  magnetPointEnabled = false,
+  magnetPointX       = 0.5,
+  magnetPointY       = 0.3,
+  magnetStrength     = 0.5,
+  onMagnetMove,
+  rhythmEnabled      = false,
+  rhythmIntensity    = 0.5,
+  inkLevel           = 1,
 }: WritingZoneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const cursorDomRef = useRef<HTMLSpanElement>(null);
@@ -806,6 +823,18 @@ export function WritingZone({
 
   const [driftTick, setDriftTick] = useState(0);
 
+  // ── Magnet state ──────────────────────────────────────────────────────────
+  const charMagnetOffsets    = useRef<{ dx: number; dy: number }[]>([]);
+  const charMagnetVelocities = useRef<{ vx: number; vy: number }[]>([]);
+  const [magnetDragging, setMagnetDragging] = useState(false);
+  const magnetDragStartRef = useRef<{ mx: number; my: number; px: number; py: number } | null>(null);
+  const magnetPxRef  = useRef(magnetPointX);
+  const magnetPyRef  = useRef(magnetPointY);
+  const magnetStrRef = useRef(magnetStrength);
+  useLayoutEffect(() => { magnetPxRef.current  = magnetPointX;  }, [magnetPointX]);
+  useLayoutEffect(() => { magnetPyRef.current  = magnetPointY;  }, [magnetPointY]);
+  useLayoutEffect(() => { magnetStrRef.current = magnetStrength; }, [magnetStrength]);
+
   // Sync arrays with positions length
   useEffect(() => {
     const now = Date.now();
@@ -814,12 +843,16 @@ export function WritingZone({
       charDrift.current.push({ x: 0, y: 0, vx: 0, vy: 0 });
       charOffsets.current.push({ dx: 0, dy: 0 });
       charElsRef.current.push(null);
+      charMagnetOffsets.current.push({ dx: 0, dy: 0 });
+      charMagnetVelocities.current.push({ vx: 0, vy: 0 });
     }
     if (positions.length < posTimesRef.current.length) {
-      posTimesRef.current.length = positions.length;
-      charDrift.current.length   = positions.length;
-      charOffsets.current.length = positions.length;
-      charElsRef.current.length  = positions.length;
+      posTimesRef.current.length          = positions.length;
+      charDrift.current.length            = positions.length;
+      charOffsets.current.length          = positions.length;
+      charElsRef.current.length           = positions.length;
+      charMagnetOffsets.current.length    = positions.length;
+      charMagnetVelocities.current.length = positions.length;
     }
   }, [positions.length]);
 
@@ -837,9 +870,17 @@ export function WritingZone({
     }
   }, [driftet]);
 
+  // Reset magnet state when magnet is turned off
+  useEffect(() => {
+    if (!magnetPointEnabled) {
+      charMagnetOffsets.current    = charMagnetOffsets.current.map(() => ({ dx: 0, dy: 0 }));
+      charMagnetVelocities.current = charMagnetVelocities.current.map(() => ({ vx: 0, vy: 0 }));
+    }
+  }, [magnetPointEnabled]);
+
   // rAF physics loop
   useEffect(() => {
-    if (!driftet && !verblasst) return;
+    if (!driftet && !verblasst && !magnetPointEnabled) return;
     let animId: number;
     const spf = driftSpeed / 100;
 
@@ -941,13 +982,40 @@ export function WritingZone({
         }
       }
 
+      if (magnetPointEnabled) {
+        const mx = magnetPxRef.current * window.innerWidth;
+        const my = magnetPyRef.current * window.innerHeight;
+        const str = magnetStrRef.current;
+        for (let i = 0; i < pos.length; i++) {
+          const el = charElsRef.current[i];
+          if (!el) continue;
+          const rect = el.getBoundingClientRect();
+          const cx = rect.left + rect.width / 2;
+          const cy = rect.top + rect.height / 2;
+          const ddx = mx - cx;
+          const ddy = my - cy;
+          const dist = Math.sqrt(ddx * ddx + ddy * ddy) + 1;
+          const force = Math.min(dist * 0.0001, 0.08) * str;
+          const mv = charMagnetVelocities.current[i];
+          const mo = charMagnetOffsets.current[i];
+          if (!mv || !mo) continue;
+          mv.vx += (ddx / dist) * force;
+          mv.vy += (ddy / dist) * force;
+          mv.vx *= 0.90;
+          mv.vy *= 0.90;
+          mo.dx += mv.vx;
+          mo.dy += mv.vy;
+        }
+        dirty = true;
+      }
+
       if (dirty || verblasst) setDriftTick(n => n + 1);
       animId = requestAnimationFrame(loop);
     };
 
     animId = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(animId);
-  }, [driftet, driftSaetze, driftWoerter, driftBuchstaben, driftDelay, driftSpeed, verblasst, verblassenDelay, verblassenSpeed]);
+  }, [driftet, driftSaetze, driftWoerter, driftBuchstaben, driftDelay, driftSpeed, verblasst, verblassenDelay, verblassenSpeed, magnetPointEnabled]);
 
   // Focus on mount
   useEffect(() => { containerRef.current?.focus(); }, []);
@@ -1045,6 +1113,25 @@ export function WritingZone({
     };
   }, [cursorLaeuftWeiter]); // onUpdate/lkpt excluded intentionally – via ref
 
+  // Magnet dot drag
+  useEffect(() => {
+    if (!magnetDragging) return;
+    const onMove = (e: MouseEvent) => {
+      const drag = magnetDragStartRef.current;
+      if (!drag || !onMagnetMove) return;
+      const nx = drag.px + (e.clientX - drag.mx) / window.innerWidth;
+      const ny = drag.py + (e.clientY - drag.my) / window.innerHeight;
+      onMagnetMove(Math.max(0, Math.min(1, nx)), Math.max(0, Math.min(1, ny)));
+    };
+    const onUp = () => { magnetDragStartRef.current = null; setMagnetDragging(false); };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+  }, [magnetDragging, onMagnetMove]);
+
   // ── Backspace ─────────────────────────────────────────────────────────────
 
   const applyBackspace = useCallback(() => {
@@ -1128,6 +1215,28 @@ export function WritingZone({
 
   void driftTick; // read tick so render re-runs on each anim frame
 
+  // ── Rhythm scale per word ─────────────────────────────────────────────────
+  const wordScaleMap = new Map<number, number>();
+  if (rhythmEnabled) {
+    const wids = groupsRef.current.wid;
+    const wordTimesMap = new Map<number, number[]>();
+    for (let i = 0; i < positions.length; i++) {
+      const w = wids[i];
+      if (w == null) continue;
+      if (!wordTimesMap.has(w)) wordTimesMap.set(w, []);
+      const t = posTimesRef.current[i];
+      if (t) wordTimesMap.get(w)!.push(t);
+    }
+    wordTimesMap.forEach((times, wId) => {
+      if (times.length < 2) { wordScaleMap.set(wId, 1); return; }
+      const duration = Math.max(...times) - Math.min(...times);
+      const tpc = duration / times.length;
+      const tNorm = Math.max(0, Math.min(1, (tpc - 50) / 250));
+      const baseScale = 0.75 + tNorm * 0.70;
+      wordScaleMap.set(wId, 1 + (baseScale - 1) * rhythmIntensity);
+    });
+  }
+
   // ── Build wrap-around clones (portal) ─────────────────────────────────────
   const wrapClones: React.ReactNode[] = [];
 
@@ -1180,11 +1289,19 @@ export function WritingZone({
           ? { filter: "blur(5px)", userSelect: "none" }
           : {};
 
-      // Drift transform
-      const offset = charOffsets.current[i];
-      const hasDrift = driftet && offset && (Math.abs(offset.dx) > 0.01 || Math.abs(offset.dy) > 0.01);
-      const dx = offset?.dx ?? 0;
-      const dy = offset?.dy ?? 0;
+      // Combined transform (drift + magnet)
+      const offset    = charOffsets.current[i];
+      const magnetOff = charMagnetOffsets.current[i];
+      const driftDx   = offset?.dx ?? 0;
+      const driftDy   = offset?.dy ?? 0;
+      const magnetDx  = magnetOff?.dx ?? 0;
+      const magnetDy  = magnetOff?.dy ?? 0;
+      const dx        = driftDx + magnetDx;
+      const dy        = driftDy + magnetDy;
+      const wordId    = groupsRef.current.wid[i] ?? 0;
+      const wordScale = rhythmEnabled ? (wordScaleMap.get(wordId) ?? 1) : 1;
+      const hasDrift  = (driftet && (Math.abs(driftDx) > 0.01 || Math.abs(driftDy) > 0.01)) ||
+                        (magnetPointEnabled && (Math.abs(magnetDx) > 0.01 || Math.abs(magnetDy) > 0.01));
 
       // Fade opacity
       let fadeOpacity = 1;
@@ -1197,8 +1314,11 @@ export function WritingZone({
         }
       }
 
-      const driftStyle: React.CSSProperties = hasDrift
-        ? { transform: `translate(${dx}px, ${dy}px)`, zIndex: 10 }
+      const transformParts: string[] = [];
+      if (Math.abs(dx) > 0.01 || Math.abs(dy) > 0.01) transformParts.push(`translate(${dx}px, ${dy}px)`);
+      if (Math.abs(wordScale - 1) > 0.001) transformParts.push(`scale(${wordScale})`);
+      const driftStyle: React.CSSProperties = transformParts.length > 0
+        ? { transform: transformParts.join(" "), zIndex: hasDrift ? 10 : undefined }
         : {};
 
       // Newlines
@@ -1382,6 +1502,7 @@ export function WritingZone({
             overflowWrap: "anywhere",
             transition:   "color 1s linear",
             overflow:     "visible",
+            opacity:      inkLevel,
             boxShadow:    selectAll ? "inset 0 0 0 2px rgba(100,130,200,0.35)" : undefined,
           }}
         >
@@ -1396,6 +1517,33 @@ export function WritingZone({
           {nodes}
         </div>
       </div>
+      {/* Magnet point dot */}
+      {magnetPointEnabled && createPortal(
+        <div
+          style={{
+            position: "fixed",
+            left: `${magnetPointX * window.innerWidth}px`,
+            top: `${magnetPointY * window.innerHeight}px`,
+            width: 14,
+            height: 14,
+            borderRadius: "50%",
+            backgroundColor: "#000",
+            transform: "translate(-50%, -50%)",
+            cursor: magnetDragging ? "grabbing" : "grab",
+            zIndex: 100,
+            userSelect: "none",
+          }}
+          onMouseDown={(e) => {
+            e.preventDefault();
+            magnetDragStartRef.current = {
+              mx: e.clientX, my: e.clientY,
+              px: magnetPointX, py: magnetPointY,
+            };
+            setMagnetDragging(true);
+          }}
+        />,
+        document.body
+      )}
       {/* Wrap-around clones rendered as portal so they're not clipped */}
       {wrapClones.length > 0 && createPortal(
         <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 5 }}>

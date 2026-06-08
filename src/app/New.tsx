@@ -122,6 +122,14 @@ const TRANSLATIONS = {
     fadeTiming: "Zeitpunkt des Verblassens",
     fadeAfter: (n: number) => `Nach ${n} min`,
     fadeSpeed: "Schnelligkeit des Verblassens",
+    magnetLabel: "Magnet-Punkt",
+    magnetStrengthLabel: "Anziehungskraft",
+    magnetHint: "Ziehe den Punkt im Schreibbereich.",
+    rhythmLabel: "Rhythmus-Sensitivität",
+    rhythmIntensityLabel: "Intensität",
+    inkLabel: "Tinte",
+    inkDecayLabel: "Abnahme",
+    inkRefill: "Tinte auffüllen",
     // Position
     posStandard: "Standard",
     posSpiral: "Spiralförmiger Text",
@@ -211,6 +219,14 @@ const TRANSLATIONS = {
     fadeTiming: "Fade timing",
     fadeAfter: (n: number) => `After ${n} min`,
     fadeSpeed: "Fade speed",
+    magnetLabel: "Magnet Point",
+    magnetStrengthLabel: "Attraction Strength",
+    magnetHint: "Drag the dot in the writing area.",
+    rhythmLabel: "Rhythm Sensitivity",
+    rhythmIntensityLabel: "Intensity",
+    inkLabel: "Ink",
+    inkDecayLabel: "Decay",
+    inkRefill: "Refill Ink",
     // Position
     posStandard: "Standard",
     posSpiral: "Spiraling Text",
@@ -640,6 +656,21 @@ export default function New() {
   const [verblassZeitpunkt, setVerblassZeitpunkt]         = useState(2);
   const [verblassSchnelligkeit, setVerblassSchnelligkeit] = useState(3);
 
+  // Magnet Point params
+  const [magnetPointEnabled, setMagnetPointEnabled]               = useState(false);
+  const [magnetPointX, setMagnetPointX]                           = useState(0.5);
+  const [magnetPointY, setMagnetPointY]                           = useState(0.3);
+  const [magnetStrength, setMagnetStrength]                       = useState(0.5);
+
+  // Rhythm Sensitivity params
+  const [rhythmSensitivityEnabled, setRhythmSensitivityEnabled]   = useState(false);
+  const [rhythmSensitivityIntensity, setRhythmSensitivityIntensity] = useState(0.5);
+
+  // Ink Text params
+  const [inkTextEnabled, setInkTextEnabled]                       = useState(false);
+  const [inkDecayRate, setInkDecayRate]                           = useState(0.5);
+  const [inkLevel, setInkLevel]                                   = useState(1);
+
   // Position params
   const [positionMode, setPositionMode] = useState<"standard" | "spiral" | "random" | "custom">("standard");
 
@@ -698,6 +729,22 @@ export default function New() {
     }
   }, [positions.length, timerUserReset, timerEnabled, timerMinutes, timerRunning]);
 
+  // Reset ink when effect is toggled off
+  useEffect(() => {
+    if (!inkTextEnabled) setInkLevel(1);
+  }, [inkTextEnabled]);
+
+  // Deplete ink on each new character typed
+  const prevPosLenRef = useRef(0);
+  useEffect(() => {
+    if (!inkTextEnabled) { prevPosLenRef.current = positions.length; return; }
+    const added = positions.length - prevPosLenRef.current;
+    prevPosLenRef.current = positions.length;
+    if (added > 0) {
+      setInkLevel(lvl => Math.max(0, lvl - added * inkDecayRate * 0.008));
+    }
+  }, [positions.length, inkTextEnabled, inkDecayRate]);
+
   // Load tool from URL ?tool=ID
   useEffect(() => {
     const toolId = searchParams.get("tool");
@@ -731,6 +778,14 @@ export default function New() {
       setGrainLevel(typeof p.grainLevel === "number" ? p.grainLevel : 0);
       setTextSizeLevel(typeof p.textSizeLevel === "number" ? p.textSizeLevel : 20);
       setBgHue(typeof p.bgHue === "number" ? p.bgHue : null);
+      setMagnetPointEnabled(p.magnetPointEnabled === true);
+      setMagnetPointX(typeof p.magnetPointX === "number" ? p.magnetPointX : 0.5);
+      setMagnetPointY(typeof p.magnetPointY === "number" ? p.magnetPointY : 0.3);
+      setMagnetStrength(typeof p.magnetStrength === "number" ? p.magnetStrength : 0.5);
+      setRhythmSensitivityEnabled(p.rhythmSensitivityEnabled === true);
+      setRhythmSensitivityIntensity(typeof p.rhythmSensitivityIntensity === "number" ? p.rhythmSensitivityIntensity : 0.5);
+      setInkTextEnabled(p.inkTextEnabled === true);
+      setInkDecayRate(typeof p.inkDecayRate === "number" ? p.inkDecayRate : 0.5);
       if (p.asciiImage) setLoadedAsciiImage(p.asciiImage);
     }).catch((err) => {
       console.error("[New] Failed to load tool:", err);
@@ -780,6 +835,9 @@ export default function New() {
         textFliegtEnabled, fliegtUnit, fliegtZeitpunkt, fliegtSchnelligkeit,
         textVerblassEnabled, verblassZeitpunkt, verblassSchnelligkeit,
         positionMode, grainLevel, textSizeLevel, bgHue,
+        magnetPointEnabled, magnetPointX, magnetPointY, magnetStrength,
+        rhythmSensitivityEnabled, rhythmSensitivityIntensity,
+        inkTextEnabled, inkDecayRate,
       };
       // Fix 3: update existing tool if loaded via URL, otherwise create new
       const id = currentToolId
@@ -799,6 +857,9 @@ export default function New() {
     textFliegtEnabled, fliegtUnit, fliegtZeitpunkt, fliegtSchnelligkeit,
     textVerblassEnabled, verblassZeitpunkt, verblassSchnelligkeit,
     positionMode, grainLevel, textSizeLevel, bgHue,
+    magnetPointEnabled, magnetPointX, magnetPointY, magnetStrength,
+    rhythmSensitivityEnabled, rhythmSensitivityIntensity,
+    inkTextEnabled, inkDecayRate,
   ]);
 
   // ── Computed values ──────────────────────────────────────────────────────
@@ -1024,6 +1085,14 @@ export default function New() {
             fontSize={computedFontSize}
             fontFamily={FONT_SERIF}
             centeredPrompt={true}
+            magnetPointEnabled={magnetPointEnabled}
+            magnetPointX={magnetPointX}
+            magnetPointY={magnetPointY}
+            magnetStrength={magnetStrength}
+            onMagnetMove={(x, y) => { setMagnetPointX(x); setMagnetPointY(y); }}
+            rhythmEnabled={rhythmSensitivityEnabled}
+            rhythmIntensity={rhythmSensitivityIntensity}
+            inkLevel={inkLevel}
           />
         )}
       </motion.div>
@@ -1592,6 +1661,27 @@ export default function New() {
                         <DoubleSlider value={verblassSchnelligkeit} min={1} max={10} onChange={setVerblassSchnelligkeit} dark={dark} />
                       </div>
                     </div>
+
+                    {/* Magnet Point */}
+                    <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "14px" }}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.magnetLabel}</span>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                          <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: descColor }}>{magnetPointEnabled ? t.on : t.off}</span>
+                          <ToggleBtn on={magnetPointEnabled} onToggle={() => setMagnetPointEnabled(e => !e)} dark={dark} />
+                        </div>
+                      </div>
+                      {magnetPointEnabled && (
+                        <>
+                          <div style={{ borderTop: `1px dashed ${innerBorder}` }} />
+                          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                            <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.magnetStrengthLabel}</span>
+                            <DoubleSlider value={Math.round(magnetStrength * 10)} min={1} max={10} onChange={v => setMagnetStrength(v / 10)} dark={dark} />
+                          </div>
+                          <span style={{ fontFamily: FONT_SANS, fontSize: "12px", color: descColor, fontStyle: "italic" }}>{t.magnetHint}</span>
+                        </>
+                      )}
+                    </div>
                   </div>
                 )}
 
@@ -1689,6 +1779,58 @@ export default function New() {
                             cursor: "pointer", outline: "none",
                           }}
                         >{t.lfBgColorReset}</button>
+                      )}
+                    </div>
+
+                    {/* Rhythm Sensitivity */}
+                    <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "14px" }}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.rhythmLabel}</span>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                          <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: descColor }}>{rhythmSensitivityEnabled ? t.on : t.off}</span>
+                          <ToggleBtn on={rhythmSensitivityEnabled} onToggle={() => setRhythmSensitivityEnabled(e => !e)} dark={dark} />
+                        </div>
+                      </div>
+                      {rhythmSensitivityEnabled && (
+                        <>
+                          <div style={{ borderTop: `1px dashed ${innerBorder}` }} />
+                          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                            <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.rhythmIntensityLabel}</span>
+                            <DoubleSlider value={Math.round(rhythmSensitivityIntensity * 10)} min={1} max={10} onChange={v => setRhythmSensitivityIntensity(v / 10)} dark={dark} />
+                          </div>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Ink Text */}
+                    <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "14px" }}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.inkLabel}</span>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                          <span style={{ fontFamily: FONT_SANS, fontSize: "11px", fontWeight: 500, color: descColor }}>{inkTextEnabled ? t.on : t.off}</span>
+                          <ToggleBtn on={inkTextEnabled} onToggle={() => setInkTextEnabled(e => !e)} dark={dark} />
+                        </div>
+                      </div>
+                      {inkTextEnabled && (
+                        <>
+                          <div style={{ borderTop: `1px dashed ${innerBorder}` }} />
+                          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                            <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.inkDecayLabel}</span>
+                            <DoubleSlider value={Math.round(inkDecayRate * 10)} min={1} max={10} onChange={v => setInkDecayRate(v / 10)} dark={dark} />
+                          </div>
+                          <button
+                            onClick={() => setInkLevel(1)}
+                            style={{
+                              alignSelf: "flex-start",
+                              fontFamily: FONT_SANS, fontSize: "13px",
+                              padding: "5px 14px", borderRadius: "100px",
+                              border: `1px dashed ${innerBorder}`,
+                              background: "transparent",
+                              color: dark ? DARK_TEXT : LIGHT_TEXT,
+                              cursor: "pointer", outline: "none",
+                            }}
+                          >{t.inkRefill}</button>
+                        </>
                       )}
                     </div>
                   </div>
@@ -1842,6 +1984,36 @@ export default function New() {
         )}
       </AnimatePresence>
 
+      {/* ── Ink refill button (standalone when no reveal bar) ────────────── */}
+      <AnimatePresence>
+        {inkTextEnabled && !showRevealBar && createPortal(
+          <motion.div
+            key="ink-btn"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 12 }}
+            transition={{ duration: 0.25 }}
+            style={{ position: "fixed", bottom: "32px", left: "50%", transform: "translateX(-50%)", zIndex: 200 }}
+          >
+            <button
+              onClick={() => setInkLevel(1)}
+              style={{
+                fontFamily: FONT_SANS, fontSize: "12px", letterSpacing: "0.04em",
+                padding: "8px 20px",
+                background: dark ? "rgba(240,232,220,0.1)" : "rgba(85,85,85,0.08)",
+                border: `1px dashed ${dark ? DARK_BORDER : BORDER_COL}`,
+                borderRadius: "100px", backdropFilter: "blur(10px)",
+                color: dark ? "rgba(240,232,220,0.8)" : LIGHT_TEXT,
+                cursor: "pointer", outline: "none",
+                opacity: inkLevel > 0.95 ? 0.4 : 1,
+                transition: "opacity 0.2s",
+              }}
+            >{t.inkRefill}</button>
+          </motion.div>,
+          document.body
+        )}
+      </AnimatePresence>
+
       {/* ── Revealed bar (after visual timer) ─────────────────────────── */}
       <AnimatePresence>
         {showRevealBar && createPortal(
@@ -1853,13 +2025,32 @@ export default function New() {
             style={{
               position: "fixed", bottom: "32px", left: "50%",
               transform: "translateX(-50%)", zIndex: 200,
+              display: "flex", flexDirection: "column", alignItems: "stretch", gap: 0,
             }}
           >
+            {inkTextEnabled && (
+              <button
+                onClick={() => setInkLevel(1)}
+                style={{
+                  fontFamily: FONT_SANS, fontSize: "12px", letterSpacing: "0.04em",
+                  padding: "8px 20px",
+                  background: "rgba(240,232,220,0.1)",
+                  border: `1px dashed ${DARK_BORDER}`,
+                  borderBottom: "none",
+                  borderRadius: "100px 100px 0 0",
+                  backdropFilter: "blur(10px)",
+                  color: "rgba(240,232,220,0.8)", cursor: "pointer", outline: "none",
+                  opacity: inkLevel > 0.95 ? 0.4 : 1,
+                  transition: "opacity 0.2s",
+                }}
+              >{t.inkRefill}</button>
+            )}
             <div style={{
               display: "flex", alignItems: "center",
               background: "rgba(240,232,220,0.1)",
               border: `1px dashed ${DARK_BORDER}`,
-              borderRadius: "100px", backdropFilter: "blur(10px)",
+              borderRadius: inkTextEnabled ? "0 0 100px 100px" : "100px",
+              backdropFilter: "blur(10px)",
               overflow: "hidden",
             }}>
               <button

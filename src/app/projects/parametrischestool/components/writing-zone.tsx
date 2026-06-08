@@ -97,6 +97,8 @@ interface WritingZoneProps {
   magnetPointY?: number;        // 0–1 fraction of viewport height
   magnetPointStrength?: number; // 0–1
   onMagnetPointMove?: (x: number, y: number) => void;
+  blindMode?: boolean;
+  readOnly?: boolean;
 }
 
 // ── Pure helpers ──────────────────────────────────────────────────────────────
@@ -1780,6 +1782,8 @@ export function WritingZone({
   magnetPointY          = 0.32,
   magnetPointStrength   = 0.5,
   onMagnetPointMove,
+  blindMode  = false,
+  readOnly   = false,
 }: WritingZoneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const cursorDomRef = useRef<HTMLSpanElement>(null);
@@ -2472,6 +2476,7 @@ export function WritingZone({
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (readOnly) { e.preventDefault(); return; }
       if (e.key === "Tab") return;
 
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "a") {
@@ -2633,7 +2638,7 @@ export function WritingZone({
       lkpt.current = now;
       onUpdate(newPos, baseCur + 1);
     },
-    [positions, cursor, applyBackspace, onUpdate, lkpt, textEditingEnabled, deleteMode, correctionMode]
+    [positions, cursor, applyBackspace, onUpdate, lkpt, textEditingEnabled, deleteMode, correctionMode, readOnly]
   );
 
   // ── Click-to-cursor ───────────────────────────────────────────────────────
@@ -2746,7 +2751,7 @@ export function WritingZone({
               marginLeft:      "-1px",
               marginRight:     "-1px",
               animation:       "cursorBlink 1s step-end infinite",
-              opacity:         1,
+              opacity:         blindMode ? 0 : 1,
               transition:      "background-color 1s linear",
             }}
           />
@@ -2770,7 +2775,7 @@ export function WritingZone({
       const hidden  = isHidden;
 
       // Visibility effect
-      const visStyle: React.CSSProperties = hidden
+      const visStyle: React.CSSProperties = (blindMode || hidden)
         ? { opacity: 0, userSelect: "none" }
         : blurred
           ? { filter: "blur(5px)", userSelect: "none" }

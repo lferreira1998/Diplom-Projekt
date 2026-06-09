@@ -2065,12 +2065,17 @@ export default function New() {
       )}
 
       {showPromptBtn && visible && (
-        <div data-html2canvas-ignore="true" style={{
-          position: "fixed", top: inViewer ? "70px" : "24px",
-          left: 0, right: 0,
-          zIndex: 24, display: "flex", justifyContent: "center",
-          pointerEvents: "none",
-        }}>
+        <motion.div
+          data-html2canvas-ignore="true"
+          animate={{ left: rulesOpen ? "507px" : "165px" }}
+          transition={{ left: SPRING }}
+          style={{
+            position: "fixed", top: inViewer ? "70px" : "24px",
+            right: "240px",
+            zIndex: 24, display: "flex", justifyContent: "center",
+            pointerEvents: "none",
+          }}
+        >
           <div style={{
             display: "flex", alignItems: "center", gap: "8px",
             height: "33px", padding: prompts[0]?.trim() ? "0 13px" : "0 13px 0 9px",
@@ -2099,7 +2104,7 @@ export default function New() {
               lineHeight: "normal",
             }} title={currentPrompt}>{currentPrompt}</span>
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* ── Info modal ────────────────────────────────────────────────────── */}

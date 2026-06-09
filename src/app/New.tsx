@@ -797,6 +797,29 @@ function DoubleSlider({ value, min, max, step = 1, onChange, dark }: {
   );
 }
 
+// ── Rule icons (Stability cards + Position options) ─────────────────────────────
+function RuleIcon({ id, color }: { id: string; color: string }) {
+  const s = { stroke: color, strokeWidth: 1.6, fill: "none", strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+  return (
+    <svg width={18} height={18} viewBox="0 0 24 24" style={{ flexShrink: 0, display: "block" }}>
+      {/* Stability */}
+      {id === "drift"  && (<><path d="M3 8h10" {...s} /><path d="M3 12h6" {...s} /><path d="M3 16h8" {...s} /><path d="M15 12l5-3v6z" stroke={color} strokeWidth={1.6} fill={color} strokeLinejoin="round" /></>)}
+      {id === "fade"   && (<><circle cx={5} cy={12} r={2.4} fill={color} /><circle cx={12} cy={12} r={1.9} fill={color} opacity={0.55} /><circle cx={18.5} cy={12} r={1.3} fill={color} opacity={0.28} /></>)}
+      {id === "heavy"  && (<><path d="M9 7a3 3 0 016 0" {...s} /><path d="M7.5 7h9l1.5 12h-12z" {...s} /></>)}
+      {id === "magnet" && (<><path d="M7 3v8a5 5 0 0010 0V3" {...s} /><path d="M7 3h3.2M13.8 3H17" {...s} /><path d="M7 7.5h3M14 7.5h3" {...s} /></>)}
+      {id === "ink"    && (<path d="M12 3s6 6.5 6 10.5a6 6 0 01-12 0C6 9.5 12 3 12 3z" {...s} />)}
+      {/* Position */}
+      {id === "standard"  && (<path d="M4 7h16M4 12h16M4 17h9" {...s} />)}
+      {id === "spiral"    && (<path d="M13.5 12a1.5 1.5 0 11-1.5-1.5A3.5 3.5 0 0115.5 14 5.5 5.5 0 016 9.8" {...s} />)}
+      {id === "random"    && (<><circle cx={6} cy={7} r={1.6} fill={color} /><circle cx={16} cy={5} r={1.6} fill={color} /><circle cx={11} cy={13} r={1.6} fill={color} /><circle cx={18} cy={16} r={1.6} fill={color} /><circle cx={6} cy={17} r={1.6} fill={color} /></>)}
+      {id === "running"   && (<><path d="M5 6v12" {...s} /><path d="M10 12h8" {...s} /><path d="M14.5 8.5L19 12l-4.5 3.5" {...s} /></>)}
+      {id === "zigzag"    && (<path d="M3 9l4.5 7L12 9l4.5 7L21 9" {...s} />)}
+      {id === "followdot" && (<><circle cx={17} cy={8} r={2.6} fill={color} /><path d="M4 19c4 0 8.5-3.5 11-9" {...s} strokeDasharray="0.1 3.2" /></>)}
+      {id === "custom"    && (<><path d="M4 20l1-3.2 9.6-9.6 2.2 2.2L7.2 19z" {...s} /><path d="M13.4 5.8l2.2 2.2" {...s} /></>)}
+    </svg>
+  );
+}
+
 // ── Timer done overlay ────────────────────────────────────────────────────────
 function TimerDoneOverlay({
   dark, isVisual, onDelete, onReveal, onCopy, copied, t, surfaceLight, cardBg,
@@ -1913,6 +1936,17 @@ export default function New() {
     grainLevel === 0 && grainMotion === 0 && textSizeLevel === 46 && bgHue === null && serifLevel === null &&
     !blindWritingEnabled;
 
+  // Whether each sidebar category has any non-default (active) parameter — drives
+  // the little badge shown on the category button.
+  const categoryActive: Record<string, boolean> = {
+    "Look & Feel": grainLevel !== 0 || grainMotion !== 0 || textSizeLevel !== 46 || bgHue !== null || serifLevel !== null,
+    "Time":        timerEnabled || cursorRunning || blindWritingEnabled,
+    "Visibility":  visibility !== "visible",
+    "Correction":  correctionVisible || deleteMode !== "all",
+    "Stability":   textFliegtEnabled || textVerblassEnabled || textSchwerEnabled || magnetPoint || inkEnabled,
+    "Position":    positionMode !== "standard",
+  };
+
   const clearParameters = () => {
     setTimerEnabled(false); setTimerMode("fixed"); setTimerMinutes(10); setVisualTimer(false); setTimerUserReset(false);
     setCursorRunning(false); setCursorSchnelligkeit(50);
@@ -2494,6 +2528,7 @@ export default function New() {
                     key={cat.en}
                     onClick={() => { setActiveCategory(cat.en); setIdentityOpen(false); }}
                     style={{
+                      position: "relative",
                       width: "105px", height: cat.h,
                       borderRadius: cat.br,
                       background: !identityOpen && cat.en === activeCategory ? catActiveBg : catInactiveBg,
@@ -2512,7 +2547,20 @@ export default function New() {
                       whiteSpace: "nowrap", lineHeight: "normal",
                       flexShrink: 0, transition: "background 0.15s",
                     }}
-                  >{t.catLabel(cat)}</button>
+                  >
+                    {t.catLabel(cat)}
+                    {categoryActive[cat.en] && (
+                      <span
+                        aria-hidden
+                        style={{
+                          position: "absolute", top: "7px", right: "7px",
+                          width: "8px", height: "8px", borderRadius: "50%",
+                          background: dark ? DARK_TEXT : LIGHT_TEXT,
+                          boxShadow: `0 0 0 2px ${catInactiveBg}`,
+                        }}
+                      />
+                    )}
+                  </button>
                 ))}
               </div>
             </div>
@@ -3077,7 +3125,10 @@ export default function New() {
                       <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px 24px", display: "flex", flexDirection: "column", gap: "16px", opacity: isDOMIncompatible ? 0.55 : 1, transition: "opacity 0.2s" }}>
                         {/* Header row */}
                         <div style={{ height: "36px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                          <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.driftLabel}</span>
+                          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                            <RuleIcon id="drift" color={dark ? DARK_TEXT : LIGHT_TEXT} />
+                            <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.driftLabel}</span>
+                          </div>
                           <span onClick={() => applyDrift(!textFliegtEnabled, DE, t.driftLabel)} style={{ fontFamily: FONT_SANS, fontSize: "16px", color: descColor, cursor: "pointer" }}>{textFliegtEnabled ? t.on : t.off}</span>
                         </div>
                         <AnimatePresence initial={false} mode="wait">
@@ -3147,7 +3198,10 @@ export default function New() {
                     {/* Text verblasst card */}
                     <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
                       <div style={{ height: "36px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.fadeLabel}</span>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                          <RuleIcon id="fade" color={dark ? DARK_TEXT : LIGHT_TEXT} />
+                          <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.fadeLabel}</span>
+                        </div>
                         <span onClick={() => setTextVerblassEnabled(e => !e)} style={{ fontFamily: FONT_SANS, fontSize: "16px", color: descColor, cursor: "pointer" }}>{textVerblassEnabled ? t.on : t.off}</span>
                       </div>
                       <AnimatePresence initial={false} mode="wait">
@@ -3174,7 +3228,10 @@ export default function New() {
                     <div style={{ position: "relative" }}>
                       <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px 24px", display: "flex", flexDirection: "column", gap: "16px", opacity: isDOMIncompatible ? 0.55 : 1, transition: "opacity 0.2s" }}>
                         <div style={{ height: "36px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                          <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.heavyLabel}</span>
+                          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                            <RuleIcon id="heavy" color={dark ? DARK_TEXT : LIGHT_TEXT} />
+                            <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.heavyLabel}</span>
+                          </div>
                           <span onClick={() => applyHeavy(!textSchwerEnabled, DE)} style={{ fontFamily: FONT_SANS, fontSize: "16px", color: descColor, cursor: "pointer" }}>{textSchwerEnabled ? t.on : t.off}</span>
                         </div>
                         <AnimatePresence initial={false} mode="wait">
@@ -3207,7 +3264,10 @@ export default function New() {
                     {/* Magnet Point card */}
                     <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
                       <div style={{ height: "36px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{DE ? "Magnet-Punkt" : "Magnet Point"}</span>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                          <RuleIcon id="magnet" color={dark ? DARK_TEXT : LIGHT_TEXT} />
+                          <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{DE ? "Magnet-Punkt" : "Magnet Point"}</span>
+                        </div>
                         <span onClick={() => setMagnetPoint(v => !v)} style={{ fontFamily: FONT_SANS, fontSize: "16px", color: descColor, cursor: "pointer" }}>{magnetPoint ? t.on : t.off}</span>
                       </div>
                       <motion.p key={magnetPoint ? "mp-on" : "mp-off"} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.18 }} style={{ fontFamily: FONT_SANS, fontSize: "13px", color: descColor, lineHeight: "1.45", margin: 0 }}>
@@ -3226,7 +3286,10 @@ export default function New() {
                     {/* Ink card */}
                     <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
                       <div style={{ height: "36px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.inkLabel}</span>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                          <RuleIcon id="ink" color={dark ? DARK_TEXT : LIGHT_TEXT} />
+                          <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{t.inkLabel}</span>
+                        </div>
                         <span onClick={() => setInkEnabled(v => !v)} style={{ fontFamily: FONT_SANS, fontSize: "16px", color: descColor, cursor: "pointer" }}>{inkEnabled ? t.on : t.off}</span>
                       </div>
                       <motion.p key={inkEnabled ? "ink-on" : "ink-off"} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.18 }} style={{ fontFamily: FONT_SANS, fontSize: "13px", color: descColor, lineHeight: "1.45", margin: 0 }}>
@@ -3264,7 +3327,10 @@ export default function New() {
                           background: positionMode === opt.value ? (dark ? "rgba(240,232,220,0.22)" : "rgba(85,85,85,0.13)") : settingsCardBg,
                           transition: "background 0.12s, border 0.12s",
                         }}>
-                          <span style={{ fontFamily: FONT_SANS, fontSize: "15px", fontWeight: positionMode === opt.value ? 600 : 400, color: dark ? DARK_TEXT : LIGHT_TEXT, lineHeight: "1.4" }}>{opt.label}</span>
+                          <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
+                            <RuleIcon id={opt.value} color={dark ? DARK_TEXT : LIGHT_TEXT} />
+                            <span style={{ fontFamily: FONT_SANS, fontSize: "15px", fontWeight: positionMode === opt.value ? 600 : 400, color: dark ? DARK_TEXT : LIGHT_TEXT, lineHeight: "1.4" }}>{opt.label}</span>
+                          </div>
                           <RadioCircle selected={positionMode === opt.value} dark={dark} />
                         </div>
                         {opt.value === "random" && positionMode === "random" && (

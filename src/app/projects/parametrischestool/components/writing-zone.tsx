@@ -1795,51 +1795,6 @@ export function WritingZone({
     [fontFamily, fontVariationSettings]
   );
 
-  // Unified placeholder overlay shared across all non-normal writing modes.
-  const renderPlaceholder = () => {
-    if (positions.length > 0) return null;
-    return (
-      <div style={{
-        position: "absolute", inset: 0,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        pointerEvents: "none", zIndex: 2,
-      }}>
-        <div style={{ position: "relative" }}>
-          {onDiceRoll && dicePaths && (
-            <button
-              onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
-              onClick={(e) => { e.stopPropagation(); onDiceRoll(); }}
-              aria-label="Roll the dice"
-              style={{
-                position: "absolute", top: "0.42em", left: `-${fontSize * 1.26 + 16}px`,
-                background: "none", border: "none", padding: 0, margin: 0,
-                display: "block", cursor: "pointer", pointerEvents: "auto", lineHeight: 0,
-                color: "#AAAAAA",
-                animation: diceSpinning ? "_diceRoll 0.55s ease-in-out" : "none",
-                transformOrigin: "center",
-              }}
-            >
-              <svg width={fontSize * 1.26} height={fontSize * 1.26} viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <style>{`@keyframes _diceRoll{0%{transform:rotate(0)scale(1)}20%{transform:rotate(-20deg)scale(.85)}55%{transform:rotate(170deg)scale(.9)}80%{transform:rotate(340deg)scale(1.05)}100%{transform:rotate(360deg)scale(1)}}`}</style>
-                {dicePaths.map((d, i) => <path key={i} d={d} fill="#AAAAAA" />)}
-              </svg>
-            </button>
-          )}
-          <span style={{
-            fontFamily: effectiveFamily,
-            fontSize: `${fontSize}px`,
-            color: "#AAAAAA",
-            fontStyle: "italic",
-            userSelect: "none",
-            whiteSpace: "nowrap",
-          }}>
-            {writingPrompt || "Fang einfach an zu schreiben…"}
-          </span>
-        </div>
-      </div>
-    );
-  };
-
   useLayoutEffect(() => {
     if (focusRef) focusRef.current = () => containerRef.current?.focus();
   });
@@ -2946,7 +2901,6 @@ export function WritingZone({
             externalPlaceholder={true}
           />
         </div>
-        {renderPlaceholder()}
       </div>
     );
   }
@@ -2975,7 +2929,6 @@ export function WritingZone({
             externalPlaceholder={true}
           />
         </div>
-        {renderPlaceholder()}
       </div>
     );
   }
@@ -3039,7 +2992,6 @@ export function WritingZone({
             fontSize={fontSize}
           />
         </div>
-        {renderPlaceholder()}
       </div>
     );
   }
@@ -3107,7 +3059,6 @@ export function WritingZone({
             fontSize={fontSize}
           />
         </div>
-        {renderPlaceholder()}
       </div>
     );
   }

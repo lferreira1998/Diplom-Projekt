@@ -285,7 +285,7 @@ const TRANSLATIONS = {
       return `Nach ${mins} min ${secs} Sek`;
     },
     inkLabel: "Tinte",
-    inkDesc: "Buchstaben wirken wie Tinte – sie werden blasser. Klick auf den Tintentropfen zum Nachfüllen.",
+    inkDesc: "Buchstaben verblassen wie Tinte. Klick auf den Tropfen zum Nachfüllen.",
     // Position
     posStandard: "Standard",
     posSpiral: "Spiralförmiger Text",
@@ -429,7 +429,7 @@ const TRANSLATIONS = {
       return `After ${mins} min ${secs} sec`;
     },
     inkLabel: "Ink",
-    inkDesc: "Letters behave like ink — they fade over time. Click the ink drop button to refill.",
+    inkDesc: "Letters fade like ink over time. Click the drop to refill.",
     // Position
     posStandard: "Standard",
     posSpiral: "Spiraling Text",
@@ -1904,7 +1904,7 @@ export default function New() {
   const rulesBtnBg = rulesOpen ? (dark ? "rgba(240,232,220,0.1)" : surfaceDark) : floatBg;
 
   const currentPrompt = prompts[0] || (diceIdx < 0 ? t.writingPrompt : (lang === "de" ? DICE_PROMPTS_DE[diceIdx] : DICE_PROMPTS_EN[diceIdx]));
-  const PROMPT_BTN_MODES = ["spiral", "followdot", "running", "random", "custom"];
+  const PROMPT_BTN_MODES = ["spiral", "followdot", "running", "random", "custom", "zigzag"];
   // Show the prompt in a top chip (instead of centered on the surface) for these
   // special position modes. Now also during creation — not only when viewing a saved
   // tool — because the centered surface prompt overflows these layouts.
@@ -3272,8 +3272,8 @@ export default function New() {
                       </div>
                       <motion.p key={magnetPoint ? "mp-on" : "mp-off"} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.18 }} style={{ fontFamily: FONT_SANS, fontSize: "13px", color: descColor, lineHeight: "1.45", margin: 0 }}>
                         {DE
-                          ? "Ein ziehbarer Punkt im Schreibfeld zieht den Text langsam zu sich. Ziehe den Punkt, um ihn zu platzieren."
-                          : "A draggable point in the writing area slowly pulls the text toward it. Drag the dot to place it."}
+                          ? "Ein Punkt zieht den Text langsam zu sich. Ziehe ihn zum Platzieren."
+                          : "A draggable point slowly pulls text toward it. Drag to place it."}
                       </motion.p>
                       {magnetPoint && (
                         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>

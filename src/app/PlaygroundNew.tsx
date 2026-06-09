@@ -768,8 +768,8 @@ function HeroHeading({ DE, theme }: { DE: boolean; theme: Theme }) {
     ? "Schreibwerkzeuge prägen, wie wir denken & schreiben."
     : "Writing Tools shape how we think & write.";
   const line2 = DE
-    ? "Entdecke Schreibwerkzeuge, die ihre Regeln brechen."
-    : "Explore Writing Tools that break their rules.";
+    ? "Brich ihre Regeln, um dein Denken zu verändern."
+    : "Break their rules to change your thinking.";
 
   return (
     <h1 style={{ margin: 0, fontFamily: FONT_CMP_SERIF, fontSize: 36, lineHeight: "45px", fontWeight: 600, color: theme.headline, textAlign: "center", whiteSpace: "nowrap", animation: "_heroIn 1s ease-out both" }}>
@@ -848,7 +848,7 @@ function ScrollReveal({ paragraphs, color, containerRef }: {
   const { scrollYProgress } = useScroll({
     container: containerRef,
     target: ref,
-    offset: ["start 0.85", "end 0.5"],
+    offset: ["start 0.6", "end 0.45"],
   });
   const wordArrays = paragraphs.map((p) => p.split(" "));
   const total = wordArrays.reduce((sum, a) => sum + a.length, 0);
@@ -984,7 +984,7 @@ export default function PlaygroundNew({ variant = "intro" }: { variant?: "intro"
         )}
 
         {!collectionOnly && !exploreMode && (
-          <section style={{ display: "flex", justifyContent: "center", padding: "180px 24px 200px", boxSizing: "border-box" }}>
+          <section style={{ display: "flex", justifyContent: "center", padding: "140px 24px 160px", boxSizing: "border-box" }}>
             <ScrollReveal
               paragraphs={DE ? REVEAL_TEXT.de : REVEAL_TEXT.en}
               color={theme.headline}

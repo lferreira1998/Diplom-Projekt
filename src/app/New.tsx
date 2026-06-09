@@ -176,13 +176,16 @@ const NAV_ROUTES: Record<string, string> = {
   About:           "/about-the-project",
 };
 
+// dotT/dotR = inset (px) of the active-category badge from the top/right edge.
+// Rounded shapes (pill, circle) need a larger inset so the dot sits inside the
+// curve instead of poking out past the border at the empty corner.
 const SIDEBAR_CATS = [
-  { en: "Look & Feel", de: "Look & Feel",  h: "60px",  br: "100px" },
-  { en: "Time",        de: "Zeit",         h: "104px", br: "100px" },
-  { en: "Visibility",  de: "Sichtbarkeit", h: "63px",  br: "4px" },
-  { en: "Correction",  de: "Korrigieren",  h: "60px",  br: "40px 4px 40px 4px" },
-  { en: "Stability",   de: "Stabilität",   h: "46px",  br: "4px" },
-  { en: "Position",    de: "Position",     h: "68px",  br: "4px", bottom: true as const },
+  { en: "Look & Feel", de: "Look & Feel",  h: "60px",  br: "100px",             dotT: 11, dotR: 11 },
+  { en: "Time",        de: "Zeit",         h: "104px", br: "100px",             dotT: 18, dotR: 18 },
+  { en: "Visibility",  de: "Sichtbarkeit", h: "63px",  br: "4px",               dotT: 7,  dotR: 7 },
+  { en: "Correction",  de: "Korrigieren",  h: "60px",  br: "40px 4px 40px 4px", dotT: 7,  dotR: 7 },
+  { en: "Stability",   de: "Stabilität",   h: "46px",  br: "4px",               dotT: 7,  dotR: 7 },
+  { en: "Position",    de: "Position",     h: "68px",  br: "4px",               dotT: 7,  dotR: 7, bottom: true as const },
 ];
 
 // ── Translations ──────────────────────────────────────────────────────────────
@@ -2553,7 +2556,7 @@ export default function New() {
                       <span
                         aria-hidden
                         style={{
-                          position: "absolute", top: "7px", right: "7px",
+                          position: "absolute", top: `${cat.dotT}px`, right: `${cat.dotR}px`,
                           width: "8px", height: "8px", borderRadius: "50%",
                           background: dark ? DARK_TEXT : LIGHT_TEXT,
                           boxShadow: `0 0 0 2px ${catInactiveBg}`,

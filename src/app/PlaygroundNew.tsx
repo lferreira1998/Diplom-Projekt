@@ -880,40 +880,52 @@ function ScrollReveal({ paragraphs, color, containerRef }: {
   );
 }
 
-// "Create Tool" sits at the bottom of the collection: a small circle that
-// expands into a full-width pill on hover. Clicking it opens the Create Tool page.
-function CreateToolButton({ dark, theme, DE }: { dark: boolean; theme: Theme; DE: boolean }) {
+// Floating "Create Tool" FAB: stays fixed at the bottom-right the whole time and
+// its width grows with scroll progress — from a small circle at the top to a
+// full-width pill at the bottom. It never navigates on its own; only a click opens
+// the Create Tool page.
+function CreateToolButton({ mainRef, dark, theme, DE }: {
+  mainRef: RefObject<HTMLElement | null>;
+  dark: boolean; theme: Theme; DE: boolean;
+}) {
   const navigate = useNavigate();
-  const [hovered, setHovered] = useState(false);
+  const [vpW, setVpW] = useState(1200);
+  useEffect(() => {
+    const update = () => setVpW(window.innerWidth);
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+  const { scrollYProgress } = useScroll({ container: mainRef });
+  const width = useTransform(scrollYProgress, [0, 1], [104, Math.max(104, vpW - 48)]);
   return (
-    <div style={{ marginTop: "32px", width: "100%", display: "flex", justifyContent: "flex-end" }}>
-      <button
-        onClick={() => navigate("/create-tool")}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-        style={{
-          width: hovered ? "100%" : "104px",
-          height: "104px",
-          borderRadius: "52px",
-          border: `1px dashed ${theme.border}`,
-          background: dark ? theme.toolBg : "#fcf6ef",
-          cursor: "pointer",
-          outline: "none",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontFamily: FONT_SANS,
-          fontSize: "15px",
-          color: theme.text,
-          letterSpacing: "-0.15px",
-          whiteSpace: "nowrap",
-          boxSizing: "border-box",
-          transition: "width 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
-        }}
-      >
-        {DE ? "Tool erstellen" : "Create Tool"}
-      </button>
-    </div>
+    <motion.button
+      onClick={() => navigate("/create-tool")}
+      style={{
+        position: "fixed",
+        bottom: 24,
+        right: 24,
+        zIndex: 50,
+        width,
+        height: 104,
+        borderRadius: 52,
+        border: `1px dashed ${theme.border}`,
+        background: dark ? theme.toolBg : "#fcf6ef",
+        cursor: "pointer",
+        outline: "none",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontFamily: FONT_SANS,
+        fontSize: "15px",
+        color: theme.text,
+        letterSpacing: "-0.15px",
+        whiteSpace: "nowrap",
+        boxSizing: "border-box",
+      }}
+    >
+      {DE ? "Tool erstellen" : "Create Tool"}
+    </motion.button>
   );
 }
 
@@ -1036,7 +1048,6 @@ export default function PlaygroundNew({ variant = "intro" }: { variant?: "intro"
               DE={DE}
             />
           )}
-          {!loading && <CreateToolButton dark={dark} theme={theme} DE={DE} />}
         </div>
         {exploreMode && (
           <button
@@ -1052,6 +1063,7 @@ export default function PlaygroundNew({ variant = "intro" }: { variant?: "intro"
           onConfirm={(id, mins) => { setLaunchTool(null); navigateToTool(id, mins); }}
           onClose={() => setLaunchTool(null)}
         />
+        {!exploreMode && <CreateToolButton mainRef={mainRef} dark={dark} theme={theme} DE={DE} />}
       </main>
     </DarkContext.Provider>
     </ThemeContext.Provider>

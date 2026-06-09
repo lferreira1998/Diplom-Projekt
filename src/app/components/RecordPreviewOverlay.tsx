@@ -12,7 +12,7 @@ const DEF_RATIO  = 2 / 3; // default card aspect ratio h/w
 const HANDLE_PX  = 10;
 
 // ── Shape definitions ─────────────────────────────────────────────────────────
-type ShapeId = "round" | "portrait" | "landscape" | "wide-pill" | "fluid" | "tall-pill";
+type ShapeId = "round" | "portrait" | "landscape" | "wide-pill" | "fluid" | "tall-pill" | "spiral-leaf";
 
 interface ShapeDef {
   id: ShapeId;
@@ -32,6 +32,23 @@ function rrPath(ctx: CanvasRenderingContext2D, w: number, h: number, r: number) 
     ctx.lineTo(w, h - rr); ctx.arcTo(w, h, w - rr, h, rr);
     ctx.lineTo(rr, h); ctx.arcTo(0, h, 0, h - rr, rr);
     ctx.lineTo(0, rr); ctx.arcTo(0, 0, rr, 0, rr);
+    ctx.closePath();
+  }
+}
+
+// Rounded-rect clip with per-corner radii [tl, tr, br, bl] (CSS order).
+function rrPathVar(ctx: CanvasRenderingContext2D, w: number, h: number, radii: [number, number, number, number]) {
+  ctx.beginPath();
+  if (typeof (ctx as unknown as { roundRect?: unknown }).roundRect === "function") {
+    (ctx as unknown as { roundRect: (x: number, y: number, w: number, h: number, r: number[]) => void }).roundRect(0, 0, w, h, radii);
+  } else {
+    const m = (r: number) => Math.min(r, w / 2, h / 2);
+    const [tl, tr, br, bl] = radii.map(m);
+    ctx.moveTo(tl, 0);
+    ctx.lineTo(w - tr, 0); ctx.arcTo(w, 0, w, tr, tr);
+    ctx.lineTo(w, h - br); ctx.arcTo(w, h, w - br, h, br);
+    ctx.lineTo(bl, h); ctx.arcTo(0, h, 0, h - bl, bl);
+    ctx.lineTo(0, tl); ctx.arcTo(0, 0, tl, 0, tl);
     ctx.closePath();
   }
 }
@@ -79,11 +96,19 @@ const SHAPES: ShapeDef[] = [
     frameBorderRadius: "200px",
     applyClip: (ctx, w, h) => { rrPath(ctx, w, h, w / 2); ctx.clip(); },
   },
+  {
+    id: "spiral-leaf", label: "Spiral", labelDe: "Spirale", ratio: 163 / 319,
+    frameBorderRadius: "24px 200px 24px 200px",
+    applyClip: (ctx, w, h) => {
+      rrPathVar(ctx, w, h, [w * 24 / 319, w * 200 / 319, w * 24 / 319, w * 200 / 319]);
+      ctx.clip();
+    },
+  },
 ];
 
 // Shapes offered in the picker (full SHAPES list is kept so previously saved
 // tools recorded in other shapes still render correctly).
-const PICKABLE_IDS: ShapeId[] = ["wide-pill", "fluid", "landscape"];
+const PICKABLE_IDS: ShapeId[] = ["wide-pill", "fluid", "landscape", "spiral-leaf"];
 const PICKABLE_SHAPES: ShapeDef[] = PICKABLE_IDS.map(id => SHAPES.find(s => s.id === id)!);
 
 // SVG icon for each shape (56×56 viewBox)
@@ -96,6 +121,7 @@ function ShapeIcon({ id, fill }: { id: ShapeId; fill: string }) {
       {id === "wide-pill" && <rect x="2" y="17" width="52" height="22" rx="11" fill={fill} />}
       {id === "fluid"     && <path d="M 10 16 L 52 16 Q 54 16 54 18 L 54 38 Q 54 40 46 40 L 4 40 Q 2 40 2 38 L 2 24 Q 2 16 10 16 Z" fill={fill} />}
       {id === "tall-pill" && <rect x="16" y="2" width="24" height="52" rx="12" fill={fill} />}
+      {id === "spiral-leaf" && <path d="M7 16 L41 16 A12 12 0 0 1 53 28 L53 36 A4 4 0 0 1 49 40 L15 40 A12 12 0 0 1 3 28 L3 20 A4 4 0 0 1 7 16 Z" fill={fill} />}
     </svg>
   );
 }

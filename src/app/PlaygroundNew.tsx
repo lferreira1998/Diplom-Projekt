@@ -190,6 +190,7 @@ const RECORD_SHAPE_DISPLAY: Record<string, { borderRadius: string | number; rati
   "wide-pill": { borderRadius: 999,                 ratio: 163 / 324, circle: false },
   "fluid":     { borderRadius: "40px 4px 40px 4px", ratio: 174 / 363, circle: false },
   "tall-pill": { borderRadius: 999,                 ratio: 309 / 211, circle: true },
+  "spiral-leaf": { borderRadius: "24px 200px 24px 200px", ratio: 163 / 319, circle: false },
 };
 
 function UserToolShape({ tool, style, onClick, dark }: {
@@ -904,26 +905,27 @@ export default function PlaygroundNew() {
               bottom: "40px",
               right: "48px",
               zIndex: 50,
-              width: "96px",
-              height: "96px",
+              width: "139px",
+              height: "139px",
               borderRadius: "50%",
               border: `1px dashed ${theme.border}`,
-              background: theme.toolBg,
+              background: dark ? theme.toolBg : "#fcf6ef",
               cursor: "pointer",
               outline: "none",
               display: "flex",
-              flexDirection: "column",
               alignItems: "center",
               justifyContent: "center",
+              padding: "6px 12px",
+              boxSizing: "border-box",
               fontFamily: FONT_SANS,
-              fontSize: "11px",
+              fontSize: "15px",
               color: theme.text,
+              letterSpacing: "-0.15px",
               textAlign: "center",
-              lineHeight: "1.4",
+              whiteSpace: "nowrap",
             }}
           >
-            <span style={{ fontSize: "20px", lineHeight: 1, marginBottom: "3px" }}>+</span>
-            <span style={{ whiteSpace: "pre-line" }}>{DE ? "Tool\nerstellen" : "Create\nTool"}</span>
+            {DE ? "Tool erstellen" : "Create Tool"}
           </button>
         )}
       </main>

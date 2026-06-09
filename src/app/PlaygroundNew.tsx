@@ -965,7 +965,7 @@ export default function PlaygroundNew() {
               padding: "6px 12px",
               boxSizing: "border-box",
               fontFamily: FONT_SANS,
-              fontSize: "12px",
+              fontSize: "15px",
               color: theme.text,
               letterSpacing: "-0.15px",
               textAlign: "center",

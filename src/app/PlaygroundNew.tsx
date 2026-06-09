@@ -556,8 +556,8 @@ function Section({ title, tools, onOpen, onDelete, emptyMsg, sessionId, favorite
   const dark = useContext(DarkContext);
   const navigate = useNavigate();
   return (
-    <section style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "12px", borderBottom: `1px dashed ${theme.border}`, paddingBottom: "12px" }}>
+    <section style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "12px", borderBottom: `1px dashed ${theme.border}`, paddingBottom: "32px" }}>
         <span style={{ fontFamily: FONT_CMP_SERIF, fontSize: "32px", color: theme.headline, lineHeight: "normal" }}>{title}</span>
         {tab !== undefined && onTabChange && (
           <div style={{ display: "flex", gap: "8px" }}>
@@ -993,7 +993,7 @@ export default function PlaygroundNew({ variant = "intro" }: { variant?: "intro"
           </section>
         )}
 
-        <div ref={toolsRef} style={{ width: "100%", boxSizing: "border-box", padding: "96px 100px 160px" }}>
+        <div ref={toolsRef} style={{ width: "100%", boxSizing: "border-box", padding: "96px 24px 160px" }}>
           {loading ? (
             <SkeletonGrid title={DE ? "Tool-Sammlung" : "Tool Collection"} dark={dark} />
           ) : (

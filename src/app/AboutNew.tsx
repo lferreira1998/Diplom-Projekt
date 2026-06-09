@@ -7,7 +7,7 @@ const SERIF = "'az-serif', serif";
 const SANS = "'az-sans', sans-serif";
 const MONO = "'az-sans', sans-serif";
 
-const SIDEBAR_W = "min(34vw, 520px)";
+const SIDEBAR_W = "max(390px, min(34vw, 520px))";
 const CANVAS_W = 1520;
 const CANVAS_H = 1460;
 
@@ -278,7 +278,6 @@ export default function AboutNew() {
           left: 0,
           bottom: 0,
           width: SIDEBAR_W,
-          minWidth: 390,
           boxSizing: "border-box",
           padding: "36px 30px 44px",
           overflowY: "auto",
@@ -358,7 +357,6 @@ export default function AboutNew() {
           left: SIDEBAR_W,
           right: 0,
           bottom: 0,
-          minLeft: 390,
           overflow: "hidden",
         }}
       >
@@ -366,7 +364,7 @@ export default function AboutNew() {
           style={{
             position: "fixed",
             top: 31,
-            left: "calc(min(34vw, 520px) + 40px)",
+            left: `calc(${SIDEBAR_W} + 40px)`,
             right: 260,
             zIndex: 7,
             pointerEvents: "none",
@@ -440,7 +438,7 @@ export default function AboutNew() {
                     position: "absolute",
                     left: point.x,
                     top: point.y,
-                    translate: "-50% -50%",
+                    transform: "translate(-50%, -50%)",
                     width: isMain ? 228 : 168,
                     minHeight: isMain ? 128 : 86,
                     padding: isMain ? "16px 18px" : "12px 13px",

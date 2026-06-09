@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useLayoutEffect, useMemo, useRef,
 import { ToolPreview } from "./components/ToolPreview";
 import { ToolLaunchModal } from "./components/ToolLaunchModal";
 import type { CSSProperties, ReactNode, RefObject } from "react";
-import { motion, useScroll, useTransform, useMotionValueEvent, type MotionValue } from "motion/react";
+import { motion, useScroll, useTransform, type MotionValue } from "motion/react";
 import { useNavigate, useLocation } from "react-router";
 import { deleteNewTool, getAllNewTools, type NewToolData, type NewToolParams } from "./utils/storage";
 import TopNav from "./components/TopNav";
@@ -880,64 +880,40 @@ function ScrollReveal({ paragraphs, color, containerRef }: {
   );
 }
 
-// On the Introduction page, the "Create Tool" circle grows as you scroll past
-// the tool collection — expanding from a small circle to a full-page rectangle,
-// and finally navigating into the Create Tool page once it fills the screen.
-function CreateToolReveal({ mainRef, pastHero, dark, theme, DE }: {
-  mainRef: RefObject<HTMLElement | null>;
-  pastHero: boolean;
-  dark: boolean;
-  theme: Theme;
-  DE: boolean;
-}) {
+// "Create Tool" sits at the bottom of the collection: a small circle that
+// expands into a full-width pill on hover. Clicking it opens the Create Tool page.
+function CreateToolButton({ dark, theme, DE }: { dark: boolean; theme: Theme; DE: boolean }) {
   const navigate = useNavigate();
-  const zoneRef = useRef<HTMLDivElement>(null);
-  const navigated = useRef(false);
-  const [vp, setVp] = useState({ w: 1600, h: 900 });
-  useEffect(() => {
-    const update = () => setVp({ w: window.innerWidth, h: window.innerHeight });
-    update();
-    window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
-  }, []);
-  const { scrollYProgress } = useScroll({
-    container: mainRef,
-    target: zoneRef,
-    offset: ["start end", "end end"],
-  });
-  const width    = useTransform(scrollYProgress, [0, 1], [104, vp.w]);
-  const height   = useTransform(scrollYProgress, [0, 1], [104, vp.h]);
-  const right    = useTransform(scrollYProgress, [0, 1], [24, 0]);
-  const bottom   = useTransform(scrollYProgress, [0, 1], [24, 0]);
-  const radius   = useTransform(scrollYProgress, [0, 1], [52, 0]);
-  const fontSize = useTransform(scrollYProgress, [0, 0.55], [15, 30]);
-  useMotionValueEvent(scrollYProgress, "change", (v) => {
-    if (v >= 0.985 && !navigated.current) { navigated.current = true; navigate("/create-tool"); }
-  });
+  const [hovered, setHovered] = useState(false);
   return (
-    <>
-      {/* Tall scroll zone that drives the growth */}
-      <div ref={zoneRef} aria-hidden style={{ height: "150vh", pointerEvents: "none" }} />
-      <motion.button
+    <div style={{ marginTop: "32px", width: "100%", display: "flex", justifyContent: "flex-end" }}>
+      <button
         onClick={() => navigate("/create-tool")}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
         style={{
-          position: "fixed", right, bottom, width, height, borderRadius: radius,
-          zIndex: 55,
+          width: hovered ? "100%" : "104px",
+          height: "104px",
+          borderRadius: "52px",
           border: `1px dashed ${theme.border}`,
           background: dark ? theme.toolBg : "#fcf6ef",
-          cursor: "pointer", outline: "none",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          overflow: "hidden", boxSizing: "border-box", color: theme.text,
-          opacity: pastHero ? 1 : 0,
-          pointerEvents: pastHero ? "auto" : "none",
-          transition: "opacity 0.3s ease",
+          cursor: "pointer",
+          outline: "none",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontFamily: FONT_SANS,
+          fontSize: "15px",
+          color: theme.text,
+          letterSpacing: "-0.15px",
+          whiteSpace: "nowrap",
+          boxSizing: "border-box",
+          transition: "width 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
         }}
       >
-        <motion.span style={{ fontFamily: FONT_SANS, fontSize, letterSpacing: "-0.15px", textAlign: "center", whiteSpace: "nowrap" }}>
-          {DE ? "Tool erstellen" : "Create Tool"}
-        </motion.span>
-      </motion.button>
-    </>
+        {DE ? "Tool erstellen" : "Create Tool"}
+      </button>
+    </div>
   );
 }
 
@@ -947,24 +923,9 @@ export default function PlaygroundNew({ variant = "intro" }: { variant?: "intro"
   const navigate = useNavigate();
   const mainRef = useRef<HTMLElement>(null);
   const toolsRef = useRef<HTMLDivElement>(null);
-  const heroCenterRef = useRef<HTMLDivElement>(null);
   const [exploreMode, setExploreMode] = useState(false);
   const [launchTool, setLaunchTool] = useState<NewToolData | null>(null);
   const [tab, setTab] = useState<"all" | "my">("all");
-  // The floating "Create Tool" button only fades in once the hero call-to-action
-  // (which already carries a "Create" link) has scrolled out of view.
-  const [pastHero, setPastHero] = useState(false);
-
-  useEffect(() => {
-    const el = heroCenterRef.current;
-    if (!el) return;
-    const io = new IntersectionObserver(
-      ([entry]) => setPastHero(!entry.isIntersecting),
-      { threshold: 0 },
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
 
   const DE = lang === "de";
 
@@ -989,8 +950,6 @@ export default function PlaygroundNew({ variant = "intro" }: { variant?: "intro"
 
   const theme = getTheme(dark);
   const displayedTools = tab === "all" ? [...presetTools, ...publicTools] : myToolsAll;
-  // In collection-only mode there's no hero to scroll past, so the FAB is always shown.
-  const showFab = collectionOnly || pastHero;
 
   return (
     <ThemeContext.Provider value={theme}>
@@ -1013,7 +972,7 @@ export default function PlaygroundNew({ variant = "intro" }: { variant?: "intro"
             <div style={{ position: "absolute", left: 456, top: 300, width: 768, opacity: exploreMode ? 0 : 1, transition: "opacity 0.35s ease", pointerEvents: exploreMode ? "none" : "auto" }}>
               <HeroHeading DE={DE} theme={theme} />
             </div>
-            <div ref={heroCenterRef} style={{ position: "absolute", left: 456, top: 408, width: 768, display: "flex", justifyContent: "center", opacity: exploreMode ? 0 : 1, transition: "opacity 0.35s ease", pointerEvents: exploreMode ? "none" : "auto", animation: "_heroIn 1s ease-out 0.4s both" }}>
+            <div style={{ position: "absolute", left: 456, top: 408, width: 768, display: "flex", justifyContent: "center", opacity: exploreMode ? 0 : 1, transition: "opacity 0.35s ease", pointerEvents: exploreMode ? "none" : "auto", animation: "_heroIn 1s ease-out 0.4s both" }}>
               <p style={{ margin: 0, width: 540, textAlign: "center", fontFamily: FONT_SANS, fontWeight: 300, fontSize: "17px", lineHeight: 1.3, color: dark ? theme.text : "#484643", letterSpacing: "-0.01em" }}>
                 <span onClick={() => navigate("/create-tool")} style={HERO_LINK}>{DE ? "Erstelle" : "Create"}</span>
                 {DE ? " und teile dein eigenes Tool. " : " and share your own tool. "}
@@ -1077,6 +1036,7 @@ export default function PlaygroundNew({ variant = "intro" }: { variant?: "intro"
               DE={DE}
             />
           )}
+          {!loading && <CreateToolButton dark={dark} theme={theme} DE={DE} />}
         </div>
         {exploreMode && (
           <button
@@ -1092,45 +1052,6 @@ export default function PlaygroundNew({ variant = "intro" }: { variant?: "intro"
           onConfirm={(id, mins) => { setLaunchTool(null); navigateToTool(id, mins); }}
           onClose={() => setLaunchTool(null)}
         />
-        {/* Collection page: plain Create Tool button. */}
-        {!exploreMode && collectionOnly && (
-          <button
-            onClick={() => navigate("/create-tool")}
-            style={{
-              position: "fixed",
-              bottom: "24px",
-              right: "24px",
-              zIndex: 50,
-              width: "104px",
-              height: "104px",
-              borderRadius: "50%",
-              border: `1px dashed ${theme.border}`,
-              background: dark ? theme.toolBg : "#fcf6ef",
-              cursor: "pointer",
-              outline: "none",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "6px 12px",
-              boxSizing: "border-box",
-              fontFamily: FONT_SANS,
-              fontSize: "15px",
-              color: theme.text,
-              letterSpacing: "-0.15px",
-              textAlign: "center",
-              whiteSpace: "nowrap",
-              opacity: showFab ? 1 : 0,
-              pointerEvents: showFab ? "auto" : "none",
-              transition: "opacity 0.3s ease",
-            }}
-          >
-            {DE ? "Tool erstellen" : "Create Tool"}
-          </button>
-        )}
-        {/* Introduction page: the Create Tool circle grows on scroll into the page. */}
-        {!exploreMode && !collectionOnly && (
-          <CreateToolReveal mainRef={mainRef} pastHero={pastHero} dark={dark} theme={theme} DE={DE} />
-        )}
       </main>
     </DarkContext.Provider>
     </ThemeContext.Provider>

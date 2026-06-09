@@ -14,8 +14,8 @@ const ROUTES: Record<string, string> = {
 };
 
 const LABELS = {
-  de: { Create: "Tool erstellen", Playground: "Tool-Sammlung", About: "Über das Projekt", menuClosed: "Menü", menuOpen: "Schließen", langSwitch: "English" },
-  en: { Create: "Create Tool", Playground: "Tool Collection", About: "About", menuClosed: "Menu", menuOpen: "Close", langSwitch: "Deutsch" },
+  de: { Create: "Tool erstellen", Playground: "Tool-Sammlung", About: "Über das Projekt", menuClosed: "Go to", menuOpen: "Schließen", langSwitch: "English" },
+  en: { Create: "Create Tool", Playground: "Tool Collection", About: "About", menuClosed: "Go to", menuOpen: "Close", langSwitch: "Deutsch" },
 };
 
 const NAV_CONTAINER = {

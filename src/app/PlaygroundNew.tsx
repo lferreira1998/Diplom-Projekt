@@ -10,6 +10,14 @@ const FONT_SERIF = "'az-serif', serif";
 const FONT_CMP_SERIF = "'az-cond', serif";
 const FONT_SANS = "'az-sans', sans-serif";
 
+// Dotted-underline inline link used in the hero call-to-action sentence.
+const HERO_LINK: CSSProperties = {
+  textDecoration: "underline",
+  textDecorationStyle: "dotted",
+  textUnderlineOffset: "3px",
+  cursor: "pointer",
+};
+
 type Theme = {
   bg: string;
   panelBg: string;
@@ -286,6 +294,17 @@ export const CARD_SHAPE_DEFS: Record<string, {
   "in-a-spiral":         { bgLight: "#eef7ff", bgDark: "#242c38",  radius: "24px 200px 24px 200px", circle: false, bottomLeft: false, label: { de: "...in einer Spirale",            en: "...in a spiral" },               video: "in-a-spiral" },
 };
 
+// The six official experiments, surfaced as cards in the collection (same shapes
+// + videos as the hero). Descriptions mirror the preset viewer in New.tsx.
+const PRESET_META: { id: string; desc: { de: string; en: string } }[] = [
+  { id: "without-stopping",    desc: { de: "Schreib ohne anzuhalten. Der Cursor läuft weiter, Pausen werden sichtbar. Löschen ist nicht möglich.", en: "Write without stopping. The cursor keeps moving, making pauses visible. Deletion is impossible." } },
+  { id: "uninvited-thoughts",  desc: { de: "Deine Wörter verlieren ihre Form und fliegen davon, wie Gedanken, die du nicht festhalten kannst.", en: "Your words lose their form and drift away, like thoughts you cannot hold on to." } },
+  { id: "off-the-grid",        desc: { de: "Text erscheint nicht linear, sondern zufällig im Raum verteilt.", en: "Text doesn't appear linearly, but scattered randomly across the space." } },
+  { id: "blind-then-witness",  desc: { de: "Schreib blind. Dein Text bleibt unsichtbar, während du schreibst.", en: "Write blind. Your text stays invisible while you write." } },
+  { id: "visible-corrections", desc: { de: "Korrigieren hinterlässt Spuren. Gelöschter Text wird überdeckt, nicht entfernt.", en: "Correcting leaves traces. Deleted text is covered, not removed." } },
+  { id: "in-a-spiral",         desc: { de: "Dein Text windet sich in einer Spirale nach innen.", en: "Your text winds inward in a spiral." } },
+];
+
 function getPresetShape(params: NewToolParams, dark: boolean, DE: boolean): {
   bg: string; radius: string; label: string; circle: boolean; bottomLeft: boolean; video: string | null;
 } {
@@ -557,14 +576,16 @@ function Section({ title, tools, onOpen, onDelete, emptyMsg, sessionId, favorite
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "32px" }}>
           {tools.map((tool, i) => {
             const owned = tool.params.sessionId === sessionId;
+            const isPreset = tool.id.startsWith("preset:");
             return (
               <Reveal key={tool.id} index={i}>
                 <ToolCard
                   tool={tool}
                   onClick={() => onOpen(tool.id)}
-                  onDelete={owned && onDelete ? () => onDelete(tool.id) : undefined}
+                  onDelete={owned && !isPreset && onDelete ? () => onDelete(tool.id) : undefined}
                   isFavorite={favorites?.includes(tool.id)}
-                  onToggleFavorite={!owned && onToggleFavorite ? () => onToggleFavorite(tool.id) : undefined}
+                  onToggleFavorite={!owned && !isPreset && onToggleFavorite ? () => onToggleFavorite(tool.id) : undefined}
+                  DE={DE}
                 />
               </Reveal>
             );
@@ -793,18 +814,48 @@ export default function PlaygroundNew() {
   const { sessionId, loading, lang, setLang, dark, setDark, favorites, toggleFavorite, myToolsAll, publicTools, tools, navigateToTool, handleDelete } = usePlaygroundData();
   const navigate = useNavigate();
   const toolsRef = useRef<HTMLDivElement>(null);
+  const heroCenterRef = useRef<HTMLDivElement>(null);
   const [exploreMode, setExploreMode] = useState(false);
   const [launchTool, setLaunchTool] = useState<NewToolData | null>(null);
   const [tab, setTab] = useState<"all" | "my">("all");
+  // The floating "Create Tool" button only fades in once the hero call-to-action
+  // (which already carries a "Create" link) has scrolled out of view.
+  const [pastHero, setPastHero] = useState(false);
+
+  useEffect(() => {
+    const el = heroCenterRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([entry]) => setPastHero(!entry.isIntersecting),
+      { threshold: 0 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  const DE = lang === "de";
 
   const openTool = (id: string) => {
+    if (id.startsWith("preset:")) { navigate(`/create-tool?preset=${id.slice(7)}`); return; }
     const t = tools.find(x => x.id === id) ?? null;
     setLaunchTool(t);
   };
 
-  const DE = lang === "de";
+  // Synthesize the six official experiments as tool cards (shape + video come
+  // from cardShape; name + description are localized here).
+  const presetTools = useMemo<NewToolData[]>(
+    () => PRESET_META.map((p) => ({
+      id: `preset:${p.id}`,
+      savedAt: "",
+      name: DE ? CARD_SHAPE_DEFS[p.id].label.de : CARD_SHAPE_DEFS[p.id].label.en,
+      description: DE ? p.desc.de : p.desc.en,
+      params: { source: "new", cardShape: p.id } as unknown as NewToolParams,
+    })),
+    [DE],
+  );
+
   const theme = getTheme(dark);
-  const displayedTools = tab === "all" ? publicTools : myToolsAll;
+  const displayedTools = tab === "all" ? [...presetTools, ...publicTools] : myToolsAll;
 
   return (
     <ThemeContext.Provider value={theme}>
@@ -826,20 +877,16 @@ export default function PlaygroundNew() {
             <div style={{ position: "absolute", left: 456, top: 300, width: 768, opacity: exploreMode ? 0 : 1, transition: "opacity 0.35s ease", pointerEvents: exploreMode ? "none" : "auto" }}>
               <HeroHeading DE={DE} theme={theme} />
             </div>
-            <div style={{ position: "absolute", left: 456, top: 408, width: 768, display: "flex", justifyContent: "center", gap: "12px", opacity: exploreMode ? 0 : 1, transition: "opacity 0.35s ease", pointerEvents: exploreMode ? "none" : "auto", animation: "_heroIn 1s ease-out 0.4s both" }}>
-              {([
-                { label: DE ? "Tool-Sammlung" : "Tool Collection",     onClick: () => setExploreMode(true) },
-                { label: DE ? "Tool erstellen" : "Create Tool",         onClick: () => navigate("/create-tool") },
-                { label: DE ? "Über das Projekt" : "About the Project", onClick: () => navigate("/about-the-project") },
-              ]).map(({ label, onClick }) => (
-                <button
-                  key={label}
-                  onClick={onClick}
-                  style={{ background: theme.toolBg, border: `1px dashed ${theme.border}`, borderRadius: 0, cursor: "pointer", outline: "none", padding: "8px 16px", fontFamily: FONT_SANS, fontSize: "14px", color: theme.text }}
-                >
-                  {label}
-                </button>
-              ))}
+            <div ref={heroCenterRef} style={{ position: "absolute", left: 456, top: 408, width: 768, display: "flex", justifyContent: "center", opacity: exploreMode ? 0 : 1, transition: "opacity 0.35s ease", pointerEvents: exploreMode ? "none" : "auto", animation: "_heroIn 1s ease-out 0.4s both" }}>
+              <p style={{ margin: 0, width: 540, textAlign: "center", fontFamily: FONT_SANS, fontWeight: 300, fontSize: "17px", lineHeight: 1.55, color: theme.headline, letterSpacing: "-0.01em" }}>
+                <span onClick={() => navigate("/create-tool")} style={HERO_LINK}>{DE ? "Erstelle" : "Create"}</span>
+                {DE ? " und teile dein eigenes Tool. " : " and share your own tool. "}
+                <span onClick={() => setExploreMode(true)} style={HERO_LINK}>{DE ? "Probiere" : "Try"}</span>
+                {DE ? " Tools von anderen." : " tools made by others."}
+                <br />
+                <span onClick={() => navigate("/about-the-project")} style={HERO_LINK}>{DE ? "Lies" : "Read"}</span>
+                {DE ? " über das Projekt." : " about the project."}
+              </p>
             </div>
             {exploreMode && myToolsAll.slice(0, EXPLORE_SLOTS.length).map((tool, i) => {
               const slot = EXPLORE_SLOTS[i];
@@ -923,6 +970,9 @@ export default function PlaygroundNew() {
               letterSpacing: "-0.15px",
               textAlign: "center",
               whiteSpace: "nowrap",
+              opacity: pastHero ? 1 : 0,
+              pointerEvents: pastHero ? "auto" : "none",
+              transition: "opacity 0.3s ease",
             }}
           >
             {DE ? "Tool erstellen" : "Create Tool"}

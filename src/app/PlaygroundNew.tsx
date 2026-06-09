@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { ToolPreview } from "./components/ToolPreview";
 import { ToolLaunchModal } from "./components/ToolLaunchModal";
-import type { CSSProperties, ReactNode } from "react";
+import type { CSSProperties, ReactNode, RefObject } from "react";
+import { motion, useScroll, useTransform, type MotionValue } from "motion/react";
 import { useNavigate, useLocation } from "react-router";
 import { deleteNewTool, getAllNewTools, type NewToolData, type NewToolParams } from "./utils/storage";
 import TopNav from "./components/TopNav";
@@ -810,9 +811,76 @@ function PageNavFAB({ dark, myToolsAll, DE, theme, loading, bottom = 40 }: { dar
 }
 
 
+// ── Scroll-synced text reveal ─────────────────────────────────────────────────
+// The paragraph starts in a light state and darkens word by word as it scrolls
+// through the viewport — the reveal is tied directly to scroll progress.
+const REVEAL_TEXT: { de: string[]; en: string[] } = {
+  en: [
+    "Shaping Thoughts asks how much our thinking is shaped by the tools we use to write.",
+    "It began from observing thoughts as movement and structure, and noticing how different this is from writing, which fixes, orders, and stabilizes them.",
+    "This tension made me question how much writing tools influence thought, so I looked at existing tools with different rules and began changing those rules myself.",
+    "The goal is to make interface behavior visible and open up new ways of writing and thinking.",
+  ],
+  de: [
+    "Shaping Thoughts fragt, wie sehr unser Denken von den Werkzeugen geprägt wird, mit denen wir schreiben.",
+    "Es begann damit, Gedanken als Bewegung und Struktur zu beobachten und zu bemerken, wie anders das vom Schreiben ist, das sie fixiert, ordnet und stabilisiert.",
+    "Diese Spannung ließ mich fragen, wie stark Schreibwerkzeuge das Denken beeinflussen. Also betrachtete ich bestehende Werkzeuge mit anderen Regeln und begann, diese Regeln selbst zu verändern.",
+    "Das Ziel ist, das Verhalten von Interfaces sichtbar zu machen und neue Wege des Schreibens und Denkens zu eröffnen.",
+  ],
+};
+
+function RevealWord({ children, progress, range, color }: {
+  children: string;
+  progress: MotionValue<number>;
+  range: [number, number];
+  color: string;
+}) {
+  const opacity = useTransform(progress, range, [0.28, 1]);
+  return <motion.span style={{ opacity, color }}>{children}</motion.span>;
+}
+
+function ScrollReveal({ paragraphs, color, containerRef }: {
+  paragraphs: string[];
+  color: string;
+  containerRef: RefObject<HTMLElement | null>;
+}) {
+  const ref = useRef<HTMLParagraphElement>(null);
+  const { scrollYProgress } = useScroll({
+    container: containerRef,
+    target: ref,
+    offset: ["start 0.85", "end 0.5"],
+  });
+  const wordArrays = paragraphs.map((p) => p.split(" "));
+  const total = wordArrays.reduce((sum, a) => sum + a.length, 0);
+  let idx = 0;
+  return (
+    <p
+      ref={ref}
+      style={{ margin: 0, width: 739, maxWidth: "100%", textAlign: "center", fontFamily: FONT_CMP_SERIF, fontWeight: 500, fontSize: "34px", lineHeight: 1.3 }}
+    >
+      {wordArrays.map((words, pi) => (
+        <span key={pi}>
+          {pi > 0 && <><br /><br /></>}
+          {words.map((w, wi) => {
+            const start = idx / total;
+            const end = (idx + 1) / total;
+            idx += 1;
+            return (
+              <RevealWord key={`${pi}-${wi}`} progress={scrollYProgress} range={[start, end]} color={color}>
+                {wi < words.length - 1 ? `${w} ` : w}
+              </RevealWord>
+            );
+          })}
+        </span>
+      ))}
+    </p>
+  );
+}
+
 export default function PlaygroundNew() {
   const { sessionId, loading, lang, setLang, dark, setDark, favorites, toggleFavorite, myToolsAll, publicTools, tools, navigateToTool, handleDelete } = usePlaygroundData();
   const navigate = useNavigate();
+  const mainRef = useRef<HTMLElement>(null);
   const toolsRef = useRef<HTMLDivElement>(null);
   const heroCenterRef = useRef<HTMLDivElement>(null);
   const [exploreMode, setExploreMode] = useState(false);
@@ -861,7 +929,7 @@ export default function PlaygroundNew() {
     <ThemeContext.Provider value={theme}>
     <DarkContext.Provider value={dark}>
       <TopNav current="Playground" dark={dark} setDark={setDark} lang={lang} setLang={setLang} />
-      <main style={{ minHeight: "100vh", height: "100vh", width: "100vw", overflowX: "hidden", overflowY: exploreMode ? "hidden" : "auto", position: "relative", backgroundColor: theme.bg, color: theme.text, fontFamily: FONT_SANS, WebkitOverflowScrolling: "touch" }}>
+      <main ref={mainRef} style={{ minHeight: "100vh", height: "100vh", width: "100vw", overflowX: "hidden", overflowY: exploreMode ? "hidden" : "auto", position: "relative", backgroundColor: theme.bg, color: theme.text, fontFamily: FONT_SANS, WebkitOverflowScrolling: "touch" }}>
         <style>{`html, body, #root { height: 100%; overflow: hidden; }`}</style>
 
         <section aria-label="Writing tools playground" style={{ position: "relative", minHeight: "100vh", overflow: exploreMode ? "visible" : "hidden", background: "transparent" }}>
@@ -881,7 +949,7 @@ export default function PlaygroundNew() {
               <p style={{ margin: 0, width: 540, textAlign: "center", fontFamily: FONT_SANS, fontWeight: 300, fontSize: "17px", lineHeight: 1.3, color: dark ? theme.text : "#484643", letterSpacing: "-0.01em" }}>
                 <span onClick={() => navigate("/create-tool")} style={HERO_LINK}>{DE ? "Erstelle" : "Create"}</span>
                 {DE ? " und teile dein eigenes Tool. " : " and share your own tool. "}
-                <span onClick={() => setExploreMode(true)} style={HERO_LINK}>{DE ? "Probiere" : "Try"}</span>
+                <span onClick={() => toolsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })} style={HERO_LINK}>{DE ? "Probiere" : "Try"}</span>
                 {DE ? " Tools von anderen." : " tools made by others."}
                 <br />
                 <span onClick={() => navigate("/about-the-project")} style={HERO_LINK}>{DE ? "Lies" : "Read"}</span>
@@ -909,6 +977,16 @@ export default function PlaygroundNew() {
             })}
           </div>
         </section>
+
+        {!exploreMode && (
+          <section style={{ display: "flex", justifyContent: "center", padding: "180px 24px 200px", boxSizing: "border-box" }}>
+            <ScrollReveal
+              paragraphs={DE ? REVEAL_TEXT.de : REVEAL_TEXT.en}
+              color={theme.headline}
+              containerRef={mainRef}
+            />
+          </section>
+        )}
 
         <div ref={toolsRef} style={{ width: "100%", boxSizing: "border-box", padding: "96px 100px 160px" }}>
           {loading ? (

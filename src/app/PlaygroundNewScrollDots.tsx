@@ -2,7 +2,16 @@ import PlaygroundNew from "./PlaygroundNew";
 
 // Renders the playground. variant "intro" = full landing page (hero + scroll
 // reveal + collection); variant "collection" = only the tool-collection grid.
+function ensureEnglishDefaultLanguage() {
+  if (typeof window === "undefined") return;
+  if (!window.localStorage.getItem("appLang")) {
+    window.localStorage.setItem("appLang", "en");
+  }
+}
+
 export default function PlaygroundNewScrollDots({ variant }: { variant?: "intro" | "collection" }) {
+  ensureEnglishDefaultLanguage();
+
   return (
     <>
       <style>{`

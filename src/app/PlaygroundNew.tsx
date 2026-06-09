@@ -463,10 +463,10 @@ function ToolCard({ tool, onClick, onDelete, isFavorite, onToggleFavorite, DE }:
       {onDelete && (
         <div style={{ position: "absolute", top: "10px", right: "10px", display: "flex", alignItems: "center", gap: "4px", zIndex: 2 }}>
           {confirming ? (
-            <div onClick={(e) => e.stopPropagation()} style={{ display: "flex", alignItems: "center", gap: "5px", background: dark ? theme.panelBg : "#fff", border: `1px solid ${theme.border}`, borderRadius: "6px", padding: "4px 6px", boxShadow: "0 2px 8px rgba(0,0,0,0.18)" }}>
-              <span style={{ fontFamily: FONT_SANS, fontSize: "11px", color: theme.text, whiteSpace: "nowrap" }}>Löschen?</span>
-              <button onClick={(e) => { e.stopPropagation(); onDelete(); }} style={{ height: "22px", padding: "0 9px", background: "#b43c3c", border: "none", borderRadius: "4px", cursor: "pointer", outline: "none", fontFamily: FONT_SANS, fontSize: "11px", color: "#fff" }}>Ja</button>
-              <button onClick={(e) => { e.stopPropagation(); setConfirming(false); }} style={{ height: "22px", padding: "0 9px", background: "transparent", border: `1px solid ${theme.border}`, borderRadius: "4px", cursor: "pointer", outline: "none", fontFamily: FONT_SANS, fontSize: "11px", color: theme.text }}>Nein</button>
+            <div onClick={(e) => e.stopPropagation()} style={{ display: "flex", alignItems: "center", gap: "6px", background: dark ? theme.panelBg : "#fef8ee", border: `1px dashed ${shapeBorder}`, borderRadius: "4px", padding: "5px 8px" }}>
+              <span style={{ fontFamily: FONT_SANS, fontSize: "12px", color: theme.text, whiteSpace: "nowrap", letterSpacing: "-0.01em" }}>{DE ? "Löschen?" : "Delete?"}</span>
+              <button onClick={(e) => { e.stopPropagation(); onDelete(); }} style={{ height: "24px", padding: "0 10px", background: "transparent", border: `1px dashed ${shapeBorder}`, borderRadius: "4px", cursor: "pointer", outline: "none", fontFamily: FONT_SANS, fontSize: "12px", color: "#b43c3c", whiteSpace: "nowrap" }}>{DE ? "Ja" : "Yes"}</button>
+              <button onClick={(e) => { e.stopPropagation(); setConfirming(false); }} style={{ height: "24px", padding: "0 10px", background: "transparent", border: `1px dashed ${shapeBorder}`, borderRadius: "4px", cursor: "pointer", outline: "none", fontFamily: FONT_SANS, fontSize: "12px", color: theme.muted, whiteSpace: "nowrap" }}>{DE ? "Nein" : "No"}</button>
             </div>
           ) : (
             <button onClick={(e) => { e.stopPropagation(); setConfirming(true); }} title="Aus meinen Tools entfernen" style={{ width: "24px", height: "24px", background: dark ? theme.panelBg : "#fef8ee", border: `1px dashed ${shapeBorder}`, borderRadius: "50%", cursor: "pointer", outline: "none", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FONT_SANS, fontSize: "16px", color: theme.muted, lineHeight: 1 }}>×</button>
@@ -548,24 +548,6 @@ function Section({ title, tools, onOpen, onDelete, emptyMsg, sessionId, favorite
               );
             })}
           </div>
-        )}
-        {showCreate && (
-          <button
-            onClick={() => navigate("/create-tool")}
-            style={{
-              marginLeft: "auto",
-              padding: "6px 14px",
-              border: `1px dashed ${theme.border}`,
-              borderRadius: "4px",
-              background: "transparent",
-              fontFamily: FONT_SANS, fontSize: "13px",
-              color: theme.muted,
-              cursor: "pointer", outline: "none",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {DE ? "+ Eigenes Tool erstellen" : "+ Create your own tool"}
-          </button>
         )}
       </div>
       {tools.length === 0 ? (

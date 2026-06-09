@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate, useLocation } from "react-router";
+import { Routes, Route, Navigate, useLocation, useParams } from "react-router";
 import MobileGate from "./components/MobileGate";
 import Overview from "./Overview";
 import OneWordReplay from "./OneWordReplay";
@@ -34,6 +34,13 @@ function SearchRedirect({ to }: { to: string }) {
   return <Navigate to={`${to}${search}`} replace />;
 }
 
+// Legacy experiment pages (/new-experiments/:preset) are replaced by the new
+// create-tool preset viewer so every preset opens in the current design.
+function PresetRedirect() {
+  const { preset } = useParams();
+  return <Navigate to={`/create-tool?preset=${preset ?? ""}`} replace />;
+}
+
 export default function App() {
   return (
     <MobileGate>
@@ -58,23 +65,16 @@ export default function App() {
       <Route path="/drifting-disappearing-words" element={<DriftingDisappearingWords />} />
       <Route path="/visual-timer" element={<VisualTimer />} />
       <Route path="/randomly-spatially" element={<RandomlySpatially />} />
-      <Route path="/all-tools" element={<AllTools />} />
 
-      {/* ── New experiments ── */}
-      <Route path="/new-experiments/uninvited-thoughts" element={<StyledUninvitedThoughts />} />
-      <Route path="/new-experiments/without-stopping" element={<StyledWithoutStopping />} />
-      <Route path="/new-experiments/blind-then-witness" element={<StyledBlindThenWitness />} />
-      <Route path="/new-experiments/visible-corrections" element={<StyledVisibleCorrections />} />
-      <Route path="/new-experiments/off-the-grid" element={<StyledOffTheGrid />} />
-      <Route path="/new-experiments/in-a-spiral" element={<StyledInASpiral />} />
+      {/* ── Legacy preset pages → new create-tool preset viewer ── */}
+      <Route path="/new-experiments/:preset" element={<PresetRedirect />} />
 
-      {/* ── Experimental layouts ── */}
-      <Route path="/playgroundcodex" element={<PlaygroundCodex />} />
-      <Route path="/playgroundcodex/my-tools" element={<PlaygroundCodexMyTools />} />
-      <Route path="/playgroundcodex2" element={<PlaygroundCodex2 />} />
-      <Route path="/playgroundcodex2/my-tools" element={<PlaygroundCodex2MyTools />} />
-
-      {/* ── Redirects for old URLs ── */}
+      {/* ── Redirects for old URLs → new pages only ── */}
+      <Route path="/all-tools" element={<Navigate to="/tool-collection" replace />} />
+      <Route path="/playgroundcodex" element={<Navigate to="/tool-collection" replace />} />
+      <Route path="/playgroundcodex/my-tools" element={<Navigate to="/tool-collection" replace />} />
+      <Route path="/playgroundcodex2" element={<Navigate to="/tool-collection" replace />} />
+      <Route path="/playgroundcodex2/my-tools" element={<Navigate to="/tool-collection" replace />} />
       <Route path="/playground" element={<Navigate to="/tool-collection" replace />} />
       <Route path="/playgroundnew" element={<Navigate to="/tool-collection" replace />} />
       <Route path="/playgroundnew1" element={<Navigate to="/tool-collection" replace />} />
@@ -84,6 +84,9 @@ export default function App() {
       <Route path="/anonymously-in-public" element={<Navigate to="/blind-then-witness" replace />} />
       <Route path="/loschen-korrigieren" element={<Navigate to="/visible-corrections" replace />} />
       <Route path="/aboutnew" element={<Navigate to="/about-the-project" replace />} />
+
+      {/* ── Catch-all → tool collection ── */}
+      <Route path="*" element={<Navigate to="/tool-collection" replace />} />
     </Routes>
     </MobileGate>
   );

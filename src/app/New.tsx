@@ -231,7 +231,7 @@ const TRANSLATIONS = {
     cursorSpeed: "Geschwindigkeit",
     // Blind writing
     blindLabel: "Replay",
-    blindDesc: "Der Text bleibt unsichtbar während des Schreibens. Danach kann man ihn in genau dem Tempo abspielen, in dem er getippt wurde – ein Beichtstuhl-Effekt: Man begegnet dem eigenen Text, als wäre er von jemand anderem.",
+    blindDesc: "Bleibt beim Schreiben verborgen und wird danach im genauen Tipptempo abgespielt.",
     blindPlay: "Abspielen",
     blindPlaying: "Läuft …",
     blindNoText: "Noch nichts geschrieben.",
@@ -375,7 +375,7 @@ const TRANSLATIONS = {
     cursorSpeed: "Speed",
     // Blind writing
     blindLabel: "Replay",
-    blindDesc: "Text stays hidden while writing. Afterwards you can play it back at the exact pace it was typed — a confessional effect: you encounter your own text as if written by someone else.",
+    blindDesc: "Text stays hidden as you write, then replays at the exact pace it was typed.",
     blindPlay: "Play back",
     blindPlaying: "Playing …",
     blindNoText: "Nothing written yet.",

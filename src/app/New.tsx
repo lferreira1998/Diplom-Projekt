@@ -912,13 +912,13 @@ function navItemStyle(dark: boolean, active: boolean, surfaceLight = "#fcf6ef", 
 
 const NAV_CONTAINER = {
   hidden: {},
-  visible: { transition: { staggerChildren: 0.07 } },
-  exit:   { transition: { staggerChildren: 0.04, staggerDirection: -1 as const } },
+  visible: { transition: { staggerChildren: 0.08 } },
+  exit:   { transition: { staggerChildren: 0.05, staggerDirection: -1 as const } },
 };
 const NAV_ITEM = {
-  hidden:  { opacity: 0, y: -10 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.18, ease: "easeOut" } },
-  exit:    { opacity: 0, y: -10, transition: { duration: 0.1 } },
+  hidden:  { opacity: 0, y: -52, scale: 0.88 },
+  visible: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 380, damping: 24 } },
+  exit:    { opacity: 0, y: -24, scale: 0.92, transition: { duration: 0.14 } },
 };
 
 // ── Session ID ────────────────────────────────────────────────────────────────
@@ -3604,7 +3604,7 @@ export default function New() {
                 animate={
                   menuOpen
                     ? { y: 8, opacity: 0, scale: 1, transition: { y: { duration: 0.22, ease: "easeOut" }, opacity: { duration: 0.1 } } }
-                    : menuHovered ? { y: -3, opacity: 1, scale: 1.22 } : { y: -6, opacity: 0, scale: 1 }
+                    : menuHovered ? { y: 0, opacity: 1, scale: 1 } : { y: -6, opacity: 0, scale: 1 }
                 }
                 transition={{ duration: 0.22, ease: "easeOut" }}
                 style={{

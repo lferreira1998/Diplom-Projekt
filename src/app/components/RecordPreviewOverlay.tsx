@@ -81,6 +81,11 @@ const SHAPES: ShapeDef[] = [
   },
 ];
 
+// Shapes offered in the picker (full SHAPES list is kept so previously saved
+// tools recorded in other shapes still render correctly).
+const PICKABLE_IDS: ShapeId[] = ["wide-pill", "fluid", "landscape"];
+const PICKABLE_SHAPES: ShapeDef[] = PICKABLE_IDS.map(id => SHAPES.find(s => s.id === id)!);
+
 // SVG icon for each shape (56×56 viewBox)
 function ShapeIcon({ id, fill }: { id: ShapeId; fill: string }) {
   return (
@@ -132,7 +137,7 @@ export function RecordPreviewOverlay({
     : `color-mix(in srgb, ${bg} 80%, rgba(255,255,255,0.9))`;
   const btnPrimary = { bg: dark ? "#f0e8dc" : "#555555", text: dark ? "#1e1d1b" : "#fcf6ef" };
 
-  const [shape,     setShape]   = useState<ShapeDef>(SHAPES[1]); // default: standard
+  const [shape,     setShape]   = useState<ShapeDef>(PICKABLE_SHAPES[0]); // default: Wide
   const [phase,     setPhase]   = useState<Phase>("shape-select");
   const [frame,     setFrame]   = useState<Frame>(initFrame);
   const [countdown, setCount]   = useState(3);
@@ -427,7 +432,7 @@ export function RecordPreviewOverlay({
               {DE ? "Form auswählen" : "Choose a shape"}
             </p>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px" }}>
-              {SHAPES.map(s => (
+              {PICKABLE_SHAPES.map(s => (
                 <button
                   key={s.id}
                   onClick={() => handlePickShape(s)}

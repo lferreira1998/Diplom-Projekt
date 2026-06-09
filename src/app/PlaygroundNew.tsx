@@ -878,7 +878,7 @@ export default function PlaygroundNew() {
               <HeroHeading DE={DE} theme={theme} />
             </div>
             <div ref={heroCenterRef} style={{ position: "absolute", left: 456, top: 408, width: 768, display: "flex", justifyContent: "center", opacity: exploreMode ? 0 : 1, transition: "opacity 0.35s ease", pointerEvents: exploreMode ? "none" : "auto", animation: "_heroIn 1s ease-out 0.4s both" }}>
-              <p style={{ margin: 0, width: 540, textAlign: "center", fontFamily: FONT_SANS, fontWeight: 300, fontSize: "17px", lineHeight: 1.55, color: theme.headline, letterSpacing: "-0.01em" }}>
+              <p style={{ margin: 0, width: 540, textAlign: "center", fontFamily: FONT_SANS, fontWeight: 300, fontSize: "17px", lineHeight: 1.3, color: dark ? theme.text : "#484643", letterSpacing: "-0.01em" }}>
                 <span onClick={() => navigate("/create-tool")} style={HERO_LINK}>{DE ? "Erstelle" : "Create"}</span>
                 {DE ? " und teile dein eigenes Tool. " : " and share your own tool. "}
                 <span onClick={() => setExploreMode(true)} style={HERO_LINK}>{DE ? "Probiere" : "Try"}</span>

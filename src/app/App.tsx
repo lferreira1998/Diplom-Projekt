@@ -46,8 +46,9 @@ export default function App() {
     <MobileGate>
     <Routes>
       {/* ── Main routes ── */}
-      <Route path="/" element={<Navigate to="/tool-collection" replace />} />
-      <Route path="/tool-collection" element={<PlaygroundNewScrollDots />} />
+      <Route path="/" element={<Navigate to="/introduction" replace />} />
+      <Route path="/introduction" element={<PlaygroundNewScrollDots />} />
+      <Route path="/tool-collection" element={<PlaygroundNewScrollDots variant="collection" />} />
       <Route path="/create-tool" element={<New />} />
       <Route path="/my-tools" element={<MyToolsPage />} />
       <Route path="/about-the-project" element={<AboutNew />} />
@@ -75,9 +76,9 @@ export default function App() {
       <Route path="/playgroundcodex/my-tools" element={<Navigate to="/tool-collection" replace />} />
       <Route path="/playgroundcodex2" element={<Navigate to="/tool-collection" replace />} />
       <Route path="/playgroundcodex2/my-tools" element={<Navigate to="/tool-collection" replace />} />
-      <Route path="/playground" element={<Navigate to="/tool-collection" replace />} />
-      <Route path="/playgroundnew" element={<Navigate to="/tool-collection" replace />} />
-      <Route path="/playgroundnew1" element={<Navigate to="/tool-collection" replace />} />
+      <Route path="/playground" element={<Navigate to="/introduction" replace />} />
+      <Route path="/playgroundnew" element={<Navigate to="/introduction" replace />} />
+      <Route path="/playgroundnew1" element={<Navigate to="/introduction" replace />} />
       <Route path="/new" element={<SearchRedirect to="/create-tool" />} />
       <Route path="/parametrisches-tool" element={<SearchRedirect to="/write" />} />
       <Route path="/dont-stop-writing" element={<Navigate to="/without-stopping" replace />} />
@@ -85,8 +86,8 @@ export default function App() {
       <Route path="/loschen-korrigieren" element={<Navigate to="/visible-corrections" replace />} />
       <Route path="/aboutnew" element={<Navigate to="/about-the-project" replace />} />
 
-      {/* ── Catch-all → tool collection ── */}
-      <Route path="*" element={<Navigate to="/tool-collection" replace />} />
+      {/* ── Catch-all → introduction ── */}
+      <Route path="*" element={<Navigate to="/introduction" replace />} />
     </Routes>
     </MobileGate>
   );

@@ -171,6 +171,7 @@ export const DICE_FACES: string[][] = [
 ];
 
 const NAV_ROUTES: Record<string, string> = {
+  Introduction:    "/introduction",
   CreateTool:      "/create-tool",
   ToolCollection:  "/tool-collection",
   About:           "/about-the-project",
@@ -204,7 +205,7 @@ const TRANSLATIONS = {
     langMenu: "English",
     word: "Wort",
     words: "Wörter",
-    navLabels: { CreateTool: "Tool erstellen", ToolCollection: "Tool-Sammlung", About: "Über das Projekt" },
+    navLabels: { Introduction: "Einführung", CreateTool: "Tool erstellen", ToolCollection: "Tool-Sammlung", About: "Über das Projekt" },
     // Identity panel
     identityHeading: "Identität.",
     identitySubtitle: "Speichere dein Regelset als Tool. Nur Name und Vorschau sind nötig. Beschreibung und Schreibanstoß sind optional.",
@@ -348,7 +349,7 @@ const TRANSLATIONS = {
     langMenu: "Deutsch",
     word: "word",
     words: "words",
-    navLabels: { CreateTool: "Create Tool", ToolCollection: "Tool Collection", About: "About" },
+    navLabels: { Introduction: "Introduction", CreateTool: "Create Tool", ToolCollection: "Tool Collection", About: "About" },
     // Identity panel
     identityHeading: "Identity.",
     identitySubtitle: "Save your rule set as a tool. Only name and preview are required. Description and writing prompt are optional.",
@@ -3703,11 +3704,11 @@ export default function New() {
                     initial="hidden" animate="visible" exit="exit"
                     style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, display: "flex", flexDirection: "column", gap: "8px", alignItems: "flex-end" }}
                   >
-                    {(["CreateTool", "ToolCollection", "About"] as const).map((key, i) => (
+                    {(["Introduction", "CreateTool", "ToolCollection", "About"] as const).map((key) => (
                       <motion.button
                         key={key}
                         variants={NAV_ITEM}
-                        style={navItemStyle(dark, i === 0, surfaceLight, bgHue)}
+                        style={navItemStyle(dark, key === "CreateTool", surfaceLight, bgHue)}
                         onClick={(e) => {
                           e.stopPropagation();
                           setMenuOpen(false);

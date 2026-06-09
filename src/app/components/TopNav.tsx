@@ -8,14 +8,15 @@ const DARK_TEXT  = "#f0e8dc";
 const FONT_SANS  = "'az-sans', sans-serif";
 
 const ROUTES: Record<string, string> = {
-  Create:     "/create-tool",
-  Playground: "/tool-collection",
-  About:      "/about-the-project",
+  Introduction: "/introduction",
+  Create:       "/create-tool",
+  Playground:   "/tool-collection",
+  About:        "/about-the-project",
 };
 
 const LABELS = {
-  de: { Create: "Tool erstellen", Playground: "Tool-Sammlung", About: "Über das Projekt", menuClosed: "Go to", menuOpen: "Schließen", langSwitch: "English" },
-  en: { Create: "Create Tool", Playground: "Tool Collection", About: "About", menuClosed: "Go to", menuOpen: "Close", langSwitch: "Deutsch" },
+  de: { Introduction: "Einführung", Create: "Tool erstellen", Playground: "Tool-Sammlung", About: "Über das Projekt", menuClosed: "Go to", menuOpen: "Schließen", langSwitch: "English" },
+  en: { Introduction: "Introduction", Create: "Create Tool", Playground: "Tool Collection", About: "About", menuClosed: "Go to", menuOpen: "Close", langSwitch: "Deutsch" },
 };
 
 const NAV_CONTAINER = {
@@ -111,7 +112,7 @@ function navItemStyle(dark: boolean, active: boolean): React.CSSProperties {
 export default function TopNav({
   current, dark, setDark, lang, setLang,
 }: {
-  current: "Create" | "Playground" | "About";
+  current: "Introduction" | "Create" | "Playground" | "About";
   dark: boolean;
   setDark: (fn: (d: boolean) => boolean) => void;
   lang: "de" | "en";
@@ -183,7 +184,7 @@ export default function TopNav({
                     initial="hidden" animate="visible" exit="exit"
                     style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, display: "flex", flexDirection: "column", gap: "8px", alignItems: "flex-end" }}
                   >
-                    {(["Create", "Playground", "About"] as const).map((key) => (
+                    {(["Introduction", "Create", "Playground", "About"] as const).map((key) => (
                       <motion.button
                         key={key}
                         variants={NAV_ITEM}

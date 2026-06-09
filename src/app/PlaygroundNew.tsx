@@ -877,7 +877,8 @@ function ScrollReveal({ paragraphs, color, containerRef }: {
   );
 }
 
-export default function PlaygroundNew() {
+export default function PlaygroundNew({ variant = "intro" }: { variant?: "intro" | "collection" }) {
+  const collectionOnly = variant === "collection";
   const { sessionId, loading, lang, setLang, dark, setDark, favorites, toggleFavorite, myToolsAll, publicTools, tools, navigateToTool, handleDelete } = usePlaygroundData();
   const navigate = useNavigate();
   const mainRef = useRef<HTMLElement>(null);
@@ -924,14 +925,17 @@ export default function PlaygroundNew() {
 
   const theme = getTheme(dark);
   const displayedTools = tab === "all" ? [...presetTools, ...publicTools] : myToolsAll;
+  // In collection-only mode there's no hero to scroll past, so the FAB is always shown.
+  const showFab = collectionOnly || pastHero;
 
   return (
     <ThemeContext.Provider value={theme}>
     <DarkContext.Provider value={dark}>
-      <TopNav current="Playground" dark={dark} setDark={setDark} lang={lang} setLang={setLang} />
+      <TopNav current={collectionOnly ? "Playground" : "Introduction"} dark={dark} setDark={setDark} lang={lang} setLang={setLang} />
       <main ref={mainRef} style={{ minHeight: "100vh", height: "100vh", width: "100vw", overflowX: "hidden", overflowY: exploreMode ? "hidden" : "auto", position: "relative", backgroundColor: theme.bg, color: theme.text, fontFamily: FONT_SANS, WebkitOverflowScrolling: "touch" }}>
         <style>{`html, body, #root { height: 100%; overflow: hidden; }`}</style>
 
+        {!collectionOnly && (
         <section aria-label="Writing tools playground" style={{ position: "relative", minHeight: "100vh", overflow: exploreMode ? "visible" : "hidden", background: "transparent" }}>
           <div style={{ position: "absolute", left: "50%", top: "50%", width: 1680, height: 858, transform: exploreMode ? "translate(-50%, -50%) scale(0.88)" : "translate(-50%, -50%)", transition: "transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94)" }}>
             <div style={{ position: "absolute", inset: 0, animation: "_toolIn 1.2s ease-out 0.8s both" }}>
@@ -977,8 +981,9 @@ export default function PlaygroundNew() {
             })}
           </div>
         </section>
+        )}
 
-        {!exploreMode && (
+        {!collectionOnly && !exploreMode && (
           <section style={{ display: "flex", justifyContent: "center", padding: "180px 24px 200px", boxSizing: "border-box" }}>
             <ScrollReveal
               paragraphs={DE ? REVEAL_TEXT.de : REVEAL_TEXT.en}
@@ -1048,8 +1053,8 @@ export default function PlaygroundNew() {
               letterSpacing: "-0.15px",
               textAlign: "center",
               whiteSpace: "nowrap",
-              opacity: pastHero ? 1 : 0,
-              pointerEvents: pastHero ? "auto" : "none",
+              opacity: showFab ? 1 : 0,
+              pointerEvents: showFab ? "auto" : "none",
               transition: "opacity 0.3s ease",
             }}
           >

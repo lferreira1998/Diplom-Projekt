@@ -28,6 +28,31 @@ jobs:
           VITE_SUPABASE_URL: https://lrppyiremhutnwtdhogt.supabase.co
           VITE_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxycHB5aXJlbWh1dG53dGRob2d0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NjgyMjUsImV4cCI6MjA5MzA0NDIyNX0.hetcvdF-C2HpaqbuWcy16GcuGsRtsZ8CZzh7-EHfTX4
 
+      - name: Add direct SPA route entrypoints
+        run: |
+          for route in \
+            introduction \
+            tool-collection \
+            create-tool \
+            my-tools \
+            about-the-project \
+            write \
+            without-stopping \
+            uninvited-thoughts \
+            visible-corrections \
+            blind-then-witness \
+            off-the-grid \
+            in-a-spiral \
+            one-word-replay \
+            drifting-following-words \
+            drifting-disappearing-words \
+            visual-timer \
+            randomly-spatially
+          do
+            mkdir -p "dist/$route"
+            cp dist/index.html "dist/$route/index.html"
+          done
+
       - name: Deploy to gh-pages branch
         uses: peaceiris/actions-gh-pages@v4
         with:

@@ -3004,7 +3004,6 @@ export function WritingZone({
             externalPlaceholder={true}
           />
         </div>
-        {renderPlaceholder()}
       </div>
     );
   }

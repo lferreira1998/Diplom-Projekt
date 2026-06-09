@@ -902,8 +902,8 @@ export default function PlaygroundNew() {
             onClick={() => navigate("/create-tool")}
             style={{
               position: "fixed",
-              bottom: "40px",
-              right: "48px",
+              bottom: "24px",
+              right: "24px",
               zIndex: 50,
               width: "139px",
               height: "139px",

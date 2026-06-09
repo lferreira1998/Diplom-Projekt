@@ -1915,7 +1915,7 @@ export default function New() {
     followdot: { de: "",                en: "" },
     running:   { de: "→ Schreib…",      en: "→ Write…" },
     random:    { de: "Lass los…",       en: "Let go…" },
-    custom:    { de: "Zeichne zuerst…", en: "Draw first…" },
+    custom:    { de: "",                en: "" },
   };
   const writingZonePrompt = showPromptBtn
     ? (SHORT_PLACEHOLDER[positionMode]?.[lang] ?? "")

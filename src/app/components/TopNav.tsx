@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -15,8 +15,8 @@ const ROUTES: Record<string, string> = {
 };
 
 const LABELS = {
-  de: { Introduction: "Einführung", Create: "Tool erstellen", Playground: "Tool-Sammlung", About: "Über das Projekt", menuClosed: "Go to", menuOpen: "Schließen", langSwitch: "English" },
-  en: { Introduction: "Introduction", Create: "Create Tool", Playground: "Tool Collection", About: "About", menuClosed: "Go to", menuOpen: "Close", langSwitch: "Deutsch" },
+  de: { Introduction: "Einführung", Create: "Tool erstellen", Playground: "Tool-Sammlung", About: "Über das Projekt", menuClosed: "Go to", menuOpen: "Go to", langSwitch: "English" },
+  en: { Introduction: "Introduction", Create: "Create Tool", Playground: "Tool Collection", About: "About", menuClosed: "Go to", menuOpen: "Go to", langSwitch: "Deutsch" },
 };
 
 const NAV_CONTAINER = {
@@ -119,6 +119,7 @@ export default function TopNav({
   setLang: (fn: (l: "de" | "en") => "de" | "en") => void;
 }) {
   const navigate = useNavigate();
+  const navRef = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuHovered, setMenuHovered] = useState(false);
@@ -126,12 +127,22 @@ export default function TopNav({
   const L = LABELS[lang];
   const iconColor = dark ? DARK_TEXT : LIGHT_TEXT;
 
+  useEffect(() => {
+    if (!menuOpen) return;
+    const closeOnOutsidePointerDown = (event: PointerEvent) => {
+      if (!navRef.current?.contains(event.target as Node)) setMenuOpen(false);
+    };
+    document.addEventListener("pointerdown", closeOnOutsidePointerDown);
+    return () => document.removeEventListener("pointerdown", closeOnOutsidePointerDown);
+  }, [menuOpen]);
+
   return (
     <>
       {/* ── Right cluster: eye + dark + menu ── */}
       <AnimatePresence mode="wait">
         {visible ? (
           <motion.div
+            ref={navRef}
             key="topnav-right-full"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
@@ -174,7 +185,7 @@ export default function TopNav({
                 style={{ ...btnStyle(dark), position: "relative", zIndex: 1 }}
                 onClick={(e) => { e.stopPropagation(); setMenuOpen(o => !o); setMenuHovered(false); }}
               >
-                {menuOpen ? L.menuOpen : L.menuClosed}
+                {L.menuClosed}
               </button>
               <AnimatePresence>
                 {menuOpen && (

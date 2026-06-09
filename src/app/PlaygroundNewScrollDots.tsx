@@ -7,6 +7,7 @@ const FAB_START_WIDTH = 104;
 const FAB_START_RIGHT = 24;
 const TOOL_COLLECTION_INSET = 96;
 const FAB_END_COLOR = "#FFFDFA";
+const VIRTUAL_SCROLL_PIXELS = 520;
 
 // Renders the playground. variant "intro" = full landing page (hero + scroll
 // reveal + collection); variant "collection" = only the tool-collection grid.
@@ -51,19 +52,17 @@ function useExtendedCreateToolFab() {
     if (!main) return;
 
     let frame = 0;
-    let measureFrame = 0;
-    const spacer = document.createElement("div");
-    spacer.dataset.createToolExtraScroll = "true";
-    spacer.setAttribute("aria-hidden", "true");
-    spacer.style.width = "100%";
-    spacer.style.pointerEvents = "none";
-    main.appendChild(spacer);
+    let virtualOverscroll = 0;
+    const virtualRange = FAB_END - 100;
+
+    const getScrollMax = () => Math.max(1, main.scrollHeight - main.clientHeight);
 
     const updateFab = () => {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
-        const originalScrollMax = Math.max(1, main.scrollHeight - main.clientHeight - spacer.offsetHeight);
-        const progress = (main.scrollTop / originalScrollMax) * 100;
+        const scrollMax = getScrollMax();
+        const naturalProgress = (main.scrollTop / scrollMax) * 100;
+        const progress = naturalProgress + virtualOverscroll * virtualRange;
         const grow = clamp01((progress - FAB_START) / (FAB_END - FAB_START));
         const move = clamp01((progress - 92) / 8);
         const finalInset = window.innerWidth < 900 ? FAB_START_RIGHT : TOOL_COLLECTION_INSET;
@@ -75,32 +74,46 @@ function useExtendedCreateToolFab() {
       });
     };
 
-    const measureScrollExtension = () => {
-      cancelAnimationFrame(measureFrame);
-      measureFrame = requestAnimationFrame(() => {
-        spacer.style.height = "0px";
-        const originalScrollMax = Math.max(1, main.scrollHeight - main.clientHeight);
-        spacer.style.height = `${originalScrollMax * 0.15}px`;
-        updateFab();
-      });
+    const handleScroll = () => {
+      const scrollMax = getScrollMax();
+      if (main.scrollTop < scrollMax - 2 && virtualOverscroll > 0) {
+        virtualOverscroll = 0;
+      }
+      updateFab();
     };
 
-    measureScrollExtension();
-    window.setTimeout(measureScrollExtension, 500);
-    window.setTimeout(measureScrollExtension, 1500);
+    const handleWheel = (event: WheelEvent) => {
+      const scrollMax = getScrollMax();
+      const atBottom = main.scrollTop >= scrollMax - 2;
+      const scrollingDownAtBottom = event.deltaY > 0 && atBottom;
+      const unwindingVirtualScroll = event.deltaY < 0 && virtualOverscroll > 0;
 
-    const mutationObserver = new MutationObserver(measureScrollExtension);
+      if (!scrollingDownAtBottom && !unwindingVirtualScroll) return;
+
+      const nextOverscroll = clamp01(virtualOverscroll + event.deltaY / VIRTUAL_SCROLL_PIXELS);
+      if (nextOverscroll === virtualOverscroll && !scrollingDownAtBottom) return;
+
+      event.preventDefault();
+      virtualOverscroll = nextOverscroll;
+      updateFab();
+    };
+
+    updateFab();
+    window.setTimeout(updateFab, 500);
+    window.setTimeout(updateFab, 1500);
+
+    const mutationObserver = new MutationObserver(updateFab);
     mutationObserver.observe(main, { childList: true, subtree: true });
-    main.addEventListener("scroll", updateFab, { passive: true });
-    window.addEventListener("resize", measureScrollExtension);
+    main.addEventListener("scroll", handleScroll, { passive: true });
+    main.addEventListener("wheel", handleWheel, { passive: false });
+    window.addEventListener("resize", updateFab);
 
     return () => {
       cancelAnimationFrame(frame);
-      cancelAnimationFrame(measureFrame);
       mutationObserver.disconnect();
-      main.removeEventListener("scroll", updateFab);
-      window.removeEventListener("resize", measureScrollExtension);
-      spacer.remove();
+      main.removeEventListener("scroll", handleScroll);
+      main.removeEventListener("wheel", handleWheel);
+      window.removeEventListener("resize", updateFab);
       main.style.removeProperty("--create-tool-fab-width");
       main.style.removeProperty("--create-tool-fab-right");
       main.style.removeProperty("--create-tool-fab-bg");

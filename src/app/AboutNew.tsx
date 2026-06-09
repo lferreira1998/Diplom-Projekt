@@ -241,8 +241,6 @@ export default function AboutNew() {
         overflow: "hidden",
         position: "relative",
         backgroundColor: T.bg,
-        backgroundImage: T.dotGrid,
-        backgroundSize: "42px 42px",
         color: T.text,
         fontFamily: SANS,
       }}

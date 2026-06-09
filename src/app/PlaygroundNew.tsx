@@ -557,7 +557,7 @@ function Section({ title, tools, onOpen, onDelete, emptyMsg, sessionId, favorite
   const navigate = useNavigate();
   return (
     <section style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "12px", borderBottom: `1px dashed ${theme.border}`, paddingBottom: "32px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "12px", borderBottom: `1px dashed ${theme.border}`, paddingBottom: "11px" }}>
         <span style={{ fontFamily: FONT_CMP_SERIF, fontSize: "32px", color: theme.headline, lineHeight: "normal" }}>{title}</span>
         {tab !== undefined && onTabChange && (
           <div style={{ display: "flex", gap: "8px" }}>
@@ -574,7 +574,7 @@ function Section({ title, tools, onOpen, onDelete, emptyMsg, sessionId, favorite
       {tools.length === 0 ? (
         <p style={{ fontFamily: FONT_SANS, fontSize: "14px", color: theme.muted, margin: 0 }}>{emptyMsg}</p>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "32px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: "32px" }}>
           {tools.map((tool, i) => {
             const owned = tool.params.sessionId === sessionId;
             const isPreset = tool.id.startsWith("preset:");
@@ -632,10 +632,7 @@ function SkeletonGrid({ title, dark, rows = 3 }: { title: string; dark: boolean;
   useLayoutEffect(() => {
     const el = gridRef.current;
     if (!el) return;
-    const measure = () => {
-      const w = el.clientWidth;
-      setCols(Math.max(1, Math.floor((w + 20) / (300 + 20))));
-    };
+    const measure = () => setCols(4);
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(el);
@@ -1007,8 +1004,8 @@ export default function PlaygroundNew({ variant = "intro" }: { variant?: "intro"
               favorites={favorites}
               onToggleFavorite={tab === "all" ? toggleFavorite : undefined}
               showCreate
-              tab={tab}
-              onTabChange={setTab}
+              tab={collectionOnly ? tab : undefined}
+              onTabChange={collectionOnly ? setTab : undefined}
               DE={DE}
             />
           )}

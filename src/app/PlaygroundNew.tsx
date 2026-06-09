@@ -1057,7 +1057,7 @@ export default function PlaygroundNew({ variant = "intro" }: { variant?: "intro"
           </section>
         )}
 
-        <div ref={toolsRef} style={{ width: "100%", boxSizing: "border-box", padding: "96px 24px 160px" }}>
+        <div ref={toolsRef} style={{ width: "100%", boxSizing: "border-box", padding: "96px 96px 160px" }}>
           {loading ? (
             <SkeletonGrid title={DE ? "Tool-Sammlung" : "Tool Collection"} dark={dark} />
           ) : (

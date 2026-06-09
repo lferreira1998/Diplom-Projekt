@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useLayoutEffect, useMemo, useRef,
 import { ToolPreview } from "./components/ToolPreview";
 import { ToolLaunchModal } from "./components/ToolLaunchModal";
 import type { CSSProperties, ReactNode, RefObject } from "react";
-import { motion, useScroll, useTransform, type MotionValue } from "motion/react";
+import { motion, useScroll, useTransform, useMotionValueEvent, type MotionValue } from "motion/react";
 import { useNavigate, useLocation } from "react-router";
 import { deleteNewTool, getAllNewTools, type NewToolData, type NewToolParams } from "./utils/storage";
 import TopNav from "./components/TopNav";
@@ -538,7 +538,7 @@ function Reveal({ children, index = 0 }: { children: ReactNode; index?: number }
   );
 }
 
-function Section({ title, tools, onOpen, onDelete, emptyMsg, sessionId, favorites, onToggleFavorite, showCreate, tab, onTabChange, DE }: {
+function Section({ title, tools, onOpen, onDelete, emptyMsg, sessionId, favorites, onToggleFavorite, showCreate, tab, onTabChange, onSeeAll, DE }: {
   title: string;
   tools: NewToolData[];
   onOpen: (id: string) => void;
@@ -550,6 +550,7 @@ function Section({ title, tools, onOpen, onDelete, emptyMsg, sessionId, favorite
   showCreate?: boolean;
   tab?: "all" | "my";
   onTabChange?: (t: "all" | "my") => void;
+  onSeeAll?: () => void;
   DE?: boolean;
 }) {
   const theme = useContext(ThemeContext);
@@ -569,6 +570,11 @@ function Section({ title, tools, onOpen, onDelete, emptyMsg, sessionId, favorite
               );
             })}
           </div>
+        )}
+        {onSeeAll && (
+          <button onClick={onSeeAll} style={{ marginLeft: "auto", height: "31px", padding: "0 12px", borderRadius: "4px", background: "transparent", color: theme.muted, border: `1px dashed ${theme.border}`, fontFamily: FONT_SANS, fontSize: "15px", letterSpacing: "-0.01em", cursor: "pointer", outline: "none", whiteSpace: "nowrap" }}>
+            {DE ? "Alle Tools ansehen" : "See all tools"}
+          </button>
         )}
       </div>
       {tools.length === 0 ? (
@@ -874,6 +880,67 @@ function ScrollReveal({ paragraphs, color, containerRef }: {
   );
 }
 
+// On the Introduction page, the "Create Tool" circle grows as you scroll past
+// the tool collection — expanding from a small circle to a full-page rectangle,
+// and finally navigating into the Create Tool page once it fills the screen.
+function CreateToolReveal({ mainRef, pastHero, dark, theme, DE }: {
+  mainRef: RefObject<HTMLElement | null>;
+  pastHero: boolean;
+  dark: boolean;
+  theme: Theme;
+  DE: boolean;
+}) {
+  const navigate = useNavigate();
+  const zoneRef = useRef<HTMLDivElement>(null);
+  const navigated = useRef(false);
+  const [vp, setVp] = useState({ w: 1600, h: 900 });
+  useEffect(() => {
+    const update = () => setVp({ w: window.innerWidth, h: window.innerHeight });
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+  const { scrollYProgress } = useScroll({
+    container: mainRef,
+    target: zoneRef,
+    offset: ["start end", "end end"],
+  });
+  const width    = useTransform(scrollYProgress, [0, 1], [104, vp.w]);
+  const height   = useTransform(scrollYProgress, [0, 1], [104, vp.h]);
+  const right    = useTransform(scrollYProgress, [0, 1], [24, 0]);
+  const bottom   = useTransform(scrollYProgress, [0, 1], [24, 0]);
+  const radius   = useTransform(scrollYProgress, [0, 1], [52, 0]);
+  const fontSize = useTransform(scrollYProgress, [0, 0.55], [15, 30]);
+  useMotionValueEvent(scrollYProgress, "change", (v) => {
+    if (v >= 0.985 && !navigated.current) { navigated.current = true; navigate("/create-tool"); }
+  });
+  return (
+    <>
+      {/* Tall scroll zone that drives the growth */}
+      <div ref={zoneRef} aria-hidden style={{ height: "150vh", pointerEvents: "none" }} />
+      <motion.button
+        onClick={() => navigate("/create-tool")}
+        style={{
+          position: "fixed", right, bottom, width, height, borderRadius: radius,
+          zIndex: 55,
+          border: `1px dashed ${theme.border}`,
+          background: dark ? theme.toolBg : "#fcf6ef",
+          cursor: "pointer", outline: "none",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          overflow: "hidden", boxSizing: "border-box", color: theme.text,
+          opacity: pastHero ? 1 : 0,
+          pointerEvents: pastHero ? "auto" : "none",
+          transition: "opacity 0.3s ease",
+        }}
+      >
+        <motion.span style={{ fontFamily: FONT_SANS, fontSize, letterSpacing: "-0.15px", textAlign: "center", whiteSpace: "nowrap" }}>
+          {DE ? "Tool erstellen" : "Create Tool"}
+        </motion.span>
+      </motion.button>
+    </>
+  );
+}
+
 export default function PlaygroundNew({ variant = "intro" }: { variant?: "intro" | "collection" }) {
   const collectionOnly = variant === "collection";
   const { sessionId, loading, lang, setLang, dark, setDark, favorites, toggleFavorite, myToolsAll, publicTools, tools, navigateToTool, handleDelete } = usePlaygroundData();
@@ -996,7 +1063,7 @@ export default function PlaygroundNew({ variant = "intro" }: { variant?: "intro"
           ) : (
             <Section
               title={DE ? "Tool-Sammlung" : "Tool Collection"}
-              tools={displayedTools}
+              tools={collectionOnly ? displayedTools : displayedTools.slice(0, 8)}
               onOpen={openTool}
               onDelete={tab === "my" ? handleDelete : undefined}
               emptyMsg={tab === "all" ? (DE ? "Noch keine öffentlichen Tools vorhanden." : "No public tools yet.") : (DE ? "Noch keine eigenen Tools." : "No tools yet.")}
@@ -1006,6 +1073,7 @@ export default function PlaygroundNew({ variant = "intro" }: { variant?: "intro"
               showCreate
               tab={collectionOnly ? tab : undefined}
               onTabChange={collectionOnly ? setTab : undefined}
+              onSeeAll={collectionOnly ? undefined : () => navigate("/tool-collection")}
               DE={DE}
             />
           )}
@@ -1024,7 +1092,8 @@ export default function PlaygroundNew({ variant = "intro" }: { variant?: "intro"
           onConfirm={(id, mins) => { setLaunchTool(null); navigateToTool(id, mins); }}
           onClose={() => setLaunchTool(null)}
         />
-        {!exploreMode && (
+        {/* Collection page: plain Create Tool button. */}
+        {!exploreMode && collectionOnly && (
           <button
             onClick={() => navigate("/create-tool")}
             style={{
@@ -1057,6 +1126,10 @@ export default function PlaygroundNew({ variant = "intro" }: { variant?: "intro"
           >
             {DE ? "Tool erstellen" : "Create Tool"}
           </button>
+        )}
+        {/* Introduction page: the Create Tool circle grows on scroll into the page. */}
+        {!exploreMode && !collectionOnly && (
+          <CreateToolReveal mainRef={mainRef} pastHero={pastHero} dark={dark} theme={theme} DE={DE} />
         )}
       </main>
     </DarkContext.Provider>

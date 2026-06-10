@@ -195,7 +195,8 @@ export default function TopNav({
                     initial="hidden" animate="visible" exit="exit"
                     style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, display: "flex", flexDirection: "column", gap: "8px", alignItems: "flex-end" }}
                   >
-                    {(["Introduction", "Create", "Playground", "About"] as const).map((key) => (
+                    {/* "About" temporarily hidden — re-add it to this list to restore the button. */}
+                    {(["Introduction", "Create", "Playground"] as const).map((key) => (
                       <motion.button
                         key={key}
                         variants={NAV_ITEM}

@@ -995,9 +995,11 @@ export default function PlaygroundNew({ variant = "intro" }: { variant?: "intro"
                 {DE ? " und teile dein eigenes Tool. " : " and share your own tool. "}
                 <span onClick={() => toolsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })} style={HERO_LINK}>{DE ? "Probiere" : "Try"}</span>
                 {DE ? " Tools von anderen." : " tools made by others."}
+                {/* "Read about the project." temporarily hidden — remove these comment markers to restore.
                 <br />
                 <span onClick={() => navigate("/about-the-project")} style={HERO_LINK}>{DE ? "Lies" : "Read"}</span>
                 {DE ? " über das Projekt." : " about the project."}
+                */}
               </p>
             </div>
             {exploreMode && myToolsAll.slice(0, EXPLORE_SLOTS.length).map((tool, i) => {

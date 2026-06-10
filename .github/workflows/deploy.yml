@@ -49,8 +49,7 @@ jobs:
             visual-timer \
             randomly-spatially
           do
-            mkdir -p "dist/$route"
-            cp dist/index.html "dist/$route/index.html"
+            cp dist/index.html "dist/$route"
           done
 
       - name: Deploy to gh-pages branch

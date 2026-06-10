@@ -1,18 +1,31 @@
 import { useEffect, useRef, useState } from "react";
 import { MiniReplayPreview } from "./MiniReplayPreview";
+import type { CSSProperties } from "react";
 import type { NewToolData } from "../utils/storage";
 
-interface Props {
+type SavedToolPreviewProps = {
   tool: NewToolData;
   active: boolean;
   dark: boolean;
-}
+  style?: CSSProperties;
+};
 
-export function ToolPreview({ tool, active, dark }: Props) {
+type StaticVideoPreviewProps = {
+  videoName: string;
+  dark: boolean;
+  style?: CSSProperties;
+};
+
+type Props = SavedToolPreviewProps | StaticVideoPreviewProps;
+
+export function ToolPreview(props: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoError, setVideoError] = useState(false);
+  const isSavedTool = "tool" in props;
 
-  const videoUrl = tool.params.previewVideo;
+  const videoUrl = isSavedTool
+    ? props.tool.params.previewVideo
+    : `/videos/${props.videoName}.webm`;
 
   // Lazy playback: only load + play the video while it's on (or near) screen,
   // and pause it when it scrolls away. Avoids dozens of videos downloading and
@@ -55,17 +68,20 @@ export function ToolPreview({ tool, active, dark }: Props) {
           objectFit: "cover",
           display: "block",
           pointerEvents: "none",
+          ...props.style,
         }}
       />
     );
   }
 
+  if (!isSavedTool) return null;
+
   return (
     <MiniReplayPreview
-      params={tool.params}
-      active={active}
-      dark={dark}
-      toolId={tool.id}
+      params={props.tool.params}
+      active={props.active}
+      dark={props.dark}
+      toolId={props.tool.id}
     />
   );
 }

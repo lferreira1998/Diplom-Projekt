@@ -132,6 +132,26 @@ export default function PlaygroundNewScrollDots({ variant }: { variant?: "intro"
           background-attachment: local !important;
         }
 
+        body #root main .playground-tool-shape video,
+        body #root main div[style*="aspect-ratio"] video {
+          opacity: 0 !important;
+        }
+
+        body #root main .playground-tool-shape .playground-tool-label,
+        body #root main div[style*="aspect-ratio"] div[style*="height: 163px"] > span {
+          opacity: 1 !important;
+        }
+
+        body #root main .playground-tool-shape:hover video,
+        body #root main div[style*="aspect-ratio"]:hover video {
+          opacity: 1 !important;
+        }
+
+        body #root main .playground-tool-shape:hover .playground-tool-label,
+        body #root main div[style*="aspect-ratio"]:hover div[style*="height: 163px"] > span {
+          opacity: 0 !important;
+        }
+
         body #root main > button[style*="bottom: 24px"][style*="right: 24px"] {
           width: var(--create-tool-fab-width, 104px) !important;
           right: var(--create-tool-fab-right, 24px) !important;

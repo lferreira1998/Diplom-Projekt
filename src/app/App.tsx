@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { Routes, Route, Navigate, useLocation, useParams } from "react-router";
 import MobileGate from "./components/MobileGate";
+import TopNav from "./components/TopNav";
 import Overview from "./Overview";
 import OneWordReplay from "./OneWordReplay";
 import AboutNew from "./AboutNew";
@@ -41,9 +43,27 @@ function PresetRedirect() {
   return <Navigate to={`/create-tool?preset=${preset ?? ""}`} replace />;
 }
 
+function GlobalRouteTopNav() {
+  const { pathname } = useLocation();
+  const [lang, setLang] = useState<"de" | "en">(() => (localStorage.getItem("appLang") as "de" | "en") ?? "en");
+  const [dark, setDark] = useState<boolean>(() => localStorage.getItem("appTheme") === "dark");
+
+  const localNavRoutes = [
+    "/introduction",
+    "/tool-collection",
+    "/about-the-project",
+  ];
+  if (localNavRoutes.some((route) => pathname === route || pathname.startsWith(`${route}/`))) {
+    return null;
+  }
+
+  return <TopNav current="Playground" dark={dark} setDark={setDark} lang={lang} setLang={setLang} />;
+}
+
 export default function App() {
   return (
     <MobileGate>
+    <GlobalRouteTopNav />
     <Routes>
       {/* ── Main routes ── */}
       <Route path="/" element={<Navigate to="/introduction" replace />} />

@@ -898,6 +898,11 @@ function CreateToolButton({ mainRef, dark, theme, DE }: {
   }, []);
   const { scrollYProgress } = useScroll({ container: mainRef });
   const width = useTransform(scrollYProgress, [0, 1], [104, Math.max(104, vpW - 48)]);
+  const background = useTransform(
+    scrollYProgress,
+    [0, 1],
+    [dark ? theme.toolBg : "#fcf6ef", "#FFFDFA"]
+  );
   return (
     <motion.button
       onClick={() => navigate("/create-tool")}
@@ -910,7 +915,7 @@ function CreateToolButton({ mainRef, dark, theme, DE }: {
         height: 104,
         borderRadius: 52,
         border: `1px dashed ${theme.border}`,
-        background: dark ? theme.toolBg : "#fcf6ef",
+        background,
         cursor: "pointer",
         outline: "none",
         display: "flex",

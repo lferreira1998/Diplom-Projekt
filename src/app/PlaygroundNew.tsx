@@ -79,256 +79,461 @@ function ToolShape({ label, style, textStyle, href, videoLight, videoDark, bgLig
   bgDark?: string;
   videoFit?: "cover" | "contain";
 }) {
-  const dark = useContext(DarkContext);
   const theme = useContext(ThemeContext);
-  const navigate = useNavigate();
-  const videoName = dark ? videoDark : videoLight;
-  const bg = dark ? (bgDark ?? theme.panelBg) : (bgLight ?? theme.panelBg);
+  const dark  = useContext(DarkContext);
+  const video = dark ? videoDark : videoLight;
+  const bg    = dark ? (bgDark ?? theme.toolBg) : (bgLight ?? theme.toolBg);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [hovered, setHovered] = useState(false);
+
+  function prepareVideo(target: HTMLVideoElement) {
+    target.muted = true;
+    target.defaultMuted = true;
+    target.playsInline = true;
+    if (target.readyState === 0) target.load();
+  }
+
+  useEffect(() => {
+    const target = videoRef.current;
+    if (!target) return;
+    prepareVideo(target);
+    const play = () => target.play().catch(() => undefined);
+    play();
+    if (target.readyState < 2) target.addEventListener("canplay", play, { once: true });
+  }, [video]);
+
   return (
-    <button
-      onClick={() => navigate(href)}
+    <a
+      className="playground-tool-shape"
+      href={href}
+      onPointerEnter={() => setHovered(true)}
+      onPointerLeave={() => setHovered(false)}
+      onFocus={() => setHovered(true)}
+      onBlur={() => setHovered(false)}
       style={{
         position: "absolute",
         border: `1px dashed ${theme.border}`,
-        background: bg,
+        color: theme.text,
+        textDecoration: "none",
+        boxSizing: "border-box",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
+        fontFamily: FONT_SANS,
+        fontSize: 17,
+        fontWeight: 400,
+        lineHeight: "normal",
+        background: bg,
         overflow: "hidden",
-        cursor: "pointer",
-        outline: "none",
-        padding: 0,
-        boxSizing: "border-box",
-        color: theme.text,
+        transformOrigin: "center",
         ...style,
       }}
     >
-      <ToolPreview
-        videoName={videoName}
-        dark={dark}
-        style={{ position: "absolute", inset: 0, opacity: 0, transition: "opacity 0.25s ease", objectFit: videoFit }}
-      />
-      <span style={{ position: "relative", zIndex: 1, fontFamily: FONT_SANS, fontSize: "17px", lineHeight: 1, color: theme.text, pointerEvents: "none", ...textStyle }}>{label}</span>
-      <style>{`
-        button:hover video { opacity: 1 !important; }
-        button:hover span { opacity: 0; }
-      `}</style>
-    </button>
+      <video
+        key={video}
+        ref={videoRef}
+        muted
+        loop
+        playsInline
+        preload="auto"
+        onLoadedMetadata={(event) => prepareVideo(event.currentTarget)}
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          objectFit: videoFit,
+          opacity: hovered ? 0 : 1,
+          transition: "opacity 120ms ease",
+          pointerEvents: "none",
+          transform: "translateZ(0)",
+          zIndex: 0,
+        }}
+      >
+        <source src={`/videos/${video}.webm`} type="video/webm" />
+      </video>
+      <span
+        className="playground-tool-label"
+        style={{
+          position: "relative",
+          zIndex: 1,
+          opacity: hovered ? 1 : 0,
+          transition: "opacity 120ms ease",
+          ...textStyle,
+        }}
+      >
+        {label}
+      </span>
+    </a>
   );
 }
 
-type CardShape = "without-stopping" | "uninvited-thoughts" | "off-the-grid" | "blind-then-witness" | "visible-corrections" | "in-a-spiral";
+// Slot definitions for explore mode — positions outside the 1680×858 hero box
+// plus two center slots that replace the heading
+const EXPLORE_SLOTS: { left: number; top: number; width: number; height: number; borderRadius: string | number; rotate: number }[] = [
+  // Center — replace the heading
+  { left: 535, top: 262, width: 220, height: 210, borderRadius: 200, rotate: -3.5 },
+  { left: 835, top: 272, width: 295, height: 163, borderRadius: 100, rotate: 4 },
+  // Left outer
+  { left: -292, top: 168, width: 236, height: 233, borderRadius: 200, rotate: 5.1 },
+  { left: -280, top: 438, width: 241, height: 182, borderRadius: 4, rotate: -9.25 },
+  { left: -268, top: 638, width: 251, height: 163, borderRadius: 4, rotate: 4.18 },
+  // Right outer
+  { left: 1718, top: 126, width: 251, height: 163, borderRadius: 4, rotate: 4.18 },
+  { left: 1710, top: 372, width: 324, height: 163, borderRadius: 100, rotate: 6.45 },
+  { left: 1706, top: 578, width: 211, height: 309, borderRadius: 200, rotate: 12.11 },
+  // Top outer
+  { left: 672, top: -196, width: 363, height: 174, borderRadius: "40px 4px 40px 4px", rotate: -2.4 },
+  { left: 240, top: -198, width: 241, height: 182, borderRadius: 4, rotate: -9.25 },
+  // Bottom outer
+  { left: 176, top: 900, width: 241, height: 182, borderRadius: 4, rotate: -9.25 },
+  { left: 952, top: 896, width: 236, height: 233, borderRadius: 200, rotate: 5.1 },
+];
 
-const CARD_SHAPE_DEFS: Record<CardShape, { label: { en: string; de: string }; bgLight: string; bgDark: string; borderRadius: string; videoLight: string; videoDark: string; videoFit?: "cover" | "contain" }> = {
-  "without-stopping": {
-    label: { en: "...without stopping", de: "...ohne aufzuhören" },
-    bgLight: "#fbf5eb", bgDark: "#3e3e3e", borderRadius: "999px",
-    videoLight: "without-stopping-light", videoDark: "without-stopping-dark", videoFit: "cover",
-  },
-  "uninvited-thoughts": {
-    label: { en: "...uninvited thoughts", de: "...ungefragte Gedanken" },
-    bgLight: "#eaf8f5", bgDark: "#1f2f29", borderRadius: "4px",
-    videoLight: "uninvited-thoughts-light", videoDark: "uninvited-thoughts-dark",
-  },
-  "off-the-grid": {
-    label: { en: "...off the grid", de: "...außerhalb des Rasters" },
-    bgLight: "#fff0f4", bgDark: "#37262d", borderRadius: "4px",
-    videoLight: "off-the-grid-light", videoDark: "off-the-grid-dark",
-  },
-  "blind-then-witness": {
-    label: { en: "...blind & then witness", de: "...blind und dann Zeuge" },
-    bgLight: "#ecf7ee", bgDark: "#222d26", borderRadius: "999px",
-    videoLight: "blind-then-witness-light", videoDark: "blind-then-witness-dark",
-  },
-  "visible-corrections": {
-    label: { en: "...with visible corrections", de: "...mit sichtbaren Korrekturen" },
-    bgLight: "#f5f6ea", bgDark: "#2f2836", borderRadius: "40px 4px 40px 4px",
-    videoLight: "visible-corrections-light", videoDark: "visible-corrections-dark",
-  },
-  "in-a-spiral": {
-    label: { en: "...in a spiral", de: "...in einer Spirale" },
-    bgLight: "#ecf4fe", bgDark: "#242c38", borderRadius: "999px",
-    videoLight: "in-a-spiral-light", videoDark: "in-a-spiral-dark", videoFit: "cover",
-  },
+// Maps a recorded shape id (from the record overlay) to its display silhouette
+// so the shape a tool was recorded with is the shape shown across the collection.
+const RECORD_SHAPE_DISPLAY: Record<string, { borderRadius: string | number; ratio: number; circle: boolean }> = {
+  "round":     { borderRadius: "50%",               ratio: 1,         circle: true },
+  "portrait":  { borderRadius: 4,                   ratio: 182 / 241, circle: false },
+  "landscape": { borderRadius: 4,                   ratio: 163 / 251, circle: false },
+  "wide-pill": { borderRadius: 999,                 ratio: 163 / 324, circle: false },
+  "fluid":     { borderRadius: "40px 4px 40px 4px", ratio: 174 / 363, circle: false },
+  "tall-pill": { borderRadius: 999,                 ratio: 309 / 211, circle: true },
+  "spiral-leaf": { borderRadius: "24px 200px 24px 200px", ratio: 163 / 319, circle: false },
 };
 
-const PRESET_META: { id: CardShape; desc: { en: string; de: string } }[] = [
-  { id: "without-stopping", desc: { en: "Keep writing. The cursor does not wait for you.", de: "Schreib weiter. Der Cursor wartet nicht auf dich." } },
-  { id: "uninvited-thoughts", desc: { en: "Follow the moving dot. Catch thoughts as they appear.", de: "Folge dem Punkt. Fang Gedanken, wenn sie auftauchen." } },
-  { id: "off-the-grid", desc: { en: "Words leave the line and drift through the page.", de: "Wörter verlassen die Linie und treiben über die Seite." } },
-  { id: "blind-then-witness", desc: { en: "Write without seeing. Watch yourself afterwards.", de: "Schreib ohne zu sehen. Beobachte dich danach selbst." } },
-  { id: "visible-corrections", desc: { en: "Correcting leaves traces. Deleted text is covered, not removed.", de: "Korrigieren hinterlässt Spuren. Gelöschtes wird überdeckt, nicht entfernt." } },
-  { id: "in-a-spiral", desc: { en: "Your text winds inward in a spiral.", de: "Dein Text windet sich nach innen." } },
-];
-
-const EXPLORE_SLOTS = [
-  { left: 40, top: 197, width: 236, height: 233, rotate: 5.1, borderRadius: "999px" },
-  { left: 420, top: 57, width: 241, height: 182, rotate: -9.25, borderRadius: "4px" },
-  { left: 1220, top: 112, width: 251, height: 163, rotate: 4.18, borderRadius: "4px" },
-  { left: 213, top: 579, width: 324, height: 163, rotate: 6.45, borderRadius: "999px" },
-  { left: 774, top: 550, width: 363, height: 174, rotate: -2.5, borderRadius: "40px 4px 40px 4px" },
-  { left: 1321, top: 414, width: 211, height: 309, rotate: 12.11, borderRadius: "999px" },
-];
-
-function inferCardShape(tool: NewToolData): CardShape {
-  const shape = (tool.params as any)?.cardShape;
-  if (shape && shape in CARD_SHAPE_DEFS) return shape;
-  const key = `${tool.name} ${tool.description}`.toLowerCase();
-  if (key.includes("spiral")) return "in-a-spiral";
-  if (key.includes("visible") || key.includes("correction") || key.includes("tipp")) return "visible-corrections";
-  if (key.includes("blind") || key.includes("witness")) return "blind-then-witness";
-  if (key.includes("grid")) return "off-the-grid";
-  if (key.includes("uninvited")) return "uninvited-thoughts";
-  return "without-stopping";
-}
-
-function UserToolShape({ tool, style, textStyle, dark, onClick }: { tool: NewToolData; style: CSSProperties; textStyle?: CSSProperties; dark: boolean; onClick: () => void }) {
-  const theme = useContext(ThemeContext);
-  const shape = inferCardShape(tool);
-  const def = CARD_SHAPE_DEFS[shape];
-  const previewUrl = (tool.params as any)?.previewVideoUrl ?? (tool.params as any)?.preview_video_url ?? (tool.params as any)?.previewVideo;
-  return (
-    <button onClick={onClick} style={{ position: "absolute", border: `1px dashed ${theme.border}`, background: dark ? def.bgDark : def.bgLight, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", cursor: "pointer", outline: "none", padding: 0, boxSizing: "border-box", color: theme.text, ...style }}>
-      {previewUrl ? (
-        <video src={previewUrl} autoPlay muted loop playsInline style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0, transition: "opacity 0.25s ease" }} />
-      ) : (
-        <ToolPreview videoName={dark ? def.videoDark : def.videoLight} dark={dark} style={{ position: "absolute", inset: 0, opacity: 0, transition: "opacity 0.25s ease", objectFit: def.videoFit ?? "cover" }} />
-      )}
-      <span style={{ position: "relative", zIndex: 1, fontFamily: FONT_SANS, fontSize: "17px", lineHeight: 1, color: theme.text, pointerEvents: "none", textAlign: "center", padding: "0 18px", ...textStyle }}>{tool.name}</span>
-      <style>{`button:hover video { opacity: 1 !important; } button:hover span { opacity: 0; }`}</style>
-    </button>
-  );
-}
-
-function getAuthorSession(tool: NewToolData): string | undefined {
-  const params: any = tool.params ?? {};
-  return tool.userSession ?? tool.sessionId ?? tool.user_session ?? params.userSession ?? params.sessionId ?? params.user_session;
-}
-
-function usePersistentSessionId() {
-  const [sessionId, setSessionId] = useState<string>(() => {
-    try { return getSessionId(); } catch { return ""; }
-  });
-  useEffect(() => { if (!sessionId) setSessionId(getSessionId()); }, [sessionId]);
-  return sessionId;
-}
-
-function usePlaygroundData() {
-  const sessionId = usePersistentSessionId();
-  const [loading, setLoading] = useState(true);
-  const [tools, setTools] = useState<NewToolData[]>([]);
-  const [lang, setLangState] = useState<"de" | "en">(() => (localStorage.getItem("appLang") as "de" | "en") ?? "en");
-  const [dark, setDarkState] = useState<boolean>(() => localStorage.getItem("appTheme") === "dark");
-  const [favorites, setFavorites] = useState<Set<string>>(() => {
-    try { return new Set(JSON.parse(localStorage.getItem("favoriteTools") || "[]")); } catch { return new Set(); }
-  });
-
-  const setLang = (fn: (l: "de" | "en") => "de" | "en") => {
-    setLangState(l => { const next = fn(l); localStorage.setItem("appLang", next); return next; });
-  };
-  const setDark = (fn: (d: boolean) => boolean) => {
-    setDarkState(d => { const next = fn(d); localStorage.setItem("appTheme", next ? "dark" : "light"); return next; });
-  };
-
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      setLoading(true);
-      try {
-        const all = await getAllNewTools();
-        if (alive) setTools(all);
-      } finally { if (alive) setLoading(false); }
-    })();
-    return () => { alive = false; };
-  }, []);
-
-  const myTools = useMemo(() => tools.filter(t => getAuthorSession(t) === sessionId), [tools, sessionId]);
-  const favoriteTools = useMemo(() => tools.filter(t => favorites.has(t.id)), [tools, favorites]);
-  const myToolsAll = useMemo(() => {
-    const map = new Map<string, NewToolData>();
-    [...myTools, ...favoriteTools].forEach(t => map.set(t.id, t));
-    return Array.from(map.values());
-  }, [myTools, favoriteTools]);
-  const publicTools = useMemo(() => tools.filter(t => getAuthorSession(t) !== sessionId), [tools, sessionId]);
-
-  useEffect(() => {
-    localStorage.setItem("hasOwnTools", myToolsAll.length > 0 ? "true" : "false");
-  }, [myToolsAll.length]);
-
-  const toggleFavorite = (id: string) => {
-    setFavorites(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      localStorage.setItem("favoriteTools", JSON.stringify(Array.from(next)));
-      return next;
-    });
-  };
-
-  const navigate = useNavigate();
-  const navigateToTool = (id: string, minutes?: number) => {
-    const suffix = minutes && minutes > 0 ? `&minutes=${minutes}` : "";
-    navigate(`/create-tool?tool=${id}${suffix}`);
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!window.confirm("Delete this tool?")) return;
-    await deleteNewTool(id);
-    setTools(prev => prev.filter(t => t.id !== id));
-    setFavorites(prev => { const next = new Set(prev); next.delete(id); localStorage.setItem("favoriteTools", JSON.stringify(Array.from(next))); return next; });
-  };
-
-  return { sessionId, loading, lang, setLang, dark, setDark, favorites, toggleFavorite, myToolsAll, publicTools, tools, navigateToTool, handleDelete };
-}
-
-function SkeletonGrid({ title, dark }: { title: string; dark: boolean }) {
-  const theme = useContext(ThemeContext);
-  return (
-    <section>
-      <h2 style={{ fontFamily: FONT_SERIF, fontSize: "34px", margin: "0 0 24px", color: theme.headline }}>{title}</h2>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "24px" }}>
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} style={{ height: 260, border: `1px dashed ${theme.border}`, borderRadius: 16, background: dark ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.35)", opacity: 0.7 }} />
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function ToolCard({ tool, onOpen, onDelete, sessionId, favorites, onToggleFavorite, DE }: {
+function UserToolShape({ tool, style, onClick, dark }: {
   tool: NewToolData;
-  onOpen: (id: string) => void;
-  onDelete?: (id: string) => void;
-  sessionId: string;
-  favorites: Set<string>;
-  onToggleFavorite?: (id: string) => void;
-  DE: boolean;
+  style: CSSProperties;
+  textStyle?: CSSProperties;
+  onClick: () => void;
+  dark: boolean;
+}) {
+  const theme = useContext(ThemeContext);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const videoUrl = tool.params.previewVideo;
+
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v || !videoUrl) return;
+    v.muted = true; v.playsInline = true;
+    const play = () => v.play().catch(() => undefined);
+    play();
+    if (v.readyState < 2) v.addEventListener("canplay", play, { once: true });
+  }, [videoUrl]);
+
+  // Render in the shape the tool was actually recorded with: override the slot's
+  // default border-radius / height so the silhouette matches the recording.
+  const shapeDef = tool.params.recordShape ? RECORD_SHAPE_DISPLAY[tool.params.recordShape] : undefined;
+  const baseW = typeof style.width === "number" ? style.width : undefined;
+  const shapedStyle: CSSProperties = shapeDef
+    ? {
+        ...style,
+        borderRadius: shapeDef.borderRadius,
+        ...(baseW ? { height: Math.round(baseW * shapeDef.ratio) } : {}),
+      }
+    : style;
+
+  return (
+    <div
+      onClick={onClick}
+      style={{
+        position: "absolute",
+        border: `1px dashed ${theme.border}`,
+        overflow: "hidden",
+        cursor: "pointer",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        ...shapedStyle,
+      }}
+    >
+      {videoUrl ? (
+        <video
+          key={videoUrl}
+          ref={videoRef}
+          muted loop playsInline preload="auto"
+          style={{
+            position: "absolute", inset: 0, width: "100%", height: "100%",
+            objectFit: "cover",
+            pointerEvents: "none",
+          }}
+        >
+          <source src={videoUrl} />
+        </video>
+      ) : (
+        <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+          <ToolPreview tool={tool} active dark={dark} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function HeartIcon({ filled, color }: { filled: boolean; color: string }) {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill={filled ? color : "none"} stroke={color} strokeWidth="1.8" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 22 L6.5 12.5 A5.5 5.5 0 1 0 12 7 A5.5 5.5 0 1 0 17.5 12.5 Z" strokeLinejoin="round" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+// Shape definitions for the 6 preset presets — used in cards and the shape picker
+export const CARD_SHAPE_DEFS: Record<string, {
+  bgLight: string; bgDark: string;
+  radius: string;
+  circle: boolean;
+  bottomLeft: boolean;
+  label: { de: string; en: string };
+  video: string;
+}> = {
+  "without-stopping":    { bgLight: "#fbf5eb", bgDark: "#3e3e3e",  radius: "200px",                 circle: true,  bottomLeft: false, label: { de: "...ohne anzuhalten",            en: "...without stopping" },          video: "without-stopping" },
+  "uninvited-thoughts":  { bgLight: "#eaf8f5", bgDark: "#1f2f29",  radius: "4px",                   circle: false, bottomLeft: false, label: { de: "...ungebetene Gedanken",        en: "...uninvited thoughts" },        video: "uninvited-thoughts" },
+  "off-the-grid":        { bgLight: "#fff4f6", bgDark: "#37262d",  radius: "4px",                   circle: false, bottomLeft: true,  label: { de: "...abseits des Rasters",        en: "...off the grid" },              video: "off-the-grid" },
+  "blind-then-witness":  { bgLight: "#ecf7ee", bgDark: "#222d26",  radius: "100px",                 circle: false, bottomLeft: false, label: { de: "...blind & dann sehen",          en: "...blind & then witness" },      video: "blind-then-witness" },
+  "visible-corrections": { bgLight: "#f6f8ed", bgDark: "#2f2836",  radius: "40px 4px 40px 4px",     circle: false, bottomLeft: false, label: { de: "...mit sichtbaren Korrekturen", en: "...with visible corrections" },  video: "visible-corrections" },
+  "in-a-spiral":         { bgLight: "#eef7ff", bgDark: "#242c38",  radius: "24px 200px 24px 200px", circle: false, bottomLeft: false, label: { de: "...in einer Spirale",            en: "...in a spiral" },               video: "in-a-spiral" },
+};
+
+// The six official experiments, surfaced as cards in the collection (same shapes
+// + videos as the hero). Descriptions mirror the preset viewer in New.tsx.
+const PRESET_META: { id: string; desc: { de: string; en: string } }[] = [
+  { id: "without-stopping",    desc: { de: "Schreib ohne anzuhalten. Der Cursor läuft weiter, Pausen werden sichtbar. Löschen ist nicht möglich.", en: "Write without stopping. The cursor keeps moving, making pauses visible. Deletion is impossible." } },
+  { id: "uninvited-thoughts",  desc: { de: "Deine Wörter verlieren ihre Form und fliegen davon, wie Gedanken, die du nicht festhalten kannst.", en: "Your words lose their form and drift away, like thoughts you cannot hold on to." } },
+  { id: "off-the-grid",        desc: { de: "Text erscheint nicht linear, sondern zufällig im Raum verteilt.", en: "Text doesn't appear linearly, but scattered randomly across the space." } },
+  { id: "blind-then-witness",  desc: { de: "Schreib blind. Dein Text bleibt unsichtbar, während du schreibst.", en: "Write blind. Your text stays invisible while you write." } },
+  { id: "visible-corrections", desc: { de: "Korrigieren hinterlässt Spuren. Gelöschter Text wird überdeckt, nicht entfernt.", en: "Correcting leaves traces. Deleted text is covered, not removed." } },
+  { id: "in-a-spiral",         desc: { de: "Dein Text windet sich in einer Spirale nach innen.", en: "Your text winds inward in a spiral." } },
+];
+
+function getPresetShape(params: NewToolParams, dark: boolean, DE: boolean): {
+  bg: string; radius: string; label: string; circle: boolean; bottomLeft: boolean; video: string | null;
+} {
+  // Explicit card shape override
+  let shapeId = (params.cardShape as string | null | undefined) ?? null;
+  // Infer from params if not set
+  if (!shapeId) {
+    if (params.positionMode === "spiral")       shapeId = "in-a-spiral";
+    else if (params.visibility === "invisible") shapeId = "blind-then-witness";
+    else if (params.correctionVisible)          shapeId = "visible-corrections";
+    else if (params.positionMode === "random")  shapeId = "off-the-grid";
+    else if (params.cursorRunning)              shapeId = "without-stopping";
+    else if (params.textFliegtEnabled)          shapeId = "uninvited-thoughts";
+  }
+  if (shapeId && CARD_SHAPE_DEFS[shapeId]) {
+    const d = CARD_SHAPE_DEFS[shapeId];
+    return { bg: dark ? d.bgDark : d.bgLight, radius: d.radius, label: DE ? d.label.de : d.label.en, circle: d.circle, bottomLeft: d.bottomLeft, video: d.video };
+  }
+  // Fallback: hue-based
+  const hL = (h: number) => `oklch(97.5% 0.015 ${h})`;
+  const hD = (h: number) => `oklch(26% 0.025 ${h})`;
+  const bgFor = (hue: number | null) =>
+    hue !== null ? (dark ? hD(hue) : hL(hue)) : (dark ? "#2b2926" : "#fef8ee");
+  const hue = params.bgHue;
+  return { bg: bgFor(hue), radius: "100px", label: "...", circle: hue === null, bottomLeft: false, video: null };
+}
+
+function ToolCard({ tool, onClick, onDelete, isFavorite, onToggleFavorite, DE }: {
+  tool: NewToolData;
+  onClick: () => void;
+  onDelete?: () => void;
+  isFavorite?: boolean;
+  onToggleFavorite?: () => void;
+  DE?: boolean;
 }) {
   const theme = useContext(ThemeContext);
   const dark = useContext(DarkContext);
-  const shape = inferCardShape(tool);
-  const def = CARD_SHAPE_DEFS[shape];
-  const own = getAuthorSession(tool) === sessionId;
-  const fav = favorites.has(tool.id);
-  const previewUrl = (tool.params as any)?.previewVideoUrl ?? (tool.params as any)?.preview_video_url ?? (tool.params as any)?.previewVideo;
+  const [hovered, setHovered] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const shapeVideoRef = useRef<HTMLVideoElement>(null);
+
+  const shape = getPresetShape(tool.params, dark, DE ?? false);
+  const userVideoUrl = tool.params.previewVideo || null;
+  const presetVideoName = shape.video ? `${shape.video}-${dark ? "dark" : "light"}` : null;
+  const videoSrc = userVideoUrl || (presetVideoName ? `/videos/${presetVideoName}.webm` : null);
+
+  // If the user recorded their own clip in a chosen shape, present the card in
+  // that exact shape (border-radius + aspect ratio) instead of the preset shape.
+  const recShape = tool.params.recordShape ? RECORD_SHAPE_DISPLAY[tool.params.recordShape] : undefined;
+  const useRec = !!(userVideoUrl && recShape);
+  const shapeRadius = useRec ? recShape!.borderRadius : shape.radius;
+  const shapeWidth = useRec ? `${Math.round(163 / recShape!.ratio)}px`
+    : (shape.circle ? "min(44%, 163px)" : "calc(100% - 16px)");
+
+  useEffect(() => {
+    const v = shapeVideoRef.current;
+    if (!v || !videoSrc) return;
+    v.muted = true; v.playsInline = true;
+    const play = () => v.play().catch(() => undefined);
+    play();
+    if (v.readyState < 2) v.addEventListener("canplay", play, { once: true });
+  }, [videoSrc]);
+
+  const cardBg = hovered ? (dark ? "#232120" : "#fffdfa") : (dark ? theme.toolBg : "#fdf9f3");
+  const cardBorder = hovered ? (dark ? "rgba(240,232,220,0.22)" : "#a8a8a8") : (dark ? theme.border : "#b4b3b3");
+  const descColor = dark ? "rgba(240,232,220,0.45)" : "#7a7d89";
+  const shapeTextColor = dark ? "rgba(240,232,220,0.6)" : "#555555";
+  const shapeBorder = dark ? "rgba(240,232,220,0.2)" : "#a4a4a4";
+
   return (
-    <div style={{ position: "relative", minHeight: 340, paddingTop: 20, transform: `translateY(${(Math.abs(tool.id.charCodeAt(0) % 4) * 8)}px)` }}>
-      <button onClick={() => onOpen(tool.id)} style={{ width: "100%", height: 260, border: `1px dashed ${theme.border}`, borderRadius: def.borderRadius, background: dark ? def.bgDark : def.bgLight, position: "relative", overflow: "hidden", cursor: "pointer", outline: "none", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
-        {previewUrl ? (
-          <video src={previewUrl} autoPlay muted loop playsInline style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0, transition: "opacity 0.25s ease" }} />
-        ) : (
-          <ToolPreview videoName={dark ? def.videoDark : def.videoLight} dark={dark} style={{ position: "absolute", inset: 0, opacity: 0, transition: "opacity 0.25s ease", objectFit: def.videoFit ?? "cover" }} />
-        )}
-        <span style={{ position: "relative", zIndex: 1, fontFamily: FONT_SANS, fontSize: 18, color: theme.text, textAlign: "center" }}>{tool.name || def.label.en}</span>
-        <style>{`button:hover video { opacity: 1 !important; } button:hover span { opacity: 0; }`}</style>
-      </button>
-      <div style={{ marginTop: 14, padding: "0 4px" }}>
-        <h3 style={{ margin: 0, fontFamily: FONT_SERIF, fontSize: 24, lineHeight: "28px", color: theme.headline }}>{tool.name || (DE ? "Unbenannt" : "Untitled")}</h3>
-        {tool.description && <p style={{ margin: "7px 0 0", fontFamily: FONT_SANS, fontSize: 14, lineHeight: "19px", color: theme.muted }}>{tool.description}</p>}
-        <div style={{ display: "flex", gap: 10, marginTop: 12, alignItems: "center" }}>
-          {onToggleFavorite && <button onClick={(e) => { e.stopPropagation(); onToggleFavorite(tool.id); }} style={{ border: `1px dashed ${theme.border}`, borderRadius: 999, background: "transparent", color: theme.text, padding: "6px 12px", fontFamily: FONT_SANS, cursor: "pointer" }}>{fav ? (DE ? "Gespeichert" : "Saved") : (DE ? "Merken" : "Add to My Tools")}</button>}
-          {own && onDelete && <button onClick={(e) => { e.stopPropagation(); onDelete(tool.id); }} style={{ border: "none", background: "transparent", color: theme.muted, fontFamily: FONT_SANS, cursor: "pointer" }}>{DE ? "Löschen" : "Delete"}</button>}
-        </div>
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => { setHovered(false); setConfirming(false); }}
+      onClick={onClick}
+      style={{
+        background: cardBg,
+        border: `1px dashed ${cardBorder}`,
+        borderRadius: "8px",
+        overflow: "hidden",
+        aspectRatio: "1",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "16px",
+        boxSizing: "border-box",
+        position: "relative",
+        cursor: "pointer",
+        transition: "background 0.15s, border-color 0.15s",
+      }}
+    >
+      {/* Title */}
+      <div style={{ width: "100%", flexShrink: 0 }}>
+        <span style={{
+          fontFamily: FONT_CMP_SERIF,
+          fontSize: "18px",
+          color: dark ? theme.text : "#302e2c",
+          lineHeight: "normal",
+          display: "block",
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          paddingRight: (onDelete || onToggleFavorite) ? "36px" : "0",
+        }}>
+          {tool.name || "Unnamed Tool"}
+        </span>
       </div>
+
+      {/* Preset shape with video */}
+      <div style={{
+        flexShrink: 0,
+        position: "relative",
+        width: shapeWidth,
+        maxWidth: "calc(100% - 16px)",
+        height: "163px",
+        background: shape.bg,
+        border: `1px dashed ${shapeBorder}`,
+        borderRadius: shapeRadius,
+        overflow: "hidden",
+        display: "flex",
+        alignItems: shape.bottomLeft ? "flex-end" : "center",
+        justifyContent: shape.bottomLeft ? "flex-start" : "center",
+        padding: shape.bottomLeft ? "12px" : "6px 12px",
+        boxSizing: "border-box",
+      }}>
+        {videoSrc && (
+          <video
+            key={videoSrc}
+            ref={shapeVideoRef}
+            muted loop playsInline preload="auto"
+            src={videoSrc}
+            style={{
+              position: "absolute", inset: 0, width: "100%", height: "100%",
+              objectFit: "cover",
+              opacity: 1,
+              pointerEvents: "none",
+              transform: "translateZ(0)",
+            }}
+          />
+        )}
+        <span style={{
+          position: "relative",
+          zIndex: 1,
+          fontFamily: FONT_SANS,
+          fontSize: "17px",
+          color: shapeTextColor,
+          letterSpacing: "-0.01em",
+          textAlign: "center",
+          lineHeight: "1.3",
+          whiteSpace: "nowrap",
+          opacity: videoSrc ? 0 : 1,
+        }}>
+          {shape.label}
+        </span>
+      </div>
+
+      {/* Description */}
+      <div style={{ width: "100%", flexShrink: 0 }}>
+        <p style={{
+          margin: 0,
+          fontFamily: FONT_SANS,
+          fontSize: "15px",
+          color: descColor,
+          letterSpacing: "-0.01em",
+          lineHeight: "normal",
+          display: "-webkit-box",
+          WebkitLineClamp: 3,
+          WebkitBoxOrient: "vertical" as const,
+          overflow: "hidden",
+        }}>
+          {tool.description || "\u00a0"}
+        </p>
+      </div>
+
+      {/* Delete button (My Tools) */}
+      {onDelete && (
+        <div style={{ position: "absolute", top: "10px", right: "10px", display: "flex", alignItems: "center", gap: "4px", zIndex: 2 }}>
+          {confirming ? (
+            <div onClick={(e) => e.stopPropagation()} style={{ display: "flex", alignItems: "center", gap: "6px", background: dark ? theme.panelBg : "#fef8ee", border: `1px dashed ${shapeBorder}`, borderRadius: "4px", padding: "5px 8px" }}>
+              <span style={{ fontFamily: FONT_SANS, fontSize: "12px", color: theme.text, whiteSpace: "nowrap", letterSpacing: "-0.01em" }}>{DE ? "Löschen?" : "Delete?"}</span>
+              <button onClick={(e) => { e.stopPropagation(); onDelete(); }} style={{ height: "24px", padding: "0 10px", background: "transparent", border: `1px dashed ${shapeBorder}`, borderRadius: "4px", cursor: "pointer", outline: "none", fontFamily: FONT_SANS, fontSize: "12px", color: "#b43c3c", whiteSpace: "nowrap" }}>{DE ? "Ja" : "Yes"}</button>
+              <button onClick={(e) => { e.stopPropagation(); setConfirming(false); }} style={{ height: "24px", padding: "0 10px", background: "transparent", border: `1px dashed ${shapeBorder}`, borderRadius: "4px", cursor: "pointer", outline: "none", fontFamily: FONT_SANS, fontSize: "12px", color: theme.muted, whiteSpace: "nowrap" }}>{DE ? "Nein" : "No"}</button>
+            </div>
+          ) : (
+            <button onClick={(e) => { e.stopPropagation(); setConfirming(true); }} title="Aus meinen Tools entfernen" style={{ width: "24px", height: "24px", background: dark ? theme.panelBg : "#fef8ee", border: `1px dashed ${shapeBorder}`, borderRadius: "50%", cursor: "pointer", outline: "none", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FONT_SANS, fontSize: "16px", color: theme.muted, lineHeight: 1 }}>×</button>
+          )}
+        </div>
+      )}
+
+      {/* Favorite button (All Tools) */}
+      {onToggleFavorite && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onToggleFavorite(); }}
+          title={isFavorite ? "Aus My Tools entfernen" : "Zu My Tools hinzufügen"}
+          style={{ position: "absolute", top: "10px", right: "10px", zIndex: 2, width: "26px", height: "26px", background: dark ? theme.panelBg : "#fef8ee", border: `1px dashed ${shapeBorder}`, borderRadius: "50%", cursor: "pointer", outline: "none", display: "flex", alignItems: "center", justifyContent: "center" }}
+        >
+          <HeartIcon filled={!!isFavorite} color={isFavorite ? "#d4607a" : theme.muted} />
+        </button>
+      )}
+    </div>
+  );
+}
+
+// Cross-fades each card in as it scrolls into view (subtle, once, no slide)
+function Reveal({ children, index = 0 }: { children: ReactNode; index?: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [shown, setShown] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setShown(true); io.disconnect(); } },
+      { threshold: 0.12, rootMargin: "0px 0px -6% 0px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  const delay = (index % 3) * 0.06;
+  return (
+    <div
+      ref={ref}
+      style={{
+        opacity: shown ? 1 : 0,
+        transition: `opacity 0.5s ease ${delay}s`,
+        willChange: "opacity",
+      }}
+    >
+      {children}
     </div>
   );
 }
@@ -340,47 +545,237 @@ function Section({ title, tools, onOpen, onDelete, emptyMsg, sessionId, favorite
   onDelete?: (id: string) => void;
   emptyMsg: string;
   sessionId: string;
-  favorites: Set<string>;
+  favorites?: string[];
   onToggleFavorite?: (id: string) => void;
   showCreate?: boolean;
   tab?: "all" | "my";
-  onTabChange?: (tab: "all" | "my") => void;
+  onTabChange?: (t: "all" | "my") => void;
   onSeeAll?: () => void;
-  DE: boolean;
+  DE?: boolean;
 }) {
   const theme = useContext(ThemeContext);
+  const dark = useContext(DarkContext);
   const navigate = useNavigate();
   return (
-    <section>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28 }}>
-        <h2 style={{ fontFamily: FONT_SERIF, fontSize: "34px", margin: 0, color: theme.headline }}>{title}</h2>
-        {tab && onTabChange && (
-          <div style={{ display: "flex", gap: 4, border: `1px dashed ${theme.border}`, borderRadius: 999, padding: 4 }}>
-            <button onClick={() => onTabChange("all")} style={{ border: "none", borderRadius: 999, padding: "8px 16px", background: tab === "all" ? theme.headline : "transparent", color: tab === "all" ? "#fcf6ef" : theme.muted, fontFamily: FONT_SANS, cursor: "pointer" }}>{DE ? "Alle Tools" : "All Tools"}</button>
-            <button onClick={() => onTabChange("my")} style={{ border: "none", borderRadius: 999, padding: "8px 16px", background: tab === "my" ? theme.headline : "transparent", color: tab === "my" ? "#fcf6ef" : theme.muted, fontFamily: FONT_SANS, cursor: "pointer" }}>{DE ? "Meine Tools" : "My Tools"}</button>
+    <section style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "12px", borderBottom: `1px dashed ${theme.border}`, paddingBottom: "11px" }}>
+        <span style={{ fontFamily: FONT_CMP_SERIF, fontSize: "32px", color: theme.headline, lineHeight: "normal" }}>{title}</span>
+        {tab !== undefined && onTabChange && (
+          <div style={{ display: "flex", gap: "8px" }}>
+            {(["all", "my"] as const).map((t) => {
+              const isActive = tab === t;
+              const label = t === "all" ? (DE ? "Alle Tools" : "All Tools") : (DE ? "Meine Tools" : "My Tools");
+              return (
+                <button key={t} onClick={() => onTabChange(t)} style={{ height: "31px", padding: "0 12px", borderRadius: "4px", background: isActive ? theme.headline : "transparent", color: isActive ? (dark ? theme.bg : "#fcf6ef") : theme.muted, border: isActive ? "none" : `1px dashed ${theme.border}`, fontFamily: FONT_SANS, fontSize: "15px", letterSpacing: "-0.01em", cursor: "pointer", outline: "none" }}>{label}</button>
+              );
+            })}
           </div>
+        )}
+        {onSeeAll && (
+          <button onClick={onSeeAll} style={{ marginLeft: "auto", height: "31px", padding: "0 12px", borderRadius: "4px", background: "transparent", color: theme.muted, border: `1px dashed ${theme.border}`, fontFamily: FONT_SANS, fontSize: "15px", letterSpacing: "-0.01em", cursor: "pointer", outline: "none", whiteSpace: "nowrap" }}>
+            {DE ? "Alle Tools ansehen" : "See all tools"}
+          </button>
         )}
       </div>
       {tools.length === 0 ? (
-        <p style={{ fontFamily: FONT_SANS, color: theme.muted }}>{emptyMsg}</p>
+        <p style={{ fontFamily: FONT_SANS, fontSize: "14px", color: theme.muted, margin: 0 }}>{emptyMsg}</p>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", columnGap: 42, rowGap: 58 }}>
-          {tools.map(t => <ToolCard key={t.id} tool={t} onOpen={onOpen} onDelete={onDelete} sessionId={sessionId} favorites={favorites} onToggleFavorite={onToggleFavorite} DE={DE} />)}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: "32px" }}>
+          {tools.map((tool, i) => {
+            const owned = tool.params.sessionId === sessionId;
+            const isPreset = tool.id.startsWith("preset:");
+            return (
+              <Reveal key={tool.id} index={i}>
+                <ToolCard
+                  tool={tool}
+                  onClick={() => onOpen(tool.id)}
+                  onDelete={owned && !isPreset && onDelete ? () => onDelete(tool.id) : undefined}
+                  isFavorite={favorites?.includes(tool.id)}
+                  onToggleFavorite={!owned && !isPreset && onToggleFavorite ? () => onToggleFavorite(tool.id) : undefined}
+                  DE={DE}
+                />
+              </Reveal>
+            );
+          })}
         </div>
       )}
-      <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 52 }}>
-        {onSeeAll && <button onClick={onSeeAll} style={{ border: `1px dashed ${theme.border}`, background: theme.toolBg, color: theme.text, borderRadius: 999, padding: "10px 20px", fontFamily: FONT_SANS, cursor: "pointer" }}>{DE ? "Alle Tools ansehen" : "Explore all tools"}</button>}
-        {showCreate && <button onClick={() => navigate("/create-tool")} style={{ border: `1px dashed ${theme.border}`, background: theme.toolBg, color: theme.text, borderRadius: 999, padding: "10px 20px", fontFamily: FONT_SANS, cursor: "pointer" }}>{DE ? "Tool erstellen" : "Create Tool"}</button>}
+    </section>
+  );
+}
+
+// ── Skeleton placeholders shown while tools load ──────────────────────────────
+function SkeletonCard({ hue, dark, delay }: { hue: number; dark: boolean; delay: number }) {
+  const theme = useContext(ThemeContext);
+  // Very subtle, low-chroma tint of the Look & Feel hue
+  const block = dark ? `oklch(40% 0.016 ${hue})` : `oklch(94.5% 0.016 ${hue})`;
+  const bar   = dark ? `oklch(37% 0.010 ${hue})` : `oklch(93% 0.010 ${hue})`;
+  return (
+    <div
+      style={{
+        border: `1px dashed ${theme.border}`,
+        borderRadius: "8px",
+        overflow: "hidden",
+        background: theme.bg,
+        display: "flex",
+        flexDirection: "column",
+        boxSizing: "border-box",
+        animation: `_skelIn 0.5s ease-out ${delay}s both, _skelPulse 1.9s ease-in-out ${delay + 0.5}s infinite`,
+      }}
+    >
+      <div style={{ width: "100%", aspectRatio: "3 / 2", background: block, flexShrink: 0 }} />
+      <div style={{ padding: "16px 18px", display: "flex", flexDirection: "column", gap: "9px" }}>
+        <div style={{ height: "14px", width: "58%", borderRadius: "4px", background: bar }} />
+        <div style={{ height: "11px", width: "86%", borderRadius: "4px", background: bar }} />
+      </div>
+    </div>
+  );
+}
+
+function SkeletonGrid({ title, dark, rows = 3 }: { title: string; dark: boolean; rows?: number }) {
+  const theme = useContext(ThemeContext);
+  const gridRef = useRef<HTMLDivElement>(null);
+  const [cols, setCols] = useState(4);
+  useLayoutEffect(() => {
+    const el = gridRef.current;
+    if (!el) return;
+    const measure = () => setCols(4);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  // Stable hue pool so colours don't reshuffle on resize
+  const huePool = useMemo(() => Array.from({ length: 60 }, () => Math.floor(Math.random() * 360)), []);
+  const count = cols * rows;
+  return (
+    <section style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+      <style>{`@keyframes _skelPulse { 0%,100%{opacity:1} 50%{opacity:0.72} } @keyframes _skelIn { from{opacity:0} to{opacity:1} }`}</style>
+      <div style={{ display: "flex", alignItems: "baseline", gap: "12px", borderBottom: `1px dashed ${theme.border}`, paddingBottom: "12px" }}>
+        <span style={{ fontFamily: FONT_SERIF, fontSize: "28px", color: theme.text }}>{title}</span>
+      </div>
+      <div ref={gridRef} style={{ display: "grid", gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: "20px" }}>
+        {Array.from({ length: count }, (_, i) => (
+          <SkeletonCard key={i} hue={huePool[i % huePool.length]} dark={dark} delay={(i % cols) * 0.08} />
+        ))}
       </div>
     </section>
   );
 }
 
+// ── Stale-while-revalidate cache for the tool list ────────────────────────────
+// Shared across All Tools / My Tools navigations (module scope) and persisted
+// to localStorage so repeat visits render instantly while we refresh in the bg.
+const TOOLS_CACHE_KEY = "playgroundToolsCacheV1";
+let toolsMemCache: NewToolData[] | null = null;
+
+function readToolsCache(): NewToolData[] | null {
+  if (toolsMemCache) return toolsMemCache;
+  try {
+    const raw = localStorage.getItem(TOOLS_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) { toolsMemCache = parsed as NewToolData[]; return toolsMemCache; }
+  } catch { /* ignore */ }
+  return null;
+}
+
+function writeToolsCache(tools: NewToolData[]) {
+  toolsMemCache = tools;
+  try { localStorage.setItem(TOOLS_CACHE_KEY, JSON.stringify(tools)); } catch { /* ignore */ }
+}
+
+function getDeletedIds(): string[] {
+  try { return JSON.parse(localStorage.getItem("deletedToolIds") ?? "[]") as string[]; }
+  catch { return []; }
+}
+
+function usePlaygroundData() {
+  const navigate = useNavigate();
+  const sessionId = useMemo(() => getSessionId(), []);
+  const cachedAll = useMemo(() => readToolsCache(), []);
+  const [tools, setTools] = useState<NewToolData[]>(() => {
+    if (!cachedAll) return [];
+    const del = getDeletedIds();
+    return cachedAll.filter((t) => !del.includes(t.id));
+  });
+  // Skeletons only on the very first visit (no cache yet)
+  const [loading, setLoading] = useState(cachedAll === null);
+  const [lang, setLang] = useState<"de" | "en">(() => (localStorage.getItem("appLang") as "de" | "en") ?? "de");
+  const [dark, setDark] = useState<boolean>(() => localStorage.getItem("appTheme") === "dark");
+  const [favorites, setFavorites] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem("favoriteToolIds") ?? "[]") as string[]; }
+    catch { return []; }
+  });
+
+  const toggleFavorite = (id: string) => {
+    setFavorites((current) => {
+      const next = current.includes(id) ? current.filter((x) => x !== id) : [...current, id];
+      localStorage.setItem("favoriteToolIds", JSON.stringify(next));
+      return next;
+    });
+  };
+
+  useEffect(() => { localStorage.setItem("appTheme", dark ? "dark" : "light"); }, [dark]);
+
+  useEffect(() => {
+    const deletedIds = getDeletedIds();
+    getAllNewTools()
+      .then((all) => {
+        writeToolsCache(all);
+        setTools(all.filter((t) => !deletedIds.includes(t.id)));
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  const myToolsRaw = tools.filter((tool) => tool.params.sessionId === sessionId);
+  const myToolsMap = new Map<string, NewToolData>();
+  for (const tool of myToolsRaw) {
+    const key = tool.params.displayName || tool.name || tool.id;
+    const existing = myToolsMap.get(key);
+    if (!existing || tool.savedAt > existing.savedAt) myToolsMap.set(key, tool);
+  }
+  const myTools = Array.from(myToolsMap.values()).sort((a, b) => b.savedAt.localeCompare(a.savedAt));
+  const favoriteTools = tools.filter((tool) => favorites.includes(tool.id) && tool.params.sessionId !== sessionId);
+  const myToolsAll = [...myTools, ...favoriteTools];
+  const publicTools = tools.filter((tool) => tool.params.isPublic !== false);
+
+  useEffect(() => {
+    if (!loading) localStorage.setItem("hasOwnTools", String(myToolsAll.length > 0));
+  }, [loading, myToolsAll.length]);
+
+  const navigateToTool = (id: string, timerMinutes: number | null) => {
+    const timerParam = timerMinutes != null ? `&timer=${timerMinutes}` : "&timer=0";
+    navigate(`/create-tool?tool=${id}${timerParam}`);
+  };
+
+  const handleDelete = (id: string) => {
+    const target = tools.find((tool) => tool.id === id);
+    const toDelete = target
+      ? tools.filter((tool) => tool.params.sessionId === target.params.sessionId && (tool.params.displayName || tool.name) === (target.params.displayName || target.name))
+      : tools.filter((tool) => tool.id === id);
+    const ids = toDelete.map((tool) => tool.id);
+    try {
+      const existing = JSON.parse(localStorage.getItem("deletedToolIds") ?? "[]") as string[];
+      localStorage.setItem("deletedToolIds", JSON.stringify(Array.from(new Set([...existing, ...ids]))));
+    } catch { /* ignore */ }
+    setTools((current) => current.filter((tool) => !ids.includes(tool.id)));
+    Promise.all(ids.map(deleteNewTool)).catch(console.error);
+  };
+
+  return { sessionId, loading, lang, setLang, dark, setDark, favorites, toggleFavorite, myToolsAll, publicTools, tools, navigateToTool, handleDelete };
+}
+
 function HeroHeading({ DE, theme }: { DE: boolean; theme: Theme }) {
-  const line1 = DE ? "Writing Tools formen, wie wir denken & schreiben." : "Writing Tools shape how we think & write.";
-  const line2 = DE ? "Brich ihre Regeln, um dein Denken zu verändern." : "Break their rules to change your thinking.";
+  const line1 = DE
+    ? "Schreibwerkzeuge prägen, wie wir denken & schreiben."
+    : "Writing Tools shape how we think & write.";
+  const line2 = DE
+    ? "Brich ihre Regeln, um dein Denken zu verändern."
+    : "Break their rules to change your thinking.";
+
   return (
-    <h1 style={{ margin: 0, textAlign: "center", fontFamily: FONT_CMP_SERIF, fontWeight: 500, fontSize: "48px", lineHeight: 1.22, color: theme.headline, letterSpacing: "0px" }}>
+    <h1 style={{ margin: 0, fontFamily: FONT_CMP_SERIF, fontSize: 36, lineHeight: "45px", fontWeight: 600, color: theme.headline, textAlign: "center", whiteSpace: "nowrap", animation: "_heroIn 1s ease-out both" }}>
       <style>{`
         @keyframes _heroIn { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: none; } }
         @keyframes _toolIn { from { opacity: 0; } to { opacity: 1; } }
@@ -419,7 +814,7 @@ function PageNavFAB({ dark, myToolsAll, DE, theme, loading, bottom = 40 }: { dar
 }
 
 
-// ── Scroll-synced text reveal ─────────────────────────────────
+// ── Scroll-synced text reveal ─────────────────────────────────────────────────
 // The paragraph starts in a light state and darkens word by word as it scrolls
 // through the viewport — the reveal is tied directly to scroll progress.
 const REVEAL_TEXT: { de: string[]; en: string[] } = {
@@ -633,7 +1028,7 @@ export default function PlaygroundNew({ variant = "intro" }: { variant?: "intro"
           </section>
         )}
 
-        <div ref={toolsRef} style={{ width: "100%", boxSizing: "border-box", padding: "96px 96px 192px" }}>
+        <div ref={toolsRef} style={{ width: "100%", boxSizing: "border-box", padding: "96px 96px 160px" }}>
           {loading ? (
             <SkeletonGrid title={DE ? "Tool-Sammlung" : "Tool Collection"} dark={dark} />
           ) : (

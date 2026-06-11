@@ -131,7 +131,13 @@ function ToolShape({ label, style, textStyle, href, videoLight, videoDark, bgLig
     >
       <video
         key={video}
-        ref={videoRef}
+        ref={(el) => {
+          videoRef.current = el;
+          // Force muted synchronously at mount — React sets the `muted`
+          // property after insertion, which makes the browser block autoplay.
+          if (el) { el.muted = true; el.defaultMuted = true; }
+        }}
+        src={`/videos/${video}.webm`}
         autoPlay
         muted
         loop
@@ -150,9 +156,7 @@ function ToolShape({ label, style, textStyle, href, videoLight, videoDark, bgLig
           transform: "translateZ(0)",
           zIndex: 0,
         }}
-      >
-        <source src={`/videos/${video}.webm`} type="video/webm" />
-      </video>
+      />
       <span
         className="playground-tool-label"
         style={{

@@ -682,12 +682,16 @@ function IconEyeOpen({ color }: { color: string }) {
   );
 }
 
+// "auge_aus" — crossed-out eye → action: hide the UI
 function IconEyeClosed({ color }: { color: string }) {
   return (
-    <svg width="19" height="13" viewBox="0 0 126.33 89.05" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M81.1,74.39v5.69l-.09.11c-4.81,5.63-11.31,8.86-17.83,8.86s-13.05-3.23-17.86-8.86l-.09-.11v-5.69l.66.77c4.59,5.37,10.73,8.33,17.29,8.33s12.67-2.96,17.26-8.33l.66-.77Z" fill={color}/>
-      <path d="M80.98,8.9v5.31l-.44-.52c-4.62-5.4-10.79-8.37-17.39-8.37s-12.74,2.97-17.36,8.37l-.44.52v-5.31l.06-.07C50.2,3.22,56.67,0,63.15,0s12.98,3.22,17.77,8.83l.06.07Z" fill={color}/>
-      <path d="M107.53,21.49l17.88,18.17v7.65l-29.6,30.08v-8.34l25.34-25.57-18.74-18.9-.96-.97-23.11,13.99c.63,1.82.96,3.84.96,6.01,0,9.22-6.66,16.14-16.13,16.14-5.07,0-9.44-2.09-12.34-5.5l-21.11,12.77-5.13,3.11-19.68,11.91-4.91-3.52,20.56-12.48-.96-.97L2.13,47.31v-7.65L31.73,9.58v8.34L6.39,43.48l18.32,18.49.96.97,22.34-13.56c-.64-1.78-.98-3.72-.98-5.77,0-9.73,6.92-16.39,16.14-16.39,5.2,0,9.55,2.01,12.41,5.43l21.75-13.2,5.13-3.12,18.79-11.4,5.08,3.63-19.76,11.96.96.97Z" fill={color}/>
+    <svg width="20" height="14.1" viewBox="0 0 21.67 15.26" fill={color} style={{ overflow: "visible" }} xmlns="http://www.w3.org/2000/svg">
+      <path d="M4.71,11.23l-1.09-.64-3.62-2.12v-1.07l5.03-2.94v1.16l-3.97,2.28v.03l3.66,2.13.31.18v.84l-.32.15Z"/>
+      <path d="M16.64,10.28l3.97-2.28v-.03l-3.97-2.31v-1.19l5.03,2.96v1.06l-5.03,2.94v-1.16Z"/>
+      <path d="M8.34.62c.73-.42,1.52-.62,2.38-.62s1.66.21,2.38.63c.73.42,1.44,1.03,2.15,1.84v1.06c-.74-.75-1.46-1.31-2.16-1.69-.7-.38-1.49-.57-2.37-.57s-1.67.19-2.37.57c-.71.38-1.42.94-2.16,1.69v-1.06c.71-.82,1.42-1.44,2.15-1.85Z"/>
+      <path d="M13.1,14.63c-.73.42-1.52.62-2.38.62s-1.66-.21-2.38-.63c-.73-.42-1.44-1.03-2.15-1.84v-1.06c.74.75,1.46,1.31,2.16,1.69.7.38,1.49.57,2.37.57s1.67-.19,2.37-.57c.71-.38,1.42-.94,2.16-1.69v1.06c-.71.82-1.42,1.44-2.15,1.85Z"/>
+      <path d="M13.3,7.79c0,1.29-1.04,2.33-2.33,2.33-.79,0-1.49-.39-1.91-.98-.21-.29-.34-.62-.4-.98-.02-.12-.03-.24-.03-.37,0-1.29,1.04-2.34,2.34-2.34.69,0,1.3.3,1.72.77.24.26.42.57.52.92.06.21.09.42.09.65Z"/>
+      <path d="M20.93,2.27c-1.06.5-1.85.88-2.37,1.12-.52.25-1.04.51-1.57.76-.53.25-1.32.64-2.38,1.14l-1.92.93c.24.26.42.57.52.92l1.86-.89c.62-.3,1.14-.55,1.57-.76.32-.15.59-.28.81-.39.05-.02.09-.04.14-.07.48-.22.96-.45,1.43-.68.52-.25,1.31-.63,2.36-1.14l-.45-.94ZM6.83,9.04c-.9.44-1.6.78-2.11,1.02-.09.04-.17.08-.25.12-.28.14-.56.28-.85.41-.24.12-.48.24-.72.35-.53.25-1.32.63-2.37,1.15l.45.94c1.06-.51,1.85-.89,2.38-1.14.46-.22.9-.44,1.35-.66.07-.03.15-.06.22-.1.03-.01.06-.03.1-.05.51-.25,1.26-.61,2.26-1.09l1.77-.85c-.21-.29-.34-.62-.4-.98l-1.83.88Z"/>
     </svg>
   );
 }
@@ -753,14 +757,15 @@ function RadioCircle({ selected, dark }: { selected: boolean; dark: boolean }) {
   );
 }
 
+// "auge_an" — open eye → action: show the UI again
 function IconShowHidden({ color }: { color: string }) {
   return (
-    <svg width="19" height="13" viewBox="0 0 36 25" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M23.318 2.9355V4.46104C21.7844 2.56568 19.7599 1.61799 17.7232 1.61799C15.6988 1.61799 13.6744 2.56568 12.1407 4.46104V2.9355C13.6744 1.04014 15.6988 8.84903e-08 17.7232 0C19.7599 -8.90266e-08 21.7844 1.04014 23.318 2.9355Z" fill={color}/>
-      <path d="M11.7952 21.6912V20.1656C13.3289 22.061 15.3533 23.0087 17.39 23.0087C19.4144 23.0087 21.4389 22.061 22.9725 20.1656V21.6912C21.4389 23.5865 19.4144 24.6267 17.39 24.6267C15.3533 24.6267 13.3289 23.5865 11.7952 21.6912Z" fill={color}/>
-      <path d="M35.113 11.2229L26.682 2.65537V5.03092L33.8989 12.3133L26.682 19.5957V21.9713L35.113 13.4037V11.2229Z" fill={color}/>
-      <path d="M0 13.4037L8.43094 21.9713V19.5957L1.21406 12.3133L8.43094 5.03092V2.65537L0 11.2229V13.4037Z" fill={color}/>
-      <path d="M21.9794 12.3497C21.9794 14.9757 20.0828 16.9453 17.3839 16.9453C14.7579 16.9453 12.7883 14.9757 12.7883 12.3497C12.7883 9.57782 14.7579 7.68125 17.3839 7.68125C20.0828 7.68125 21.9794 9.57782 21.9794 12.3497Z" fill={color}/>
+    <svg width="20" height="16.16" viewBox="0 0 22.83 18.45" fill={color} style={{ overflow: "visible" }} xmlns="http://www.w3.org/2000/svg">
+      <text fill={color} transform="translate(0 12.71) scale(.75 1)" fontSize="15" style={{ fontFamily: "'ABCArizona'", fontVariationSettings: "'SRFF' 0, 'wdth' 100, 'wght' 350" }}>{"<"}</text>
+      <text fill={color} transform="translate(22.83 5.74) rotate(-180) scale(.75 1)" fontSize="15" style={{ fontFamily: "'ABCArizona'", fontVariationSettings: "'SRFF' 0, 'wdth' 100, 'wght' 350" }}>{"<"}</text>
+      <text fill={color} transform="translate(8.19 .55) rotate(90) scale(1.53 1)" fontSize="9.8" style={{ fontFamily: "'ABCArizona'", fontVariationSettings: "'SRFF' 0, 'wdth' 100, 'wght' 350" }}>(</text>
+      <text fill={color} transform="translate(14.39 17.27) rotate(-90) scale(1.53 1)" fontSize="9.8" style={{ fontFamily: "'ABCArizona'", fontVariationSettings: "'SRFF' 0, 'wdth' 100, 'wght' 350" }}>(</text>
+      <circle fill={color} cx="11.54" cy="9.06" r="2.34"/>
     </svg>
   );
 }
@@ -802,26 +807,108 @@ function DoubleSlider({ value, min, max, step = 1, onChange, dark }: {
 }
 
 // ── Rule icons (Stability cards + Position options) ─────────────────────────────
+// Designer SVGs (ABC Arizona glyphs used as marks). Inlined so the loaded
+// ABCArizona webfont renders the <text> glyphs and currentColor follows theme.
+function fitBox(vbW: number, vbH: number, max: number) {
+  const sc = max / Math.max(vbW, vbH);
+  return { width: +(vbW * sc).toFixed(2), height: +(vbH * sc).toFixed(2) };
+}
+function azGlyph(fontSize: number, extra?: React.CSSProperties): React.CSSProperties {
+  return {
+    fontFamily: "'ABCArizona'",
+    fontSize: `${fontSize}px`,
+    fontVariationSettings: "'SRFF' 0, 'wdth' 100, 'wght' 350",
+    ...extra,
+  };
+}
 function RuleIcon({ id, color }: { id: string; color: string }) {
-  const s = { stroke: color, strokeWidth: 1.6, fill: "none", strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
-  return (
-    <svg width={18} height={18} viewBox="0 0 24 24" style={{ flexShrink: 0, display: "block" }}>
-      {/* Stability */}
-      {id === "drift"  && (<><path d="M3 8h10" {...s} /><path d="M3 12h6" {...s} /><path d="M3 16h8" {...s} /><path d="M15 12l5-3v6z" stroke={color} strokeWidth={1.6} fill={color} strokeLinejoin="round" /></>)}
-      {id === "fade"   && (<><circle cx={5} cy={12} r={2.4} fill={color} /><circle cx={12} cy={12} r={1.9} fill={color} opacity={0.55} /><circle cx={18.5} cy={12} r={1.3} fill={color} opacity={0.28} /></>)}
-      {id === "heavy"  && (<><path d="M9 7a3 3 0 016 0" {...s} /><path d="M7.5 7h9l1.5 12h-12z" {...s} /></>)}
-      {id === "blackhole" && (<><circle cx={12} cy={12} r={4} fill={color} /><circle cx={12} cy={12} r={7} stroke={color} strokeWidth={1.4} fill="none" opacity={0.45} /><circle cx={12} cy={12} r={10} stroke={color} strokeWidth={0.8} fill="none" opacity={0.18} /></>)}
-      {id === "ink"    && (<path d="M12 3s6 6.5 6 10.5a6 6 0 01-12 0C6 9.5 12 3 12 3z" {...s} />)}
-      {/* Position */}
-      {id === "standard"  && (<path d="M4 7h16M4 12h16M4 17h9" {...s} />)}
-      {id === "spiral"    && (<path d="M13.5 12a1.5 1.5 0 11-1.5-1.5A3.5 3.5 0 0115.5 14 5.5 5.5 0 016 9.8" {...s} />)}
-      {id === "random"    && (<><circle cx={6} cy={7} r={1.6} fill={color} /><circle cx={16} cy={5} r={1.6} fill={color} /><circle cx={11} cy={13} r={1.6} fill={color} /><circle cx={18} cy={16} r={1.6} fill={color} /><circle cx={6} cy={17} r={1.6} fill={color} /></>)}
-      {id === "running"   && (<><path d="M5 6v12" {...s} /><path d="M10 12h8" {...s} /><path d="M14.5 8.5L19 12l-4.5 3.5" {...s} /></>)}
-      {id === "zigzag"    && (<path d="M3 9l4.5 7L12 9l4.5 7L21 9" {...s} />)}
-      {id === "followdot" && (<><circle cx={17} cy={8} r={2.6} fill={color} /><path d="M4 19c4 0 8.5-3.5 11-9" {...s} strokeDasharray="0.1 3.2" /></>)}
-      {id === "custom"    && (<><path d="M4 20l1-3.2 9.6-9.6 2.2 2.2L7.2 19z" {...s} /><path d="M13.4 5.8l2.2 2.2" {...s} /></>)}
-    </svg>
-  );
+  const wrap = (vbW: number, vbH: number, children: React.ReactNode, max = 19) => {
+    const { width, height } = fitBox(vbW, vbH, max);
+    return (
+      <svg width={width} height={height} viewBox={`0 0 ${vbW} ${vbH}`} fill="currentColor"
+        style={{ flexShrink: 0, display: "block", color, overflow: "visible" }} xmlns="http://www.w3.org/2000/svg">
+        {children}
+      </svg>
+    );
+  };
+  switch (id) {
+    case "drift": return wrap(18.79, 28.5, <>
+      <text fill="currentColor" transform="translate(0 24.53)" style={azGlyph(15, { letterSpacing: "-0.01em" })}>a</text>
+      <text fill="currentColor" transform="translate(8.15 21.99) rotate(-17.81)" style={azGlyph(15)}>b</text>
+      <text fill="currentColor" transform="translate(11.75 12.71)" style={azGlyph(15)}>c</text>
+    </>);
+    case "fade": return wrap(13.94, 24.7, <>
+      <text fill="currentColor" opacity={0.25} transform="translate(0 18.82) scale(.68 1)" style={azGlyph(22.2)}>l</text>
+      <text fill="currentColor" opacity={0.5} transform="translate(3.55 18.82) scale(.68 1)" style={azGlyph(22.2)}>l</text>
+      <text fill="currentColor" opacity={0.8} transform="translate(6.95 18.82) scale(.68 1)" style={azGlyph(22.2)}>l</text>
+      <text fill="currentColor" opacity={1} transform="translate(10.36 18.82) scale(.68 1)" style={azGlyph(22.2)}>l</text>
+    </>);
+    case "heavy": return wrap(10.75, 16.76, <>
+      <path d="M10.06,14.29c-.46.78-1.1,1.39-1.91,1.82-.81.44-1.73.65-2.75.65s-1.96-.22-2.78-.65c-.82-.43-1.47-1.04-1.93-1.82-.46-.78-.69-1.66-.69-2.64s.23-1.88.69-2.65c.46-.78,1.1-1.39,1.93-1.82.83-.44,1.75-.65,2.78-.65s1.94.22,2.75.65,1.45,1.04,1.91,1.82c.46.78.69,1.67.69,2.65s-.23,1.86-.69,2.64ZM9.1,9.66c-.35-.58-.85-1.04-1.5-1.36-.65-.32-1.38-.48-2.2-.48s-1.57.16-2.22.48c-.65.32-1.15.77-1.51,1.36-.36.58-.54,1.25-.54,1.99s.18,1.4.54,1.97c.36.58.86,1.02,1.51,1.35.65.32,1.39.49,2.22.49s1.55-.16,2.2-.49c.65-.33,1.15-.77,1.5-1.35.36-.58.53-1.23.53-1.97s-.18-1.4-.53-1.99Z"/>
+      <path d="M2.14,1.81c.33-.57.77-1.02,1.34-1.33.57-.32,1.21-.48,1.92-.48s1.33.16,1.9.47,1.01.75,1.33,1.32c.32.56.48,1.21.48,1.94,0,.37-.04.72-.12,1.04-.08.33-.19.62-.34.88h-.98c.15-.3.26-.59.33-.86.07-.28.1-.57.1-.88,0-.53-.11-1-.34-1.4-.22-.41-.54-.72-.94-.94-.4-.22-.88-.33-1.42-.33s-1.02.11-1.43.34-.74.55-.97.96-.35.88-.35,1.41c0,.3.04.6.12.9.08.3.21.62.38.95h-.96c-.18-.29-.31-.61-.4-.96-.09-.35-.14-.71-.14-1.07,0-.74.16-1.4.49-1.96Z"/>
+    </>);
+    case "blackhole": return wrap(18.53, 18.87, <>
+      <path d="M6.97.62c.73-.42,1.52-.62,2.38-.62s1.66.21,2.38.63c.73.42,1.44,1.03,2.15,1.84v1.06c-.74-.75-1.46-1.31-2.16-1.69-.7-.38-1.49-.57-2.37-.57s-1.67.19-2.37.57c-.71.38-1.42.94-2.16,1.69v-1.06c.71-.82,1.42-1.44,2.15-1.85Z"/>
+      <path d="M17.91,7c.42.73.62,1.52.62,2.38s-.21,1.66-.63,2.38c-.42.73-1.03,1.44-1.84,2.15h-1.06c.75-.74,1.31-1.46,1.69-2.16.38-.7.57-1.49.57-2.37s-.19-1.67-.57-2.37c-.38-.71-.94-1.42-1.69-2.16h1.06c.82.71,1.44,1.42,1.85,2.15Z"/>
+      <path d="M.62,11.75C.21,11.03,0,10.23,0,9.38s.21-1.66.63-2.38c.42-.73,1.03-1.44,1.84-2.15h1.06c-.75.74-1.31,1.46-1.69,2.16-.38.7-.57,1.49-.57,2.37s.19,1.67.57,2.37c.38.71.94,1.42,1.69,2.16h-1.06c-.82-.71-1.44-1.42-1.85-2.15Z"/>
+      <path d="M11.72,18.25c-.73.42-1.52.62-2.38.62s-1.66-.21-2.38-.63c-.73-.42-1.44-1.03-2.15-1.84v-1.06c.74.75,1.46,1.31,2.16,1.69.7.38,1.49.57,2.37.57s1.67-.19,2.37-.57c.71-.38,1.42-.94,2.16-1.69v1.06c-.71.82-1.42,1.44-2.15,1.85Z"/>
+      <path d="M14.03,12.08c-.46.78-1.1,1.39-1.91,1.82-.81.44-1.73.65-2.75.65s-1.96-.22-2.78-.65c-.82-.43-1.47-1.04-1.93-1.82-.46-.78-.69-1.66-.69-2.64s.23-1.88.69-2.65c.46-.78,1.1-1.39,1.93-1.82.83-.44,1.75-.65,2.78-.65s1.94.22,2.75.65,1.45,1.04,1.91,1.82c.46.78.69,1.67.69,2.65s-.23,1.86-.69,2.64ZM13.06,7.46c-.35-.58-.85-1.04-1.5-1.36-.65-.32-1.38-.48-2.2-.48s-1.57.16-2.22.48c-.65.32-1.15.77-1.51,1.36-.36.58-.54,1.25-.54,1.99s.18,1.4.54,1.97c.36.58.86,1.02,1.51,1.35.65.32,1.39.49,2.22.49s1.55-.16,2.2-.49c.65-.33,1.15-.77,1.5-1.35.36-.58.53-1.23.53-1.97s-.18-1.4-.53-1.99Z"/>
+    </>);
+    case "ink": return wrap(10.75, 16.95, <>
+      <path d="M10.12,14.24c-.42.83-1.05,1.49-1.87,1.98-.82.49-1.78.73-2.88.73s-2.03-.25-2.85-.75c-.82-.5-1.45-1.16-1.88-1.99-.43-.83-.65-1.71-.65-2.66,0-.6.07-1.14.2-1.61.14-.48.34-.93.61-1.37h1.11v-.02c-.27.49-.47.96-.6,1.4-.13.44-.19.92-.19,1.43,0,.77.17,1.48.52,2.14.34.66.84,1.17,1.48,1.55.64.38,1.4.57,2.27.57s1.64-.19,2.29-.56c.65-.37,1.13-.88,1.46-1.53.33-.65.5-1.38.5-2.21,0-.48-.07-.96-.21-1.45s-.37-.98-.68-1.48l1.11-.02c.29.45.51.93.67,1.45.15.52.23,1.07.23,1.66,0,.99-.21,1.9-.64,2.73Z"/>
+      <path d="M7.7,6.67L5.42,1.41h-.03l-2.31,5.27h-1.19L4.85,0h1.06l2.94,6.67h-1.16Z"/>
+    </>);
+    case "standard": return wrap(24.73, 18.59, <>
+      <text fill="currentColor" transform="translate(18.85 8.93) rotate(-90) scale(.68 1)" style={azGlyph(22.2)}>l</text>
+      <text fill="currentColor" transform="translate(18.82 3.58) rotate(-90) scale(.68 1)" style={azGlyph(22.2)}>l</text>
+      <text fill="currentColor" transform="translate(18.82 13.78) rotate(-90) scale(.68 1)" style={azGlyph(22.2)}>l</text>
+      <text fill="currentColor" transform="translate(12.36 18.59) rotate(-90) scale(1.13 1)" style={azGlyph(13.22)}>l</text>
+    </>);
+    case "spiral": return wrap(16.68, 16.94, <>
+      <path d="M8.49.81h3.95v1.09h-3.95V.81Z"/>
+      <path d="M3.43,1.74l3.54-1.74.48.98-3.54,1.74-.48-.98Z"/>
+      <path d="M0,6.5l2.29-3.21.89.64L.89,7.13l-.89-.64Z"/>
+      <path d="M.7,12.5L.01,8.62l1.08-.19.68,3.89-1.08.19Z"/>
+      <path d="M5.02,16.13l-3.06-2.49.69-.85,3.06,2.49-.69.85Z"/>
+      <path d="M10.02,16.94l-3.93-.4.11-1.09,3.93.4-.11,1.09Z"/>
+      <path d="M14.77,14.8l-3.46,1.9-.53-.96,3.46-1.9.53.96Z"/>
+      <path d="M14.36,13.13l1.28-3.73,1.04.35-1.28,3.73-1.04-.35Z"/>
+      <path d="M15.6,8.43l-3-2.56.71-.83,3,2.56-.71.83Z"/>
+      <path d="M4.9,10.18l1-3.82,1.06.28-1,3.82-1.06-.28Z"/>
+      <path d="M10.44,12.19l-.03-3.95h1.09s.03,3.94.03,3.94h-1.09Z"/>
+      <path d="M9.56,13.51l-3.55-1.73.48-.98,3.55,1.73-.48.98Z"/>
+      <path d="M11.48,5.82l-3.94.25-.07-1.09,3.94-.25.07,1.09Z"/>
+    </>);
+    case "random": return wrap(18.93, 18.02, <>
+      <circle cx="2.34" cy="2.34" r="2.34"/>
+      <circle cx="10.35" cy="5.19" r="2.34"/>
+      <circle cx="5.74" cy="11.91" r="2.34"/>
+      <circle cx="16.59" cy="15.68" r="2.34"/>
+    </>);
+    case "running": return wrap(21.36, 6.96, <>
+      <path d="M14.68,5.8l5.27-2.28v-.03l-5.27-2.31V0l6.67,2.96v1.06l-6.67,2.94v-1.16Z"/>
+      <text fill="currentColor" transform="translate(14.53 5.44) rotate(-90) scale(.87 1)" style={azGlyph(17.15)}>l</text>
+    </>);
+    case "zigzag": return wrap(24.06, 16.42, <>
+      <path d="M14.68,5.8l5.27-2.28v-.03l-5.27-2.31V0l6.67,2.96v1.06l-6.67,2.94v-1.16Z"/>
+      <text fill="currentColor" transform="translate(14.53 5.44) rotate(-90) scale(.87 1)" style={azGlyph(17.15)}>l</text>
+      <path d="M9.37,10.61l-5.27,2.28v.03l5.27,2.31v1.19l-6.67-2.96v-1.06l6.67-2.94v1.16Z"/>
+      <text fill="currentColor" transform="translate(9.52 10.97) rotate(90) scale(.87 1)" style={azGlyph(17.15)}>l</text>
+    </>);
+    case "followdot": return wrap(18.4, 19.03, <>
+      <path d="M3.91,16.89l-3.32,2.14-.59-.92,3.32-2.14.59.92Z"/>
+      <path d="M8.4,11.62l-2.12,3.33-.92-.59,2.12-3.33.92.59Z"/>
+      <path d="M12.93,6.54l-2.74,2.83-.79-.76,2.74-2.83.79.76Z"/>
+      <path d="M18.4,2.34c0,1.29-1.04,2.33-2.33,2.33-.79,0-1.49-.39-1.91-.98-.21-.29-.34-.62-.4-.98-.02-.12-.03-.24-.03-.37,0-1.29,1.04-2.34,2.34-2.34.69,0,1.3.3,1.72.77.24.26.42.57.52.92.06.21.09.42.09.65Z"/>
+    </>);
+    case "custom": return wrap(19.89, 22.13, <>
+      <path d="M16.01,14.53l-3.01,2.55-.71-.84,3.01-2.55.71.84Z"/>
+      <path d="M13.41,18.18l5.14,2.55.02-.02-1.63-5.51.91-.76,2.05,7.01-.81.69-6.55-3.2.88-.75Z"/>
+      <text fill="currentColor" transform="translate(14.01 13.69) rotate(-40.2) scale(.85 1)" style={azGlyph(17.58)}>l</text>
+      <text fill="currentColor" transform="translate(9.62 17.39) rotate(-40.2) scale(.85 1)" style={azGlyph(17.58)}>l</text>
+    </>);
+    default: return null;
+  }
 }
 
 // ── Timer done overlay ────────────────────────────────────────────────────────
@@ -1509,10 +1596,12 @@ export default function New() {
               onClick={() => setLang(l => { const next = l === "de" ? "en" : "de"; localStorage.setItem("appLang", next); return next; })}
               style={{ background: "transparent", border: `1px dashed ${BORDER_COL}`, borderRadius: "4px", cursor: "pointer", outline: "none", fontFamily: FONT_SANS, fontSize: "13px", color: LIGHT_TEXT, height: "29px", padding: "0 10px" }}
             >{lang === "de" ? "DE" : "EN"}</button>
+            {/* About hidden for now — re-enable when the page is ready
             <button
               onClick={() => navigate("/about-the-project")}
               style={{ background: "transparent", border: `1px dashed ${BORDER_COL}`, borderRadius: "4px", cursor: "pointer", outline: "none", fontFamily: FONT_SANS, fontSize: "13px", color: LIGHT_TEXT, height: "29px", padding: "0 10px" }}
             >{DE_new ? "Über das Projekt" : "About"}</button>
+            */}
           </div>
         </div>
 
@@ -3647,13 +3736,14 @@ export default function New() {
             >
               <IconEyeClosed color={navIconColor} />
             </button>
-            {/* Dark mode toggle (moved here from the left) */}
+            {/* Dark-mode toggle hidden for now — re-enable when dark mode is ready
             <button
               style={btnStyle(dark, { background: floatBg, color: navIconColor, width: "33px", padding: 0 }, surfaceLight)}
               onClick={(e) => { e.stopPropagation(); setDark(d => { const next = !d; localStorage.setItem("appTheme", next ? "dark" : "light"); return next; }); }}
             >
               <IconHalfCircle color={navIconColor} dark={dark} />
             </button>
+            */}
             {/* Menu button + dropdown — hidden in viewer mode */}
             {!inViewer && <div
               style={{ position: "relative" }}
@@ -3690,7 +3780,7 @@ export default function New() {
                     initial="hidden" animate="visible" exit="exit"
                     style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, display: "flex", flexDirection: "column", gap: "8px", alignItems: "flex-end" }}
                   >
-                    {(["Introduction", "CreateTool", "ToolCollection", "About"] as const).map((key) => (
+                    {(["Introduction", "CreateTool", "ToolCollection"] as const).map((key) => (
                       <motion.button
                         key={key}
                         variants={NAV_ITEM}

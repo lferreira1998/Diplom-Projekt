@@ -821,6 +821,27 @@ function azGlyph(fontSize: number, extra?: React.CSSProperties): React.CSSProper
     ...extra,
   };
 }
+// Checklist marks (designer SVGs). "Not yet" = hollow ABCArizona "o";
+// "done" = checkmark (angled stroke + rotated ABCArizona "l"). currentColor follows the row.
+function IconNotYet({ color = "currentColor", size = 13 }: { color?: string; size?: number }) {
+  const { width, height } = fitBox(8.4, 16.69, size);
+  return (
+    <svg width={width} height={height} viewBox="0 0 8.4 16.69" fill="currentColor"
+      style={{ flexShrink: 0, display: "block", color, overflow: "visible" }} xmlns="http://www.w3.org/2000/svg">
+      <text fill="currentColor" transform="translate(0 12.71)" style={azGlyph(15)}>o</text>
+    </svg>
+  );
+}
+function IconCheck({ color = "currentColor", size = 13 }: { color?: string; size?: number }) {
+  const { width, height } = fitBox(13.6, 15.91, size);
+  return (
+    <svg width={width} height={height} viewBox="0 0 13.6 15.91" fill="currentColor"
+      style={{ flexShrink: 0, display: "block", color, overflow: "visible" }} xmlns="http://www.w3.org/2000/svg">
+      <path d="M.93,8.28l1.78,2.85-.93.58-1.78-2.85.93-.58Z" />
+      <text fill="currentColor" transform="translate(11.17 5.41) rotate(-143.6) scale(.97 1)" style={azGlyph(15.4)}>l</text>
+    </svg>
+  );
+}
 function RuleIcon({ id, color }: { id: string; color: string }) {
   const wrap = (vbW: number, vbH: number, children: React.ReactNode, max = 19) => {
     const { width, height } = fitBox(vbW, vbH, max);
@@ -1901,8 +1922,12 @@ export default function New() {
       if (!currentToolId) setCurrentToolId(id);
       localStorage.setItem("hasCreatedTool", "1");
       setSavedId(id);
-    } catch {
-      setSaveError(lang === "de" ? "Fehler beim Speichern. Bitte erneut versuchen." : "Error saving. Please try again.");
+    } catch (e) {
+      console.error("[New] save failed:", e);
+      const err = e as { message?: string; details?: string; hint?: string; code?: string } | null;
+      const detail = [err?.message, err?.details, err?.hint, err?.code ? `(${err.code})` : ""]
+        .filter(Boolean).join(" · ") || String(e);
+      setSaveError((lang === "de" ? "Fehler beim Speichern: " : "Error saving: ") + detail);
     } finally {
       setSaving(false);
     }
@@ -2901,8 +2926,8 @@ export default function New() {
                         { ok: !!toolDescription.trim(), label: lang === "de" ? "Beschreibung" : "Description" },
                         { ok: !!previewVideoUrl,        label: lang === "de" ? "Vorschau-Video" : "Preview video" },
                       ].map(({ ok, label }) => (
-                        <span key={label} style={{ fontFamily: FONT_SANS, fontSize: "12px", color: ok ? (dark ? "rgba(240,232,220,0.4)" : "#aaa") : "#e05252", display: "flex", alignItems: "center", gap: "5px" }}>
-                          <span style={{ fontSize: "10px" }}>{ok ? "✓" : "○"}</span> {label}
+                        <span key={label} style={{ fontFamily: FONT_SANS, fontSize: "12px", color: ok ? (dark ? "rgba(240,232,220,0.4)" : "#aaa") : "#e05252", display: "flex", alignItems: "center", gap: "7px" }}>
+                          {ok ? <IconCheck size={13} /> : <IconNotYet size={13} />} {label}
                         </span>
                       ))}
                     </div>

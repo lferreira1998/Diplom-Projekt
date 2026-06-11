@@ -80,21 +80,10 @@ function NormalizeVisibleDashes() {
       "✓": `<svg viewBox="0 0 13.6 15.91" aria-hidden="true" style="width:13.6px;height:15.91px;display:block;overflow:visible;color:currentColor"><path fill="currentColor" d="M.93,8.28l1.78,2.85-.93.58-1.78-2.85.93-.58Z"/><text fill="currentColor" x="0" y="0" transform="translate(11.17 5.41) rotate(-143.6) scale(.97 1)" style="font-family:'az-sans',sans-serif;font-size:15.4px;font-variation-settings:'SRFF' 0,'wdth' 100,'wght' 350,'slnt' 0">l</text></svg>`,
       "○": `<svg viewBox="0 0 8.4 16.69" aria-hidden="true" style="width:8.4px;height:16.69px;display:block;overflow:visible;color:currentColor"><text fill="currentColor" x="0" y="12.71" style="font-family:'az-sans',sans-serif;font-size:15px;font-variation-settings:'SRFF' 0,'wdth' 100,'wght' 350,'slnt' 0">o</text></svg>`,
     };
-    const saveIcon = `<span data-save-icon-wrap="true" aria-hidden="true" style="position:relative;width:14.08px;height:21.51px;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;color:currentColor;margin-right:8px;vertical-align:middle"><svg class="st-save-icon-normal" viewBox="0 0 14.08 21.51" style="position:absolute;width:14.08px;height:21.51px;display:block;overflow:visible;transition:opacity 120ms ease"><path fill="currentColor" d="M6.5,11.86l-4.53,4.53-.77-.77,4.53-4.53.77.77Z"/><path fill="currentColor" d="M12.9,1.09H1.2V0s11.7,0,11.7,0v1.09Z"/><path fill="currentColor" d="M8.47,11.09l4.43,4.57-.71.73-4.43-4.57.71-.73Z"/><text fill="currentColor" x="0" y="0" transform="translate(0 16.39) scale(.78 1)" style="font-family:'az-sans',sans-serif;font-size:19.3px;font-variation-settings:'SRFF' 0,'wdth' 100,'wght' 350,'slnt' 0">l</text><text fill="currentColor" x="0" y="0" transform="translate(10.5 16.34) scale(.78 1)" style="font-family:'az-sans',sans-serif;font-size:19.24px;font-variation-settings:'SRFF' 0,'wdth' 100,'wght' 350,'slnt' 0">l</text></svg><svg class="st-save-icon-selected" viewBox="0 0 11.7 16.39" style="position:absolute;width:11.7px;height:16.39px;display:block;overflow:visible;opacity:0;transition:opacity 120ms ease"><path fill="currentColor" d="M11.35,15.78h.33v-.31l-.33.31Z"/><polygon fill="currentColor" points="11.7 0 11.7 1.1 11.68 1.1 11.68 15.47 11.35 15.78 10.69 16.39 5.54 11.62 .77 16.39 .23 15.84 0 15.61 0 0 11.7 0"/></svg></span>`;
-    if (!document.getElementById("st-save-icon-style")) {
-      const style = document.createElement("style");
-      style.id = "st-save-icon-style";
-      style.textContent = `
-        button[data-save-icon="true"]:hover .st-save-icon-normal,
-        button[data-save-icon="true"]:focus-visible .st-save-icon-normal,
-        button[data-save-icon="true"]:active .st-save-icon-normal { opacity: 0; }
-        button[data-save-icon="true"]:hover .st-save-icon-selected,
-        button[data-save-icon="true"]:focus-visible .st-save-icon-selected,
-        button[data-save-icon="true"]:active .st-save-icon-selected { opacity: 1 !important; }
-      `;
-      document.head.appendChild(style);
-    }
-
+    const saveIcons = {
+      normal: `<svg viewBox="0 0 14.08 21.51" aria-hidden="true" style="width:14.08px;height:21.51px;display:block;overflow:visible;color:currentColor"><path fill="currentColor" d="M6.5,11.86l-4.53,4.53-.77-.77,4.53-4.53.77.77Z"/><path fill="currentColor" d="M12.9,1.09H1.2V0s11.7,0,11.7,0v1.09Z"/><path fill="currentColor" d="M8.47,11.09l4.43,4.57-.71.73-4.43-4.57.71-.73Z"/><text fill="currentColor" x="0" y="0" transform="translate(0 16.39) scale(.78 1)" style="font-family:'az-sans',sans-serif;font-size:19.3px;font-variation-settings:'SRFF' 0,'wdth' 100,'wght' 350,'slnt' 0">l</text><text fill="currentColor" x="0" y="0" transform="translate(10.5 16.34) scale(.78 1)" style="font-family:'az-sans',sans-serif;font-size:19.24px;font-variation-settings:'SRFF' 0,'wdth' 100,'wght' 350,'slnt' 0">l</text></svg>`,
+      selected: `<svg viewBox="0 0 11.7 16.39" aria-hidden="true" style="width:11.7px;height:16.39px;display:block;overflow:visible;color:currentColor"><path fill="currentColor" d="M11.35,15.78h.33v-.31l-.33.31Z"/><polygon fill="currentColor" points="11.7 0 11.7 1.1 11.68 1.1 11.68 15.47 11.35 15.78 10.69 16.39 5.54 11.62 .77 16.39 .23 15.84 0 15.61 0 0 11.7 0"/></svg>`,
+    };
     const replaceStatusIcons = (root: ParentNode) => {
       root.querySelectorAll?.("span").forEach((span) => {
         const symbol = span.textContent?.trim() ?? "";
@@ -111,18 +100,20 @@ function NormalizeVisibleDashes() {
       });
     };
 
-    const replaceSaveIcons = (root: ParentNode) => {
+    const replaceCardSaveIcons = (root: ParentNode) => {
       root.querySelectorAll?.("button").forEach((button) => {
-        if (button.dataset.saveIcon === "true") return;
-        const text = button.textContent?.trim() ?? "";
-        const isSaveButton = /^(Save tool to collection|Tool zur Sammlung hinzufügen|Save privately|Privat speichern|Speichert|Saving)/i.test(text);
-        if (!isSaveButton) return;
-        button.dataset.saveIcon = "true";
-        button.style.display = "inline-flex";
-        button.style.alignItems = "center";
-        button.style.justifyContent = "center";
-        button.style.gap = button.style.gap || "0px";
-        button.insertAdjacentHTML("afterbegin", saveIcon);
+        const title = button.getAttribute("title") ?? "";
+        const isCardSave = title === "Zu My Tools hinzufügen" || title === "Aus My Tools entfernen";
+        if (!isCardSave) return;
+
+        const isSaved = title === "Aus My Tools entfernen";
+        if (button.dataset.cardSaveIcon === String(isSaved)) return;
+
+        button.dataset.cardSaveIcon = String(isSaved);
+        button.innerHTML = isSaved ? saveIcons.selected : saveIcons.normal;
+        button.style.color = isSaved
+          ? "#d4607a"
+          : (localStorage.getItem("appTheme") === "dark" ? "rgba(240,232,220,0.5)" : "#9a9daa");
       });
     };
 
@@ -141,7 +132,7 @@ function NormalizeVisibleDashes() {
 
     normalizeText(document.body);
     replaceStatusIcons(document.body);
-    replaceSaveIcons(document.body);
+    replaceCardSaveIcons(document.body);
     const observer = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
         mutation.addedNodes.forEach((node) => {
@@ -152,7 +143,7 @@ function NormalizeVisibleDashes() {
           } else if (node instanceof HTMLElement) {
             normalizeText(node);
             replaceStatusIcons(node);
-            replaceSaveIcons(node);
+            replaceCardSaveIcons(node);
           }
         });
       }

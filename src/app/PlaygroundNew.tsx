@@ -132,6 +132,7 @@ function ToolShape({ label, style, textStyle, href, videoLight, videoDark, bgLig
       <video
         key={video}
         ref={videoRef}
+        autoPlay
         muted
         loop
         playsInline

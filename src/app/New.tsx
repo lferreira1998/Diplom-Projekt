@@ -810,7 +810,7 @@ function RuleIcon({ id, color }: { id: string; color: string }) {
       {id === "drift"  && (<><path d="M3 8h10" {...s} /><path d="M3 12h6" {...s} /><path d="M3 16h8" {...s} /><path d="M15 12l5-3v6z" stroke={color} strokeWidth={1.6} fill={color} strokeLinejoin="round" /></>)}
       {id === "fade"   && (<><circle cx={5} cy={12} r={2.4} fill={color} /><circle cx={12} cy={12} r={1.9} fill={color} opacity={0.55} /><circle cx={18.5} cy={12} r={1.3} fill={color} opacity={0.28} /></>)}
       {id === "heavy"  && (<><path d="M9 7a3 3 0 016 0" {...s} /><path d="M7.5 7h9l1.5 12h-12z" {...s} /></>)}
-      {id === "magnet" && (<><path d="M7 3v8a5 5 0 0010 0V3" {...s} /><path d="M7 3h3.2M13.8 3H17" {...s} /><path d="M7 7.5h3M14 7.5h3" {...s} /></>)}
+      {id === "blackhole" && (<><circle cx={12} cy={12} r={4} fill={color} /><circle cx={12} cy={12} r={7} stroke={color} strokeWidth={1.4} fill="none" opacity={0.45} /><circle cx={12} cy={12} r={10} stroke={color} strokeWidth={0.8} fill="none" opacity={0.18} /></>)}
       {id === "ink"    && (<path d="M12 3s6 6.5 6 10.5a6 6 0 01-12 0C6 9.5 12 3 12 3z" {...s} />)}
       {/* Position */}
       {id === "standard"  && (<path d="M4 7h16M4 12h16M4 17h9" {...s} />)}
@@ -3260,19 +3260,19 @@ export default function New() {
                     <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
                       <div style={{ height: "36px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                          <RuleIcon id="magnet" color={dark ? DARK_TEXT : LIGHT_TEXT} />
-                          <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{DE ? "Magnet-Punkt" : "Magnet Point"}</span>
+                          <RuleIcon id="blackhole" color={dark ? DARK_TEXT : LIGHT_TEXT} />
+                          <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{DE ? "Schwarzes Loch" : "Black Hole"}</span>
                         </div>
                         <span onClick={() => setMagnetPoint(v => !v)} style={{ fontFamily: FONT_SANS, fontSize: "16px", color: descColor, cursor: "pointer" }}>{magnetPoint ? t.on : t.off}</span>
                       </div>
                       <motion.p key={magnetPoint ? "mp-on" : "mp-off"} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.18 }} style={{ fontFamily: FONT_SANS, fontSize: "13px", color: descColor, lineHeight: "1.45", margin: 0 }}>
                         {DE
-                          ? "Ein Punkt zieht den Text langsam zu sich. Ziehe ihn zum Platzieren."
-                          : "A draggable point slowly pulls text toward it. Drag to place it."}
+                          ? "Ein Punkt saugt den Text an und verschluckt ihn. Ziehe ihn zum Platzieren."
+                          : "A point pulls text toward it — letters spiral in and disappear. Drag to place it."}
                       </motion.p>
                       {magnetPoint && (
                         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                          <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{DE ? "Anziehungskraft" : "Attraction Strength"}</span>
+                          <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{DE ? "Sogkraft" : "Pull Strength"}</span>
                           <DoubleSlider value={Math.round(magnetPointStrength * 10)} min={1} max={10} step={1} onChange={v => setMagnetPointStrength(v / 10)} dark={dark} />
                         </div>
                       )}

@@ -1839,8 +1839,8 @@ export function WritingZone({
   const mousePosRef      = useRef<{ x: number; y: number } | null>(null);
   const [magnetTick, setMagnetTick] = useState(0);
 
-  // Magnet point (draggable fixed point that attracts text)
-  const magnetPointOffsetsRef = useRef<{ dx: number; dy: number; vx: number; vy: number }[]>([]);
+  // Black hole (draggable fixed point that pulls text in until letters vanish)
+  const magnetPointOffsetsRef = useRef<{ dx: number; dy: number; vx: number; vy: number; consumed: boolean; opacity: number }[]>([]);
   const [magnetPointDragging, setMagnetPointDragging] = useState(false);
   const magnetPointDragStartRef = useRef<{ mx: number; my: number; px: number; py: number } | null>(null);
   const magnetPointXRef  = useRef(magnetPointX);
@@ -1881,7 +1881,7 @@ export function WritingZone({
       charNat.current.push(null);
       charElsRef.current.push(null);
       magnetOffsetsRef.current.push({ dx: 0, dy: 0 });
-      magnetPointOffsetsRef.current.push({ dx: 0, dy: 0, vx: 0, vy: 0 });
+      magnetPointOffsetsRef.current.push({ dx: 0, dy: 0, vx: 0, vy: 0, consumed: false, opacity: 1 });
       const inkVal = inkEnabledRef.current ? inkLevelRef.current : 1.0;
       charInkRef.current.push(inkVal);
       if (inkEnabledRef.current) {
@@ -1994,12 +1994,12 @@ export function WritingZone({
   // Reset magnet-point offsets when turned off
   useEffect(() => {
     if (!magnetPoint) {
-      magnetPointOffsetsRef.current = magnetPointOffsetsRef.current.map(() => ({ dx: 0, dy: 0, vx: 0, vy: 0 }));
+      magnetPointOffsetsRef.current = magnetPointOffsetsRef.current.map(() => ({ dx: 0, dy: 0, vx: 0, vy: 0, consumed: false, opacity: 1 }));
       setMagnetTick(t => t + 1);
     }
   }, [magnetPoint]);
 
-  // Magnet point RAF loop: gentle, controlled attraction toward the fixed point.
+  // Black hole RAF loop: strong gravitational pull; letters spiral in and vanish.
   useEffect(() => {
     if (!magnetPoint) return;
     let animId: number;
@@ -2012,20 +2012,33 @@ export function WritingZone({
         const m = magnetPointOffsetsRef.current[i];
         const el = charElsRef.current[i];
         if (!m || !el) continue;
+        if (m.consumed) {
+          // Fade out after being swallowed
+          if (m.opacity > 0) {
+            m.opacity = Math.max(0, m.opacity - 0.09);
+            dirty = true;
+          }
+          continue;
+        }
         const rect = el.getBoundingClientRect();
-        // Current (already-offset) centre; subtract the offset to get the base centre.
         const cx = rect.left + rect.width / 2;
         const cy = rect.top + rect.height / 2;
         const ddx = px - cx;
         const ddy = py - cy;
         const dist = Math.sqrt(ddx * ddx + ddy * ddy) + 1;
-        const force = Math.min(dist * 0.00012, 0.09) * str;
+        // Black hole: strong inverse-distance force — letters accelerate as they close in
+        const force = str * Math.min(0.7, 55 / dist);
         m.vx += (ddx / dist) * force;
         m.vy += (ddy / dist) * force;
-        m.vx *= 0.90;
-        m.vy *= 0.90;
+        m.vx *= 0.86;
+        m.vy *= 0.86;
         m.dx += m.vx;
         m.dy += m.vy;
+        // Swallow the letter once it reaches the event horizon
+        if (dist < 14) {
+          m.consumed = true;
+          m.opacity = 1;
+        }
         dirty = true;
       }
       if (dirty) setMagnetTick(t => t + 1);
@@ -2769,9 +2782,14 @@ export function WritingZone({
       const mgY = (magnetCursor ? (magnetOffsetsRef.current[i]?.dy ?? 0) : 0)
                 + (magnetPoint  ? (magnetPointOffsetsRef.current[i]?.dy ?? 0) : 0);
 
-      const hasDriftOrMagnet = hasDrift || Math.abs(mgX) > 0.01 || Math.abs(mgY) > 0.01;
+      // Black hole: shrink + fade when consumed
+      const bhEntry = magnetPoint ? magnetPointOffsetsRef.current[i] : null;
+      const bhOpacity = (bhEntry?.consumed) ? (bhEntry.opacity ?? 1) : 1;
+      const bhScale   = (bhEntry?.consumed) ? Math.max(0.01, bhEntry.opacity ?? 1) : 1;
+
+      const hasDriftOrMagnet = hasDrift || Math.abs(mgX) > 0.01 || Math.abs(mgY) > 0.01 || bhScale < 1;
       const driftStyle: React.CSSProperties = hasDriftOrMagnet
-        ? { transform: `translate(${dx + mgX}px, ${dy + mgY}px) rotate(${rot}deg)`, zIndex: 10 }
+        ? { transform: `translate(${dx + mgX}px, ${dy + mgY}px) rotate(${rot}deg)${bhScale < 1 ? ` scale(${bhScale.toFixed(3)})` : ""}`, zIndex: 10 }
         : {};
 
       // Newlines
@@ -2795,7 +2813,7 @@ export function WritingZone({
               borderRadius: inSel1 ? "2px" : undefined,
               ...visStyle,
               ...driftStyle,
-              opacity: (visStyle.opacity ?? 1) as number * fadeOpacity,
+              opacity: (visStyle.opacity ?? 1) as number * fadeOpacity * bhOpacity,
             }}
           >
             {renderLayers(pos, showTippex, coverBgColor)}
@@ -2817,7 +2835,7 @@ export function WritingZone({
             borderRadius: inSel ? "2px" : undefined,
             ...visStyle,
             ...driftStyle,
-            opacity: (typeof visStyle.opacity === "number" ? visStyle.opacity : 1) * fadeOpacity * revealOpacity,
+            opacity: (typeof visStyle.opacity === "number" ? visStyle.opacity : 1) * fadeOpacity * revealOpacity * bhOpacity,
           }}
         >
           {renderLayers(pos, showTippex, coverBgColor)}
@@ -3179,19 +3197,19 @@ export function WritingZone({
         </div>,
         document.body
       )}
-      {/* Draggable magnet point dot */}
+      {/* Draggable black hole dot */}
       {magnetPoint && createPortal(
         <div
           style={{
             position: "fixed",
             left: `${magnetPointX * (typeof window !== "undefined" ? window.innerWidth : 1920)}px`,
             top:  `${magnetPointY * (typeof window !== "undefined" ? window.innerHeight : 1080)}px`,
-            width: 14, height: 14, borderRadius: "50%",
-            background: textColor,
+            width: 20, height: 20, borderRadius: "50%",
+            background: "radial-gradient(circle at 38% 38%, #333 0%, #000 55%, #000 100%)",
             transform: "translate(-50%, -50%)",
             cursor: magnetPointDragging ? "grabbing" : "grab",
             zIndex: 60, userSelect: "none",
-            boxShadow: "0 0 0 4px rgba(0,0,0,0.06)",
+            boxShadow: "0 0 0 2px rgba(255,255,255,0.55), 0 0 10px 4px rgba(0,0,0,0.45), 0 0 24px 8px rgba(0,0,0,0.18)",
           }}
           onMouseDown={(e) => {
             e.preventDefault();

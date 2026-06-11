@@ -275,10 +275,24 @@ function UserToolShape({ tool, style, onClick, dark }: {
   );
 }
 
-function HeartIcon({ filled, color }: { filled: boolean; color: string }) {
+// Bookmark icons (designer SVGs). "normal" = unsaved; "selected" = saved (filled).
+const AZ_GLYPH_STYLE = { fontFamily: "'ABCArizona'", fontVariationSettings: "'SRFF' 0,'wdth' 100,'wght' 350" };
+function BookmarkNormal({ color }: { color: string }) {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill={filled ? color : "none"} stroke={color} strokeWidth="1.8" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 22 L6.5 12.5 A5.5 5.5 0 1 0 12 7 A5.5 5.5 0 1 0 17.5 12.5 Z" strokeLinejoin="round" strokeLinecap="round" />
+    <svg width="14.08" height="21.51" viewBox="0 0 14.08 21.51" style={{ display: "block", overflow: "visible", color }} xmlns="http://www.w3.org/2000/svg">
+      <path fill="currentColor" d="M6.5,11.86l-4.53,4.53-.77-.77,4.53-4.53.77.77Z"/>
+      <path fill="currentColor" d="M12.9,1.09H1.2V0s11.7,0,11.7,0v1.09Z"/>
+      <path fill="currentColor" d="M8.47,11.09l4.43,4.57-.71.73-4.43-4.57.71-.73Z"/>
+      <text fill="currentColor" x="0" y="0" transform="translate(0 16.39) scale(.78 1)" style={{ ...AZ_GLYPH_STYLE, fontSize: "19.3px" }}>l</text>
+      <text fill="currentColor" x="0" y="0" transform="translate(10.5 16.34) scale(.78 1)" style={{ ...AZ_GLYPH_STYLE, fontSize: "19.24px" }}>l</text>
+    </svg>
+  );
+}
+function BookmarkSelected({ color }: { color: string }) {
+  return (
+    <svg width="11.7" height="16.39" viewBox="0 0 11.7 16.39" style={{ display: "block", overflow: "visible", color }} xmlns="http://www.w3.org/2000/svg">
+      <path fill="currentColor" d="M11.35,15.78h.33v-.31l-.33.31Z"/>
+      <polygon fill="currentColor" points="11.7 0 11.7 1.1 11.68 1.1 11.68 15.47 11.35 15.78 10.69 16.39 5.54 11.62 .77 16.39 .23 15.84 0 15.61 0 0 11.7 0"/>
     </svg>
   );
 }
@@ -507,7 +521,9 @@ function ToolCard({ tool, onClick, onDelete, isFavorite, onToggleFavorite, DE }:
           title={isFavorite ? "Aus My Tools entfernen" : "Zu My Tools hinzufügen"}
           style={{ position: "absolute", top: "10px", right: "10px", zIndex: 2, width: "26px", height: "26px", background: dark ? theme.panelBg : "#fef8ee", border: `1px dashed ${shapeBorder}`, borderRadius: "50%", cursor: "pointer", outline: "none", display: "flex", alignItems: "center", justifyContent: "center" }}
         >
-          <HeartIcon filled={!!isFavorite} color={isFavorite ? "#d4607a" : theme.muted} />
+          {isFavorite
+            ? <BookmarkSelected color="#d4607a" />
+            : <BookmarkNormal color={theme.muted} />}
         </button>
       )}
     </div>

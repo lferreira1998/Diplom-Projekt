@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Ebene_2" data-name="Ebene 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24.06 16.42">
+  <defs>
+    <style>
+      .cls-1 {
+        font-family: 'ABCArizonaSuperfamilyVariable_0.000SRFF_350.000wght', 'ABC Arizona Superfamily Variable Unlicensed Trial';
+        font-size: 17.15px;
+        font-variation-settings: 'SRFF' 0, 'wdth' 100, 'wght' 350, 'slnt' 0;
+      }
+
+      .cls-1, .cls-2 {
+        fill: #1d1d1b;
+      }
+    </style>
+  </defs>
+  <g id="Ebene_1-2" data-name="Ebene 1">
+    <path class="cls-2" d="M14.68,5.8l5.27-2.28v-.03l-5.27-2.31V0l6.67,2.96v1.06l-6.67,2.94v-1.16Z"/>
+    <text class="cls-1" transform="translate(14.53 5.44) rotate(-90) scale(.87 1)"><tspan x="0" y="0">l</tspan></text>
+    <path class="cls-2" d="M9.37,10.61l-5.27,2.28v.03l5.27,2.31v1.19l-6.67-2.96v-1.06l6.67-2.94v1.16Z"/>
+    <text class="cls-1" transform="translate(9.52 10.97) rotate(90) scale(.87 1)"><tspan x="0" y="0">l</tspan></text>
+  </g>
+</svg>

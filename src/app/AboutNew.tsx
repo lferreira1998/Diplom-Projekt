@@ -164,21 +164,13 @@ function edgePoint(n: MapNode, tx: number, ty: number, pad: number) {
   return { x: c.x + dx * s, y: c.y + dy * s };
 }
 
-// Gently bowed dashed connector that runs only in the gap between two nodes.
+// Straight dashed connector between two node image edges (no curve, like Figma).
 function connectorPath(a: MapNode, b: MapNode) {
   const ca = centre(a);
   const cb = centre(b);
-  const p1 = edgePoint(a, cb.x, cb.y, 14);
-  const p2 = edgePoint(b, ca.x, ca.y, 14);
-  const mx = (p1.x + p2.x) / 2;
-  const my = (p1.y + p2.y) / 2;
-  const dx = p2.x - p1.x;
-  const dy = p2.y - p1.y;
-  const len = Math.hypot(dx, dy) || 1;
-  const bow = len * 0.07;
-  const ctrlX = mx + (-dy / len) * bow;
-  const ctrlY = my + (dx / len) * bow;
-  return `M ${p1.x} ${p1.y} Q ${ctrlX} ${ctrlY} ${p2.x} ${p2.y}`;
+  const p1 = edgePoint(a, cb.x, cb.y, 10);
+  const p2 = edgePoint(b, ca.x, ca.y, 10);
+  return `M ${p1.x} ${p1.y} L ${p2.x} ${p2.y}`;
 }
 
 export default function AboutNew() {

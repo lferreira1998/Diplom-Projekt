@@ -218,8 +218,8 @@ export default function AboutNew() {
     setPanelOpen(true);
   };
 
-  const imgFilter = dark ? "invert(1) brightness(1.7) contrast(0.9)" : "none";
-  const imgBlend: React.CSSProperties["mixBlendMode"] = dark ? "screen" : "multiply";
+  const imgMix: React.CSSProperties["mixBlendMode"] = dark ? "screen" : "multiply";
+  const imgFilt = dark ? "invert(1) brightness(1.5) contrast(0.85)" : "none";
 
   return (
     <main
@@ -272,11 +272,11 @@ export default function AboutNew() {
               ×
             </button>
 
-            <div style={{ width: "100%", height: 167, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: "100%", height: 167, display: "flex", alignItems: "center", justifyContent: "center", isolation: "isolate", backgroundColor: T.asideBg }}>
               <img
                 src={active.img}
                 alt=""
-                style={{ maxWidth: "100%", maxHeight: 167, objectFit: "contain", mixBlendMode: imgBlend, filter: imgFilter }}
+                style={{ maxWidth: "100%", maxHeight: 167, objectFit: "contain", mixBlendMode: imgMix, filter: imgFilt }}
               />
             </div>
 
@@ -363,11 +363,13 @@ export default function AboutNew() {
                       display: "flex", flexDirection: "column", alignItems: "center", gap: 12,
                     }}
                   >
-                    <img
-                      src={n.img}
-                      alt=""
-                      style={{ width: n.w, height: n.h, objectFit: "contain", pointerEvents: "none", mixBlendMode: imgBlend, filter: imgFilter }}
-                    />
+                    <div style={{ isolation: "isolate", backgroundColor: T.bg, width: n.w, height: n.h, flexShrink: 0 }}>
+                      <img
+                        src={n.img}
+                        alt=""
+                        style={{ width: "100%", height: "100%", objectFit: "contain", display: "block", pointerEvents: "none", mixBlendMode: imgMix, filter: imgFilt }}
+                      />
+                    </div>
                     <span
                       className="aboutmap-label"
                       style={{

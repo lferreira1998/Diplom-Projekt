@@ -168,8 +168,8 @@ function edgePoint(n: MapNode, tx: number, ty: number, pad: number) {
 function connectorPath(a: MapNode, b: MapNode) {
   const ca = centre(a);
   const cb = centre(b);
-  const p1 = edgePoint(a, cb.x, cb.y, 10);
-  const p2 = edgePoint(b, ca.x, ca.y, 10);
+  const p1 = edgePoint(a, cb.x, cb.y, 0);
+  const p2 = edgePoint(b, ca.x, ca.y, 0);
   return `M ${p1.x} ${p1.y} L ${p2.x} ${p2.y}`;
 }
 

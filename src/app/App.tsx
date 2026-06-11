@@ -76,6 +76,27 @@ function GlobalRouteTopNav() {
 
 function NormalizeVisibleDashes() {
   useEffect(() => {
+    const statusIcons: Record<string, string> = {
+      "✓": `<svg viewBox="0 0 13.6 15.91" aria-hidden="true" style="width:13.6px;height:15.91px;display:block;overflow:visible;color:currentColor"><path fill="currentColor" d="M.93,8.28l1.78,2.85-.93.58-1.78-2.85.93-.58Z"/><text fill="currentColor" x="0" y="0" transform="translate(11.17 5.41) rotate(-143.6) scale(.97 1)" style="font-family:'az-sans',sans-serif;font-size:15.4px;font-variation-settings:'SRFF' 0,'wdth' 100,'wght' 350,'slnt' 0">l</text></svg>`,
+      "○": `<svg viewBox="0 0 8.4 16.69" aria-hidden="true" style="width:8.4px;height:16.69px;display:block;overflow:visible;color:currentColor"><text fill="currentColor" x="0" y="12.71" style="font-family:'az-sans',sans-serif;font-size:15px;font-variation-settings:'SRFF' 0,'wdth' 100,'wght' 350,'slnt' 0">o</text></svg>`,
+    };
+
+    const replaceStatusIcons = (root: ParentNode) => {
+      root.querySelectorAll?.("span").forEach((span) => {
+        const symbol = span.textContent?.trim() ?? "";
+        const icon = statusIcons[symbol];
+        if (!icon || span.dataset.statusIcon === "true") return;
+        span.dataset.statusIcon = "true";
+        span.innerHTML = icon;
+        span.style.display = "inline-flex";
+        span.style.alignItems = "center";
+        span.style.justifyContent = "center";
+        span.style.width = symbol === "✓" ? "13.6px" : "8.4px";
+        span.style.height = "16.69px";
+        span.style.flex = "0 0 auto";
+      });
+    };
+
     const normalizeText = (root: ParentNode) => {
       const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
       let node = walker.nextNode();
@@ -90,6 +111,7 @@ function NormalizeVisibleDashes() {
     };
 
     normalizeText(document.body);
+    replaceStatusIcons(document.body);
     const observer = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
         mutation.addedNodes.forEach((node) => {
@@ -99,6 +121,7 @@ function NormalizeVisibleDashes() {
               .replace(/[—–]/g, "-");
           } else if (node instanceof HTMLElement) {
             normalizeText(node);
+            replaceStatusIcons(node);
           }
         });
       }

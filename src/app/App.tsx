@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Routes, Route, Navigate, useLocation, useParams } from "react-router";
 import MobileGate from "./components/MobileGate";
 import TopNav from "./components/TopNav";
@@ -74,9 +74,46 @@ function GlobalRouteTopNav() {
   );
 }
 
+function NormalizeVisibleDashes() {
+  useEffect(() => {
+    const normalizeText = (root: ParentNode) => {
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      let node = walker.nextNode();
+      while (node) {
+        if (node.nodeValue && /[—–]/.test(node.nodeValue)) {
+          node.nodeValue = node.nodeValue
+            .replace(/\s[—–]\s/g, ", ")
+            .replace(/[—–]/g, "-");
+        }
+        node = walker.nextNode();
+      }
+    };
+
+    normalizeText(document.body);
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        mutation.addedNodes.forEach((node) => {
+          if (node.nodeType === Node.TEXT_NODE && node.nodeValue && /[—–]/.test(node.nodeValue)) {
+            node.nodeValue = node.nodeValue
+              .replace(/\s[—–]\s/g, ", ")
+              .replace(/[—–]/g, "-");
+          } else if (node instanceof HTMLElement) {
+            normalizeText(node);
+          }
+        });
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, []);
+
+  return null;
+}
+
 export default function App() {
   return (
     <MobileGate>
+    <NormalizeVisibleDashes />
     <GlobalRouteTopNav />
     <Routes>
       {/* ── Main routes ── */}

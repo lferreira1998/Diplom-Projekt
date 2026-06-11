@@ -59,19 +59,8 @@ function GlobalRouteTopNav() {
 
   const current = pathname.startsWith("/create-tool") ? "Create" : "Playground";
 
-  return (
-    <>
-      {pathname.startsWith("/create-tool") && (
-        <style>{`
-          div[data-html2canvas-ignore="true"][style*="top: 24px"][style*="right: 24px"][style*="z-index: 20"],
-          button[data-html2canvas-ignore="true"][style*="top: 12px"][style*="right: 12px"][style*="z-index: 20"] {
-            display: none !important;
-          }
-        `}</style>
-      )}
-      <TopNav current={current} dark={dark} setDark={setDark} lang={lang} setLang={setLang} />
-    </>
-  );
+  return <TopNav current={current} dark={dark} setDark={setDark} lang={lang} setLang={setLang} />;
+
 }
 
 function NormalizeVisibleDashes() {

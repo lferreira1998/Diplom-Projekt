@@ -134,8 +134,22 @@ export default function TopNav({
   const navigate = useNavigate();
   const navRef = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(true);
+  // true when hidden by New.tsx's focus mode (vs. our own eye button)
+  const [hiddenByNew, setHiddenByNew] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuHovered, setMenuHovered] = useState(false);
+
+  // Mirror New.tsx focus mode: when body[data-new-ui-hidden]="1" is set, hide.
+  // When removed, restore — but only if we were hidden by New.tsx (not our own eye).
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      const hidden = document.body.dataset.newUiHidden === "1";
+      if (hidden) { setVisible(false); setHiddenByNew(true); }
+      else { setHiddenByNew(false); setVisible(true); }
+    });
+    observer.observe(document.body, { attributes: true, attributeFilter: ["data-new-ui-hidden"] });
+    return () => observer.disconnect();
+  }, []);
 
   const L = LABELS[lang];
   const iconColor = dark ? DARK_TEXT : LIGHT_TEXT;
@@ -161,12 +175,15 @@ export default function TopNav({
             transition={{ duration: 0.15 }}
             style={{ position: "fixed", top: "24px", right: "24px", display: "flex", flexDirection: "row", alignItems: "center", gap: "10px", zIndex: 60 }}
           >
-            <button
-              style={{ ...btnStyle(dark), width: "33px", padding: 0 }}
-              onClick={(e) => { e.stopPropagation(); setVisible(false); setMenuOpen(false); }}
-            >
-              <IconEyeClosed color={iconColor} />
-            </button>
+            {/* Eye button only on non-Create routes — Create Tool has its own eye in New.tsx */}
+            {current !== "Create" && (
+              <button
+                style={{ ...btnStyle(dark), width: "33px", padding: 0 }}
+                onClick={(e) => { e.stopPropagation(); setVisible(false); setMenuOpen(false); }}
+              >
+                <IconEyeClosed color={iconColor} />
+              </button>
+            )}
             {/* Dark-mode toggle hidden for now — re-enable when dark mode is ready
             <button
               style={{ ...btnStyle(dark), width: "33px", padding: 0 }}
@@ -228,20 +245,24 @@ export default function TopNav({
             </div>
           </motion.div>
         ) : (
-          <motion.button
-            key="topnav-right-mini"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-            style={{
-              position: "fixed", top: "12px", right: "12px", zIndex: 60,
-              background: dark ? "rgba(240,232,220,0.06)" : "rgba(252,246,239,0.6)",
-              border: "none", borderRadius: "4px", cursor: "pointer", outline: "none",
-              padding: "4px 6px", display: "flex", alignItems: "center", justifyContent: "center",
-            }}
-            onClick={(e) => { e.stopPropagation(); setVisible(true); }}
-          >
-            <IconShowHidden color={iconColor} />
-          </motion.button>
+          // Don't render the restore button when New.tsx triggered the hide —
+          // New.tsx renders its own restore button at the same position.
+          !hiddenByNew ? (
+            <motion.button
+              key="topnav-right-mini"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              style={{
+                position: "fixed", top: "12px", right: "12px", zIndex: 60,
+                background: dark ? "rgba(240,232,220,0.06)" : "rgba(252,246,239,0.6)",
+                border: "none", borderRadius: "4px", cursor: "pointer", outline: "none",
+                padding: "4px 6px", display: "flex", alignItems: "center", justifyContent: "center",
+              }}
+              onClick={(e) => { e.stopPropagation(); setVisible(true); }}
+            >
+              <IconShowHidden color={iconColor} />
+            </motion.button>
+          ) : null
         )}
       </AnimatePresence>
     </>

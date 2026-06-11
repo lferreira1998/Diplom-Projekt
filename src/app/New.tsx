@@ -1566,6 +1566,13 @@ export default function New() {
   const [topRightWidth, setTopRightWidth] = useState(200);
   const writingZoneRef = useRef<HTMLDivElement>(null);
 
+  // Signal TopNav (and any other outside-React UI) to hide when focus mode is active.
+  useEffect(() => {
+    if (!visible) document.body.dataset.newUiHidden = "1";
+    else delete document.body.dataset.newUiHidden;
+    return () => { delete document.body.dataset.newUiHidden; };
+  }, [visible]);
+
   useEffect(() => {
     const measure = () => {
       if (topRightGroupRef.current) {

@@ -519,10 +519,10 @@ function ToolCard({ tool, onClick, onDelete, isFavorite, onToggleFavorite, DE }:
         <button
           onClick={(e) => { e.stopPropagation(); onToggleFavorite(); }}
           title={isFavorite ? "Aus My Tools entfernen" : "Zu My Tools hinzufügen"}
-          style={{ position: "absolute", top: "10px", right: "10px", zIndex: 2, width: "26px", height: "26px", background: dark ? theme.panelBg : "#fef8ee", border: `1px dashed ${shapeBorder}`, borderRadius: "50%", cursor: "pointer", outline: "none", display: "flex", alignItems: "center", justifyContent: "center" }}
+          style={{ position: "absolute", top: "10px", right: "10px", zIndex: 2, width: "26px", height: "26px", background: "transparent", border: "none", cursor: "pointer", outline: "none", display: "flex", alignItems: "center", justifyContent: "center" }}
         >
           {isFavorite
-            ? <BookmarkSelected color="#d4607a" />
+            ? <BookmarkSelected color={dark ? DARK_TEXT : LIGHT_TEXT} />
             : <BookmarkNormal color={theme.muted} />}
         </button>
       )}

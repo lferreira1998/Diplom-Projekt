@@ -457,7 +457,7 @@ export function RecordPreviewOverlay({
             <p style={{ fontFamily: FONT_SANS, fontSize: "13px", color: mutedCol, margin: "0 0 20px 0", letterSpacing: "0.03em" }}>
               {DE ? "Form auswählen" : "Choose a shape"}
             </p>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px" }}>
+            <div style={{ display: "flex", flexDirection: "row", gap: "10px" }}>
               {PICKABLE_SHAPES.map(s => (
                 <button
                   key={s.id}

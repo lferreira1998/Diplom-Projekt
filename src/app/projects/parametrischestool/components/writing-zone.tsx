@@ -3197,26 +3197,32 @@ export function WritingZone({
         </div>,
         document.body
       )}
-      {/* Draggable black hole dot */}
+      {/* Draggable black hole dot — designer SVG icon */}
       {magnetPoint && createPortal(
         <div
           style={{
             position: "fixed",
             left: `${magnetPointX * (typeof window !== "undefined" ? window.innerWidth : 1920)}px`,
             top:  `${magnetPointY * (typeof window !== "undefined" ? window.innerHeight : 1080)}px`,
-            width: 20, height: 20, borderRadius: "50%",
-            background: "radial-gradient(circle at 38% 38%, #333 0%, #000 55%, #000 100%)",
             transform: "translate(-50%, -50%)",
             cursor: magnetPointDragging ? "grabbing" : "grab",
             zIndex: 60, userSelect: "none",
-            boxShadow: "0 0 0 2px rgba(255,255,255,0.55), 0 0 10px 4px rgba(0,0,0,0.45), 0 0 24px 8px rgba(0,0,0,0.18)",
           }}
           onMouseDown={(e) => {
             e.preventDefault();
             magnetPointDragStartRef.current = { mx: e.clientX, my: e.clientY, px: magnetPointX, py: magnetPointY };
             setMagnetPointDragging(true);
           }}
-        />,
+        >
+          <svg width={44} height={44} viewBox="0 0 18.53 18.87" fill="none" xmlns="http://www.w3.org/2000/svg"
+            style={{ display: "block", color: "#555", overflow: "visible" }}>
+            <path fill="currentColor" d="M6.97.62c.73-.42,1.52-.62,2.38-.62s1.66.21,2.38.63c.73.42,1.44,1.03,2.15,1.84v1.06c-.74-.75-1.46-1.31-2.16-1.69-.7-.38-1.49-.57-2.37-.57s-1.67.19-2.37.57c-.71.38-1.42.94-2.16,1.69v-1.06c.71-.82,1.42-1.44,2.15-1.85Z"/>
+            <path fill="currentColor" d="M17.91,7c.42.73.62,1.52.62,2.38s-.21,1.66-.63,2.38c-.42.73-1.03,1.44-1.84,2.15h-1.06c.75-.74,1.31-1.46,1.69-2.16.38-.7.57-1.49.57-2.37s-.19-1.67-.57-2.37c-.38-.71-.94-1.42-1.69-2.16h1.06c.82.71,1.44,1.42,1.85,2.15Z"/>
+            <path fill="currentColor" d="M.62,11.75C.21,11.03,0,10.23,0,9.38s.21-1.66.63-2.38c.42-.73,1.03-1.44,1.84-2.15h1.06c-.75.74-1.31,1.46-1.69,2.16-.38.7-.57,1.49-.57,2.37s.19,1.67.57,2.37c.38.71.94,1.42,1.69,2.16h-1.06c-.82-.71-1.44-1.42-1.85-2.15Z"/>
+            <path fill="currentColor" d="M11.72,18.25c-.73.42-1.52.62-2.38.62s-1.66-.21-2.38-.63c-.73-.42-1.44-1.03-2.15-1.84v-1.06c.74.75,1.46,1.31,2.16,1.69.7.38,1.49.57,2.37.57s1.67-.19,2.37-.57c.71-.38,1.42-.94,2.16-1.69v1.06c-.71.82-1.42,1.44-2.15,1.85Z"/>
+            <path fill="currentColor" d="M14.03,12.08c-.46.78-1.1,1.39-1.91,1.82-.81.44-1.73.65-2.75.65s-1.96-.22-2.78-.65c-.82-.43-1.47-1.04-1.93-1.82-.46-.78-.69-1.66-.69-2.64s.23-1.88.69-2.65c.46-.78,1.1-1.39,1.93-1.82.83-.44,1.75-.65,2.78-.65s1.94.22,2.75.65,1.45,1.04,1.91,1.82c.46.78.69,1.67.69,2.65s-.23,1.86-.69,2.64ZM13.06,7.46c-.35-.58-.85-1.04-1.5-1.36-.65-.32-1.38-.48-2.2-.48s-1.57.16-2.22.48c-.65.32-1.15.77-1.51,1.36-.36.58-.54,1.25-.54,1.99s.18,1.4.54,1.97c.36.58.86,1.02,1.51,1.35.65.32,1.39.49,2.22.49s1.55-.16,2.2-.49c.65-.33,1.15-.77,1.5-1.35.36-.58.53-1.23.53-1.97s-.18-1.4-.53-1.99Z"/>
+          </svg>
+        </div>,
         document.body
       )}
       {/* Wrap-around clones rendered as portal so they're not clipped */}

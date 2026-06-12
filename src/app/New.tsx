@@ -1477,13 +1477,14 @@ export default function New() {
   const CANVAS_MODES = new Set(["spiral", "custom", "zigzag", "followdot"]);
   const applyPositionMode = useCallback((
     mode: "standard" | "spiral" | "random" | "running" | "custom" | "zigzag" | "followdot",
-    opts: { setTextFliegtEnabled: (v: boolean) => void; setCursorRunning: (v: boolean) => void; setCorrectionVisible: (v: boolean) => void; setTextSchwerEnabled: (v: boolean) => void; textFliegtEnabled: boolean; cursorRunning: boolean; correctionVisible: boolean; textSchwerEnabled: boolean; de: boolean; posNames: Record<string, string> }
+    opts: { setTextFliegtEnabled: (v: boolean) => void; setCursorRunning: (v: boolean) => void; setCorrectionVisible: (v: boolean) => void; setTextSchwerEnabled: (v: boolean) => void; setMagnetPoint: (v: boolean) => void; textFliegtEnabled: boolean; cursorRunning: boolean; correctionVisible: boolean; textSchwerEnabled: boolean; magnetPointEnabled: boolean; de: boolean; posNames: Record<string, string> }
   ) => {
     setPositionMode(mode);
     if (mode === "standard" || !CANVAS_MODES.has(mode)) return;
     const turned: string[] = [];
     if (opts.textFliegtEnabled) { opts.setTextFliegtEnabled(false); turned.push(opts.de ? "Text fliegt davon" : "Text drift"); }
     if (opts.textSchwerEnabled) { opts.setTextSchwerEnabled(false); turned.push(opts.de ? "Text wird schwer" : "Text gets heavy"); }
+    if (opts.magnetPointEnabled) { opts.setMagnetPoint(false); turned.push(opts.de ? "Schwarzes Loch" : "Black Hole"); }
     if (turned.length > 0) {
       const posLabel = opts.posNames[mode] ?? mode;
       showCompatMsg(opts.de
@@ -1514,6 +1515,19 @@ export default function New() {
       showCompatMsg(de
         ? `Text wird schwer aktiv. Position zurück auf Standard.`
         : `Text gets heavy enabled. Position reset to Standard.`
+      );
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDOMIncompatible, showCompatMsg]);
+
+  // Smart magnetPoint setter — resets position for canvas-based modes
+  const applyMagnetPoint = useCallback((enabled: boolean, de: boolean) => {
+    setMagnetPoint(enabled);
+    if (enabled && isDOMIncompatible) {
+      setPositionMode("standard");
+      showCompatMsg(de
+        ? `Schwarzes Loch aktiv. Position zurück auf Standard.`
+        : `Black Hole enabled. Position reset to Standard.`
       );
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -3377,24 +3391,33 @@ export default function New() {
                       )}
                     </div>
 
-                    {/* Magnet Point card */}
-                    <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
-                      <div style={{ height: "36px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                          <RuleIcon id="blackhole" color={dark ? DARK_TEXT : LIGHT_TEXT} />
-                          <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{DE ? "Schwarzes Loch" : "Black Hole"}</span>
+                    {/* Magnet Point (Black Hole) card */}
+                    <div style={{ position: "relative" }}>
+                      <div style={{ background: settingsCardBg, border: `1px dashed ${innerBorder}`, borderRadius: "8px", padding: "12px 24px 24px", display: "flex", flexDirection: "column", gap: "16px", opacity: isDOMIncompatible ? 0.55 : 1, transition: "opacity 0.2s" }}>
+                        <div style={{ height: "36px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                            <RuleIcon id="blackhole" color={dark ? DARK_TEXT : LIGHT_TEXT} />
+                            <span style={{ fontFamily: FONT_SANS, fontSize: "16px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{DE ? "Schwarzes Loch" : "Black Hole"}</span>
+                          </div>
+                          <span onClick={() => applyMagnetPoint(!magnetPoint, DE)} style={{ fontFamily: FONT_SANS, fontSize: "16px", color: descColor, cursor: "pointer" }}>{magnetPoint ? t.on : t.off}</span>
                         </div>
-                        <span onClick={() => setMagnetPoint(v => !v)} style={{ fontFamily: FONT_SANS, fontSize: "16px", color: descColor, cursor: "pointer" }}>{magnetPoint ? t.on : t.off}</span>
+                        <motion.p key={magnetPoint ? "mp-on" : "mp-off"} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.18 }} style={{ fontFamily: FONT_SANS, fontSize: "13px", color: descColor, lineHeight: "1.45", margin: 0 }}>
+                          {DE
+                            ? "Ein Punkt saugt den Text an und verschluckt ihn. Ziehe ihn zum Platzieren."
+                            : "A point pulls text toward it — letters spiral in and disappear. Drag to place it."}
+                        </motion.p>
+                        {magnetPoint && (
+                          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                            <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{DE ? "Sogkraft" : "Pull Strength"}</span>
+                            <DoubleSlider value={Math.round(magnetPointStrength * 10)} min={1} max={10} step={1} onChange={v => setMagnetPointStrength(v / 10)} dark={dark} />
+                          </div>
+                        )}
                       </div>
-                      <motion.p key={magnetPoint ? "mp-on" : "mp-off"} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.18 }} style={{ fontFamily: FONT_SANS, fontSize: "13px", color: descColor, lineHeight: "1.45", margin: 0 }}>
-                        {DE
-                          ? "Ein Punkt saugt den Text an und verschluckt ihn. Ziehe ihn zum Platzieren."
-                          : "A point pulls text toward it — letters spiral in and disappear. Drag to place it."}
-                      </motion.p>
-                      {magnetPoint && (
-                        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                          <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: dark ? DARK_TEXT : LIGHT_TEXT }}>{DE ? "Sogkraft" : "Pull Strength"}</span>
-                          <DoubleSlider value={Math.round(magnetPointStrength * 10)} min={1} max={10} step={1} onChange={v => setMagnetPointStrength(v / 10)} dark={dark} />
+                      {isDOMIncompatible && (
+                        <div style={{ position: "absolute", bottom: "10px", left: 0, right: 0, textAlign: "center", pointerEvents: "none" }}>
+                          <span style={{ fontFamily: FONT_SANS, fontSize: "11px", color: descColor }}>
+                            {DE ? "Aktivieren setzt Position auf Standard zurück" : "Enabling resets position to Standard"}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -3432,7 +3455,7 @@ export default function New() {
                         <div onClick={() => {
                           if (opt.value === "custom") setDrawnPath([]);
                           const posNames = { spiral: t.posSpiral, random: t.posRandom, running: t.posRunning, custom: t.posCustom, standard: t.posStandard, zigzag: t.posZigzag, followdot: t.posFollowDot };
-                          applyPositionMode(opt.value, { setTextFliegtEnabled, setCursorRunning, setCorrectionVisible, setTextSchwerEnabled, textFliegtEnabled, cursorRunning, correctionVisible, textSchwerEnabled, de: DE, posNames });
+                          applyPositionMode(opt.value, { setTextFliegtEnabled, setCursorRunning, setCorrectionVisible, setTextSchwerEnabled, setMagnetPoint, textFliegtEnabled, cursorRunning, correctionVisible, textSchwerEnabled, magnetPointEnabled: magnetPoint, de: DE, posNames });
                         }} style={{
                           display: "flex", alignItems: "center", justifyContent: "space-between",
                           border: positionMode === opt.value
@@ -3446,6 +3469,11 @@ export default function New() {
                           <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
                             <RuleIcon id={opt.value} color={dark ? DARK_TEXT : LIGHT_TEXT} />
                             <span style={{ fontFamily: FONT_SANS, fontSize: "15px", fontWeight: positionMode === opt.value ? 600 : 400, color: dark ? DARK_TEXT : LIGHT_TEXT, lineHeight: "1.4" }}>{opt.label}</span>
+                            {(["spiral","custom","zigzag","followdot"] as const).includes(opt.value as "spiral"|"custom"|"zigzag"|"followdot") && (magnetPoint || textFliegtEnabled || textSchwerEnabled) && positionMode !== opt.value && (
+                              <span style={{ fontFamily: FONT_SANS, fontSize: "11px", color: descColor, opacity: 0.7 }}>
+                                {"– " + [magnetPoint && (DE ? "Schwarzes Loch" : "Black Hole"), textFliegtEnabled && (DE ? "Text fliegt" : "Drift"), textSchwerEnabled && (DE ? "Schwer" : "Heavy")].filter(Boolean).join(", ")}
+                              </span>
+                            )}
                           </div>
                           <RadioCircle selected={positionMode === opt.value} dark={dark} />
                         </div>

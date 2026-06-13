@@ -141,6 +141,74 @@ function toRgba(color: string, alpha: number): string {
   return `rgba(242,243,246,${alpha})`;
 }
 
+// ── Experimental per-glyph physics ──────────────────────────────────────────
+// On /create_experimental the three "physics" effects (drift, heavy, black hole)
+// are layered on top of every layout renderer. Each renderer recomputes its
+// glyph screen positions every frame; this helper accumulates a per-glyph
+// displacement so the effects compose with whatever layout placed the glyph.
+interface GlyphPhys { dx: number; dy: number; vx: number; vy: number; consumed: boolean; opacity: number; }
+interface ExpPhysParams {
+  active: boolean;
+  driftet: boolean; driftSpeed: number; driftDelay: number;
+  schwer: boolean; schwerDelay: number; schwerSchnelligkeit: number;
+  magnetPoint: boolean; magnetPointX: number; magnetPointY: number; magnetPointStrength: number;
+}
+function newGlyphPhys(): GlyphPhys { return { dx: 0, dy: 0, vx: 0, vy: 0, consumed: false, opacity: 1 }; }
+function physActive(p: ExpPhysParams): boolean {
+  return p.active && (p.driftet || p.schwer || p.magnetPoint);
+}
+// Physics props the layout renderers accept in experimental mode.
+interface ExpPhysProps {
+  experimental?: boolean;
+  driftet?: boolean; driftSpeed?: number; driftDelay?: number;
+  schwer?: boolean; schwerDelay?: number; schwerSchnelligkeit?: number;
+  magnetPoint?: boolean; magnetPointX?: number; magnetPointY?: number; magnetPointStrength?: number;
+}
+function physParamsFrom(p: ExpPhysProps): ExpPhysParams {
+  return {
+    active: !!p.experimental,
+    driftet: !!p.driftet, driftSpeed: p.driftSpeed ?? 100, driftDelay: p.driftDelay ?? 0,
+    schwer: !!p.schwer, schwerDelay: p.schwerDelay ?? 0, schwerSchnelligkeit: p.schwerSchnelligkeit ?? 50,
+    magnetPoint: !!p.magnetPoint, magnetPointX: p.magnetPointX ?? 0.5, magnetPointY: p.magnetPointY ?? 0.32,
+    magnetPointStrength: p.magnetPointStrength ?? 0.5,
+  };
+}
+// Advance one glyph by a single animation frame (≈60fps, matching the existing
+// standard-layout loops which integrate per-frame). screenX/screenY are the
+// glyph's current laid-out position in *viewport* pixels, so the black-hole
+// point (stored as viewport fractions) lands correctly. Mutates and returns st.
+function stepGlyphPhys(st: GlyphPhys, screenX: number, screenY: number, ageMs: number, p: ExpPhysParams): GlyphPhys {
+  // Heavy — gravity pulls the glyph straight down once its delay has elapsed.
+  if (p.schwer && ageMs > p.schwerDelay * 1000) {
+    st.vy += 0.12 + (p.schwerSchnelligkeit / 100) * 1.4;
+  }
+  // Drift — a gentle random shove (slight upward bias) after the delay.
+  if (p.driftet && ageMs > p.driftDelay * 1000) {
+    const spd = p.driftSpeed / 100;
+    st.vx += (Math.random() - 0.5) * 0.5 * spd;
+    st.vy += ((Math.random() - 0.5) * 0.4 - 0.05) * spd;
+  }
+  // Black hole — pull the glyph's *current* position toward the point; once it
+  // crosses the event horizon it is swallowed and fades out.
+  if (p.magnetPoint && !st.consumed) {
+    const px = p.magnetPointX * window.innerWidth;
+    const py = p.magnetPointY * window.innerHeight;
+    const gx = screenX + st.dx, gy = screenY + st.dy;
+    const ddx = px - gx, ddy = py - gy;
+    const dist = Math.hypot(ddx, ddy) + 1;
+    const str = Math.max(0, Math.min(1, p.magnetPointStrength));
+    const force = str * Math.min(13, 900 / dist);
+    st.vx += (ddx / dist) * force;
+    st.vy += (ddy / dist) * force;
+    if (dist < 16) st.consumed = true;
+  }
+  const damp = (p.magnetPoint && !st.consumed) ? 0.86 : 0.93;
+  st.vx *= damp; st.vy *= damp;
+  st.dx += st.vx; st.dy += st.vy;
+  if (st.consumed && st.opacity > 0) st.opacity = Math.max(0, st.opacity - 0.08);
+  return st;
+}
+
 // ── Boundary (deleteMode) ─────────────────────────────────────────────────────
 
 const SENTENCE_TERM = new Set([".", "!", "?"]);
@@ -788,7 +856,7 @@ function parseRgb(color: string): [number, number, number] {
   return [49, 54, 66];
 }
 
-interface SpiralCanvasProps {
+interface SpiralCanvasProps extends ExpPhysProps {
   positions: Position[];
   cursor: number;
   textColor: string;
@@ -818,9 +886,11 @@ function SpiralCanvas({
   fontFamily = "'az-sans', sans-serif",
   coverBgColor = "#f2f3f6",
   fontSize = 20,
+  ...physProps
 }: SpiralCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef   = useRef<HTMLDivElement>(null);
+  const physRef   = useRef<Map<number, GlyphPhys>>(new Map());
   const [cursorOn, setCursorOn] = useState(true);
   const [size, setSize]         = useState({ w: 0, h: 0 });
 
@@ -928,7 +998,7 @@ function SpiralCanvas({
     const nowMs  = Date.now();
 
     interface CP {
-      x: number; y: number; char: string;
+      x: number; y: number; char: string; posIdx: number;
       fs: number; opacity: number; rot: number; shouldHide: boolean; isCover: boolean;
     }
     const cps: CP[] = [];
@@ -960,17 +1030,32 @@ function SpiralCanvas({
       const rot = curAngle - Math.PI / 2;
 
       cps.unshift({
-        x, y, char: chars[i], fs, opacity, rot,
+        x, y, char: chars[i], posIdx: charInfos[i]?.posIdx ?? i, fs, opacity, rot,
         shouldHide: charInfos[i]?.shouldHide ?? false,
         isCover: charInfos[i]?.isCover ?? false,
       });
     }
 
+    // Experimental physics: displace each glyph from its spiral position.
+    const pp = physParamsFrom(physProps);
+    const physOn = physActive(pp);
+    if (!physOn) physRef.current.clear();
+    const rect = physOn ? canvas.getBoundingClientRect() : null;
+
     // draw oldest → newest
     for (const cp of cps) {
       if (cp.shouldHide) continue;
+      let dx = 0, dy = 0, alpha = 1;
+      if (physOn && rect) {
+        let st = physRef.current.get(cp.posIdx);
+        if (!st) { st = newGlyphPhys(); physRef.current.set(cp.posIdx, st); }
+        const age = nowMs - (posTimesRef.current[cp.posIdx] ?? nowMs);
+        stepGlyphPhys(st, rect.left + cp.x, rect.top + cp.y, age, pp);
+        dx = st.dx; dy = st.dy; alpha = st.opacity;
+        if (st.consumed && st.opacity <= 0) continue;
+      }
       ctx.save();
-      ctx.translate(cp.x, cp.y);
+      ctx.translate(cp.x + dx, cp.y + dy);
       ctx.rotate(cp.rot);
       ctx.font = `${cp.fs}px ${fontFamily}`;
       if (cp.isCover) {
@@ -978,7 +1063,7 @@ function SpiralCanvas({
         ctx.fillStyle = coverBgColor;
         ctx.fillRect(-cw * 0.6, -cp.fs * 0.6, cw * 1.2, cp.fs * 1.2);
       } else {
-        ctx.fillStyle = `rgba(${r},${g},${b},${Math.min(1, cp.opacity)})`;
+        ctx.fillStyle = `rgba(${r},${g},${b},${Math.min(1, cp.opacity * alpha)})`;
         ctx.textAlign    = "center";
         ctx.textBaseline = "middle";
         ctx.fillText(cp.char, 0, 0);
@@ -995,7 +1080,10 @@ function SpiralCanvas({
       ctx.restore();
     }
   }, [positions, cursor, textColor, coverBgColor, visibility, split, verblasst, posTimesRef,
-      verblassenDelay, verblassenSpeed, cursorOn, size, driftTick, fontFamily, fontSize]);
+      verblassenDelay, verblassenSpeed, cursorOn, size, driftTick, fontFamily, fontSize,
+      physProps.experimental, physProps.driftet, physProps.schwer, physProps.magnetPoint,
+      physProps.magnetPointX, physProps.magnetPointY, physProps.magnetPointStrength,
+      physProps.driftDelay, physProps.driftSpeed, physProps.schwerDelay, physProps.schwerSchnelligkeit]);
 
   return (
     <div ref={wrapRef} style={{ position: "absolute", inset: 0 }}>
@@ -1006,7 +1094,7 @@ function SpiralCanvas({
 
 // ── RunningLineCanvas ─────────────────────────────────────────────────────────
 
-interface RunningLineCanvasProps {
+interface RunningLineCanvasProps extends ExpPhysProps {
   positions: Position[];
   cursor: number;
   textColor: string;
@@ -1036,9 +1124,11 @@ function RunningLineCanvas({
   driftTick,
   fontFamily = "'az-sans', sans-serif",
   fontSize = 20,
+  ...physProps
 }: RunningLineCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef   = useRef<HTMLDivElement>(null);
+  const physRef   = useRef<Map<number, GlyphPhys>>(new Map());
   const [cursorOn, setCursorOn] = useState(true);
   const [size, setSize]         = useState({ w: 0, h: 0 });
 
@@ -1111,6 +1201,12 @@ function RunningLineCanvas({
     // Start x so cursor lands at cx
     let x = cx - preWidth;
 
+    // Experimental physics: displace each glyph from its position on the line.
+    const pp = physParamsFrom(physProps);
+    const physOn = physActive(pp);
+    if (!physOn) physRef.current.clear();
+    const rect = physOn ? canvas.getBoundingClientRect() : null;
+
     for (let i = 0; i < charInfos.length; i++) {
       const ci = charInfos[i];
       const w  = charWidths[i];
@@ -1119,9 +1215,19 @@ function RunningLineCanvas({
 
       if (charX + w < -200 || charX > W + 200) continue;
 
+      let dx = 0, dy = 0, pAlpha = 1;
+      if (physOn && rect) {
+        let st = physRef.current.get(ci.posIdx);
+        if (!st) { st = newGlyphPhys(); physRef.current.set(ci.posIdx, st); }
+        const age = nowMs - (posTimesRef.current[ci.posIdx] ?? nowMs);
+        stepGlyphPhys(st, rect.left + charX, rect.top + baseline, age, pp);
+        dx = st.dx; dy = st.dy; pAlpha = st.opacity;
+        if (st.consumed && st.opacity <= 0) continue;
+      }
+
       if (ci.isCover) {
         ctx.fillStyle = coverBgColor;
-        ctx.fillRect(charX, cy - fs * 0.75, w, fs * 1.1);
+        ctx.fillRect(charX + dx, cy - fs * 0.75 + dy, w, fs * 1.1);
       } else if (!ci.shouldHide) {
         let alpha = 1;
         if (verblasst && ci.posIdx < cursor) {
@@ -1129,8 +1235,8 @@ function RunningLineCanvas({
           const delay = verblassenDelay / 10;
           alpha = Math.max(0, 1 - Math.max(0, age - delay) * (verblassenSpeed / 100) * 0.5);
         }
-        ctx.fillStyle = `rgba(${r},${g},${b},${alpha})`;
-        ctx.fillText(ci.char, charX, baseline);
+        ctx.fillStyle = `rgba(${r},${g},${b},${alpha * pAlpha})`;
+        ctx.fillText(ci.char, charX + dx, baseline + dy);
       }
     }
 
@@ -1140,7 +1246,10 @@ function RunningLineCanvas({
       ctx.fillRect(cx, cy - fs * 0.55, 2, fs * 1.1);
     }
   }, [positions, cursor, textColor, coverBgColor, visibility, split, verblasst, posTimesRef,
-      verblassenDelay, verblassenSpeed, driftTick, fontFamily, fontSize, size, cursorOn]);
+      verblassenDelay, verblassenSpeed, driftTick, fontFamily, fontSize, size, cursorOn,
+      physProps.experimental, physProps.driftet, physProps.schwer, physProps.magnetPoint,
+      physProps.magnetPointX, physProps.magnetPointY, physProps.magnetPointStrength,
+      physProps.driftDelay, physProps.driftSpeed, physProps.schwerDelay, physProps.schwerSchnelligkeit]);
 
   return (
     <div ref={wrapRef} style={{ position: "absolute", inset: 0 }}>
@@ -1221,7 +1330,7 @@ function cpSplitAt(pts: CpPt[], localOff: number, total: number): { used: CpPt[]
 const cpMeasCanvas: HTMLCanvasElement | null = typeof document !== "undefined" ? document.createElement("canvas") : null;
 const cpMeasCtx = cpMeasCanvas?.getContext("2d") ?? null;
 
-interface CustomPathSvgProps {
+interface CustomPathSvgProps extends ExpPhysProps {
   positions: Position[];
   cursor: number;
   textColor: string;
@@ -1233,6 +1342,7 @@ interface CustomPathSvgProps {
   dark?: boolean;
   isDe?: boolean;
   writingPrompt?: string;
+  posTimesRef?: React.MutableRefObject<number[]>;
 }
 
 function CustomPathSvg({
@@ -1247,9 +1357,16 @@ function CustomPathSvg({
   dark = false,
   isDe = true,
   writingPrompt = "",
+  posTimesRef,
+  experimental = false,
+  driftet = false, driftSpeed = 100, driftDelay = 0,
+  schwer = false, schwerDelay = 0, schwerSchnelligkeit = 50,
+  magnetPoint = false, magnetPointX = 0.5, magnetPointY = 0.32, magnetPointStrength = 0.5,
 }: CustomPathSvgProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
+  const physRef = useRef<Map<number, GlyphPhys>>(new Map());
+  const [physTick, setPhysTick] = useState(0);
   const [dims, setDims] = useState({ w: 0, h: 0 });
   const [livePoints, setLivePoints] = useState<CpPt[]>([]);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -1335,6 +1452,36 @@ function CustomPathSvg({
     if (cursorOff < 0) cursorOff = off;
     return { placed, cursorOffset: cursorOff, totalCharLen: off };
   }, [positions, cursor, totalLen, charW, fontSize, ptAtGlobal]);
+
+  // Experimental physics: pull/drift/drop the glyphs placed along the path.
+  const pp = physParamsFrom({ experimental, driftet, driftSpeed, driftDelay, schwer, schwerDelay, schwerSchnelligkeit, magnetPoint, magnetPointX, magnetPointY, magnetPointStrength });
+  const physOn = physActive(pp);
+  const placedRef = useRef(charsPlaced.placed);
+  placedRef.current = charsPlaced.placed;
+  const ppRef = useRef(pp);
+  ppRef.current = pp;
+  void physTick; // re-render each frame while physics runs
+  useEffect(() => {
+    if (!physOn) { physRef.current.clear(); setPhysTick(t => t + 1); return; }
+    let id = 0;
+    const loop = () => {
+      const svg = svgRef.current;
+      const rect = svg ? svg.getBoundingClientRect() : null;
+      const now = Date.now();
+      if (rect) {
+        for (const c of placedRef.current) {
+          let st = physRef.current.get(c.posIdx);
+          if (!st) { st = newGlyphPhys(); physRef.current.set(c.posIdx, st); }
+          const age = now - (posTimesRef?.current[c.posIdx] ?? now);
+          stepGlyphPhys(st, rect.left + c.x, rect.top + c.y, age, ppRef.current);
+        }
+      }
+      setPhysTick(t => t + 1);
+      id = requestAnimationFrame(loop);
+    };
+    id = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(id);
+  }, [physOn]);
 
   // Placeholder chars along the path when no text has been typed yet
   const placeholderCharsOnPath = useMemo(() => {
@@ -1488,20 +1635,26 @@ function CustomPathSvg({
           <path d={cpSvgPathD(livePoints)} fill="none" stroke={liveColor} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
         )}
 
-        {charsPlaced.placed.map((c, idx) => (
+        {charsPlaced.placed.map((c, idx) => {
+          const st = physOn ? physRef.current.get(c.posIdx) : undefined;
+          if (st && st.consumed && st.opacity <= 0) return null;
+          const dx = st ? st.dx : 0, dy = st ? st.dy : 0;
+          return (
           <text
             key={`${c.posIdx}-${idx}`}
-            transform={`translate(${c.x.toFixed(2)},${c.y.toFixed(2)}) rotate(${((c.angle * 180) / Math.PI).toFixed(2)})`}
+            transform={`translate(${(c.x + dx).toFixed(2)},${(c.y + dy).toFixed(2)}) rotate(${((c.angle * 180) / Math.PI).toFixed(2)})`}
             fontSize={fontSize}
             fontFamily={fontFamily}
             fill={textColor}
+            opacity={st ? st.opacity : 1}
             dominantBaseline="alphabetic"
             textAnchor="middle"
             style={{ userSelect: "none", pointerEvents: "none" }}
           >
             {c.char}
           </text>
-        ))}
+          );
+        })}
 
         {placeholderCharsOnPath.map((c, idx) => (
           <text
@@ -1589,7 +1742,7 @@ function CustomPathSvg({
 // Even lines (0, 2, 4…): normal direction.
 // Odd lines  (1, 3, 5…): mirrored horizontally with scaleX(-1).
 
-interface BoustrophedonZoneProps {
+interface BoustrophedonZoneProps extends ExpPhysProps {
   positions: Position[];
   cursor: number;
   textColor: string;
@@ -1600,6 +1753,7 @@ interface BoustrophedonZoneProps {
   cursorDomRef: React.RefObject<HTMLSpanElement>;
   writingPrompt?: string;
   externalPlaceholder?: boolean;
+  posTimesRef?: React.MutableRefObject<number[]>;
 }
 
 function BoustrophedonZone({
@@ -1613,10 +1767,52 @@ function BoustrophedonZone({
   cursorDomRef,
   writingPrompt,
   externalPlaceholder,
+  posTimesRef,
+  experimental = false,
+  driftet = false, driftSpeed = 100, driftDelay = 0,
+  schwer = false, schwerDelay = 0, schwerSchnelligkeit = 50,
+  magnetPoint = false, magnetPointX = 0.5, magnetPointY = 0.32, magnetPointStrength = 0.5,
 }: BoustrophedonZoneProps) {
   const containerRef  = useRef<HTMLDivElement>(null);
   const measCtxRef    = useRef<CanvasRenderingContext2D | null>(null);
+  const physRef       = useRef<Map<number, GlyphPhys>>(new Map());
+  const spanMapRef    = useRef<Map<number, { el: HTMLSpanElement; flipped: boolean }>>(new Map());
   const [lineW, setLineW] = useState(700);
+
+  const pp = physParamsFrom({ experimental, driftet, driftSpeed, driftDelay, schwer, schwerDelay, schwerSchnelligkeit, magnetPoint, magnetPointX, magnetPointY, magnetPointStrength });
+  const physOn = physActive(pp);
+  const ppRef = useRef(pp); ppRef.current = pp;
+
+  // Experimental physics: per-letter drift / heavy / black hole on top of the
+  // boustrophedon layout. Letters on mirrored (odd) lines have their x flip
+  // negated so the screen-space motion stays correct.
+  useEffect(() => {
+    if (!physOn) {
+      spanMapRef.current.forEach(({ el }) => { if (el) { el.style.transform = ""; el.style.opacity = ""; } });
+      physRef.current.clear();
+      return;
+    }
+    let id = 0;
+    const loop = () => {
+      const now = Date.now();
+      spanMapRef.current.forEach(({ el, flipped }, posIdx) => {
+        if (!el) return;
+        let st = physRef.current.get(posIdx);
+        if (!st) { st = newGlyphPhys(); physRef.current.set(posIdx, st); }
+        const rect = el.getBoundingClientRect();
+        const appliedX = flipped ? -st.dx : st.dx;
+        const baseCx = rect.left + rect.width / 2 - appliedX;
+        const baseCy = rect.top + rect.height / 2 - st.dy;
+        const age = now - (posTimesRef?.current[posIdx] ?? now);
+        stepGlyphPhys(st, baseCx, baseCy, age, ppRef.current);
+        el.style.transform = `translate(${(flipped ? -st.dx : st.dx).toFixed(2)}px, ${st.dy.toFixed(2)}px)`;
+        el.style.opacity = st.consumed ? `${st.opacity}` : "";
+      });
+      id = requestAnimationFrame(loop);
+    };
+    id = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(id);
+  }, [physOn, posTimesRef]);
 
   useEffect(() => {
     const canvas = document.createElement("canvas");
@@ -1713,7 +1909,14 @@ function BoustrophedonZone({
               }
               const pos = positions[posIdx];
               return (
-                <span key={posIdx} style={{ display: "inline", color: `rgb(${r},${g},${b})` }}>
+                <span
+                  key={posIdx}
+                  ref={(el) => {
+                    if (el) spanMapRef.current.set(posIdx, { el, flipped: isFlipped });
+                    else spanMapRef.current.delete(posIdx);
+                  }}
+                  style={{ display: physOn ? "inline-block" : "inline", color: `rgb(${r},${g},${b})` }}
+                >
                   {renderLayers(pos, showTippex, coverBgColor)}
                 </span>
               );
@@ -2268,6 +2471,19 @@ export function WritingZone({
     animId = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(animId);
   }, [driftet, driftSaetze, driftWoerter, driftBuchstaben, driftDelay, driftSpeed, verblasst, verblassenDelay, verblassenSpeed, schwer, schwerDelay, schwerSchnelligkeit]);
+
+  // Experimental: the spiral / running-line canvases redraw whenever driftTick
+  // changes, so keep it ticking while any physics effect is active in those
+  // modes (the standard loop above only ticks for drift/heavy/fade, not the
+  // black hole on its own).
+  useEffect(() => {
+    if (!experimental || !(spiralModus || runningLineModus)) return;
+    if (!driftet && !schwer && !magnetPoint && !verblasst) return;
+    let id = 0;
+    const loop = () => { setDriftTick(n => n + 1); id = requestAnimationFrame(loop); };
+    id = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(id);
+  }, [experimental, spiralModus, runningLineModus, driftet, schwer, magnetPoint, verblasst]);
 
   // Focus on mount
   useEffect(() => { containerRef.current?.focus(); }, []);
@@ -2894,6 +3110,14 @@ export function WritingZone({
 
   const nodes = (spiralModus || boustrophedonModus || followDotModus) ? [] : buildNodes();
 
+  // Experimental physics props, forwarded to every alternative layout renderer
+  // so drift / heavy / black hole compose on top of the chosen layout.
+  const expPhys = {
+    experimental, driftet, driftSpeed, driftDelay,
+    schwer, schwerDelay, schwerSchnelligkeit,
+    magnetPoint, magnetPointX, magnetPointY, magnetPointStrength,
+  };
+
   // ── JSX ──────────────────────────────────────────────────────────────────
 
   if (boustrophedonModus) {
@@ -2922,6 +3146,8 @@ export function WritingZone({
             cursorDomRef={cursorDomRef}
             writingPrompt={writingPrompt}
             externalPlaceholder={true}
+            posTimesRef={posTimesRef}
+            {...expPhys}
           />
         </div>
       </div>
@@ -3013,6 +3239,7 @@ export function WritingZone({
             driftTick={driftTick}
             fontFamily={effectiveFamily}
             fontSize={fontSize}
+            {...expPhys}
           />
         </div>
       </div>
@@ -3045,6 +3272,8 @@ export function WritingZone({
             dark={customPathDark}
             isDe={customPathDe}
             writingPrompt={writingPrompt}
+            posTimesRef={posTimesRef}
+            {...expPhys}
           />
         </div>
       </div>
@@ -3080,6 +3309,7 @@ export function WritingZone({
             driftTick={driftTick}
             fontFamily={effectiveFamily}
             fontSize={fontSize}
+            {...expPhys}
           />
         </div>
       </div>

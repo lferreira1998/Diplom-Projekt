@@ -475,7 +475,7 @@ function extractWordGroups(positions: Position[], cursor: number): { ordinal: nu
   return groups;
 }
 
-interface RandomTextZoneProps {
+interface RandomTextZoneProps extends ExpPhysProps {
   textColor: string;
   fontFamily?: string;
   positions: Position[];
@@ -484,12 +484,19 @@ interface RandomTextZoneProps {
   externalPlaceholder?: boolean;
 }
 
-function RandomTextZone({ textColor, fontFamily = "'az-sans', sans-serif", positions, cursor, fontSize = 22, externalPlaceholder }: RandomTextZoneProps) {
+function RandomTextZone({ textColor, fontFamily = "'az-sans', sans-serif", positions, cursor, fontSize = 22, externalPlaceholder, experimental = false, magnetPoint = false, magnetPointX = 0.5, magnetPointY = 0.32, magnetPointStrength = 0.5 }: RandomTextZoneProps) {
   const wrapRef    = useRef<HTMLDivElement>(null);
   const rafRef     = useRef(0);
   const elMapRef   = useRef<Map<number, HTMLDivElement>>(new Map());
   const lastTRef   = useRef(0);
   const physicsRef = useRef<Map<number, WordPhysics>>(new Map());
+  // Experimental black hole: pull whole words toward the point (the word cloud's
+  // own motion already covers drift, so only the black hole is layered on).
+  const magRef     = useRef<Map<number, { dx: number; dy: number; vx: number; vy: number; consumed: boolean; opacity: number }>>(new Map());
+  const blackHoleOn = experimental && magnetPoint;
+  const bhRef = useRef({ on: blackHoleOn, x: magnetPointX, y: magnetPointY, str: magnetPointStrength });
+  bhRef.current = { on: blackHoleOn, x: magnetPointX, y: magnetPointY, str: magnetPointStrength };
+  useEffect(() => { if (!blackHoleOn) magRef.current.clear(); }, [blackHoleOn]);
 
   // Derive word groups purely from positions (recomputed each render)
   const wordGroups = extractWordGroups(positions, cursor);
@@ -503,6 +510,7 @@ function RandomTextZone({ textColor, fontFamily = "'az-sans', sans-serif", posit
       if (!currentOrdinals.has(ord)) {
         physicsRef.current.delete(ord);
         elMapRef.current.delete(ord);
+        magRef.current.delete(ord);
       }
     }
 
@@ -547,9 +555,30 @@ function RandomTextZone({ textColor, fontFamily = "'az-sans', sans-serif", posit
       lastTRef.current = time;
 
       const el = wrapRef.current;
-      const w = el ? el.getBoundingClientRect().width  : 800;
-      const h = el ? el.getBoundingClientRect().height : 600;
+      const wrapRect = el ? el.getBoundingClientRect() : null;
+      const w = wrapRect ? wrapRect.width  : 800;
+      const h = wrapRect ? wrapRect.height : 600;
       const DAMP = 0.985;
+
+      // Black hole pull for a floating word, in screen px, additive to its drift.
+      const applyBH = (ord: number, sx: number, sy: number): { tx: number; ty: number; opMul: number } => {
+        if (!bhRef.current.on || !wrapRect) return { tx: 0, ty: 0, opMul: 1 };
+        let m = magRef.current.get(ord);
+        if (!m) { m = { dx: 0, dy: 0, vx: 0, vy: 0, consumed: false, opacity: 1 }; magRef.current.set(ord, m); }
+        if (m.consumed) { if (m.opacity > 0) m.opacity = Math.max(0, m.opacity - 0.06); return { tx: m.dx, ty: m.dy, opMul: m.opacity }; }
+        const px = bhRef.current.x * window.innerWidth;
+        const py = bhRef.current.y * window.innerHeight;
+        const cx = wrapRect.left + wrapRect.width / 2 + sx + m.dx;
+        const cy = wrapRect.top + wrapRect.height / 2 + sy + m.dy;
+        const ddx = px - cx, ddy = py - cy;
+        const dist = Math.hypot(ddx, ddy) + 1;
+        const str = Math.max(0, Math.min(1, bhRef.current.str));
+        const force = str * Math.min(13, 900 / dist);
+        m.vx += (ddx / dist) * force; m.vy += (ddy / dist) * force;
+        m.vx *= 0.86; m.vy *= 0.86; m.dx += m.vx; m.dy += m.vy;
+        if (dist < 22) m.consumed = true;
+        return { tx: m.dx, ty: m.dy, opMul: m.opacity };
+      };
 
       for (const [ord, p] of physicsRef.current) {
         const domEl = elMapRef.current.get(ord);
@@ -609,8 +638,9 @@ function RandomTextZone({ textColor, fontFamily = "'az-sans', sans-serif", posit
 
         if (domEl) {
           const op = rDepthOpacity(p.z) * p.fadeOut * breathe * ghost;
-          domEl.style.transform = `translate(-50%,-50%) translate(${sx}px,${sy}px) scale(${s}) rotateX(${p.rotateX}deg) rotateY(${p.rotateY}deg) rotateZ(${p.rotateZ}deg)`;
-          domEl.style.opacity   = `${Math.max(0, op)}`;
+          const bh = applyBH(ord, sx, sy);
+          domEl.style.transform = `translate(-50%,-50%) translate(${sx + bh.tx}px,${sy + bh.ty}px) scale(${s}) rotateX(${p.rotateX}deg) rotateY(${p.rotateY}deg) rotateZ(${p.rotateZ}deg)`;
+          domEl.style.opacity   = `${Math.max(0, op) * bh.opMul}`;
           domEl.style.filter    = p.z < -200 ? `blur(${((-200 - p.z) / 200) * 1.5}px)` : "none";
         }
       }
@@ -677,7 +707,7 @@ function RandomTextZone({ textColor, fontFamily = "'az-sans', sans-serif", posit
 // velocity physics and slows down while you type. The word you are writing follows
 // the dot; once you finish it (space / newline) it freezes at the dot's position.
 
-interface FollowDotZoneProps {
+interface FollowDotZoneProps extends ExpPhysProps {
   textColor: string;
   fontFamily?: string;
   positions: Position[];
@@ -686,11 +716,24 @@ interface FollowDotZoneProps {
   externalPlaceholder?: boolean;
 }
 
-function FollowDotZone({ textColor, fontFamily = "'az-sans', sans-serif", positions, cursor, fontSize = 22, externalPlaceholder }: FollowDotZoneProps) {
+function FollowDotZone({ textColor, fontFamily = "'az-sans', sans-serif", positions, cursor, fontSize = 22, externalPlaceholder, experimental = false, magnetPoint = false, magnetPointX = 0.5, magnetPointY = 0.32, magnetPointStrength = 0.5 }: FollowDotZoneProps) {
   const wrapRef     = useRef<HTMLDivElement>(null);
   const canvasRef   = useRef<HTMLCanvasElement>(null);
   const activeElRef = useRef<HTMLDivElement>(null);
   const rafRef      = useRef(0);
+
+  // Experimental black hole: pull the frozen (completed) words toward the point.
+  const frozenElsRef = useRef<Map<number, HTMLDivElement>>(new Map());
+  const magRef = useRef<Map<number, { dx: number; dy: number; vx: number; vy: number; consumed: boolean; opacity: number }>>(new Map());
+  const blackHoleOn = experimental && magnetPoint;
+  const bhRef = useRef({ on: blackHoleOn, x: magnetPointX, y: magnetPointY, str: magnetPointStrength });
+  bhRef.current = { on: blackHoleOn, x: magnetPointX, y: magnetPointY, str: magnetPointStrength };
+  useEffect(() => {
+    if (!blackHoleOn) {
+      frozenElsRef.current.forEach(el => { if (el) { el.style.transform = "translate(-50%,-50%)"; el.style.opacity = ""; } });
+      magRef.current.clear();
+    }
+  }, [blackHoleOn]);
 
   // Wandering dot physics in percentage coords (0–100)
   const posRef    = useRef({ x: 50, y: 50 });
@@ -786,6 +829,33 @@ function FollowDotZone({ textColor, fontFamily = "'az-sans', sans-serif", positi
         drawTrail();
         const el = activeElRef.current;
         if (el) { el.style.left = `${nx}%`; el.style.top = `${ny}%`; }
+
+        // Black hole: pull frozen words toward the point (offsetLeft/Top give the
+        // word's laid-out centre, unaffected by the magnet transform we apply).
+        if (bhRef.current.on) {
+          const px = bhRef.current.x * window.innerWidth;
+          const py = bhRef.current.y * window.innerHeight;
+          const str = Math.max(0, Math.min(1, bhRef.current.str));
+          frozenElsRef.current.forEach((fel, ord) => {
+            if (!fel) return;
+            let m = magRef.current.get(ord);
+            if (!m) { m = { dx: 0, dy: 0, vx: 0, vy: 0, consumed: false, opacity: 1 }; magRef.current.set(ord, m); }
+            if (!m.consumed) {
+              const cx = rect.left + fel.offsetLeft + m.dx;
+              const cy = rect.top + fel.offsetTop + m.dy;
+              const ddx = px - cx, ddy = py - cy;
+              const dist = Math.hypot(ddx, ddy) + 1;
+              const force = str * Math.min(13, 900 / dist);
+              m.vx += (ddx / dist) * force; m.vy += (ddy / dist) * force;
+              m.vx *= 0.86; m.vy *= 0.86; m.dx += m.vx; m.dy += m.vy;
+              if (dist < 22) m.consumed = true;
+            } else if (m.opacity > 0) {
+              m.opacity = Math.max(0, m.opacity - 0.06);
+            }
+            fel.style.transform = `translate(-50%,-50%) translate(${m.dx.toFixed(2)}px,${m.dy.toFixed(2)}px)`;
+            fel.style.opacity = m.consumed ? `${m.opacity}` : "";
+          });
+        }
       }
       rafRef.current = requestAnimationFrame(loop);
     };
@@ -801,12 +871,19 @@ function FollowDotZone({ textColor, fontFamily = "'az-sans', sans-serif", positi
       {wordGroups.filter(w => !w.isActive && frozen[w.ordinal]).map(w => {
         const p = frozen[w.ordinal];
         return (
-          <div key={w.ordinal} style={{
-            position: "absolute", left: `${p.x}%`, top: `${p.y}%`,
-            transform: "translate(-50%,-50%)", whiteSpace: "nowrap",
-            fontFamily, fontSize: `${fontSize}px`, fontWeight: 400, letterSpacing: "0.02em",
-            color: `rgba(${r},${g},${b},0.6)`, userSelect: "none", pointerEvents: "none",
-          }}>{w.text}</div>
+          <div
+            key={w.ordinal}
+            ref={(el) => {
+              if (el) frozenElsRef.current.set(w.ordinal, el);
+              else frozenElsRef.current.delete(w.ordinal);
+            }}
+            style={{
+              position: "absolute", left: `${p.x}%`, top: `${p.y}%`,
+              transform: "translate(-50%,-50%)", whiteSpace: "nowrap",
+              fontFamily, fontSize: `${fontSize}px`, fontWeight: 400, letterSpacing: "0.02em",
+              color: `rgba(${r},${g},${b},0.6)`, userSelect: "none", pointerEvents: "none",
+            }}
+          >{w.text}</div>
         );
       })}
 
@@ -891,6 +968,7 @@ function SpiralCanvas({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef   = useRef<HTMLDivElement>(null);
   const physRef   = useRef<Map<number, GlyphPhys>>(new Map());
+  const lastStepRef = useRef(0);
   const [cursorOn, setCursorOn] = useState(true);
   const [size, setSize]         = useState({ w: 0, h: 0 });
 
@@ -1041,6 +1119,10 @@ function SpiralCanvas({
     const physOn = physActive(pp);
     if (!physOn) physRef.current.clear();
     const rect = physOn ? canvas.getBoundingClientRect() : null;
+    // The draw effect can fire more than once per frame (typing, cursor blink,
+    // two driftTick pumps); gate the physics integration to ~one step / frame.
+    const doStep = physOn && (nowMs - lastStepRef.current >= 8);
+    if (doStep) lastStepRef.current = nowMs;
 
     // draw oldest → newest
     for (const cp of cps) {
@@ -1049,8 +1131,10 @@ function SpiralCanvas({
       if (physOn && rect) {
         let st = physRef.current.get(cp.posIdx);
         if (!st) { st = newGlyphPhys(); physRef.current.set(cp.posIdx, st); }
-        const age = nowMs - (posTimesRef.current[cp.posIdx] ?? nowMs);
-        stepGlyphPhys(st, rect.left + cp.x, rect.top + cp.y, age, pp);
+        if (doStep) {
+          const age = nowMs - (posTimesRef.current[cp.posIdx] ?? nowMs);
+          stepGlyphPhys(st, rect.left + cp.x, rect.top + cp.y, age, pp);
+        }
         dx = st.dx; dy = st.dy; alpha = st.opacity;
         if (st.consumed && st.opacity <= 0) continue;
       }
@@ -1129,6 +1213,7 @@ function RunningLineCanvas({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef   = useRef<HTMLDivElement>(null);
   const physRef   = useRef<Map<number, GlyphPhys>>(new Map());
+  const lastStepRef = useRef(0);
   const [cursorOn, setCursorOn] = useState(true);
   const [size, setSize]         = useState({ w: 0, h: 0 });
 
@@ -1206,6 +1291,8 @@ function RunningLineCanvas({
     const physOn = physActive(pp);
     if (!physOn) physRef.current.clear();
     const rect = physOn ? canvas.getBoundingClientRect() : null;
+    const doStep = physOn && (nowMs - lastStepRef.current >= 8);
+    if (doStep) lastStepRef.current = nowMs;
 
     for (let i = 0; i < charInfos.length; i++) {
       const ci = charInfos[i];
@@ -1219,8 +1306,10 @@ function RunningLineCanvas({
       if (physOn && rect) {
         let st = physRef.current.get(ci.posIdx);
         if (!st) { st = newGlyphPhys(); physRef.current.set(ci.posIdx, st); }
-        const age = nowMs - (posTimesRef.current[ci.posIdx] ?? nowMs);
-        stepGlyphPhys(st, rect.left + charX, rect.top + baseline, age, pp);
+        if (doStep) {
+          const age = nowMs - (posTimesRef.current[ci.posIdx] ?? nowMs);
+          stepGlyphPhys(st, rect.left + charX, rect.top + baseline, age, pp);
+        }
         dx = st.dx; dy = st.dy; pAlpha = st.opacity;
         if (st.consumed && st.opacity <= 0) continue;
       }
@@ -1800,8 +1889,10 @@ function BoustrophedonZone({
         let st = physRef.current.get(posIdx);
         if (!st) { st = newGlyphPhys(); physRef.current.set(posIdx, st); }
         const rect = el.getBoundingClientRect();
-        const appliedX = flipped ? -st.dx : st.dx;
-        const baseCx = rect.left + rect.width / 2 - appliedX;
+        // getBoundingClientRect is axis-aligned screen space, and our local
+        // translateX is negated on mirrored rows so the *screen* displacement is
+        // always st.dx — recover the base centre by subtracting it directly.
+        const baseCx = rect.left + rect.width / 2 - st.dx;
         const baseCy = rect.top + rect.height / 2 - st.dy;
         const age = now - (posTimesRef?.current[posIdx] ?? now);
         stepGlyphPhys(st, baseCx, baseCy, age, ppRef.current);
@@ -3118,6 +3209,38 @@ export function WritingZone({
     magnetPoint, magnetPointX, magnetPointY, magnetPointStrength,
   };
 
+  // Draggable black hole dot — extracted so it can be rendered in every layout
+  // branch (the alternative modes return early, before the standard JSX below).
+  const magnetDot = magnetPoint ? createPortal(
+    <div
+      style={{
+        position: "fixed",
+        left: `${magnetPointX * (typeof window !== "undefined" ? window.innerWidth : 1920)}px`,
+        top:  `${magnetPointY * (typeof window !== "undefined" ? window.innerHeight : 1080)}px`,
+        transform: "translate(-50%, -50%)",
+        cursor: magnetPointDragging ? "grabbing" : "grab",
+        zIndex: 60, userSelect: "none",
+      }}
+      onMouseDown={(e) => {
+        e.preventDefault();
+        magnetPointDragStartRef.current = { mx: e.clientX, my: e.clientY, px: magnetPointX, py: magnetPointY };
+        setMagnetPointDragging(true);
+      }}
+    >
+      <svg width={35} height={35} viewBox="0 0 18.53 18.87" fill="none" xmlns="http://www.w3.org/2000/svg"
+        style={{ display: "block", color: "#555", overflow: "visible" }}>
+        <path fill="currentColor" d="M6.97.62c.73-.42,1.52-.62,2.38-.62s1.66.21,2.38.63c.73.42,1.44,1.03,2.15,1.84v1.06c-.74-.75-1.46-1.31-2.16-1.69-.7-.38-1.49-.57-2.37-.57s-1.67.19-2.37.57c-.71.38-1.42.94-2.16,1.69v-1.06c.71-.82,1.42-1.44,2.15-1.85Z"/>
+        <path fill="currentColor" d="M17.91,7c.42.73.62,1.52.62,2.38s-.21,1.66-.63,2.38c-.42.73-1.03,1.44-1.84,2.15h-1.06c.75-.74,1.31-1.46,1.69-2.16.38-.7.57-1.49.57-2.37s-.19-1.67-.57-2.37c-.38-.71-.94-1.42-1.69-2.16h1.06c.82.71,1.44,1.42,1.85,2.15Z"/>
+        <path fill="currentColor" d="M.62,11.75C.21,11.03,0,10.23,0,9.38s.21-1.66.63-2.38c.42-.73,1.03-1.44,1.84-2.15h1.06c-.75.74-1.31,1.46-1.69,2.16-.38.7-.57,1.49-.57,2.37s.19,1.67.57,2.37c.38.71.94,1.42,1.69,2.16h-1.06c-.82-.71-1.44-1.42-1.85-2.15Z"/>
+        <path fill="currentColor" d="M11.72,18.25c-.73.42-1.52.62-2.38.62s-1.66-.21-2.38-.63c-.73-.42-1.44-1.03-2.15-1.84v-1.06c.74.75,1.46,1.31,2.16,1.69.7.38,1.49.57,2.37.57s1.67-.19,2.37-.57c.71-.38,1.42-.94,2.16-1.69v1.06c-.71.82-1.42,1.44-2.15,1.85Z"/>
+        <path fill="currentColor" d="M14.03,12.08c-.46.78-1.1,1.39-1.91,1.82-.81.44-1.73.65-2.75.65s-1.96-.22-2.78-.65c-.82-.43-1.47-1.04-1.93-1.82-.46-.78-.69-1.66-.69-2.64s.23-1.88.69-2.65c.46-.78,1.1-1.39,1.93-1.82.83-.44,1.75-.65,2.78-.65s1.94.22,2.75.65,1.45,1.04,1.91,1.82c.46.78.69,1.67.69,2.65s-.23,1.86-.69,2.64ZM13.06,7.46c-.35-.58-.85-1.04-1.5-1.36-.65-.32-1.38-.48-2.2-.48s-1.57.16-2.22.48c-.65.32-1.15.77-1.51,1.36-.36.58-.54,1.25-.54,1.99s.18,1.4.54,1.97c.36.58.86,1.02,1.51,1.35.65.32,1.39.49,2.22.49s1.55-.16,2.2-.49c.65-.33,1.15-.77,1.5-1.35.36-.58.53-1.23.53-1.97s-.18-1.4-.53-1.99Z"/>
+        {/* Black fill for the inner hole of the ring */}
+        <circle cx="9.265" cy="9.44" r="2.35" fill="#111"/>
+      </svg>
+    </div>,
+    document.body
+  ) : null;
+
   // ── JSX ──────────────────────────────────────────────────────────────────
 
   if (boustrophedonModus) {
@@ -3150,6 +3273,7 @@ export function WritingZone({
             {...expPhys}
           />
         </div>
+        {magnetDot}
       </div>
     );
   }
@@ -3176,8 +3300,10 @@ export function WritingZone({
             cursor={cursor}
             fontSize={fontSize}
             externalPlaceholder={true}
+            {...expPhys}
           />
         </div>
+        {magnetDot}
       </div>
     );
   }
@@ -3204,8 +3330,10 @@ export function WritingZone({
             cursor={cursor}
             fontSize={fontSize}
             externalPlaceholder={true}
+            {...expPhys}
           />
         </div>
+        {magnetDot}
       </div>
     );
   }
@@ -3242,6 +3370,7 @@ export function WritingZone({
             {...expPhys}
           />
         </div>
+        {magnetDot}
       </div>
     );
   }
@@ -3276,6 +3405,7 @@ export function WritingZone({
             {...expPhys}
           />
         </div>
+        {magnetDot}
       </div>
     );
   }
@@ -3312,6 +3442,7 @@ export function WritingZone({
             {...expPhys}
           />
         </div>
+        {magnetDot}
       </div>
     );
   }
@@ -3432,36 +3563,7 @@ export function WritingZone({
         </div>,
         document.body
       )}
-      {/* Draggable black hole dot — designer SVG icon */}
-      {magnetPoint && createPortal(
-        <div
-          style={{
-            position: "fixed",
-            left: `${magnetPointX * (typeof window !== "undefined" ? window.innerWidth : 1920)}px`,
-            top:  `${magnetPointY * (typeof window !== "undefined" ? window.innerHeight : 1080)}px`,
-            transform: "translate(-50%, -50%)",
-            cursor: magnetPointDragging ? "grabbing" : "grab",
-            zIndex: 60, userSelect: "none",
-          }}
-          onMouseDown={(e) => {
-            e.preventDefault();
-            magnetPointDragStartRef.current = { mx: e.clientX, my: e.clientY, px: magnetPointX, py: magnetPointY };
-            setMagnetPointDragging(true);
-          }}
-        >
-          <svg width={35} height={35} viewBox="0 0 18.53 18.87" fill="none" xmlns="http://www.w3.org/2000/svg"
-            style={{ display: "block", color: "#555", overflow: "visible" }}>
-            <path fill="currentColor" d="M6.97.62c.73-.42,1.52-.62,2.38-.62s1.66.21,2.38.63c.73.42,1.44,1.03,2.15,1.84v1.06c-.74-.75-1.46-1.31-2.16-1.69-.7-.38-1.49-.57-2.37-.57s-1.67.19-2.37.57c-.71.38-1.42.94-2.16,1.69v-1.06c.71-.82,1.42-1.44,2.15-1.85Z"/>
-            <path fill="currentColor" d="M17.91,7c.42.73.62,1.52.62,2.38s-.21,1.66-.63,2.38c-.42.73-1.03,1.44-1.84,2.15h-1.06c.75-.74,1.31-1.46,1.69-2.16.38-.7.57-1.49.57-2.37s-.19-1.67-.57-2.37c-.38-.71-.94-1.42-1.69-2.16h1.06c.82.71,1.44,1.42,1.85,2.15Z"/>
-            <path fill="currentColor" d="M.62,11.75C.21,11.03,0,10.23,0,9.38s.21-1.66.63-2.38c.42-.73,1.03-1.44,1.84-2.15h1.06c-.75.74-1.31,1.46-1.69,2.16-.38.7-.57,1.49-.57,2.37s.19,1.67.57,2.37c.38.71.94,1.42,1.69,2.16h-1.06c-.82-.71-1.44-1.42-1.85-2.15Z"/>
-            <path fill="currentColor" d="M11.72,18.25c-.73.42-1.52.62-2.38.62s-1.66-.21-2.38-.63c-.73-.42-1.44-1.03-2.15-1.84v-1.06c.74.75,1.46,1.31,2.16,1.69.7.38,1.49.57,2.37.57s1.67-.19,2.37-.57c.71-.38,1.42-.94,2.16-1.69v1.06c-.71.82-1.42,1.44-2.15,1.85Z"/>
-            <path fill="currentColor" d="M14.03,12.08c-.46.78-1.1,1.39-1.91,1.82-.81.44-1.73.65-2.75.65s-1.96-.22-2.78-.65c-.82-.43-1.47-1.04-1.93-1.82-.46-.78-.69-1.66-.69-2.64s.23-1.88.69-2.65c.46-.78,1.1-1.39,1.93-1.82.83-.44,1.75-.65,2.78-.65s1.94.22,2.75.65,1.45,1.04,1.91,1.82c.46.78.69,1.67.69,2.65s-.23,1.86-.69,2.64ZM13.06,7.46c-.35-.58-.85-1.04-1.5-1.36-.65-.32-1.38-.48-2.2-.48s-1.57.16-2.22.48c-.65.32-1.15.77-1.51,1.36-.36.58-.54,1.25-.54,1.99s.18,1.4.54,1.97c.36.58.86,1.02,1.51,1.35.65.32,1.39.49,2.22.49s1.55-.16,2.2-.49c.65-.33,1.15-.77,1.5-1.35.36-.58.53-1.23.53-1.97s-.18-1.4-.53-1.99Z"/>
-            {/* Black fill for the inner hole of the ring */}
-            <circle cx="9.265" cy="9.44" r="2.35" fill="#111"/>
-          </svg>
-        </div>,
-        document.body
-      )}
+      {magnetDot}
       {/* Wrap-around clones rendered as portal so they're not clipped */}
       {wrapClones.length > 0 && createPortal(
         <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 5 }}>

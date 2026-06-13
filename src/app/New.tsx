@@ -1361,7 +1361,7 @@ function useWindowWidth() {
   return width;
 }
 
-export default function New() {
+export default function New({ experimental = false }: { experimental?: boolean } = {}) {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -1469,18 +1469,20 @@ export default function New() {
   const NON_STANDARD_POSITIONS = ["spiral", "random", "running", "custom", "zigzag", "followdot"] as const;
   type NonStdPos = typeof NON_STANDARD_POSITIONS[number];
   const isNonStandard = NON_STANDARD_POSITIONS.includes(positionMode as NonStdPos);
-  // Canvas-based modes where DOM char effects (drift, heavy) don't apply
-  const CANVAS_POSITIONS = ["spiral", "custom", "zigzag", "followdot"] as const;
-  const isDOMIncompatible = CANVAS_POSITIONS.includes(positionMode as typeof CANVAS_POSITIONS[number]);
+  // The three per-letter physics effects (drift, heavy, black hole) only work in
+  // the standard layout — every other position mode swaps in its own renderer.
+  // Normal page: block them for ALL non-standard positions (consistent, no dead
+  // toggles). Experimental page (/create_experimental): everything combines.
+  const isDOMIncompatible = !experimental && isNonStandard;
 
-  // Smart position setter — only blocks drift/heavy for canvas-based modes
-  const CANVAS_MODES = new Set(["spiral", "custom", "zigzag", "followdot"]);
+  // Smart position setter — entering a non-standard mode turns off the physics
+  // effects (unless experimental, where every combination is allowed).
   const applyPositionMode = useCallback((
     mode: "standard" | "spiral" | "random" | "running" | "custom" | "zigzag" | "followdot",
     opts: { setTextFliegtEnabled: (v: boolean) => void; setCursorRunning: (v: boolean) => void; setCorrectionVisible: (v: boolean) => void; setTextSchwerEnabled: (v: boolean) => void; setMagnetPoint: (v: boolean) => void; textFliegtEnabled: boolean; cursorRunning: boolean; correctionVisible: boolean; textSchwerEnabled: boolean; magnetPointEnabled: boolean; de: boolean; posNames: Record<string, string> }
   ) => {
     setPositionMode(mode);
-    if (mode === "standard" || !CANVAS_MODES.has(mode)) return;
+    if (experimental || mode === "standard") return;
     const turned: string[] = [];
     if (opts.textFliegtEnabled) { opts.setTextFliegtEnabled(false); turned.push(opts.de ? "Text fliegt davon" : "Text drift"); }
     if (opts.textSchwerEnabled) { opts.setTextSchwerEnabled(false); turned.push(opts.de ? "Text wird schwer" : "Text gets heavy"); }
@@ -1492,7 +1494,7 @@ export default function New() {
         : `${posLabel} enabled. Turned off: ${turned.join(", ")}.`
       );
     }
-  }, [showCompatMsg]);
+  }, [experimental, showCompatMsg]);
 
   // Smart drift setter — only resets position for canvas-based modes
   const applyDrift = useCallback((enabled: boolean, de: boolean, posLabel: string) => {
@@ -2391,6 +2393,7 @@ export default function New() {
             onMagnetPointMove={(x, y) => { setMagnetPointX(x); setMagnetPointY(y); }}
             blindMode={blindWritingEnabled && !blindPlaybackActive}
             readOnly={blindPlaybackActive}
+            experimental={experimental}
           />
       </motion.div>
 
@@ -3469,7 +3472,7 @@ export default function New() {
                           <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
                             <RuleIcon id={opt.value} color={dark ? DARK_TEXT : LIGHT_TEXT} />
                             <span style={{ fontFamily: FONT_SANS, fontSize: "15px", fontWeight: positionMode === opt.value ? 600 : 400, color: dark ? DARK_TEXT : LIGHT_TEXT, lineHeight: "1.4" }}>{opt.label}</span>
-                            {(["spiral","custom","zigzag","followdot"] as const).includes(opt.value as "spiral"|"custom"|"zigzag"|"followdot") && (magnetPoint || textFliegtEnabled || textSchwerEnabled) && positionMode !== opt.value && (
+                            {!experimental && (["spiral","random","running","custom","zigzag","followdot"] as const).includes(opt.value as "spiral"|"random"|"running"|"custom"|"zigzag"|"followdot") && (magnetPoint || textFliegtEnabled || textSchwerEnabled) && positionMode !== opt.value && (
                               <span style={{ fontFamily: FONT_SANS, fontSize: "11px", color: descColor, opacity: 0.7 }}>
                                 {"– " + [magnetPoint && (DE ? "Schwarzes Loch" : "Black Hole"), textFliegtEnabled && (DE ? "Text fliegt" : "Drift"), textSchwerEnabled && (DE ? "Schwer" : "Heavy")].filter(Boolean).join(", ")}
                               </span>

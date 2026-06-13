@@ -99,6 +99,10 @@ interface WritingZoneProps {
   onMagnetPointMove?: (x: number, y: number) => void;
   blindMode?: boolean;
   readOnly?: boolean;
+  // Experimental mode (/create_experimental): the per-letter physics effects
+  // (drift, heavy, black hole) are ported into every layout renderer so they
+  // can combine with spiral / running / custom / zigzag / random / follow-dot.
+  experimental?: boolean;
 }
 
 // ── Pure helpers ──────────────────────────────────────────────────────────────
@@ -1784,6 +1788,7 @@ export function WritingZone({
   onMagnetPointMove,
   blindMode  = false,
   readOnly   = false,
+  experimental = false,
 }: WritingZoneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const cursorDomRef = useRef<HTMLSpanElement>(null);

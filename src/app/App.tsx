@@ -57,7 +57,7 @@ function GlobalRouteTopNav() {
     return null;
   }
 
-  const current = pathname.startsWith("/create-tool") ? "Create" : "Playground";
+  const current = (pathname.startsWith("/create-tool") || pathname.startsWith("/create_experimental")) ? "Create" : "Playground";
 
   return <TopNav current={current} dark={dark} setDark={setDark} lang={lang} setLang={setLang} />;
 
@@ -132,6 +132,7 @@ export default function App() {
       <Route path="/introduction" element={<PlaygroundNewScrollDots />} />
       <Route path="/tool-collection" element={<PlaygroundNewScrollDots variant="collection" />} />
       <Route path="/create-tool" element={<New />} />
+      <Route path="/create_experimental" element={<New experimental />} />
       <Route path="/my-tools" element={<MyToolsPage />} />
       <Route path="/about-the-project" element={<AboutNew />} />
       <Route path="/write" element={<ParametrischesTool />} />

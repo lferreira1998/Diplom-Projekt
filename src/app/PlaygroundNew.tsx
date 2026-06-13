@@ -522,7 +522,7 @@ function ToolCard({ tool, onClick, onDelete, isFavorite, onToggleFavorite, DE }:
           style={{ position: "absolute", top: "10px", right: "10px", zIndex: 2, width: "26px", height: "26px", background: "transparent", border: "none", cursor: "pointer", outline: "none", display: "flex", alignItems: "center", justifyContent: "center" }}
         >
           {isFavorite
-            ? <BookmarkSelected color={dark ? DARK_TEXT : LIGHT_TEXT} />
+            ? <BookmarkSelected color={dark ? "#f0e8dc" : "#111111"} />
             : <BookmarkNormal color={theme.muted} />}
         </button>
       )}

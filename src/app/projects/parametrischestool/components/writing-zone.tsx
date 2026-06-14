@@ -49,6 +49,7 @@ interface WritingZoneProps {
   rhythmEnabled?: boolean;
   rhythmIntensity?: number;    // 0–1
   inkLevel?: number;           // 0–1, applied as text container opacity
+  experimental?: boolean;      // unlocks effects in non-standard layouts (e.g. drift on spiral)
 }
 
 // ── Pure helpers ──────────────────────────────────────────────────────────────
@@ -566,6 +567,8 @@ interface SpiralCanvasProps {
   verblassenDelay: number;
   verblassenSpeed: number;
   driftTick: number;
+  charOffsetsRef?: React.MutableRefObject<{ dx: number; dy: number }[]>;
+  charMagnetOffsetsRef?: React.MutableRefObject<{ dx: number; dy: number }[]>;
 }
 
 function SpiralCanvas({
@@ -579,6 +582,8 @@ function SpiralCanvas({
   verblassenDelay,
   verblassenSpeed,
   driftTick,
+  charOffsetsRef,
+  charMagnetOffsetsRef,
 }: SpiralCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef   = useRef<HTMLDivElement>(null);
@@ -687,6 +692,7 @@ function SpiralCanvas({
     interface CP {
       x: number; y: number; char: string;
       fs: number; opacity: number; rot: number; shouldHide: boolean;
+      posIdx: number;
     }
     const cps: CP[] = [];
 
@@ -719,14 +725,19 @@ function SpiralCanvas({
       cps.unshift({
         x, y, char: chars[i], fs, opacity, rot,
         shouldHide: charInfos[i]?.shouldHide ?? false,
+        posIdx: charInfos[i]?.posIdx ?? i,
       });
     }
 
     // draw oldest → newest
     for (const cp of cps) {
       if (cp.shouldHide) continue;
+      const driftOff  = charOffsetsRef?.current[cp.posIdx];
+      const magnetOff = charMagnetOffsetsRef?.current[cp.posIdx];
+      const tdx = (driftOff?.dx ?? 0) + (magnetOff?.dx ?? 0);
+      const tdy = (driftOff?.dy ?? 0) + (magnetOff?.dy ?? 0);
       ctx.save();
-      ctx.translate(cp.x, cp.y);
+      ctx.translate(cp.x + tdx, cp.y + tdy);
       ctx.rotate(cp.rot);
       ctx.font = `${cp.fs}px 'IBM Plex Mono', monospace`;
       ctx.fillStyle = `rgba(${r},${g},${b},${Math.min(1, cp.opacity)})`;
@@ -792,6 +803,7 @@ export function WritingZone({
   rhythmEnabled      = false,
   rhythmIntensity    = 0.5,
   inkLevel           = 1,
+  experimental       = false,
 }: WritingZoneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const cursorDomRef = useRef<HTMLSpanElement>(null);
@@ -1451,6 +1463,8 @@ export function WritingZone({
             verblassenDelay={verblassenDelay}
             verblassenSpeed={verblassenSpeed}
             driftTick={driftTick}
+            charOffsetsRef={experimental ? charOffsets : undefined}
+            charMagnetOffsetsRef={experimental ? charMagnetOffsets : undefined}
           />
         </div>
       </div>

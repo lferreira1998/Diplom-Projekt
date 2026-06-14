@@ -604,7 +604,7 @@ function SavedModal({ dark, savedId, lang, onClose, onPlayground, surfaceLight }
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
-export default function New() {
+export default function New({ experimental = false }: { experimental?: boolean } = {}) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const sessionId = useMemo(() => getOrCreateSessionId(), []);
@@ -1093,6 +1093,7 @@ export default function New() {
             rhythmEnabled={rhythmSensitivityEnabled}
             rhythmIntensity={rhythmSensitivityIntensity}
             inkLevel={inkLevel}
+            experimental={experimental}
           />
         )}
       </motion.div>

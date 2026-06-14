@@ -162,6 +162,11 @@ interface ExpPhysProps {
   experimental?: boolean;
   driftet?: boolean; driftSpeed?: number; driftDelay?: number;
   schwer?: boolean; schwerDelay?: number; schwerSchnelligkeit?: number;
+  // Fade: the standard layout and the canvas renderers handle "Verblassen"
+  // themselves; threading the params here lets the word-cloud renderers
+  // (random / follow-dot) fade whole words by age too, so the Stability rules
+  // compose with every position mode on /create_experimental.
+  verblasst?: boolean; verblassenDelay?: number; verblassenSpeed?: number;
   magnetPoint?: boolean; magnetPointX?: number; magnetPointY?: number; magnetPointStrength?: number;
   // Ink: per-position opacity captured at type-time (older chars fuller, newer
   // ones fainter as the pen runs dry). Threaded into every layout renderer so
@@ -171,6 +176,9 @@ interface ExpPhysProps {
   // Current global ink level — only used so the canvas renderers (which draw in
   // a deps-gated effect) redraw when ink depletes, matching the standard layout.
   inkLevel?: number;
+  // Type-time timestamps (ms, Date.now) per position. Word-cloud renderers read
+  // the word's first-char stamp to drive age-based fade / heavy.
+  timesRef?: React.MutableRefObject<number[]>;
 }
 // Per-glyph ink opacity multiplier (1 = no fade). Only active in experimental
 // mode with ink enabled; otherwise a no-op so the standard pages are untouched.
@@ -499,7 +507,7 @@ interface RandomTextZoneProps extends ExpPhysProps {
   externalPlaceholder?: boolean;
 }
 
-function RandomTextZone({ textColor, fontFamily = "'az-sans', sans-serif", positions, cursor, fontSize = 22, externalPlaceholder, experimental = false, magnetPoint = false, magnetPointX = 0.5, magnetPointY = 0.32, magnetPointStrength = 0.5, inkEnabled = false, inkRef }: RandomTextZoneProps) {
+function RandomTextZone({ textColor, fontFamily = "'az-sans', sans-serif", positions, cursor, fontSize = 22, externalPlaceholder, experimental = false, magnetPoint = false, magnetPointX = 0.5, magnetPointY = 0.32, magnetPointStrength = 0.5, inkEnabled = false, inkRef, driftet = false, driftSpeed = 100, schwer = false, schwerDelay = 30, schwerSchnelligkeit = 50, verblasst = false, verblassenDelay = 120, verblassenSpeed = 100, timesRef }: RandomTextZoneProps) {
   const wrapRef    = useRef<HTMLDivElement>(null);
   const rafRef     = useRef(0);
   const elMapRef   = useRef<Map<number, HTMLDivElement>>(new Map());
@@ -521,6 +529,30 @@ function RandomTextZone({ textColor, fontFamily = "'az-sans', sans-serif", posit
   // Derive word groups purely from positions (recomputed each render)
   const wordGroups = extractWordGroups(positions, cursor);
   inkLiveRef.current = { on: inkOn, arr: inkRef, start: new Map(wordGroups.map(w => [w.ordinal, w.startIdx])) };
+
+  // Stability rules composing with the word cloud (experimental only): drift
+  // energises the wander, heavy makes a settled word fall to the floor, fade dims
+  // a whole word by the age of its first char. Kept in a live ref so the rAF loop
+  // (deps []) reads the current slider values without ever restarting. Fade/heavy
+  // use the same quick "delay / 10" timing the spiral & running canvases use, so
+  // the effect is visible against the cloud's constant motion (a 30 s delay would
+  // read as "nothing happens").
+  const driftOn = experimental && !!driftet;
+  const heavyOn = experimental && !!schwer;
+  const fadeOn  = experimental && !!verblasst;
+  const fxRef = useRef<{ driftOn: boolean; driftSpeed: number; heavyOn: boolean; heavyDelay: number; heavyGrav: number; fadeOn: boolean; fadeDelay: number; fadeSpeed: number; times?: React.MutableRefObject<number[]> }>(
+    { driftOn, driftSpeed, heavyOn, heavyDelay: schwerDelay, heavyGrav: 0.8, fadeOn, fadeDelay: verblassenDelay, fadeSpeed: verblassenSpeed, times: timesRef }
+  );
+  fxRef.current = {
+    driftOn, driftSpeed,
+    heavyOn, heavyDelay: schwerDelay, heavyGrav: 0.05 + (schwerSchnelligkeit / 100) * 1.5,
+    fadeOn, fadeDelay: verblassenDelay, fadeSpeed: verblassenSpeed,
+    times: timesRef,
+  };
+  // Per-word gravity state for "heavy" — cleared when the rule switches off so
+  // words resume floating.
+  const heavyRef = useRef<Map<number, { sx0: number; sy0: number; vy: number; dy: number; restDy: number; rot: number; vr: number }>>(new Map());
+  useEffect(() => { if (!heavyOn) heavyRef.current.clear(); }, [heavyOn]);
 
   // Sync physics map after render (layout effect = after DOM mutations, before paint)
   useLayoutEffect(() => {
@@ -601,16 +633,60 @@ function RandomTextZone({ textColor, fontFamily = "'az-sans', sans-serif", posit
         return { tx: m.dx, ty: m.dy, opMul: m.opacity };
       };
 
+      const nowMs = Date.now();
       for (const [ord, p] of physicsRef.current) {
         const domEl = elMapRef.current.get(ord);
         const ik = inkLiveRef.current;
         const im = ik.on && ik.arr ? (ik.arr.current[ik.start.get(ord) ?? -1] ?? 1) : 1;
 
+        // Age of this word (from its first char's type-time) drives fade & heavy.
+        const fx = fxRef.current;
+        const wStart = ik.start.get(ord) ?? -1;
+        const tStamp = fx.times && wStart >= 0 ? (fx.times.current[wStart] ?? 0) : 0;
+        const ageS   = tStamp ? (nowMs - tStamp) / 1000 : 0;
+        let fm = 1;
+        if (fx.fadeOn && tStamp) {
+          const d = fx.fadeDelay / 10;
+          fm = Math.max(0, 1 - Math.max(0, ageS - d) * (fx.fadeSpeed / 100) * 0.5);
+        }
+
         if (!p.released) {
           if (domEl) {
             const s = R_PERSP / (R_PERSP - p.z);
             domEl.style.transform = `translate(-50%,-50%) translate(${p.x * s}px,${p.y * s}px) scale(${s}) rotateX(${p.rotateX}deg) rotateY(${p.rotateY}deg) rotateZ(${p.rotateZ}deg)`;
-            domEl.style.opacity   = `${rDepthOpacity(p.z) * im}`;
+            domEl.style.opacity   = `${rDepthOpacity(p.z) * im * fm}`;
+            domEl.style.filter    = "none";
+          }
+          continue;
+        }
+
+        // Heavy — once the (quick) delay passes, the word stops wandering and
+        // falls straight to the floor with a small bounce, mirroring the standard
+        // layout's "letters get heavy". Uses a separate offset so it layers on top
+        // of the black hole / ink without disturbing the cloud's own physics.
+        if (fx.heavyOn && ageS > fx.heavyDelay / 10) {
+          const sCur = R_PERSP / (R_PERSP - p.z);
+          let hv = heavyRef.current.get(ord);
+          if (!hv) {
+            const sx0 = p.x * sCur, sy0 = p.y * sCur;
+            const restDy = Math.max(0, (h / 2 - 40) - sy0);
+            hv = { sx0, sy0, vy: 0, dy: 0, restDy, rot: p.rotateZ, vr: (Math.random() - 0.5) * 4 };
+            heavyRef.current.set(ord, hv);
+          }
+          if (hv.dy < hv.restDy) {
+            hv.vy += fx.heavyGrav;
+            hv.dy += hv.vy;
+            hv.rot += hv.vr;
+            if (hv.dy >= hv.restDy) {
+              hv.dy = hv.restDy; hv.vy = -hv.vy * 0.28; hv.vr *= 0.28;
+              if (Math.abs(hv.vy) < 1.2) { hv.vy = 0; hv.vr = 0; }
+            }
+          }
+          if (domEl) {
+            const op = rDepthOpacity(p.z) * p.fadeOut;
+            const bh = applyBH(ord, hv.sx0, hv.sy0 + hv.dy);
+            domEl.style.transform = `translate(-50%,-50%) translate(${hv.sx0 + bh.tx}px,${hv.sy0 + hv.dy + bh.ty}px) scale(${sCur}) rotateX(${p.rotateX}deg) rotateY(${p.rotateY}deg) rotateZ(${hv.rot}deg)`;
+            domEl.style.opacity   = `${Math.max(0, op) * bh.opMul * im * fm}`;
             domEl.style.filter    = "none";
           }
           continue;
@@ -618,7 +694,7 @@ function RandomTextZone({ textColor, fontFamily = "'az-sans', sans-serif", posit
 
         p.wanderAngle  += rnd(-0.3, 0.3) * dt;
         p.wanderAngleZ += rnd(-0.2, 0.2) * dt;
-        const ws = p.baseSpeed * 0.4;
+        const ws = p.baseSpeed * 0.4 * (fx.driftOn ? (1 + (fx.driftSpeed / 100) * 1.5) : 1);
         p.vx += Math.cos(p.wanderAngle)  * ws * dt;
         p.vy += Math.sin(p.wanderAngle)  * ws * dt;
         p.vz += Math.sin(p.wanderAngleZ) * ws * 0.15 * dt;
@@ -663,7 +739,7 @@ function RandomTextZone({ textColor, fontFamily = "'az-sans', sans-serif", posit
           const op = rDepthOpacity(p.z) * p.fadeOut * breathe * ghost;
           const bh = applyBH(ord, sx, sy);
           domEl.style.transform = `translate(-50%,-50%) translate(${sx + bh.tx}px,${sy + bh.ty}px) scale(${s}) rotateX(${p.rotateX}deg) rotateY(${p.rotateY}deg) rotateZ(${p.rotateZ}deg)`;
-          domEl.style.opacity   = `${Math.max(0, op) * bh.opMul * im}`;
+          domEl.style.opacity   = `${Math.max(0, op) * bh.opMul * im * fm}`;
           domEl.style.filter    = p.z < -200 ? `blur(${((-200 - p.z) / 200) * 1.5}px)` : "none";
         }
       }
@@ -3248,8 +3324,10 @@ export function WritingZone({
   const expPhys = {
     experimental, driftet, driftSpeed, driftDelay,
     schwer, schwerDelay, schwerSchnelligkeit,
+    verblasst, verblassenDelay, verblassenSpeed,
     magnetPoint, magnetPointX, magnetPointY, magnetPointStrength,
     inkEnabled, inkRef: charInkRef, inkLevel,
+    timesRef: posTimesRef,
   };
 
   // Draggable black hole dot — extracted so it can be rendered in every layout

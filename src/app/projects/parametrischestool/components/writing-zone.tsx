@@ -163,6 +163,18 @@ interface ExpPhysProps {
   driftet?: boolean; driftSpeed?: number; driftDelay?: number;
   schwer?: boolean; schwerDelay?: number; schwerSchnelligkeit?: number;
   magnetPoint?: boolean; magnetPointX?: number; magnetPointY?: number; magnetPointStrength?: number;
+  // Ink: per-position opacity captured at type-time (older chars fuller, newer
+  // ones fainter as the pen runs dry). Threaded into every layout renderer so
+  // the effect composes with any position mode on /create_experimental.
+  inkEnabled?: boolean;
+  inkRef?: React.MutableRefObject<number[]>;
+}
+// Per-glyph ink opacity multiplier (1 = no fade). Only active in experimental
+// mode with ink enabled; otherwise a no-op so the standard pages are untouched.
+function inkAlpha(p: ExpPhysProps, posIdx: number): number {
+  if (!p.experimental || !p.inkEnabled || !p.inkRef) return 1;
+  const v = p.inkRef.current[posIdx];
+  return typeof v === "number" ? v : 1;
 }
 function physParamsFrom(p: ExpPhysProps): ExpPhysParams {
   return {
@@ -442,8 +454,8 @@ const R_MAX_Z = 200;
 function rnd(min: number, max: number) { return Math.random() * (max - min) + min; }
 function rDepthOpacity(z: number) { return 0.25 + ((z - R_MIN_Z) / (R_MAX_Z - R_MIN_Z)) * 0.75; }
 
-function extractWordGroups(positions: Position[], cursor: number): { ordinal: number; text: string; isActive: boolean }[] {
-  const groups: { ordinal: number; text: string; isActive: boolean }[] = [];
+function extractWordGroups(positions: Position[], cursor: number): { ordinal: number; text: string; isActive: boolean; startIdx: number }[] {
+  const groups: { ordinal: number; text: string; isActive: boolean; startIdx: number }[] = [];
   let wordStart = -1;
   let ordinal = 0;
 
@@ -461,7 +473,7 @@ function extractWordGroups(positions: Position[], cursor: number): { ordinal: nu
       }
       if (text) {
         const isActive = cursor > wordStart && cursor <= i;
-        groups.push({ ordinal: ordinal++, text, isActive });
+        groups.push({ ordinal: ordinal++, text, isActive, startIdx: wordStart });
       }
       wordStart = -1;
     }
@@ -469,7 +481,7 @@ function extractWordGroups(positions: Position[], cursor: number): { ordinal: nu
 
   // If no word is active (cursor between words or at start/end), add a ghost active entry for cursor display
   if (!groups.some(g => g.isActive)) {
-    groups.push({ ordinal: ordinal, text: "", isActive: true });
+    groups.push({ ordinal: ordinal, text: "", isActive: true, startIdx: positions.length });
   }
 
   return groups;
@@ -484,7 +496,7 @@ interface RandomTextZoneProps extends ExpPhysProps {
   externalPlaceholder?: boolean;
 }
 
-function RandomTextZone({ textColor, fontFamily = "'az-sans', sans-serif", positions, cursor, fontSize = 22, externalPlaceholder, experimental = false, magnetPoint = false, magnetPointX = 0.5, magnetPointY = 0.32, magnetPointStrength = 0.5 }: RandomTextZoneProps) {
+function RandomTextZone({ textColor, fontFamily = "'az-sans', sans-serif", positions, cursor, fontSize = 22, externalPlaceholder, experimental = false, magnetPoint = false, magnetPointX = 0.5, magnetPointY = 0.32, magnetPointStrength = 0.5, inkEnabled = false, inkRef }: RandomTextZoneProps) {
   const wrapRef    = useRef<HTMLDivElement>(null);
   const rafRef     = useRef(0);
   const elMapRef   = useRef<Map<number, HTMLDivElement>>(new Map());
@@ -498,8 +510,14 @@ function RandomTextZone({ textColor, fontFamily = "'az-sans', sans-serif", posit
   bhRef.current = { on: blackHoleOn, x: magnetPointX, y: magnetPointY, str: magnetPointStrength };
   useEffect(() => { if (!blackHoleOn) magRef.current.clear(); }, [blackHoleOn]);
 
+  // Ink: per-word fade (the word's first-char ink, captured at type-time). Refs
+  // kept live so the rAF loop reads current values without restarting.
+  const inkOn = experimental && inkEnabled && !!inkRef;
+  const inkLiveRef = useRef<{ on: boolean; arr?: React.MutableRefObject<number[]>; start: Map<number, number> }>({ on: inkOn, arr: inkRef, start: new Map() });
+
   // Derive word groups purely from positions (recomputed each render)
   const wordGroups = extractWordGroups(positions, cursor);
+  inkLiveRef.current = { on: inkOn, arr: inkRef, start: new Map(wordGroups.map(w => [w.ordinal, w.startIdx])) };
 
   // Sync physics map after render (layout effect = after DOM mutations, before paint)
   useLayoutEffect(() => {
@@ -582,12 +600,14 @@ function RandomTextZone({ textColor, fontFamily = "'az-sans', sans-serif", posit
 
       for (const [ord, p] of physicsRef.current) {
         const domEl = elMapRef.current.get(ord);
+        const ik = inkLiveRef.current;
+        const im = ik.on && ik.arr ? (ik.arr.current[ik.start.get(ord) ?? -1] ?? 1) : 1;
 
         if (!p.released) {
           if (domEl) {
             const s = R_PERSP / (R_PERSP - p.z);
             domEl.style.transform = `translate(-50%,-50%) translate(${p.x * s}px,${p.y * s}px) scale(${s}) rotateX(${p.rotateX}deg) rotateY(${p.rotateY}deg) rotateZ(${p.rotateZ}deg)`;
-            domEl.style.opacity   = `${rDepthOpacity(p.z)}`;
+            domEl.style.opacity   = `${rDepthOpacity(p.z) * im}`;
             domEl.style.filter    = "none";
           }
           continue;
@@ -640,7 +660,7 @@ function RandomTextZone({ textColor, fontFamily = "'az-sans', sans-serif", posit
           const op = rDepthOpacity(p.z) * p.fadeOut * breathe * ghost;
           const bh = applyBH(ord, sx, sy);
           domEl.style.transform = `translate(-50%,-50%) translate(${sx + bh.tx}px,${sy + bh.ty}px) scale(${s}) rotateX(${p.rotateX}deg) rotateY(${p.rotateY}deg) rotateZ(${p.rotateZ}deg)`;
-          domEl.style.opacity   = `${Math.max(0, op) * bh.opMul}`;
+          domEl.style.opacity   = `${Math.max(0, op) * bh.opMul * im}`;
           domEl.style.filter    = p.z < -200 ? `blur(${((-200 - p.z) / 200) * 1.5}px)` : "none";
         }
       }
@@ -716,7 +736,7 @@ interface FollowDotZoneProps extends ExpPhysProps {
   externalPlaceholder?: boolean;
 }
 
-function FollowDotZone({ textColor, fontFamily = "'az-sans', sans-serif", positions, cursor, fontSize = 22, externalPlaceholder, experimental = false, magnetPoint = false, magnetPointX = 0.5, magnetPointY = 0.32, magnetPointStrength = 0.5 }: FollowDotZoneProps) {
+function FollowDotZone({ textColor, fontFamily = "'az-sans', sans-serif", positions, cursor, fontSize = 22, externalPlaceholder, experimental = false, magnetPoint = false, magnetPointX = 0.5, magnetPointY = 0.32, magnetPointStrength = 0.5, inkEnabled = false, inkRef }: FollowDotZoneProps) {
   const wrapRef     = useRef<HTMLDivElement>(null);
   const canvasRef   = useRef<HTMLCanvasElement>(null);
   const activeElRef = useRef<HTMLDivElement>(null);
@@ -728,9 +748,14 @@ function FollowDotZone({ textColor, fontFamily = "'az-sans', sans-serif", positi
   const blackHoleOn = experimental && magnetPoint;
   const bhRef = useRef({ on: blackHoleOn, x: magnetPointX, y: magnetPointY, str: magnetPointStrength });
   bhRef.current = { on: blackHoleOn, x: magnetPointX, y: magnetPointY, str: magnetPointStrength };
+
+  // Ink: per-word fade (word's first-char ink). Live ref so loops read current.
+  const inkOn = experimental && inkEnabled && !!inkRef;
+  const inkLiveRef = useRef<{ on: boolean; arr?: React.MutableRefObject<number[]>; start: Map<number, number> }>({ on: inkOn, arr: inkRef, start: new Map() });
+
   useEffect(() => {
     if (!blackHoleOn) {
-      frozenElsRef.current.forEach(el => { if (el) { el.style.transform = "translate(-50%,-50%)"; el.style.opacity = ""; } });
+      frozenElsRef.current.forEach(el => { if (el) { el.style.transform = "translate(-50%,-50%)"; if (!inkLiveRef.current.on) el.style.opacity = ""; } });
       magRef.current.clear();
     }
   }, [blackHoleOn]);
@@ -743,6 +768,7 @@ function FollowDotZone({ textColor, fontFamily = "'az-sans', sans-serif", positi
 
   // Derive word groups from positions (same source of truth as RandomTextZone)
   const wordGroups  = extractWordGroups(positions, cursor);
+  inkLiveRef.current = { on: inkOn, arr: inkRef, start: new Map(wordGroups.map(w => [w.ordinal, w.startIdx])) };
   const activeGroup = wordGroups.find(w => w.isActive);
   const isTyping    = !!activeGroup && activeGroup.text.length > 0;
   const typingRef   = useRef(isTyping);
@@ -852,8 +878,10 @@ function FollowDotZone({ textColor, fontFamily = "'az-sans', sans-serif", positi
             } else if (m.opacity > 0) {
               m.opacity = Math.max(0, m.opacity - 0.06);
             }
+            const ik = inkLiveRef.current;
+            const im = ik.on && ik.arr ? (ik.arr.current[ik.start.get(ord) ?? -1] ?? 1) : 1;
             fel.style.transform = `translate(-50%,-50%) translate(${m.dx.toFixed(2)}px,${m.dy.toFixed(2)}px)`;
-            fel.style.opacity = m.consumed ? `${m.opacity}` : "";
+            fel.style.opacity = m.consumed ? `${m.opacity * im}` : (ik.on ? `${im}` : "");
           });
         }
       }
@@ -882,6 +910,7 @@ function FollowDotZone({ textColor, fontFamily = "'az-sans', sans-serif", positi
               transform: "translate(-50%,-50%)", whiteSpace: "nowrap",
               fontFamily, fontSize: `${fontSize}px`, fontWeight: 400, letterSpacing: "0.02em",
               color: `rgba(${r},${g},${b},0.6)`, userSelect: "none", pointerEvents: "none",
+              opacity: inkOn ? (inkRef!.current[w.startIdx] ?? 1) : undefined,
             }}
           >{w.text}</div>
         );
@@ -894,6 +923,7 @@ function FollowDotZone({ textColor, fontFamily = "'az-sans', sans-serif", positi
         fontFamily, fontSize: `${fontSize}px`, fontWeight: 400, letterSpacing: "0.02em",
         color: `rgb(${r},${g},${b})`, userSelect: "none", pointerEvents: "none",
         display: "flex", alignItems: "center",
+        opacity: inkOn && activeGroup && activeGroup.text ? (inkRef!.current[activeGroup.startIdx] ?? 1) : undefined,
       }}>
         {activeGroup && activeGroup.text ? (
           <>
@@ -1147,7 +1177,7 @@ function SpiralCanvas({
         ctx.fillStyle = coverBgColor;
         ctx.fillRect(-cw * 0.6, -cp.fs * 0.6, cw * 1.2, cp.fs * 1.2);
       } else {
-        ctx.fillStyle = `rgba(${r},${g},${b},${Math.min(1, cp.opacity * alpha)})`;
+        ctx.fillStyle = `rgba(${r},${g},${b},${Math.min(1, cp.opacity * alpha * inkAlpha(physProps, cp.posIdx))})`;
         ctx.textAlign    = "center";
         ctx.textBaseline = "middle";
         ctx.fillText(cp.char, 0, 0);
@@ -1167,7 +1197,8 @@ function SpiralCanvas({
       verblassenDelay, verblassenSpeed, cursorOn, size, driftTick, fontFamily, fontSize,
       physProps.experimental, physProps.driftet, physProps.schwer, physProps.magnetPoint,
       physProps.magnetPointX, physProps.magnetPointY, physProps.magnetPointStrength,
-      physProps.driftDelay, physProps.driftSpeed, physProps.schwerDelay, physProps.schwerSchnelligkeit]);
+      physProps.driftDelay, physProps.driftSpeed, physProps.schwerDelay, physProps.schwerSchnelligkeit,
+      physProps.inkEnabled, physProps.inkRef]);
 
   return (
     <div ref={wrapRef} style={{ position: "absolute", inset: 0 }}>
@@ -1324,7 +1355,7 @@ function RunningLineCanvas({
           const delay = verblassenDelay / 10;
           alpha = Math.max(0, 1 - Math.max(0, age - delay) * (verblassenSpeed / 100) * 0.5);
         }
-        ctx.fillStyle = `rgba(${r},${g},${b},${alpha * pAlpha})`;
+        ctx.fillStyle = `rgba(${r},${g},${b},${alpha * pAlpha * inkAlpha(physProps, ci.posIdx)})`;
         ctx.fillText(ci.char, charX + dx, baseline + dy);
       }
     }
@@ -1338,7 +1369,8 @@ function RunningLineCanvas({
       verblassenDelay, verblassenSpeed, driftTick, fontFamily, fontSize, size, cursorOn,
       physProps.experimental, physProps.driftet, physProps.schwer, physProps.magnetPoint,
       physProps.magnetPointX, physProps.magnetPointY, physProps.magnetPointStrength,
-      physProps.driftDelay, physProps.driftSpeed, physProps.schwerDelay, physProps.schwerSchnelligkeit]);
+      physProps.driftDelay, physProps.driftSpeed, physProps.schwerDelay, physProps.schwerSchnelligkeit,
+      physProps.inkEnabled, physProps.inkRef]);
 
   return (
     <div ref={wrapRef} style={{ position: "absolute", inset: 0 }}>
@@ -1451,6 +1483,7 @@ function CustomPathSvg({
   driftet = false, driftSpeed = 100, driftDelay = 0,
   schwer = false, schwerDelay = 0, schwerSchnelligkeit = 50,
   magnetPoint = false, magnetPointX = 0.5, magnetPointY = 0.32, magnetPointStrength = 0.5,
+  inkEnabled = false, inkRef,
 }: CustomPathSvgProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -1728,6 +1761,7 @@ function CustomPathSvg({
           const st = physOn ? physRef.current.get(c.posIdx) : undefined;
           if (st && st.consumed && st.opacity <= 0) return null;
           const dx = st ? st.dx : 0, dy = st ? st.dy : 0;
+          const inkA = inkAlpha({ experimental, inkEnabled, inkRef }, c.posIdx);
           return (
           <text
             key={`${c.posIdx}-${idx}`}
@@ -1735,7 +1769,7 @@ function CustomPathSvg({
             fontSize={fontSize}
             fontFamily={fontFamily}
             fill={textColor}
-            opacity={st ? st.opacity : 1}
+            opacity={(st ? st.opacity : 1) * inkA}
             dominantBaseline="alphabetic"
             textAnchor="middle"
             style={{ userSelect: "none", pointerEvents: "none" }}
@@ -1861,6 +1895,7 @@ function BoustrophedonZone({
   driftet = false, driftSpeed = 100, driftDelay = 0,
   schwer = false, schwerDelay = 0, schwerSchnelligkeit = 50,
   magnetPoint = false, magnetPointX = 0.5, magnetPointY = 0.32, magnetPointStrength = 0.5,
+  inkEnabled = false, inkRef,
 }: BoustrophedonZoneProps) {
   const containerRef  = useRef<HTMLDivElement>(null);
   const measCtxRef    = useRef<CanvasRenderingContext2D | null>(null);
@@ -1870,6 +1905,7 @@ function BoustrophedonZone({
 
   const pp = physParamsFrom({ experimental, driftet, driftSpeed, driftDelay, schwer, schwerDelay, schwerSchnelligkeit, magnetPoint, magnetPointX, magnetPointY, magnetPointStrength });
   const physOn = physActive(pp);
+  const inkOn = experimental && inkEnabled && !!inkRef;
   const ppRef = useRef(pp); ppRef.current = pp;
 
   // Experimental physics: per-letter drift / heavy / black hole on top of the
@@ -1877,7 +1913,9 @@ function BoustrophedonZone({
   // negated so the screen-space motion stays correct.
   useEffect(() => {
     if (!physOn) {
-      spanMapRef.current.forEach(({ el }) => { if (el) { el.style.transform = ""; el.style.opacity = ""; } });
+      // Reset transforms; leave opacity to React's inline style when ink is on
+      // (ink is a static per-char fade, no animation loop needed).
+      spanMapRef.current.forEach(({ el }) => { if (el) { el.style.transform = ""; if (!inkOn) el.style.opacity = ""; } });
       physRef.current.clear();
       return;
     }
@@ -1896,14 +1934,15 @@ function BoustrophedonZone({
         const baseCy = rect.top + rect.height / 2 - st.dy;
         const age = now - (posTimesRef?.current[posIdx] ?? now);
         stepGlyphPhys(st, baseCx, baseCy, age, ppRef.current);
+        const im = inkOn ? (inkRef!.current[posIdx] ?? 1) : 1;
         el.style.transform = `translate(${(flipped ? -st.dx : st.dx).toFixed(2)}px, ${st.dy.toFixed(2)}px)`;
-        el.style.opacity = st.consumed ? `${st.opacity}` : "";
+        el.style.opacity = st.consumed ? `${st.opacity * im}` : (inkOn ? `${im}` : "");
       });
       id = requestAnimationFrame(loop);
     };
     id = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(id);
-  }, [physOn, posTimesRef]);
+  }, [physOn, inkOn, posTimesRef]);
 
   useEffect(() => {
     const canvas = document.createElement("canvas");
@@ -2006,7 +2045,7 @@ function BoustrophedonZone({
                     if (el) spanMapRef.current.set(posIdx, { el, flipped: isFlipped });
                     else spanMapRef.current.delete(posIdx);
                   }}
-                  style={{ display: physOn ? "inline-block" : "inline", color: `rgb(${r},${g},${b})` }}
+                  style={{ display: physOn ? "inline-block" : "inline", color: `rgb(${r},${g},${b})`, opacity: inkOn ? (inkRef!.current[posIdx] ?? 1) : undefined }}
                 >
                   {renderLayers(pos, showTippex, coverBgColor)}
                 </span>
@@ -3207,6 +3246,7 @@ export function WritingZone({
     experimental, driftet, driftSpeed, driftDelay,
     schwer, schwerDelay, schwerSchnelligkeit,
     magnetPoint, magnetPointX, magnetPointY, magnetPointStrength,
+    inkEnabled, inkRef: charInkRef,
   };
 
   // Draggable black hole dot — extracted so it can be rendered in every layout
@@ -3237,6 +3277,39 @@ export function WritingZone({
         {/* Black fill for the inner hole of the ring */}
         <circle cx="9.265" cy="9.44" r="2.35" fill="#111"/>
       </svg>
+    </div>,
+    document.body
+  ) : null;
+
+  // Ink refill drop — extracted so it can be rendered in every layout branch
+  // (the alternative position modes return early, before the standard JSX). On
+  // /create_experimental this lets ink compose with any position rule.
+  const inkDrop = inkEnabled ? createPortal(
+    <div style={{ position: "fixed", bottom: "80px", right: "24px", zIndex: 50, display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", pointerEvents: "auto" }}>
+      <style>{`@keyframes _inkPulse{0%,100%{opacity:1}50%{opacity:0.35}}`}</style>
+      {/* Level bar */}
+      <div style={{ width: "4px", height: "36px", background: textColor.startsWith("rgb") ? textColor.replace(/,[^)]+\)/, ",0.15)") : "rgba(0,0,0,0.12)", borderRadius: "2px", overflow: "hidden", display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
+        <div style={{ width: "100%", height: `${inkLevel * 100}%`, background: textColor, borderRadius: "2px", transition: "height 0.4s ease" }} />
+      </div>
+      {/* Refill button */}
+      <button
+        onMouseDown={e => e.preventDefault()}
+        onClick={() => { inkLevelRef.current = 1.0; setInkLevel(1.0); containerRef.current?.focus(); }}
+        title={customPathDe ? "Tinte nachfüllen" : "Refill ink"}
+        style={{
+          width: "34px", height: "34px", background: "transparent",
+          border: `1px dashed ${textColor}`, borderRadius: "6px",
+          cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+          color: textColor, outline: "none", opacity: inkLevel < 0.15 ? 1 : 0.45,
+          animation: inkLevel < 0.05 ? "_inkPulse 1.2s ease-in-out infinite" : "none",
+          transition: "opacity 0.3s",
+        }}
+      >
+        <svg width="16" height="18" viewBox="0 0 16 18" fill="none">
+          <path d="M8 1.5L12 8C13.2 10.2 12.6 13 10.4 14.2C9.7 14.6 8.85 14.8 8 14.8C7.15 14.8 6.3 14.6 5.6 14.2C3.4 13 2.8 10.2 4 8L8 1.5Z" fill="currentColor"/>
+          <path d="M6 11.5 Q8 9.5 10 11.5" stroke="white" strokeWidth="1" fill="none" opacity="0.6"/>
+        </svg>
+      </button>
     </div>,
     document.body
   ) : null;
@@ -3274,6 +3347,7 @@ export function WritingZone({
           />
         </div>
         {magnetDot}
+        {experimental && inkDrop}
       </div>
     );
   }
@@ -3304,6 +3378,7 @@ export function WritingZone({
           />
         </div>
         {magnetDot}
+        {experimental && inkDrop}
       </div>
     );
   }
@@ -3334,6 +3409,7 @@ export function WritingZone({
           />
         </div>
         {magnetDot}
+        {experimental && inkDrop}
       </div>
     );
   }
@@ -3371,6 +3447,7 @@ export function WritingZone({
           />
         </div>
         {magnetDot}
+        {experimental && inkDrop}
       </div>
     );
   }
@@ -3406,6 +3483,7 @@ export function WritingZone({
           />
         </div>
         {magnetDot}
+        {experimental && inkDrop}
       </div>
     );
   }
@@ -3443,6 +3521,7 @@ export function WritingZone({
           />
         </div>
         {magnetDot}
+        {experimental && inkDrop}
       </div>
     );
   }
@@ -3532,37 +3611,7 @@ export function WritingZone({
           {nodes}
         </div>
       </div>
-      {/* Ink refill button — only when inkEnabled. Sits directly above the
-          Export button (which is fixed at bottom:24 right:24, 44px tall). */}
-      {inkEnabled && createPortal(
-        <div style={{ position: "fixed", bottom: "80px", right: "24px", zIndex: 50, display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", pointerEvents: "auto" }}>
-          <style>{`@keyframes _inkPulse{0%,100%{opacity:1}50%{opacity:0.35}}`}</style>
-          {/* Level bar */}
-          <div style={{ width: "4px", height: "36px", background: textColor.startsWith("rgb") ? textColor.replace(/,[^)]+\)/, ",0.15)") : "rgba(0,0,0,0.12)", borderRadius: "2px", overflow: "hidden", display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
-            <div style={{ width: "100%", height: `${inkLevel * 100}%`, background: textColor, borderRadius: "2px", transition: "height 0.4s ease" }} />
-          </div>
-          {/* Refill button */}
-          <button
-            onMouseDown={e => e.preventDefault()}
-            onClick={() => { inkLevelRef.current = 1.0; setInkLevel(1.0); containerRef.current?.focus(); }}
-            title={customPathDe ? "Tinte nachfüllen" : "Refill ink"}
-            style={{
-              width: "34px", height: "34px", background: "transparent",
-              border: `1px dashed ${textColor}`, borderRadius: "6px",
-              cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-              color: textColor, outline: "none", opacity: inkLevel < 0.15 ? 1 : 0.45,
-              animation: inkLevel < 0.05 ? "_inkPulse 1.2s ease-in-out infinite" : "none",
-              transition: "opacity 0.3s",
-            }}
-          >
-            <svg width="16" height="18" viewBox="0 0 16 18" fill="none">
-              <path d="M8 1.5L12 8C13.2 10.2 12.6 13 10.4 14.2C9.7 14.6 8.85 14.8 8 14.8C7.15 14.8 6.3 14.6 5.6 14.2C3.4 13 2.8 10.2 4 8L8 1.5Z" fill="currentColor"/>
-              <path d="M6 11.5 Q8 9.5 10 11.5" stroke="white" strokeWidth="1" fill="none" opacity="0.6"/>
-            </svg>
-          </button>
-        </div>,
-        document.body
-      )}
+      {inkDrop}
       {magnetDot}
       {/* Wrap-around clones rendered as portal so they're not clipped */}
       {wrapClones.length > 0 && createPortal(

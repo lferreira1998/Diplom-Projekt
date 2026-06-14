@@ -168,6 +168,9 @@ interface ExpPhysProps {
   // the effect composes with any position mode on /create_experimental.
   inkEnabled?: boolean;
   inkRef?: React.MutableRefObject<number[]>;
+  // Current global ink level — only used so the canvas renderers (which draw in
+  // a deps-gated effect) redraw when ink depletes, matching the standard layout.
+  inkLevel?: number;
 }
 // Per-glyph ink opacity multiplier (1 = no fade). Only active in experimental
 // mode with ink enabled; otherwise a no-op so the standard pages are untouched.
@@ -1198,7 +1201,7 @@ function SpiralCanvas({
       physProps.experimental, physProps.driftet, physProps.schwer, physProps.magnetPoint,
       physProps.magnetPointX, physProps.magnetPointY, physProps.magnetPointStrength,
       physProps.driftDelay, physProps.driftSpeed, physProps.schwerDelay, physProps.schwerSchnelligkeit,
-      physProps.inkEnabled, physProps.inkRef]);
+      physProps.inkEnabled, physProps.inkRef, physProps.inkLevel]);
 
   return (
     <div ref={wrapRef} style={{ position: "absolute", inset: 0 }}>
@@ -1370,7 +1373,7 @@ function RunningLineCanvas({
       physProps.experimental, physProps.driftet, physProps.schwer, physProps.magnetPoint,
       physProps.magnetPointX, physProps.magnetPointY, physProps.magnetPointStrength,
       physProps.driftDelay, physProps.driftSpeed, physProps.schwerDelay, physProps.schwerSchnelligkeit,
-      physProps.inkEnabled, physProps.inkRef]);
+      physProps.inkEnabled, physProps.inkRef, physProps.inkLevel]);
 
   return (
     <div ref={wrapRef} style={{ position: "absolute", inset: 0 }}>
@@ -3246,7 +3249,7 @@ export function WritingZone({
     experimental, driftet, driftSpeed, driftDelay,
     schwer, schwerDelay, schwerSchnelligkeit,
     magnetPoint, magnetPointX, magnetPointY, magnetPointStrength,
-    inkEnabled, inkRef: charInkRef,
+    inkEnabled, inkRef: charInkRef, inkLevel,
   };
 
   // Draggable black hole dot — extracted so it can be rendered in every layout

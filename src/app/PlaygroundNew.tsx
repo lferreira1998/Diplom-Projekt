@@ -901,6 +901,25 @@ function ScrollReveal({ paragraphs, color, containerRef }: {
   );
 }
 
+// Bottom credit line for the Introduction & Tool Collection pages. The floating
+// Create Tool button below is fixed 24px off the viewport bottom at a height of
+// 104px, so the footer carries extra bottom padding to clear that band — without
+// it, the button would sit on top of the credit once the page is scrolled all
+// the way down.
+function SiteFooter() {
+  const theme = useContext(ThemeContext);
+  return (
+    <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", borderTop: `1px dashed ${theme.border}`, padding: "24px 24px 152px", boxSizing: "border-box" }}>
+      <p style={{ margin: 0, fontFamily: FONT_SANS, fontWeight: 300, fontSize: "17px", color: theme.text, letterSpacing: "-0.17px", whiteSpace: "nowrap" }}>
+        {"Shaping Thought by "}
+        <a href="https://www.instagram.com/joellucaferreira/" target="_blank" rel="noopener noreferrer" style={{ color: theme.text, textDecoration: "underline" }}>
+          Luca Ferreira
+        </a>
+      </p>
+    </div>
+  );
+}
+
 // Floating "Create Tool" FAB: stays fixed at the bottom-right the whole time and
 // its width grows with scroll progress — from a small circle at the top to a
 // full-width pill at the bottom. It never navigates on its own; only a click opens
@@ -1077,6 +1096,7 @@ export default function PlaygroundNew({ variant = "intro" }: { variant?: "intro"
             />
           )}
         </div>
+        <SiteFooter />
         {exploreMode && (
           <button
             onClick={() => setExploreMode(false)}

@@ -5,9 +5,11 @@ const FAB_START = 95;
 const FAB_END = 115;
 const FAB_START_WIDTH = 104;
 const FAB_START_RIGHT = 24;
+const FAB_START_BOTTOM = 24;
 const TOOL_COLLECTION_INSET = 96;
 const FAB_END_COLOR = "#FFFDFA";
 const VIRTUAL_SCROLL_PIXELS = 520;
+const FOOTER_HEIGHT = 60;
 
 // Renders the playground. variant "intro" = full landing page (hero + scroll
 // reveal + collection); variant "collection" = only the tool-collection grid.
@@ -71,6 +73,7 @@ function useExtendedCreateToolFab() {
         main.style.setProperty("--create-tool-fab-width", `${lerp(FAB_START_WIDTH, finalWidth, grow)}px`);
         main.style.setProperty("--create-tool-fab-right", `${lerp(FAB_START_RIGHT, finalInset, move)}px`);
         main.style.setProperty("--create-tool-fab-bg", mixHex(getFabStartColor(), FAB_END_COLOR, grow));
+        main.style.setProperty("--create-tool-fab-bottom", `${lerp(FAB_START_BOTTOM, FAB_START_BOTTOM + FOOTER_HEIGHT, grow)}px`);
       });
     };
 
@@ -117,6 +120,7 @@ function useExtendedCreateToolFab() {
       main.style.removeProperty("--create-tool-fab-width");
       main.style.removeProperty("--create-tool-fab-right");
       main.style.removeProperty("--create-tool-fab-bg");
+      main.style.removeProperty("--create-tool-fab-bottom");
     };
   }, []);
 }
@@ -136,6 +140,7 @@ export default function PlaygroundNewScrollDots({ variant }: { variant?: "intro"
           width: var(--create-tool-fab-width, 104px) !important;
           right: var(--create-tool-fab-right, 24px) !important;
           background: var(--create-tool-fab-bg, #fcf6ef) !important;
+          bottom: var(--create-tool-fab-bottom, 24px) !important;
         }
       `}</style>
       <PlaygroundNew variant={variant} />

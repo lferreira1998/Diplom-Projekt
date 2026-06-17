@@ -2489,13 +2489,10 @@ export function WritingZone({
     if (!revealOnHover) setRevealedSet(new Set());
   }, [revealOnHover]);
 
-  // Reset ink when turned off
+  // Sync the level bar when ink is re-enabled after being off (level is preserved across
+  // toggle — only the refill button should ever set it back to 1.0).
   useEffect(() => {
-    if (!inkEnabled) {
-      inkLevelRef.current = 1.0;
-      charInkRef.current = charInkRef.current.map(() => 1.0);
-      setInkLevel(1.0);
-    }
+    if (inkEnabled) setInkLevel(inkLevelRef.current);
   }, [inkEnabled]);
 
   // rAF physics loop

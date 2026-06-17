@@ -73,7 +73,7 @@ function useExtendedCreateToolFab() {
         main.style.setProperty("--create-tool-fab-width", `${lerp(FAB_START_WIDTH, finalWidth, grow)}px`);
         main.style.setProperty("--create-tool-fab-right", `${lerp(FAB_START_RIGHT, finalInset, move)}px`);
         main.style.setProperty("--create-tool-fab-bg", mixHex(getFabStartColor(), FAB_END_COLOR, grow));
-        main.style.setProperty("--create-tool-fab-bottom", `${lerp(FAB_START_BOTTOM, FAB_START_BOTTOM + FOOTER_HEIGHT, grow)}px`);
+        main.style.setProperty("--create-tool-fab-bottom", `${lerp(FAB_START_BOTTOM, FOOTER_HEIGHT + 110, grow)}px`);
       });
     };
 

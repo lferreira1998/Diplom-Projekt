@@ -903,8 +903,14 @@ function ScrollReveal({ paragraphs, color, containerRef }: {
 
 function SiteFooter() {
   const theme = useContext(ThemeContext);
+  const [inset, setInset] = useState(() => window.innerWidth >= 900 ? 96 : 24);
+  useEffect(() => {
+    const update = () => setInset(window.innerWidth >= 900 ? 96 : 24);
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
   return (
-    <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", borderTop: `1px dashed ${theme.border}`, padding: "0 24px", height: "60px", boxSizing: "border-box" }}>
+    <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", borderTop: `1px dashed ${theme.border}`, padding: `0 ${inset}px`, height: "60px", boxSizing: "border-box" }}>
       <p style={{ margin: 0, fontFamily: FONT_SANS, fontWeight: 300, fontSize: "17px", color: theme.text, letterSpacing: "-0.17px", whiteSpace: "nowrap" }}>
         {"Shaping Thought by "}
         <a href="https://www.instagram.com/joellucaferreira/" target="_blank" rel="noopener noreferrer" style={{ color: theme.text, textDecoration: "underline" }}>

@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import PlaygroundNew from "./PlaygroundNew";
 
 const FAB_START = 95;
-const FAB_END = 115;
+const FAB_END = 100;
 const FAB_START_WIDTH = 104;
 const FAB_START_RIGHT = 24;
 const FAB_START_BOTTOM = 24;

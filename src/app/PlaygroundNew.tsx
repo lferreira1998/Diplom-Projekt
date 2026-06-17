@@ -840,16 +840,16 @@ function PageNavFAB({ dark, myToolsAll, DE, theme, loading, bottom = 40 }: { dar
 // through the viewport — the reveal is tied directly to scroll progress.
 const REVEAL_TEXT: { de: string[]; en: string[] } = {
   en: [
-    "Shaping Thoughts asks how much our thinking is shaped by the tools we use to write.",
-    "It began from observing thoughts as movement and structure, and noticing how different this is from writing, which fixes, orders, and stabilizes them.",
-    "This tension made me question how much writing tools influence thought, so I looked at existing tools with different rules and began changing those rules myself.",
-    "The goal is to make interface behavior visible and open up new ways of writing and thinking.",
+    "Shaping Thought asks how much our thinking is shaped by the tools we use to write.",
+    "It began by watching the movement and structure of my thoughts. They appear fragmentary, fleeting, and overlapping. Writing works very differently. It fixes, orders, and stabilizes them.",
+    "This tension made me question how much writing tools influence our thinking, so I began changing those rules myself.",
+    "The goal is to make the invisible rules of writing interfaces visible and changeable. Through that, the project explores opening up other ways of writing and thinking.",
   ],
   de: [
-    "Shaping Thoughts fragt, wie sehr unser Denken von den Werkzeugen geprägt wird, mit denen wir schreiben.",
-    "Es begann damit, Gedanken als Bewegung und Struktur zu beobachten und zu bemerken, wie anders das vom Schreiben ist, das sie fixiert, ordnet und stabilisiert.",
-    "Diese Spannung ließ mich fragen, wie stark Schreibwerkzeuge das Denken beeinflussen. Also betrachtete ich bestehende Werkzeuge mit anderen Regeln und begann, diese Regeln selbst zu verändern.",
-    "Das Ziel ist, das Verhalten von Interfaces sichtbar zu machen und neue Wege des Schreibens und Denkens zu eröffnen.",
+    "Shaping Thought fragt, wie sehr unser Denken von den Werkzeugen geprägt wird, mit denen wir schreiben.",
+    "Es begann damit, die Bewegung und Struktur meiner Gedanken zu beobachten. Sie erscheinen fragmentarisch, flüchtig und überlappend. Das Schreiben funktioniert ganz anders. Es fixiert, ordnet und stabilisiert sie.",
+    "Diese Spannung ließ mich fragen, wie sehr Schreibwerkzeuge unser Denken beeinflussen, also begann ich, diese Regeln selbst zu verändern.",
+    "Das Ziel ist, die unsichtbaren Regeln von Schreib-Interfaces sichtbar und veränderbar zu machen. Dadurch erkundet das Projekt, wie sich andere Wege des Schreibens und Denkens eröffnen lassen.",
   ],
 };
 

@@ -187,7 +187,7 @@ export function WritingZone({
             className="select-none absolute top-0 left-0 pointer-events-none"
             style={{ color: "#B0B3BC", fontStyle: "italic" }}
           >
-            Don't stop writing. Let every thought pour out...
+            Don’t stop writing. Let every thought pour out...
           </span>
         )}
 

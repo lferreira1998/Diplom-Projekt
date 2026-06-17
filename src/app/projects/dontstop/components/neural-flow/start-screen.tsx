@@ -15,7 +15,7 @@ const phases = [
     num: "02",
     title: "The Flush",
     duration: "3 min",
-    desc: "High-intensity writing. Don't stop for a single second.",
+    desc: "High-intensity writing. Don’t stop for a single second.",
   },
   {
     num: "03",

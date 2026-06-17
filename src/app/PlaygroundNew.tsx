@@ -319,7 +319,7 @@ export const CARD_SHAPE_DEFS: Record<string, {
 const PRESET_META: { id: string; desc: { de: string; en: string } }[] = [
   { id: "without-stopping",    desc: { de: "Schreib ohne anzuhalten. Der Cursor läuft weiter, Pausen werden sichtbar. Löschen ist nicht möglich.", en: "Write without stopping. The cursor keeps moving, making pauses visible. Deletion is impossible." } },
   { id: "uninvited-thoughts",  desc: { de: "Deine Wörter verlieren ihre Form und fliegen davon, wie Gedanken, die du nicht festhalten kannst.", en: "Your words lose their form and drift away, like thoughts you cannot hold on to." } },
-  { id: "off-the-grid",        desc: { de: "Text erscheint nicht linear, sondern zufällig im Raum verteilt.", en: "Text doesn't appear linearly, but scattered randomly across the space." } },
+  { id: "off-the-grid",        desc: { de: "Text erscheint nicht linear, sondern zufällig im Raum verteilt.", en: "Text doesn’t appear linearly, but scattered randomly across the space." } },
   { id: "blind-then-witness",  desc: { de: "Schreib blind. Dein Text bleibt unsichtbar, während du schreibst.", en: "Write blind. Your text stays invisible while you write." } },
   { id: "visible-corrections", desc: { de: "Korrigieren hinterlässt Spuren. Gelöschter Text wird überdeckt, nicht entfernt.", en: "Correcting leaves traces. Deleted text is covered, not removed." } },
   { id: "in-a-spiral",         desc: { de: "Dein Text windet sich in einer Spirale nach innen.", en: "Your text winds inward in a spiral." } },

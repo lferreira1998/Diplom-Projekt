@@ -104,7 +104,7 @@ export default function MobileGate({ children }: { children: ReactNode }) {
             This is a desktop experience.
           </span>
           <p style={{ fontFamily: SANS, fontSize: 14, lineHeight: 1.6, color: MUTED, margin: 0 }}>
-            Put down your phone. Find a computer. Give yourself a real moment to write. That's the whole point.
+            Put down your phone. Find a computer. Give yourself a real moment to write. That’s the whole point.
           </p>
         </div>
       </motion.div>

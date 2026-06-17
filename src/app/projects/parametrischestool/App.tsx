@@ -356,7 +356,7 @@ export default function App() {
             {/* Title */}
             <div style={{ flex: 1, height: "40px", display: "flex", alignItems: "center", padding: "0 24px", border: "1px dashed #b4b3b3", backgroundColor: "transparent", boxSizing: "border-box", gap: "16px" }}>
               <span style={{ fontFamily: FONT_UI_EXT, fontSize: "12px", color: contentTextColor, letterSpacing: "-0.48px", fontWeight: 600, transition: "color 1s linear" }}>
-                {params.toolName || "Don't Stop Writing"}
+                {params.toolName || "Don’t Stop Writing"}
               </span>
               <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "16px" }}>
                 {params.timerOn && timerRunning && (

@@ -65,7 +65,7 @@ export function PhaseAwareness({ timeLeft }: PhaseAwarenessProps) {
       >
         Watch your thoughts like cars passing on a highway.
         <br />
-        Don't try to change anything.
+        Don’t try to change anything.
       </motion.p>
 
       {/* Timer */}

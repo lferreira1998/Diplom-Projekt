@@ -14,17 +14,17 @@ const NAVY         = "#11112d";
 const BORDER_NAVY  = "1px dashed #11112d";
 
 const TOOLS = [
-  { label: "...without stopping",         path: "/dont-stop-writing",           video: "without-stopping",       description: "Here, \"not writing\" is visualized, because the cursor keeps moving, whether you're keeping up or not." },
-  { label: "...blind & then witness",     path: "/one-word-replay",             video: "blind-then-witness",     description: "You won't see what you're writing. And when you're done, you'll be able to watch yourself think and write." },
-  { label: "...uninvited thoughts",       path: "/uninvited-thoughts",          video: "uninvited-thoughts",     description: "Focus on the moving dot and try not to think about anything. You won't be able to. Unwelcome thoughts will pop up. Write them down, send them off, and keep focusing on the dot." },
+  { label: "...without stopping",         path: "/dont-stop-writing",           video: "without-stopping",       description: "Here, \"not writing\" is visualized, because the cursor keeps moving, whether you’re keeping up or not." },
+  { label: "...blind & then witness",     path: "/one-word-replay",             video: "blind-then-witness",     description: "You won’t see what you’re writing. And when you’re done, you’ll be able to watch yourself think and write." },
+  { label: "...uninvited thoughts",       path: "/uninvited-thoughts",          video: "uninvited-thoughts",     description: "Focus on the moving dot and try not to think about anything. You won’t be able to. Unwelcome thoughts will pop up. Write them down, send them off, and keep focusing on the dot." },
   { label: "...with visible corrections", path: "/loschen-korrigieren",         video: "visible-corrections",    description: "Everything you write remains visible. Every correction. Inspired by old typewriters." },
   { label: "...fleeting",                 path: "/drifting-following-words",    video: "fleeting",               description: "Wörter folgen dir nach und verschwinden, bevor sie ankern können." },
   { label: "...into thin air",            path: "/drifting-disappearing-words", video: "into-thin-air",          description: "Write down your thoughts and watch them disappear again… drifting away and fading." },
-  { label: "...off the grid",             path: "/off-the-grid",               video: "off-the-grid",           description: "Don't write linearly on pre-drawn lines; instead, draw your own lines on which you can then write." },
+  { label: "...off the grid",             path: "/off-the-grid",               video: "off-the-grid",           description: "Don’t write linearly on pre-drawn lines; instead, draw your own lines on which you can then write." },
   { label: "...in a spiral",              path: "/in-a-spiral",                video: "in-a-spiral",            description: "In this experiment, you write in a spiral; the old is rolled up, and the new is always in focus." },
   { label: "...randomly & spatially",     path: "/randomly-spatially",         video: "randomly-spatially",     description: "Words and sentences do not appear sequentially here, but are scattered throughout the space at varying distances. Inspired by our chaotic inner world." },
-  { label: "...anonymously in public",    path: "/anonymously-in-public",       video: "anonymously-in-public",  description: "Write about your deepest secrets, or about the people next to you. They won't see it, because only the current letter is visible at any given time." },
-  { label: "...against the clock",        path: "/visual-timer",                video: "against-the-clock",      description: "Here you can visually see time slowly running out, as the background gradually turns the same color as your text…until you can no longer see what you've written." },
+  { label: "...anonymously in public",    path: "/anonymously-in-public",       video: "anonymously-in-public",  description: "Write about your deepest secrets, or about the people next to you. They won’t see it, because only the current letter is visible at any given time." },
+  { label: "...against the clock",        path: "/visual-timer",                video: "against-the-clock",      description: "Here you can visually see time slowly running out, as the background gradually turns the same color as your text…until you can no longer see what you’ve written." },
 ];
 
 // ── Drift physics ─────────────────────────────────────────────────────────────

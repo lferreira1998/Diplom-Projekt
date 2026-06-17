@@ -97,7 +97,7 @@ export default function App() {
                       lineHeight: 1.1,
                     }}
                   >
-                    Don't Stop Writing
+                    Don’t Stop Writing
                   </h1>
                 </motion.div>
 
@@ -250,7 +250,7 @@ export default function App() {
                       textTransform: "uppercase",
                     }}
                   >
-                    Don't Stop Writing
+                    Don’t Stop Writing
                   </span>
 
                   <div className="flex items-center gap-3">
@@ -322,7 +322,7 @@ export default function App() {
                       textTransform: "uppercase",
                     }}
                   >
-                    Don't Stop Writing
+                    Don’t Stop Writing
                   </span>
                   <button
                     onClick={handleRestart}

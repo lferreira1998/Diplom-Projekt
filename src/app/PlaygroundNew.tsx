@@ -911,7 +911,7 @@ function SiteFooter() {
   }, []);
   return (
     <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", borderTop: `1px dashed ${theme.border}`, padding: `0 ${inset}px`, height: "60px", boxSizing: "border-box" }}>
-      <p style={{ margin: 0, fontFamily: FONT_SANS, fontWeight: 300, fontSize: "17px", color: theme.text, letterSpacing: "-0.17px", whiteSpace: "nowrap" }}>
+      <p style={{ margin: 0, fontFamily: FONT_SANS, fontWeight: 300, fontSize: "15px", color: theme.text, letterSpacing: "-0.15px", whiteSpace: "nowrap" }}>
         {"Shaping Thought by "}
         <a href="https://www.instagram.com/joellucaferreira/" target="_blank" rel="noopener noreferrer" style={{ color: theme.text, textDecoration: "underline" }}>
           Luca Ferreira

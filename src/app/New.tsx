@@ -2665,9 +2665,9 @@ export default function New({ experimental = false }: { experimental?: boolean }
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                 <span style={{ fontFamily: "'az-heading', sans-serif", fontSize: "22px", color: dark ? DARK_TEXT : LIGHT_TEXT, lineHeight: "normal" }}>{t.rulesHeading}</span>
-                <span style={{ fontFamily: FONT_SANS, fontSize: "14px", color: descColor, lineHeight: "normal" }}>{t.rulesSubtitle}</span>
+                <span style={{ fontFamily: FONT_SANS, fontSize: "15px", color: descColor, lineHeight: "1.5" }}>{t.rulesSubtitle}</span>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                 {SIDEBAR_CATS.map(cat => (

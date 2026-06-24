@@ -1,6 +1,5 @@
 import { createContext, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { ToolPreview } from "./components/ToolPreview";
-import { ToolLaunchModal } from "./components/ToolLaunchModal";
 import type { CSSProperties, ReactNode, RefObject } from "react";
 import { motion, useScroll, useTransform, type MotionValue } from "motion/react";
 import { useNavigate, useLocation } from "react-router";
@@ -977,20 +976,20 @@ function CreateToolButton({ mainRef, dark, theme, DE }: {
 
 export default function PlaygroundNew({ variant = "intro" }: { variant?: "intro" | "collection" }) {
   const collectionOnly = variant === "collection";
-  const { sessionId, loading, lang, setLang, dark, setDark, favorites, toggleFavorite, myToolsAll, publicTools, tools, navigateToTool, handleDelete } = usePlaygroundData();
+  const { sessionId, loading, lang, setLang, dark, setDark, favorites, toggleFavorite, myToolsAll, publicTools, tools, handleDelete } = usePlaygroundData();
   const navigate = useNavigate();
   const mainRef = useRef<HTMLElement>(null);
   const toolsRef = useRef<HTMLDivElement>(null);
   const [exploreMode, setExploreMode] = useState(false);
-  const [launchTool, setLaunchTool] = useState<NewToolData | null>(null);
   const [tab, setTab] = useState<"all" | "my">("all");
 
   const DE = lang === "de";
 
   const openTool = (id: string) => {
     if (id.startsWith("preset:")) { navigate(`/create-tool?preset=${id.slice(7)}`); return; }
-    const t = tools.find(x => x.id === id) ?? null;
-    setLaunchTool(t);
+    // Open the tool directly in viewer mode — no launch popup. The tool's own
+    // saved timer settings apply (no ?timer override).
+    navigate(`/create-tool?tool=${id}`);
   };
 
   // Synthesize the six official experiments as tool cards (shape + video come
@@ -1106,12 +1105,6 @@ export default function PlaygroundNew({ variant = "intro" }: { variant?: "intro"
             ← {DE ? "Zurück" : "Back"}
           </button>
         )}
-        <ToolLaunchModal
-          tool={launchTool}
-          dark={dark}
-          onConfirm={(id, mins) => { setLaunchTool(null); navigateToTool(id, mins); }}
-          onClose={() => setLaunchTool(null)}
-        />
         {!exploreMode && <CreateToolButton mainRef={mainRef} dark={dark} theme={theme} DE={DE} />}
       </main>
     </DarkContext.Provider>

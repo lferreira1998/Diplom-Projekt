@@ -2088,14 +2088,6 @@ export default function New({ experimental = false }: { experimental?: boolean }
     "Position":    positionMode !== "standard",
   };
 
-  const categoryRuleCount: Record<string, number> = {
-    "Look & Feel": (grainLevel !== 0 ? 1 : 0) + (grainMotion !== 0 ? 1 : 0) + (textSizeLevel !== 46 ? 1 : 0) + (bgHue !== null ? 1 : 0) + (serifLevel !== null ? 1 : 0),
-    "Time":        (timerEnabled ? 1 : 0) + (cursorRunning ? 1 : 0) + (blindWritingEnabled ? 1 : 0),
-    "Visibility":  visibility !== "visible" ? 1 : 0,
-    "Correction":  (correctionVisible ? 1 : 0) + (deleteMode !== "all" ? 1 : 0),
-    "Stability":   (textFliegtEnabled ? 1 : 0) + (textVerblassEnabled ? 1 : 0) + (textSchwerEnabled ? 1 : 0) + (magnetPoint ? 1 : 0) + (inkEnabled ? 1 : 0),
-    "Position":    positionMode !== "standard" ? 1 : 0,
-  };
 
   const clearParameters = () => {
     setTimerEnabled(false); setTimerMode("fixed"); setTimerMinutes(10); setVisualTimer(false); setTimerUserReset(false);
@@ -2709,18 +2701,12 @@ export default function New({ experimental = false }: { experimental?: boolean }
                       <span
                         aria-hidden
                         style={{
-                          position: "absolute", bottom: "6px", right: "6px",
-                          fontFamily: FONT_SANS, fontSize: "9px", lineHeight: "1",
-                          color: dark ? "rgba(240,232,220,0.55)" : "rgba(40,30,20,0.45)",
+                          position: "absolute", top: `${cat.dotT}px`, right: `${cat.dotR}px`,
+                          width: "8px", height: "8px", borderRadius: "50%",
+                          background: dark ? DARK_TEXT : LIGHT_TEXT,
+                          boxShadow: `0 0 0 2px ${catInactiveBg}`,
                         }}
-                      >
-                        {(() => {
-                          const n = categoryRuleCount[cat.en];
-                          return lang === "de"
-                            ? `${n} Regel${n !== 1 ? "n" : ""} gebrochen`
-                            : `${n} rule${n !== 1 ? "s" : ""} broken`;
-                        })()}
-                      </span>
+                      />
                     )}
                   </button>
                 ))}

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+  <html lang="en">
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="icon" type="image/png" href="/favicon.png" />
+      <title>Shaping Thoughts</title>
+      <link rel="preload" href="/fonts/ABCArizona.woff2" as="font" type="font/woff2" crossorigin fetchpriority="high" />
+      <style>
+        @font-face {
+          font-family: 'ABCArizona';
+          src: url('/fonts/ABCArizona.woff2') format('woff2'),
+               url('/fonts/ABCArizona.woff')  format('woff');
+          font-weight: 200 700;
+          font-style: normal oblique -14deg 0deg;
+          font-display: swap;
+        }
+      </style>
+      <!-- ABCArizona under unique family names (az-*) — no collision with Typekit's freight -->
+      <style>
+        @font-face {
+          font-family: 'az-serif';
+          src: url('/fonts/ABCArizona.woff2') format('woff2'),
+               url('/fonts/ABCArizona.woff')  format('woff');
+          font-weight: 200 700;
+          font-style: normal oblique -14deg 0deg;
+          font-display: swap;
+        }
+        @font-face {
+          font-family: 'az-cond';
+          src: url('/fonts/ABCArizona.woff2') format('woff2'),
+               url('/fonts/ABCArizona.woff')  format('woff');
+          font-weight: 200 700;
+          font-style: normal;
+          font-display: swap;
+        }
+        @font-face {
+          font-family: 'az-heading';
+          src: url('/fonts/ABCArizona.woff2') format('woff2'),
+               url('/fonts/ABCArizona.woff')  format('woff');
+          font-weight: 200 700;
+          font-style: normal;
+          font-display: swap;
+        }
+        @font-face {
+          font-family: 'az-sans';
+          src: url('/fonts/ABCArizona.woff2') format('woff2'),
+               url('/fonts/ABCArizona.woff')  format('woff');
+          font-weight: 200 700;
+          font-style: normal;
+          font-display: swap;
+        }
+        /* Variation axes per role (Figma values) */
+        [style*="az-heading"] {
+          font-variation-settings: 'SRFF' 70, 'wdth' 92, 'wght' 327 !important;
+        }
+        [style*="az-serif"] {
+          font-variation-settings: 'SRFF' 0, 'wdth' 100, 'wght' 300 !important;
+        }
+        [style*="az-cond"] {
+          font-variation-settings: 'SRFF' 70, 'wdth' 80, 'wght' 360 !important;
+        }
+        /* az-sans: pure geometric sans, normal width, regular weight — matches General Sans */
+        [style*="az-sans"] {
+          font-variation-settings: 'SRFF' 0, 'wdth' 100, 'wght' 360 !important;
+        }
+      </style>
+      <script>
+        (function(l) {
+          if (l.search[1] === '/') {
+            var decoded = l.search.slice(1).split('&').map(function(s) {
+              return s.replace(/~and~/g, '&');
+            });
+            window.history.replaceState(null, null,
+              l.pathname.slice(0, -1) + decoded[0] + (decoded[1] ? '?' + decoded[1] : '') + l.hash
+            );
+          }
+        }(window.location));
+      </script>
+      <script type="module" crossorigin src="/assets/index-Bnvb1uuq.js"></script>
+      <link rel="stylesheet" crossorigin href="/assets/index-cGg_N-5R.css">
+    </head>
+
+    <body>
+      <div id="root"></div>
+    </body>
+  </html>

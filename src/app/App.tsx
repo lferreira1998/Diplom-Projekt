@@ -131,7 +131,8 @@ export default function App() {
       <Route path="/" element={<Navigate to="/introduction" replace />} />
       <Route path="/introduction" element={<PlaygroundNewScrollDots />} />
       <Route path="/tool-collection" element={<PlaygroundNewScrollDots variant="collection" />} />
-      <Route path="/create-tool" element={<New />} />
+      <Route path="/create-tool" element={<New experimental />} />
+      <Route path="/create-tool-classic" element={<New />} />
       <Route path="/create_experimental" element={<New experimental />} />
       <Route path="/my-tools" element={<MyToolsPage />} />
       <Route path="/about-the-project" element={<AboutNew />} />

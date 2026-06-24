@@ -166,8 +166,9 @@ export default function TopNav({
   return (
     <>
       {/* ── Right cluster: eye + dark + menu ── */}
+      {/* Create pages: New.tsx owns the entire top-right (eye + no Go-to). */}
       <AnimatePresence mode="wait">
-        {visible ? (
+        {current === "Create" ? null : visible ? (
           <motion.div
             ref={navRef}
             key="topnav-right-full"

@@ -1401,8 +1401,6 @@ export default function New({ experimental = false }: { experimental?: boolean }
   const [lang, setLang]               = useState<"de" | "en">(() => (localStorage.getItem("appLang") as "de" | "en") ?? "de");
   const [dark, setDark]               = useState<boolean>(() => localStorage.getItem("appTheme") === "dark");
   const [visible, setVisible]         = useState(true);
-  const [menuOpen, setMenuOpen]       = useState(false);
-  const [menuHovered, setMenuHovered] = useState(false);
   const [rulesHovered, setRulesHovered] = useState(false);
   const [rulesOpen, setRulesOpen]     = useState(() => !searchParams.get("tool") && !searchParams.get("preset"));
   const [activeCategory, setActiveCategory] = useState("Look & Feel");
@@ -3796,7 +3794,7 @@ export default function New({ experimental = false }: { experimental?: boolean }
             {/* Eye toggle */}
             <button
               style={btnStyle(dark, { background: floatBg, color: navIconColor, width: "33px", padding: 0 }, surfaceLight)}
-              onClick={(e) => { e.stopPropagation(); setVisible(false); setMenuOpen(false); setExportOpen(false); }}
+              onClick={(e) => { e.stopPropagation(); setVisible(false); setExportOpen(false); }}
             >
               <IconEyeClosed color={navIconColor} />
             </button>
@@ -3808,58 +3806,6 @@ export default function New({ experimental = false }: { experimental?: boolean }
               <IconHalfCircle color={navIconColor} dark={dark} />
             </button>
             */}
-            {/* Menu button + dropdown — hidden in viewer mode */}
-            {!inViewer && <div
-              style={{ position: "relative" }}
-              onMouseEnter={() => { if (!menuOpen) setMenuHovered(true); }}
-              onMouseLeave={() => setMenuHovered(false)}
-            >
-              <motion.div
-                aria-hidden
-                animate={
-                  menuOpen
-                    ? { y: 8, opacity: 0, scale: 1, transition: { y: { duration: 0.22, ease: "easeOut" }, opacity: { duration: 0.1 } } }
-                    : menuHovered ? { y: 0, opacity: 1, scale: 1 } : { y: -6, opacity: 0, scale: 1 }
-                }
-                transition={{ duration: 0.22, ease: "easeOut" }}
-                style={{
-                  position: "absolute", left: "2px", top: "9px",
-                  width: "calc(100% - 4px)", height: "28px",
-                  background: dark ? "rgba(240,232,220,0.1)" : surfaceLight,
-                  border: `1px dashed ${BORDER_COL}`,
-                  borderRadius: "4px", rotate: -2.42, zIndex: 0, pointerEvents: "none",
-                }}
-              />
-              <button
-                style={{ ...btnStyle(dark, { background: floatBg, color: navIconColor }), position: "relative", zIndex: 1 }}
-                onClick={(e) => { e.stopPropagation(); setMenuOpen(o => !o); setMenuHovered(false); }}
-              >
-                {menuOpen ? t.menuOpen : t.menuClosed}
-              </button>
-              <AnimatePresence>
-                {menuOpen && (
-                  <motion.div
-                    key="nav"
-                    variants={NAV_CONTAINER}
-                    initial="hidden" animate="visible" exit="exit"
-                    style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, display: "flex", flexDirection: "column", gap: "8px", alignItems: "flex-end" }}
-                  >
-                    {(["Introduction", "CreateTool", "ToolCollection"] as const).map((key) => (
-                      <motion.button
-                        key={key}
-                        variants={NAV_ITEM}
-                        style={navItemStyle(dark, key === "CreateTool", surfaceLight, bgHue)}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setMenuOpen(false);
-                          if (key !== "CreateTool") navigate(NAV_ROUTES[key]);
-                        }}
-                      >{t.navLabels[key]}</motion.button>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>}
           </motion.div>
         ) : (
           <motion.button
